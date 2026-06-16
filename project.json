@@ -1,0 +1,22 @@
+{
+  "overview": "A continuation strategy backtester that detects and scores bullish setups using Sunday levels, EMAs, 1H FVGs, and daily candle bias, then reports win rate, P&L, and trade-by-trade results.",
+  "features": [
+    "Upload CSV price data and auto-calculate 200 EMA, 20 EMA, and 50 SMA",
+    "Auto-detect bullish continuation setups using daily candle bias and confluence scoring",
+    "Sunday level input with overlap detection against moving averages and fair value gaps",
+    "Entry, stop-loss, and TP1 calculation with risk-to-reward display",
+    "Add logic detector for next Sunday level opportunities",
+    "Invalidation monitoring with exit reason labeling",
+    "Interactive price chart with entry/exit markers, MA lines, Sunday levels, and FVG zones",
+    "Backtest results with win rate, profit factor, max drawdown, and full trade log"
+  ],
+  "category": "finance",
+  "tags": [
+    "trading",
+    "backtesting",
+    "strategy",
+    "finance",
+    "technical-analysis"
+  ],
+  "last_updated": "2026-06-16T18:39:00.919Z"
+}

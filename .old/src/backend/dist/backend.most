@@ -1,0 +1,259 @@
+// Version: 4.0.0
+type AccountSettings__791237634 =
+  {accountSize : Float; baseLotSize : Float; scaleReference : Float};
+type AccountSettings__830277065 =
+  {accountSize : Float; baseLotSize : Float; scaleReference : Float};
+type BacktestSession__449351645 =
+  {
+    createdAt : Timestamp__301639476;
+    id : Nat;
+    sessionLabel : Text;
+    settings : BacktestSettings__636010050;
+    stats : PerformanceStats__208447420;
+    tradeCount : Nat
+  };
+type BacktestSession__591770963 =
+  {
+    createdAt : Int;
+    id : Nat;
+    sessionLabel : Text;
+    settings : BacktestSettings__696027641;
+    stats : PerformanceStats__294664879;
+    tradeCount : Nat
+  };
+type BacktestSettings__636010050 =
+  {
+    accountSize : Float;
+    confluenceThreshold : Nat;
+    minCandlesForMA : Nat;
+    stopBufferPct : Float;
+    tp1MultiplierR : Float
+  };
+type BacktestSettings__696027641 =
+  {
+    accountSize : Float;
+    confluenceThreshold : Nat;
+    minCandlesForMA : Nat;
+    stopBufferPct : Float;
+    tp1MultiplierR : Float
+  };
+type Candle__103554468 =
+  {
+    close : Float;
+    high : Float;
+    low : Float;
+    open : Float;
+    timeframe : Timeframe__702864845;
+    timestamp : Int;
+    volume : Float
+  };
+type Candle__394811999 =
+  {
+    close : Price__566933758;
+    high : Price__566933758;
+    low : Price__566933758;
+    open : Price__566933758;
+    timeframe : Timeframe__1028336653;
+    timestamp : Timestamp__301639476;
+    volume : Float
+  };
+type ConfluenceScore__4672173 =
+  {
+    bullishDailyCandle : Bool;
+    hasEma200 : Bool;
+    hasEma20OrSma50 : Bool;
+    hasFVG : Bool;
+    hasSundayLevel : Bool;
+    maHolds : Bool;
+    targetAbove : Bool;
+    total : Nat
+  };
+type ConfluenceScore__532274391 =
+  {
+    bullishDailyCandle : Bool;
+    hasEma200 : Bool;
+    hasEma20OrSma50 : Bool;
+    hasFVG : Bool;
+    hasSundayLevel : Bool;
+    maHolds : Bool;
+    targetAbove : Bool;
+    total : Nat
+  };
+type Data__80296667<K, V> =
+  {var count : Nat__1040412405; kvs : [var ?(K, V)]};
+type FVGZone__375311430 =
+  {bottom : Float; id : Nat; isBullish : Bool; timestamp : Int; top : Float};
+type FVGZone__965725337 =
+  {
+    bottom : Price__566933758;
+    id : Nat;
+    isBullish : Bool;
+    timestamp : Timestamp__301639476;
+    top : Price__566933758
+  };
+type Internal__41346355<K, V> =
+  {children : [var ?Node__1000929467<K, V>]; data : Data__80296667<K, V>};
+type Leaf__712614010<K, V> = {data : Data__80296667<K, V>};
+type List__529703492<T> =
+  {
+    var blockIndex : Nat__1040412405;
+    var blocks : [var [var ?T]];
+    var elementIndex : Nat__1040412405
+  };
+type List__560604548<T> = List__529703492<T>;
+type Map__222667396<K, V> = Map__912772452<K, V>;
+type Map__709709801<K, V> =
+  {var root : Node__1000929467<K, V>; var size : Nat__1040412405};
+type Map__912772452<K, V> = Map__709709801<K, V>;
+type Nat__1040412405 = Nat__920180692;
+type Nat__920180692 = Nat;
+type NewActor__228256800 =
+  {
+    accountSettings : {var data : AccountSettings__830277065};
+    backtestSessions : List__560604548<BacktestSession__591770963>;
+    candlesDaily : List__560604548<Candle__103554468>;
+    candlesH1 : List__560604548<Candle__103554468>;
+    candlesH4 : List__560604548<Candle__103554468>;
+    fvgZones : List__560604548<FVGZone__375311430>;
+    state :
+      {
+        var nextCandleId : Nat;
+        var nextFVGId : Nat;
+        var nextSessionId : Nat;
+        var nextSundayId : Nat;
+        var nextTradeId : Nat
+      };
+    sundayLevels : List__560604548<SundayLevel__929201509>;
+    tradeResults : Map__222667396<Nat, [TradeResult__951537082]>
+  };
+type Node__1000929467<K, V> =
+  {#internal : Internal__41346355<K, V>; #leaf : Leaf__712614010<K, V>};
+type OldActor__72441978 = {};
+type PerformanceStats__208447420 =
+  {
+    avgRR : Float;
+    losses : Nat;
+    maxDrawdown : Float;
+    openTrades : Nat;
+    profitFactor : Float;
+    totalPnl : Float;
+    totalTrades : Nat;
+    winRate : Float;
+    wins : Nat
+  };
+type PerformanceStats__294664879 =
+  {
+    avgRR : Float;
+    losses : Nat;
+    maxDrawdown : Float;
+    openTrades : Nat;
+    profitFactor : Float;
+    totalPnl : Float;
+    totalTrades : Nat;
+    winRate : Float;
+    wins : Nat
+  };
+type Price__566933758 = Float;
+type SundayLevel__1060008764 =
+  {
+    id : Nat;
+    levelLabel : Text;
+    price : Price__566933758;
+    weekTimestamp : Timestamp__301639476
+  };
+type SundayLevel__929201509 =
+  {id : Nat; levelLabel : Text; price : Float; weekTimestamp : Int};
+type Timeframe__1028336653 = {#Daily; #H1; #H4};
+type Timeframe__702864845 = {#Daily; #H1; #H4};
+type Timestamp__301639476 = Int;
+type TradeDirection__203644868 = {#Long};
+type TradeDirection__520458656 = {#Long};
+type TradeOutcome__336919812 = {#Loss; #Open; #Win};
+type TradeOutcome__50316161 = {#Loss; #Open; #Win};
+type TradeResult__259343482 =
+  {
+    confluenceScore : ConfluenceScore__4672173;
+    direction : TradeDirection__520458656;
+    entryPrice : Price__566933758;
+    entryTimestamp : Timestamp__301639476;
+    exitPrice : ?Price__566933758;
+    exitTimestamp : ?Timestamp__301639476;
+    lotSize : Float;
+    outcome : TradeOutcome__50316161;
+    pnl : ?Float;
+    rMultiple : ?Float;
+    stopPrice : Price__566933758;
+    tp1Price : Price__566933758;
+    tradeId : Nat
+  };
+type TradeResult__951537082 =
+  {
+    confluenceScore : ConfluenceScore__532274391;
+    direction : TradeDirection__203644868;
+    entryPrice : Float;
+    entryTimestamp : Int;
+    exitPrice : ?Float;
+    exitTimestamp : ?Int;
+    lotSize : Float;
+    outcome : TradeOutcome__336919812;
+    pnl : ?Float;
+    rMultiple : ?Float;
+    stopPrice : Float;
+    tp1Price : Float;
+    tradeId : Nat
+  };
+{
+  "20260616_000000_Init" : OldActor__72441978 -> NewActor__228256800
+}
+actor  {
+  stable accountSettings : {var data : AccountSettings__791237634};
+  stable backtestSessions :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?BacktestSession__449351645]];
+      var elementIndex : Nat__1040412405
+    };
+  stable candlesDaily :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?Candle__394811999]];
+      var elementIndex : Nat__1040412405
+    };
+  stable candlesH1 :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?Candle__394811999]];
+      var elementIndex : Nat__1040412405
+    };
+  stable candlesH4 :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?Candle__394811999]];
+      var elementIndex : Nat__1040412405
+    };
+  stable fvgZones :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?FVGZone__965725337]];
+      var elementIndex : Nat__1040412405
+    };
+  stable state :
+    {
+      var nextCandleId : Nat;
+      var nextFVGId : Nat;
+      var nextSessionId : Nat;
+      var nextSundayId : Nat;
+      var nextTradeId : Nat
+    };
+  stable sundayLevels :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?SundayLevel__1060008764]];
+      var elementIndex : Nat__1040412405
+    };
+  stable tradeResults :
+    {
+      var root : Node__1000929467<Nat, [TradeResult__259343482]>;
+      var size : Nat__1040412405
+    }
+};

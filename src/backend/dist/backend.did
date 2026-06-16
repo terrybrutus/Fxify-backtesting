@@ -1,0 +1,147 @@
+type TradeResult = 
+ record {
+   confluenceScore: ConfluenceScore;
+   direction: TradeDirection;
+   entryPrice: Price;
+   entryTimestamp: Timestamp;
+   exitPrice: opt Price;
+   exitTimestamp: opt Timestamp;
+   lotSize: float64;
+   outcome: TradeOutcome;
+   pnl: opt float64;
+   rMultiple: opt float64;
+   stopPrice: Price;
+   tp1Price: Price;
+   tradeId: nat;
+ };
+type TradeOutcome = 
+ variant {
+   Loss;
+   Open;
+   Win;
+ };
+type TradeDirection = variant {Long;};
+type Timestamp = int;
+type Timeframe = 
+ variant {
+   Daily;
+   H1;
+   H4;
+ };
+type SundayLevel = 
+ record {
+   id: nat;
+   levelLabel: text;
+   price: Price;
+   weekTimestamp: Timestamp;
+ };
+type Price = float64;
+type PerformanceStats = 
+ record {
+   avgRR: float64;
+   losses: nat;
+   maxDrawdown: float64;
+   openTrades: nat;
+   profitFactor: float64;
+   totalPnl: float64;
+   totalTrades: nat;
+   winRate: float64;
+   wins: nat;
+ };
+type MovingAverages = 
+ record {
+   ema20: opt Price;
+   ema200: opt Price;
+   sma50: opt Price;
+ };
+type FVGZone = 
+ record {
+   bottom: Price;
+   id: nat;
+   isBullish: bool;
+   timestamp: Timestamp;
+   top: Price;
+ };
+type ConfluenceScore = 
+ record {
+   bullishDailyCandle: bool;
+   hasEma200: bool;
+   hasEma20OrSma50: bool;
+   hasFVG: bool;
+   hasSundayLevel: bool;
+   maHolds: bool;
+   targetAbove: bool;
+   total: nat;
+ };
+type Candle = 
+ record {
+   close: Price;
+   high: Price;
+   low: Price;
+   open: Price;
+   timeframe: Timeframe;
+   timestamp: Timestamp;
+   volume: float64;
+ };
+type BacktestSettings = 
+ record {
+   accountSize: float64;
+   confluenceThreshold: nat;
+   minCandlesForMA: nat;
+   stopBufferPct: float64;
+   tp1MultiplierR: float64;
+ };
+type BacktestSession = 
+ record {
+   createdAt: Timestamp;
+   id: nat;
+   sessionLabel: text;
+   settings: BacktestSettings;
+   stats: PerformanceStats;
+   tradeCount: nat;
+ };
+type AccountSettings = 
+ record {
+   accountSize: float64;
+   baseLotSize: float64;
+   scaleReference: float64;
+ };
+service : {
+  __accountSettings: () -> (reserved) query;
+  __backtestSessions: (io: opt nat, count: opt nat) ->
+   (vec BacktestSession) query;
+  __candlesDaily: (io: opt nat, count: opt nat) -> (vec Candle) query;
+  __candlesH1: (io: opt nat, count: opt nat) -> (vec Candle) query;
+  __candlesH4: (io: opt nat, count: opt nat) -> (vec Candle) query;
+  __fvgZones: (io: opt nat, count: opt nat) -> (vec FVGZone) query;
+  __state: () -> (reserved) query;
+  __sundayLevels: (io: opt nat, count: opt nat) -> (vec SundayLevel) query;
+  __tradeResults: (ko: opt nat, count: opt nat) ->
+   (vec record {
+          nat;
+          vec TradeResult;
+        }) query;
+  addCandles: (newCandles: vec Candle) -> ();
+  addFVGZone: (timestamp: Timestamp, top: Price, bottom: Price, isBullish:
+   bool) -> (nat);
+  addSundayLevel: (weekTimestamp: Timestamp, price: Price, levelLabel:
+   text) -> (nat);
+  deleteAllCandles: (timeframe: Timeframe) -> ();
+  deleteBacktestSession: (id: nat) -> ();
+  deleteFVGZone: (id: nat) -> ();
+  deleteSundayLevel: (id: nat) -> ();
+  getAccountSettings: () -> (AccountSettings) query;
+  getBacktestSession: (id: nat) -> (opt BacktestSession) query;
+  getBacktestTrades: (sessionId: nat) -> (vec TradeResult) query;
+  getCandles: (timeframe: Timeframe, from: opt Timestamp, to:
+   opt Timestamp) -> (vec Candle) query;
+  getFVGZones: () -> (vec FVGZone) query;
+  getMovingAverages: (timeframe: Timeframe) -> (MovingAverages) query;
+  getPerformanceStats: (sessionId: nat) -> (opt PerformanceStats) query;
+  getSundayLevels: () -> (vec SundayLevel) query;
+  listBacktestSessions: () -> (vec BacktestSession) query;
+  runBacktest: (settings: BacktestSettings, sessionLabel: text) ->
+   (BacktestSession);
+  setAccountSettings: (accountSize: float64, baseLotSize: float64,
+   scaleReference: float64) -> ();
+}
