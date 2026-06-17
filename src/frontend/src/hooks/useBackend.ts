@@ -22,7 +22,7 @@ export function useCandles(timeframe: Timeframe, from?: bigint, to?: bigint) {
     queryKey: ["candles", timeframe, from?.toString(), to?.toString()],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getCandles(timeframe, from ?? null, to ?? null);
+      return actor.getCandles(timeframe as never, from ?? null, to ?? null) as unknown as Candle[];
     },
     enabled: !!actor && !isFetching,
   });
@@ -58,7 +58,7 @@ export function useMovingAverages(timeframe: Timeframe) {
     queryKey: ["movingAverages", timeframe],
     queryFn: async () => {
       if (!actor) return {};
-      return actor.getMovingAverages(timeframe);
+      return actor.getMovingAverages(timeframe as never);
     },
     enabled: !!actor && !isFetching,
   });
@@ -121,7 +121,7 @@ export function useAddCandles() {
   return useMutation({
     mutationFn: async (candles: Candle[]) => {
       if (!actor) throw new Error("Actor not ready");
-      return actor.addCandles(candles);
+      return actor.addCandles(candles as never);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["candles"] }),
   });
