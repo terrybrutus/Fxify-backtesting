@@ -3,6 +3,7 @@ import {
   type AuditFactor,
   type SignalAudit,
   Timeframe,
+  TradeOutcome,
 } from "@/types/strategy";
 import { FlaskConical, ShieldAlert, TrendingUp } from "lucide-react";
 import { useMemo } from "react";
@@ -80,6 +81,46 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
+function summarizeAccepted(
+  accepted: SignalAudit[],
+  trades: ReturnType<typeof useStrategyWorkspace>["run"]["trades"],
+) {
+  const bySignal = new Map(accepted.map((signal) => [signal.id, signal]));
+  const rows = new Map<
+    string,
+    {
+      label: string;
+      trades: number;
+      wins: number;
+      losses: number;
+      totalR: number;
+    }
+  >();
+  for (const trade of trades) {
+    const signal = trade.auditId ? bySignal.get(trade.auditId) : undefined;
+    if (!signal) continue;
+    for (const label of [
+      signal.setupType,
+      signal.symbol,
+      `${signal.setupType} | ${signal.symbol}`,
+    ]) {
+      const row = rows.get(label) ?? {
+        label,
+        trades: 0,
+        wins: 0,
+        losses: 0,
+        totalR: 0,
+      };
+      row.trades += 1;
+      if (trade.outcome === TradeOutcome.Win) row.wins += 1;
+      if (trade.outcome === TradeOutcome.Loss) row.losses += 1;
+      row.totalR += trade.rMultiple ?? 0;
+      rows.set(label, row);
+    }
+  }
+  return [...rows.values()].sort((a, b) => b.totalR - a.totalR);
+}
+
 export default function DiscoveryLabPage() {
   const { run } = useStrategyWorkspace();
   const signals = useMemo(
@@ -88,6 +129,10 @@ export default function DiscoveryLabPage() {
   );
   const accepted = run.acceptedSignals;
   const rejected = run.rejectedSignals;
+  const acceptedSummary = useMemo(
+    () => summarizeAccepted(accepted, run.trades),
+    [accepted, run.trades],
+  );
 
   const discovery = useMemo(() => {
     const tp1Passes = signals.filter((signal) =>
@@ -234,6 +279,44 @@ export default function DiscoveryLabPage() {
               levels, and imbalance fills as separate TP models.
             </InsightCard>
           </section>
+
+          {acceptedSummary.length > 0 && (
+            <section className="border border-border bg-card p-4">
+              <h2 className="font-display text-lg font-bold">
+                Accepted Setup Evidence
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                These rows are clues, not conclusions. Anything below 20-30
+                trades should stay in discovery mode.
+              </p>
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full min-w-[720px] font-mono text-xs">
+                  <thead className="border-b border-border text-muted-foreground">
+                    <tr>
+                      <th className="py-2 text-left">Family / Index</th>
+                      <th className="py-2 text-right">Trades</th>
+                      <th className="py-2 text-right">W/L</th>
+                      <th className="py-2 text-right">Total R</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {acceptedSummary.map((row) => (
+                      <tr key={row.label} className="border-b border-border/40">
+                        <td className="py-2">{row.label}</td>
+                        <td className="py-2 text-right">{row.trades}</td>
+                        <td className="py-2 text-right">
+                          {row.wins}/{row.losses}
+                        </td>
+                        <td className="py-2 text-right">
+                          {row.totalR.toFixed(2)}R
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
 
           <section className="grid gap-3 lg:grid-cols-2">
             <div className="border border-border bg-card p-4">
