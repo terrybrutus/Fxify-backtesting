@@ -139,6 +139,7 @@ export default function DataUploadPage() {
 
       <div className="grid gap-3 md:grid-cols-4">
         <Metric label="Candles" value={integrity.candleCount} />
+        <Metric label="Analysis candles" value={run.analysisCandleCount} />
         <Metric
           label="Symbols"
           value={integrity.symbols.join(", ") || "none"}
@@ -146,6 +147,10 @@ export default function DataUploadPage() {
         <Metric
           label="Timeframes"
           value={integrity.timeframes.join(", ") || "none"}
+        />
+        <Metric
+          label="Derived TFs"
+          value={run.derivedTimeframes.join(", ") || "none"}
         />
         <Metric label="Timezone" value={integrity.timezone} />
         <Metric label="Start" value={fmtDate(integrity.start)} />

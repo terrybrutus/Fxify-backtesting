@@ -64,6 +64,18 @@ function SignalCard({ signal }: { signal: SignalAudit }) {
       <p className="mt-4 border-t border-border pt-3 text-sm text-muted-foreground">
         {signal.explanation}
       </p>
+      {signal.warnings.length > 0 && (
+        <div className="mt-3 border-t border-border pt-3">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
+            Coco Context
+          </p>
+          <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+            {signal.warnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </article>
   );
 }

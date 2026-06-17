@@ -140,6 +140,21 @@ export interface SignalAudit {
   explanation: string;
 }
 
+export interface MarketStructureSnapshot {
+  symbol: string;
+  timestamp: number;
+  previousDayHigh?: Price;
+  previousDayLow?: Price;
+  currentWeekHigh?: Price;
+  currentWeekLow?: Price;
+  nearestOldSundayAbove?: Price;
+  nearestOldSundayBelow?: Price;
+  nearestBullishFvgFill?: Price;
+  nearestBearishFvgFill?: Price;
+  targetModel?: string;
+  stopModel?: string;
+}
+
 export interface TradeResult {
   tradeId: bigint;
   entryTimestamp: Timestamp;
@@ -207,9 +222,12 @@ export interface RuleHealthCheck {
 
 export interface EngineRun {
   integrity: DataIntegrityReport;
+  analysisCandleCount: number;
+  derivedTimeframes: Timeframe[];
   movingAverages: MovingAverages;
   sundayLevels: SundayLevel[];
   fvgZones: FVGZone[];
+  marketStructure: MarketStructureSnapshot[];
   acceptedSignals: SignalAudit[];
   rejectedSignals: SignalAudit[];
   trades: TradeResult[];
