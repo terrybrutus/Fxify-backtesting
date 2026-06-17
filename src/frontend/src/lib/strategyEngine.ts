@@ -445,16 +445,25 @@ function boolFactor(
   return { label, passed, detail };
 }
 
-function nearestLevelAbove(
+function nearestBuysideLiquidity(
   price: number,
   candles: Candle[],
 ): number | undefined {
-  const highs = candles
-    .flatMap((candle, index) =>
-      index > 0 && candle.high > price ? [candle.high] : [],
-    )
-    .sort((a, b) => a - b);
-  return highs[0];
+  const swingHighs: number[] = [];
+  for (let index = 2; index < candles.length - 2; index += 1) {
+    const leftTwo = candles[index - 2];
+    const leftOne = candles[index - 1];
+    const pivot = candles[index];
+    const rightOne = candles[index + 1];
+    const rightTwo = candles[index + 2];
+    const isConfirmedSwingHigh =
+      pivot.high > leftTwo.high &&
+      pivot.high > leftOne.high &&
+      pivot.high >= rightOne.high &&
+      pivot.high >= rightTwo.high;
+    if (isConfirmedSwingHigh && pivot.high > price) swingHighs.push(pivot.high);
+  }
+  return swingHighs.sort((a, b) => a - b)[0];
 }
 
 function scoreSignal(
@@ -491,12 +500,9 @@ function scoreSignal(
   const maHold =
     ma.ema20 !== undefined &&
     candle.low <= ma.ema20 + tolerance &&
-    candle.close >= ma.ema20 &&
-    (candles[index + 1]
-      ? candles[index + 1].close >= ma.ema20 - tolerance
-      : true);
+    candle.close >= ma.ema20;
   const tp1 =
-    nearestLevelAbove(currentPrice, candles.slice(0, index + 1)) ??
+    nearestBuysideLiquidity(currentPrice, candles.slice(0, index)) ??
     currentPrice + atrValue;
   const support = Math.min(
     ma.ema20 ?? currentPrice,
@@ -864,7 +870,7 @@ export function runHealthChecks(
       name: "No-lookahead",
       passed: true,
       detail:
-        "Signals use candles with timestamp <= available_at; pivots are not read from future candles.",
+        "Signals use candles with timestamp <= available_at; MA holds and liquidity targets do not read future candles.",
     },
     {
       name: "Prop rules",
