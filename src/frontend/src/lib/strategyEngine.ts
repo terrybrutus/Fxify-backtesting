@@ -668,12 +668,108 @@ function bestLongTarget(
   return nearest ?? { price: currentPrice + atrValue, model: "ATR fallback" };
 }
 
+type CocoSetupFamily = {
+  setupType: SignalAudit["setupType"];
+  passed: boolean;
+  detail: string;
+  priority: number;
+};
+
+function latestMovingAveragesBefore(
+  candles: Candle[],
+  timestamp: number,
+): MovingAverages {
+  const index = candles.findLastIndex((candle) => ms(candle) <= timestamp);
+  return index >= 0 ? movingAveragesAt(candles, index) : {};
+}
+
+function chooseCocoSetupFamily({
+  bullishDaily,
+  priceAbove200,
+  maStack,
+  nearSunday,
+  fvgOverlap,
+  maHold,
+  rewardR,
+  ema200Reaction,
+  m15Hold,
+  targetModel,
+}: {
+  bullishDaily: boolean;
+  priceAbove200: boolean;
+  maStack: boolean;
+  nearSunday: boolean;
+  fvgOverlap: boolean;
+  maHold: boolean;
+  rewardR: number;
+  ema200Reaction: boolean;
+  m15Hold: boolean;
+  targetModel: string;
+}): CocoSetupFamily {
+  const targetValid = rewardR >= 0.8;
+  const families: CocoSetupFamily[] = [
+    {
+      setupType: "Old Sunday Reaction",
+      passed: nearSunday && priceAbove200 && (maStack || maHold) && targetValid,
+      detail:
+        "Requires old/Sunday-level context, bullish MA context, and a valid TP target.",
+      priority: 90,
+    },
+    {
+      setupType: "200 EMA Reaction",
+      passed: ema200Reaction && bullishDaily && targetValid,
+      detail:
+        "Requires a reaction around the 200 EMA with daily continuation and enough room to TP1.",
+      priority: 80,
+    },
+    {
+      setupType: "FVG Fill Continuation",
+      passed:
+        bullishDaily &&
+        priceAbove200 &&
+        fvgOverlap &&
+        targetModel.includes("FVG fill") &&
+        targetValid,
+      detail:
+        "Requires bullish continuation, active 1H FVG overlap, and FVG-fill target logic.",
+      priority: 70,
+    },
+    {
+      setupType: "15m 20 EMA Scalp",
+      passed: m15Hold && priceAbove200 && targetValid,
+      detail:
+        "Requires lower-timeframe 20 EMA hold/reclaim, bullish location, and scalpable TP1.",
+      priority: 60,
+    },
+    {
+      setupType: "HTF Bullish Continuation",
+      passed:
+        bullishDaily && priceAbove200 && maStack && fvgOverlap && targetValid,
+      detail:
+        "Requires daily continuation, 200 EMA support, 20-over-50 MA stack, FVG confluence, and a valid TP target.",
+      priority: 50,
+    },
+  ];
+  return (
+    families
+      .filter((family) => family.passed)
+      .sort((a, b) => b.priority - a.priority)[0] ?? {
+      setupType: "HTF Bullish Continuation",
+      passed: false,
+      detail:
+        "No Coco setup family has all required gates yet; keep this as a rejected candidate.",
+      priority: 0,
+    }
+  );
+}
+
 function scoreSignal(
   candles: Candle[],
   index: number,
   sundayLevels: SundayLevel[],
   fvgZones: FVGZone[],
   dailyCandles: Candle[],
+  m15Candles: Candle[],
   structure: MarketStructureSnapshot,
 ): SignalAudit {
   const candle = candles[index];
@@ -697,8 +793,19 @@ function scoreSignal(
   );
   const bullishDaily = !!prevDaily && prevDaily.close > prevDaily.open;
   const priceAbove200 = ma.ema200 !== undefined && currentPrice > ma.ema200;
+  const ema200Reaction =
+    ma.ema200 !== undefined &&
+    candle.low <= ma.ema200 + atrValue * 0.25 &&
+    candle.close > ma.ema200;
   const maStack =
     ma.ema20 !== undefined && ma.sma50 !== undefined && ma.ema20 > ma.sma50;
+  const m15Ma = latestMovingAveragesBefore(m15Candles, ms(candle));
+  const latestM15 = m15Candles.findLast((item) => ms(item) <= ms(candle));
+  const m15Hold =
+    !!latestM15 &&
+    m15Ma.ema20 !== undefined &&
+    latestM15.low <= m15Ma.ema20 + (m15Ma.atr14 ?? atrValue) * 0.1 &&
+    latestM15.close >= m15Ma.ema20;
   const tolerance = (ma.atr14 ?? 0) * 0.1;
   const maHold =
     ma.ema20 !== undefined &&
@@ -719,8 +826,25 @@ function scoreSignal(
   const stop = Math.min(support - atrValue * 0.15, candle.low - atrValue * 0.1);
   const risk = Math.max(currentPrice - stop, 0.01);
   const rewardR = (tp1 - currentPrice) / risk;
+  const setupFamily = chooseCocoSetupFamily({
+    bullishDaily,
+    priceAbove200,
+    maStack,
+    nearSunday,
+    fvgOverlap,
+    maHold,
+    rewardR,
+    ema200Reaction,
+    m15Hold,
+    targetModel: target.model,
+  });
 
   const reasons = [
+    boolFactor(
+      "Coco setup family gate",
+      setupFamily.passed,
+      setupFamily.detail,
+    ),
     boolFactor(
       "Daily continuation bias",
       bullishDaily,
@@ -730,6 +854,11 @@ function scoreSignal(
       "Price above 200 EMA",
       priceAbove200,
       "Current 1H close is above the 200 EMA.",
+    ),
+    boolFactor(
+      "200 EMA reaction",
+      ema200Reaction,
+      "Current 1H candle reacted around the 200 EMA and closed above it.",
     ),
     boolFactor(
       "20 EMA > 50 SMA",
@@ -750,6 +879,11 @@ function scoreSignal(
       "Moving average hold",
       maHold,
       "Candle touched or approached the 20 EMA and closed back above it.",
+    ),
+    boolFactor(
+      "15m 20 EMA hold",
+      m15Hold,
+      "Latest known 15m candle touched/reclaimed the 20 EMA.",
     ),
     boolFactor(
       "TP1 buyside liquidity >= 0.8R",
@@ -778,7 +912,7 @@ function scoreSignal(
 
   const score = reasons.filter((reason) => reason.passed).length;
   const accepted =
-    score >= 5 &&
+    setupFamily.passed &&
     !blockers.some((blocker) => blocker.passed) &&
     rewardR >= 0.8 &&
     stop < currentPrice;
@@ -789,7 +923,7 @@ function scoreSignal(
     availableAt: ms(candle),
     symbol: candle.symbol,
     timeframe: Timeframe.H1,
-    setupType: "Bullish Continuation",
+    setupType: setupFamily.setupType,
     direction: TradeDirection.Long,
     accepted,
     marketState,
@@ -800,10 +934,12 @@ function scoreSignal(
       ma.ema200 === undefined
         ? [
             "Less than 200 1H candles means EMA200 is unavailable.",
+            `Coco setup family: ${setupFamily.setupType}.`,
             `Coco target model: ${target.model}.`,
             structure.stopModel ?? "Coco stop model unavailable.",
           ]
         : [
+            `Coco setup family: ${setupFamily.setupType}.`,
             `Coco target model: ${target.model}.`,
             structure.stopModel ?? "Coco stop model unavailable.",
           ],
@@ -814,7 +950,7 @@ function scoreSignal(
     dataSource: candle.source,
     ruleEngineVersion: RULE_ENGINE_VERSION,
     explanation: accepted
-      ? `Bullish continuation candidate accepted because ${reasons
+      ? `${setupFamily.setupType} candidate accepted because ${reasons
           .filter((item) => item.passed)
           .map((item) => item.label.toLowerCase())
           .join(", ")}.`
@@ -873,6 +1009,7 @@ export function runEngine(
   for (const symbol of symbols) {
     const symbolCandles = bySymbol(analysisCandles, symbol);
     const h1 = byTimeframe(symbolCandles, Timeframe.H1);
+    const m15 = byTimeframe(symbolCandles, Timeframe.M15);
     const daily = byTimeframe(symbolCandles, Timeframe.Daily);
     if (h1.length === 0) continue;
 
@@ -907,6 +1044,7 @@ export function runEngine(
         symbolSundayLevels,
         symbolFvgs,
         daily,
+        m15,
         structure,
       );
       if (
@@ -967,13 +1105,32 @@ function simulateTrades(
       rMultiple,
       confluenceScore: {
         total: BigInt(signal.score),
-        bullishDailyCandle: signal.reasons[0]?.passed ?? false,
-        hasSundayLevel: signal.reasons[3]?.passed ?? false,
-        hasEma200: signal.reasons[1]?.passed ?? false,
-        hasEma20OrSma50: signal.reasons[2]?.passed ?? false,
-        hasFVG: signal.reasons[4]?.passed ?? false,
-        maHolds: signal.reasons[5]?.passed ?? false,
-        targetAbove: signal.reasons[6]?.passed ?? false,
+        bullishDailyCandle:
+          signal.reasons.find(
+            (reason) => reason.label === "Daily continuation bias",
+          )?.passed ?? false,
+        hasSundayLevel:
+          signal.reasons.find(
+            (reason) => reason.label === "Sunday level within 0.12 ATR",
+          )?.passed ?? false,
+        hasEma200:
+          signal.reasons.find(
+            (reason) => reason.label === "Price above 200 EMA",
+          )?.passed ?? false,
+        hasEma20OrSma50:
+          signal.reasons.find((reason) => reason.label === "20 EMA > 50 SMA")
+            ?.passed ?? false,
+        hasFVG:
+          signal.reasons.find((reason) => reason.label === "1H FVG overlap")
+            ?.passed ?? false,
+        maHolds:
+          signal.reasons.find(
+            (reason) => reason.label === "Moving average hold",
+          )?.passed ?? false,
+        targetAbove:
+          signal.reasons.find(
+            (reason) => reason.label === "TP1 buyside liquidity >= 0.8R",
+          )?.passed ?? false,
       },
       outcome: exit
         ? won

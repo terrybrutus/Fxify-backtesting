@@ -121,7 +121,11 @@ export interface SignalAudit {
   symbol: string;
   timeframe: Timeframe;
   setupType:
-    | "Bullish Continuation"
+    | "HTF Bullish Continuation"
+    | "Old Sunday Reaction"
+    | "200 EMA Reaction"
+    | "15m 20 EMA Scalp"
+    | "FVG Fill Continuation"
     | "Bearish Continuation"
     | "Countertrend Scalp";
   direction: TradeDirection;
