@@ -2,7 +2,10 @@ import Layout from "@/components/Layout";
 import BacktestResultsPage from "@/pages/BacktestResultsPage";
 import ChartPage from "@/pages/ChartPage";
 import DataUploadPage from "@/pages/DataUploadPage";
+import ReplayPage from "@/pages/ReplayPage";
+import RuleEngineHealthPage from "@/pages/RuleEngineHealthPage";
 import SetupDetectorPage from "@/pages/SetupDetectorPage";
+import RejectedSetupsPage from "@/pages/RejectedSetupsPage";
 import {
   RouterProvider,
   createRootRoute,
@@ -11,28 +14,44 @@ import {
   redirect,
 } from "@tanstack/react-router";
 
-const rootRoute = createRootRoute({
-  component: Layout,
-});
+const rootRoute = createRootRoute({ component: Layout });
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
   beforeLoad: () => {
-    throw redirect({ to: "/upload" });
+    throw redirect({ to: "/data" });
   },
 });
 
-const uploadRoute = createRoute({
+const dataRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/upload",
+  path: "/data",
   component: DataUploadPage,
 });
 
-const detectRoute = createRoute({
+const healthRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/detect",
+  path: "/health",
+  component: RuleEngineHealthPage,
+});
+
+const auditRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/audit",
   component: SetupDetectorPage,
+});
+
+const rejectedRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/rejected",
+  component: RejectedSetupsPage,
+});
+
+const replayRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/replay",
+  component: ReplayPage,
 });
 
 const chartRoute = createRoute({
@@ -49,8 +68,11 @@ const resultsRoute = createRoute({
 
 const tree = rootRoute.addChildren([
   indexRoute,
-  uploadRoute,
-  detectRoute,
+  dataRoute,
+  healthRoute,
+  auditRoute,
+  rejectedRoute,
+  replayRoute,
   chartRoute,
   resultsRoute,
 ]);
