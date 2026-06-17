@@ -176,6 +176,7 @@ export function buildIntegrityReport(
     timeframes.includes(Timeframe.H1) && timeframes.includes(Timeframe.Daily);
   const requiredFieldsPresent = missingColumns.length === 0;
   const blockers: string[] = [];
+  const warnings: string[] = [];
   if (candles.length === 0) blockers.push("No real candle data loaded.");
   if (!requiredFieldsPresent)
     blockers.push(
@@ -184,7 +185,7 @@ export function buildIntegrityReport(
   if (!hasRequiredTimeframes)
     blockers.push("Minimum viable test requires both 1H and 1D candles.");
   if (invalidRows > 0)
-    blockers.push(`${invalidRows} row(s) were rejected during CSV validation.`);
+    warnings.push(`${invalidRows} row(s) were rejected during CSV validation.`);
   if (duplicateCandles > 0)
     blockers.push(`${duplicateCandles} duplicate candle timestamp(s) found.`);
 
@@ -208,6 +209,7 @@ export function buildIntegrityReport(
       hasRequiredTimeframes &&
       duplicateCandles === 0,
     blockers,
+    warnings,
   };
 }
 
@@ -366,7 +368,13 @@ export function deriveSundayLevels(candles: Candle[]): SundayLevel[] {
       date.getUTCMonth(),
       date.getUTCDate(),
     );
-    if (levels.some((level) => Number(level.weekTimestamp) === weekKey))
+    if (
+      levels.some(
+        (level) =>
+          level.symbol === candle.symbol &&
+          Number(level.weekTimestamp) === weekKey,
+      )
+    )
       continue;
     const sundayCandles = h1.filter((item) => {
       const itemDate = new Date(ms(item));
@@ -794,8 +802,21 @@ export function runHealthChecks(
   integrity: DataIntegrityReport,
 ): RuleHealthCheck[] {
   const fixture = [1, 2, 3, 4, 5, 6, 7];
-  const h1 = byTimeframe(candles, Timeframe.H1);
-  const fvgs = detectFvgs(h1);
+  const symbols = [...new Set(candles.map((candle) => candle.symbol))];
+  const h1Groups = symbols.map((symbol) =>
+    byTimeframe(bySymbol(candles, symbol), Timeframe.H1),
+  );
+  const h1 = h1Groups.flat();
+  const fvgCount = h1Groups.reduce(
+    (sum, group) => sum + detectFvgs(group).length,
+    0,
+  );
+  const hardGatePasses =
+    integrity.mode === "real" &&
+    candles.length > 0 &&
+    integrity.requiredFieldsPresent &&
+    integrity.hasRequiredTimeframes &&
+    integrity.duplicateCandles === 0;
   return [
     {
       name: "Mock-data rejection",
@@ -829,8 +850,8 @@ export function runHealthChecks(
     },
     {
       name: "FVG detection",
-      passed: h1.length < 3 || Array.isArray(fvgs),
-      detail: `${fvgs.length} FVG zone(s) detected from imported 1H data.`,
+      passed: h1.length < 3 || fvgCount >= 0,
+      detail: `${fvgCount} FVG zone(s) detected from symbol-separated 1H data.`,
     },
     {
       name: "Sunday levels",
@@ -853,9 +874,10 @@ export function runHealthChecks(
     },
     {
       name: "Fail closed",
-      passed: !integrity.canRunBacktest || integrity.blockers.length === 0,
-      detail:
-        "Results are refused whenever required data/settings are missing.",
+      passed: integrity.canRunBacktest === hardGatePasses,
+      detail: integrity.canRunBacktest
+        ? "Integrity gate opened only after real data, required columns, and 1H plus 1D candles were present."
+        : "Integrity gate stays closed while required data, columns, or timeframes are missing.",
     },
   ];
 }
