@@ -14,7 +14,9 @@ export default function ReplayPage() {
   const [replayTime, setReplayTime] = useState(defaultTime);
 
   const cutoff = replayTime ? Date.parse(replayTime) : 0;
-  const visibleCandles = h1.filter((candle) => Number(candle.timestamp) <= cutoff);
+  const visibleCandles = h1.filter(
+    (candle) => Number(candle.timestamp) <= cutoff,
+  );
   const visibleSignals = useMemo(
     () =>
       [...run.acceptedSignals, ...run.rejectedSignals]
@@ -34,10 +36,14 @@ export default function ReplayPage() {
         </p>
       </div>
       <div className="border border-border bg-card p-4">
-        <label className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+        <label
+          htmlFor="replay-cutoff"
+          className="font-mono text-xs uppercase tracking-widest text-muted-foreground"
+        >
           Replay cutoff
         </label>
         <input
+          id="replay-cutoff"
           className="mt-2 block w-full max-w-sm border border-border bg-background px-3 py-2 font-mono text-sm"
           type="datetime-local"
           value={replayTime}
@@ -68,14 +74,25 @@ export default function ReplayPage() {
                 </thead>
                 <tbody>
                   {visibleCandles.slice(-200).map((candle) => (
-                    <tr key={candle.timestamp.toString()} className="border-b border-border/40">
+                    <tr
+                      key={candle.timestamp.toString()}
+                      className="border-b border-border/40"
+                    >
                       <td className="px-3 py-1.5">
                         {new Date(Number(candle.timestamp)).toISOString()}
                       </td>
-                      <td className="px-3 py-1.5 text-right">{candle.open.toFixed(2)}</td>
-                      <td className="px-3 py-1.5 text-right">{candle.high.toFixed(2)}</td>
-                      <td className="px-3 py-1.5 text-right">{candle.low.toFixed(2)}</td>
-                      <td className="px-3 py-1.5 text-right">{candle.close.toFixed(2)}</td>
+                      <td className="px-3 py-1.5 text-right">
+                        {candle.open.toFixed(2)}
+                      </td>
+                      <td className="px-3 py-1.5 text-right">
+                        {candle.high.toFixed(2)}
+                      </td>
+                      <td className="px-3 py-1.5 text-right">
+                        {candle.low.toFixed(2)}
+                      </td>
+                      <td className="px-3 py-1.5 text-right">
+                        {candle.close.toFixed(2)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
