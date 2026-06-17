@@ -46,8 +46,7 @@ function normalizeTimeframe(value: string): Timeframe | null {
   if (["15m", "m15"].includes(normalized)) return Timeframe.M15;
   if (["1h", "h1", "60m"].includes(normalized)) return Timeframe.H1;
   if (["4h", "h4"].includes(normalized)) return Timeframe.H4;
-  if (["1d", "d1", "daily", "day"].includes(normalized))
-    return Timeframe.Daily;
+  if (["1d", "d1", "daily", "day"].includes(normalized)) return Timeframe.Daily;
   if (["1w", "w1", "weekly", "week"].includes(normalized))
     return Timeframe.Weekly;
   return null;
@@ -71,7 +70,10 @@ function splitCsvLine(line: string): string[] {
   return cells;
 }
 
-export function parseCandleCsv(text: string, sourceName: string): CsvParseResult {
+export function parseCandleCsv(
+  text: string,
+  sourceName: string,
+): CsvParseResult {
   const lines = text
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -155,13 +157,18 @@ export function buildIntegrityReport(
 
   let missingCandles = 0;
   for (const timeframe of timeframes) {
-    const group = candles.filter((candle) => candle.timeframe === timeframe);
-    const sorted = group.sort((a, b) => ms(a) - ms(b));
-    const interval = timeframeIntervalMs(timeframe);
-    if (!interval) continue;
-    for (let i = 1; i < sorted.length; i += 1) {
-      const gap = ms(sorted[i]) - ms(sorted[i - 1]);
-      if (gap > interval * 1.5) missingCandles += Math.round(gap / interval) - 1;
+    for (const symbol of symbols) {
+      const group = candles.filter(
+        (candle) => candle.symbol === symbol && candle.timeframe === timeframe,
+      );
+      const sorted = group.sort((a, b) => ms(a) - ms(b));
+      const interval = timeframeIntervalMs(timeframe);
+      if (!interval) continue;
+      for (let i = 1; i < sorted.length; i += 1) {
+        const gap = ms(sorted[i]) - ms(sorted[i - 1]);
+        if (gap > interval * 1.5)
+          missingCandles += Math.round(gap / interval) - 1;
+      }
     }
   }
 
@@ -171,7 +178,9 @@ export function buildIntegrityReport(
   const blockers: string[] = [];
   if (candles.length === 0) blockers.push("No real candle data loaded.");
   if (!requiredFieldsPresent)
-    blockers.push(`Missing required CSV columns: ${missingColumns.join(", ")}.`);
+    blockers.push(
+      `Missing required CSV columns: ${missingColumns.join(", ")}.`,
+    );
   if (!hasRequiredTimeframes)
     blockers.push("Minimum viable test requires both 1H and 1D candles.");
   if (invalidRows > 0)
@@ -220,6 +229,10 @@ function byTimeframe(candles: Candle[], timeframe: Timeframe): Candle[] {
   return candles
     .filter((candle) => candle.timeframe === timeframe)
     .sort((a, b) => ms(a) - ms(b));
+}
+
+function bySymbol(candles: Candle[], symbol: string): Candle[] {
+  return candles.filter((candle) => candle.symbol === symbol);
 }
 
 export function sma(values: number[], period: number): (number | undefined)[] {
@@ -285,7 +298,10 @@ export function rsi(values: number[], period = 14): (number | undefined)[] {
   return output;
 }
 
-export function movingAveragesAt(candles: Candle[], index: number): MovingAverages {
+export function movingAveragesAt(
+  candles: Candle[],
+  index: number,
+): MovingAverages {
   const known = candles.slice(0, index + 1);
   const closes = known.map((candle) => candle.close);
   const ema20 = ema(closes, 20).at(-1);
@@ -304,7 +320,9 @@ export function detectFvgs(candles: Candle[]): FVGZone[] {
     const c2 = candles[i - 1];
     const c3 = candles[i];
     const avgBody =
-      ranges.slice(Math.max(0, i - 21), i - 1).reduce((sum, value) => sum + value, 0) /
+      ranges
+        .slice(Math.max(0, i - 21), i - 1)
+        .reduce((sum, value) => sum + value, 0) /
       Math.max(1, Math.min(20, i - 1));
     const displacement = Math.abs(c2.close - c2.open) >= avgBody * 1.25;
     if (!displacement) continue;
@@ -315,6 +333,7 @@ export function detectFvgs(candles: Candle[]): FVGZone[] {
         bottom: c1.high,
         top: c3.low,
         isBullish: true,
+        symbol: c3.symbol,
         timeframe: c3.timeframe,
         status: "fresh",
       });
@@ -326,6 +345,7 @@ export function detectFvgs(candles: Candle[]): FVGZone[] {
         bottom: c3.high,
         top: c1.low,
         isBullish: false,
+        symbol: c3.symbol,
         timeframe: c3.timeframe,
         status: "fresh",
       });
@@ -346,7 +366,8 @@ export function deriveSundayLevels(candles: Candle[]): SundayLevel[] {
       date.getUTCMonth(),
       date.getUTCDate(),
     );
-    if (levels.some((level) => Number(level.weekTimestamp) === weekKey)) continue;
+    if (levels.some((level) => Number(level.weekTimestamp) === weekKey))
+      continue;
     const sundayCandles = h1.filter((item) => {
       const itemDate = new Date(ms(item));
       return (
@@ -363,6 +384,7 @@ export function deriveSundayLevels(candles: Candle[]): SundayLevel[] {
       weekTimestamp: BigInt(weekKey),
       price: candle.open,
       levelLabel: `Sunday open ${new Date(weekKey).toISOString().slice(0, 10)}`,
+      symbol: candle.symbol,
       fridayClose: prior?.close,
       sundayOpen: candle.open,
       sundayHigh,
@@ -373,7 +395,10 @@ export function deriveSundayLevels(candles: Candle[]): SundayLevel[] {
   return levels;
 }
 
-function classifyMarketState(candles: Candle[], index: number): SignalAudit["marketState"] {
+function classifyMarketState(
+  candles: Candle[],
+  index: number,
+): SignalAudit["marketState"] {
   if (index < 60) return "mixed/unclear";
   const ma = movingAveragesAt(candles, index);
   const window = candles.slice(index - 20, index + 1);
@@ -384,9 +409,19 @@ function classifyMarketState(candles: Candle[], index: number): SignalAudit["mar
       (window[i - 1].close > ma.ema20 && candle.close < ma.ema20)
     );
   }).length;
-  if (ma.ema20 && ma.sma50 && ma.ema20 > ma.sma50 && candles[index].close > ma.ema20)
+  if (
+    ma.ema20 &&
+    ma.sma50 &&
+    ma.ema20 > ma.sma50 &&
+    candles[index].close > ma.ema20
+  )
     return "trending up";
-  if (ma.ema20 && ma.sma50 && ma.ema20 < ma.sma50 && candles[index].close < ma.ema20)
+  if (
+    ma.ema20 &&
+    ma.sma50 &&
+    ma.ema20 < ma.sma50 &&
+    candles[index].close < ma.ema20
+  )
     return "trending down";
   if (crosses >= 4) return "ranging";
   if (ma.atr14 && window.at(-1)!.high - window.at(-1)!.low > ma.atr14 * 1.5)
@@ -394,29 +429,44 @@ function classifyMarketState(candles: Candle[], index: number): SignalAudit["mar
   return "mixed/unclear";
 }
 
-function boolFactor(label: string, passed: boolean, detail: string): AuditFactor {
+function boolFactor(
+  label: string,
+  passed: boolean,
+  detail: string,
+): AuditFactor {
   return { label, passed, detail };
 }
 
-function nearestLevelAbove(price: number, candles: Candle[]): number | undefined {
+function nearestLevelAbove(
+  price: number,
+  candles: Candle[],
+): number | undefined {
   const highs = candles
-    .flatMap((candle, index) => (index > 0 && candle.high > price ? [candle.high] : []))
+    .flatMap((candle, index) =>
+      index > 0 && candle.high > price ? [candle.high] : [],
+    )
     .sort((a, b) => a - b);
   return highs[0];
 }
 
-function scoreSignal(candles: Candle[], index: number, sundayLevels: SundayLevel[], fvgZones: FVGZone[]): SignalAudit {
+function scoreSignal(
+  candles: Candle[],
+  index: number,
+  sundayLevels: SundayLevel[],
+  fvgZones: FVGZone[],
+  dailyCandles: Candle[],
+): SignalAudit {
   const candle = candles[index];
   const ma = movingAveragesAt(candles, index);
-  const daily = byTimeframe(candles, Timeframe.Daily).filter(
-    (item) => ms(item) <= ms(candle),
-  );
+  const daily = dailyCandles.filter((item) => ms(item) <= ms(candle));
   const prevDaily = daily.at(-2);
   const marketState = classifyMarketState(candles, index);
   const currentPrice = candle.close;
   const atrValue = ma.atr14 ?? Math.max(candle.high - candle.low, 1);
   const nearSunday = sundayLevels.some(
-    (level) => Math.abs((level.sundayOpen ?? level.price) - currentPrice) <= atrValue * 0.12,
+    (level) =>
+      Math.abs((level.sundayOpen ?? level.price) - currentPrice) <=
+      atrValue * 0.12,
   );
   const fvgOverlap = fvgZones.some(
     (zone) =>
@@ -427,14 +477,19 @@ function scoreSignal(candles: Candle[], index: number, sundayLevels: SundayLevel
   );
   const bullishDaily = !!prevDaily && prevDaily.close > prevDaily.open;
   const priceAbove200 = ma.ema200 !== undefined && currentPrice > ma.ema200;
-  const maStack = ma.ema20 !== undefined && ma.sma50 !== undefined && ma.ema20 > ma.sma50;
+  const maStack =
+    ma.ema20 !== undefined && ma.sma50 !== undefined && ma.ema20 > ma.sma50;
   const tolerance = (ma.atr14 ?? 0) * 0.1;
   const maHold =
     ma.ema20 !== undefined &&
     candle.low <= ma.ema20 + tolerance &&
     candle.close >= ma.ema20 &&
-    (candles[index + 1] ? candles[index + 1].close >= ma.ema20 - tolerance : true);
-  const tp1 = nearestLevelAbove(currentPrice, candles.slice(0, index + 1)) ?? currentPrice + atrValue;
+    (candles[index + 1]
+      ? candles[index + 1].close >= ma.ema20 - tolerance
+      : true);
+  const tp1 =
+    nearestLevelAbove(currentPrice, candles.slice(0, index + 1)) ??
+    currentPrice + atrValue;
   const support = Math.min(
     ma.ema20 ?? currentPrice,
     ma.sma50 ?? currentPrice,
@@ -445,19 +500,59 @@ function scoreSignal(candles: Candle[], index: number, sundayLevels: SundayLevel
   const rewardR = (tp1 - currentPrice) / risk;
 
   const reasons = [
-    boolFactor("Daily continuation bias", bullishDaily, "Previous completed daily candle is bullish."),
-    boolFactor("Price above 200 EMA", priceAbove200, "Current 1H close is above the 200 EMA."),
-    boolFactor("20 EMA > 50 SMA", maStack, "Fast moving average is above slow average."),
-    boolFactor("Sunday level within 0.12 ATR", nearSunday, "Current price is near an active Sunday open/gap level."),
-    boolFactor("1H FVG overlap", fvgOverlap, "Current price overlaps a detected bullish 1H fair value gap."),
-    boolFactor("Moving average hold", maHold, "Candle touched or approached the 20 EMA and closed back above it."),
-    boolFactor("TP1 buyside liquidity >= 0.8R", rewardR >= 0.8, `Nearest prior high is ${rewardR.toFixed(2)}R away.`),
+    boolFactor(
+      "Daily continuation bias",
+      bullishDaily,
+      "Previous completed daily candle is bullish.",
+    ),
+    boolFactor(
+      "Price above 200 EMA",
+      priceAbove200,
+      "Current 1H close is above the 200 EMA.",
+    ),
+    boolFactor(
+      "20 EMA > 50 SMA",
+      maStack,
+      "Fast moving average is above slow average.",
+    ),
+    boolFactor(
+      "Sunday level within 0.12 ATR",
+      nearSunday,
+      "Current price is near an active Sunday open/gap level.",
+    ),
+    boolFactor(
+      "1H FVG overlap",
+      fvgOverlap,
+      "Current price overlaps a detected bullish 1H fair value gap.",
+    ),
+    boolFactor(
+      "Moving average hold",
+      maHold,
+      "Candle touched or approached the 20 EMA and closed back above it.",
+    ),
+    boolFactor(
+      "TP1 buyside liquidity >= 0.8R",
+      rewardR >= 0.8,
+      `Nearest prior high is ${rewardR.toFixed(2)}R away.`,
+    ),
   ];
 
   const blockers = [
-    boolFactor("Range state", marketState === "ranging", "Trend-continuation setups are blocked in range state."),
-    boolFactor("Prop-rule breach", false, "Default profile does not breach daily loss before entry."),
-    boolFactor("News blocker", false, "No news calendar source is loaded in MVP."),
+    boolFactor(
+      "Range state",
+      marketState === "ranging",
+      "Trend-continuation setups are blocked in range state.",
+    ),
+    boolFactor(
+      "Prop-rule breach",
+      false,
+      "Default profile does not breach daily loss before entry.",
+    ),
+    boolFactor(
+      "News blocker",
+      false,
+      "No news calendar source is loaded in MVP.",
+    ),
   ];
 
   const score = reasons.filter((reason) => reason.passed).length;
@@ -480,7 +575,10 @@ function scoreSignal(candles: Candle[], index: number, sundayLevels: SundayLevel
     score,
     reasons,
     blockers,
-    warnings: ma.ema200 === undefined ? ["Less than 200 1H candles means EMA200 is unavailable."] : [],
+    warnings:
+      ma.ema200 === undefined
+        ? ["Less than 200 1H candles means EMA200 is unavailable."]
+        : [],
     entry: currentPrice,
     stop,
     tp1,
@@ -493,15 +591,23 @@ function scoreSignal(candles: Candle[], index: number, sundayLevels: SundayLevel
           .map((item) => item.label.toLowerCase())
           .join(", ")}.`
       : `Trade rejected because ${[
-          ...reasons.filter((item) => !item.passed).map((item) => item.label.toLowerCase()),
-          ...blockers.filter((item) => item.passed).map((item) => item.label.toLowerCase()),
+          ...reasons
+            .filter((item) => !item.passed)
+            .map((item) => item.label.toLowerCase()),
+          ...blockers
+            .filter((item) => item.passed)
+            .map((item) => item.label.toLowerCase()),
         ]
           .slice(0, 4)
           .join(", ")}.`,
   };
 }
 
-export function runEngine(candles: Candle[], invalidRows = 0, missingColumns: string[] = []): EngineRun {
+export function runEngine(
+  candles: Candle[],
+  invalidRows = 0,
+  missingColumns: string[] = [],
+): EngineRun {
   const integrity = buildIntegrityReport(candles, invalidRows, missingColumns);
   if (!integrity.canRunBacktest) {
     return {
@@ -518,20 +624,54 @@ export function runEngine(candles: Candle[], invalidRows = 0, missingColumns: st
     };
   }
 
-  const h1 = byTimeframe(candles, Timeframe.H1);
-  const sundayLevels = deriveSundayLevels(candles);
-  const fvgZones = detectFvgs(h1);
-  const movingAverages = movingAveragesAt(h1, h1.length - 1);
+  const symbols = [...new Set(candles.map((candle) => candle.symbol))];
+  const sundayLevels: SundayLevel[] = [];
+  const fvgZones: FVGZone[] = [];
   const audits: SignalAudit[] = [];
-  for (let index = 200; index < h1.length; index += 1) {
-    const audit = scoreSignal(h1, index, sundayLevels, fvgZones);
-    if (audit.score >= 3 || audit.blockers.some((blocker) => blocker.passed)) {
-      audits.push(audit);
+  const h1BySymbol = new Map<string, Candle[]>();
+  let movingAverages: MovingAverages = {};
+
+  for (const symbol of symbols) {
+    const symbolCandles = bySymbol(candles, symbol);
+    const h1 = byTimeframe(symbolCandles, Timeframe.H1);
+    const daily = byTimeframe(symbolCandles, Timeframe.Daily);
+    if (h1.length === 0) continue;
+
+    h1BySymbol.set(symbol, h1);
+    movingAverages = movingAveragesAt(h1, h1.length - 1);
+
+    const symbolSundayLevels = deriveSundayLevels(symbolCandles).map(
+      (level) => ({
+        ...level,
+        id: BigInt(sundayLevels.length + Number(level.id)),
+      }),
+    );
+    const symbolFvgs = detectFvgs(h1).map((zone) => ({
+      ...zone,
+      id: BigInt(fvgZones.length + Number(zone.id)),
+    }));
+    sundayLevels.push(...symbolSundayLevels);
+    fvgZones.push(...symbolFvgs);
+
+    for (let index = 200; index < h1.length; index += 1) {
+      const audit = scoreSignal(
+        h1,
+        index,
+        symbolSundayLevels,
+        symbolFvgs,
+        daily,
+      );
+      if (
+        audit.score >= 3 ||
+        audit.blockers.some((blocker) => blocker.passed)
+      ) {
+        audits.push(audit);
+      }
     }
   }
   const acceptedSignals = audits.filter((audit) => audit.accepted);
   const rejectedSignals = audits.filter((audit) => !audit.accepted);
-  const trades = simulateTrades(acceptedSignals, h1);
+  const trades = simulateTrades(acceptedSignals, h1BySymbol);
 
   return {
     integrity,
@@ -547,8 +687,12 @@ export function runEngine(candles: Candle[], invalidRows = 0, missingColumns: st
   };
 }
 
-function simulateTrades(signals: SignalAudit[], h1: Candle[]): TradeResult[] {
+function simulateTrades(
+  signals: SignalAudit[],
+  h1BySymbol: Map<string, Candle[]>,
+): TradeResult[] {
   return signals.map((signal, index) => {
+    const h1 = h1BySymbol.get(signal.symbol) ?? [];
     const future = h1.filter((candle) => ms(candle) > signal.timestamp);
     const exit = future.find(
       (candle) => candle.low <= signal.stop || candle.high >= signal.tp1,
@@ -556,7 +700,8 @@ function simulateTrades(signals: SignalAudit[], h1: Candle[]): TradeResult[] {
     const won = exit ? exit.high >= signal.tp1 : false;
     const exitPrice = exit ? (won ? signal.tp1 : signal.stop) : undefined;
     const risk = signal.entry - signal.stop;
-    const rMultiple = exitPrice !== undefined ? (exitPrice - signal.entry) / risk : undefined;
+    const rMultiple =
+      exitPrice !== undefined ? (exitPrice - signal.entry) / risk : undefined;
     return {
       tradeId: BigInt(index + 1),
       entryTimestamp: BigInt(signal.timestamp),
@@ -579,7 +724,11 @@ function simulateTrades(signals: SignalAudit[], h1: Candle[]): TradeResult[] {
         maHolds: signal.reasons[5]?.passed ?? false,
         targetAbove: signal.reasons[6]?.passed ?? false,
       },
-      outcome: exit ? (won ? TradeOutcome.Win : TradeOutcome.Loss) : TradeOutcome.Open,
+      outcome: exit
+        ? won
+          ? TradeOutcome.Win
+          : TradeOutcome.Loss
+        : TradeOutcome.Open,
       auditId: signal.id,
     };
   });
@@ -606,7 +755,10 @@ export function computeStats(trades: TradeResult[]): PerformanceStats {
   const wins = closed.filter((trade) => trade.outcome === TradeOutcome.Win);
   const losses = closed.filter((trade) => trade.outcome === TradeOutcome.Loss);
   const pnl = closed.reduce((sum, trade) => sum + (trade.pnl ?? 0), 0);
-  const grossWin = wins.reduce((sum, trade) => sum + Math.max(trade.pnl ?? 0, 0), 0);
+  const grossWin = wins.reduce(
+    (sum, trade) => sum + Math.max(trade.pnl ?? 0, 0),
+    0,
+  );
   const grossLoss = Math.abs(
     losses.reduce((sum, trade) => sum + Math.min(trade.pnl ?? 0, 0), 0),
   );
@@ -621,7 +773,8 @@ export function computeStats(trades: TradeResult[]): PerformanceStats {
   const rr = closed.flatMap((trade) =>
     trade.rMultiple === undefined ? [] : [trade.rMultiple],
   );
-  const avgRR = rr.reduce((sum, value) => sum + value, 0) / Math.max(1, rr.length);
+  const avgRR =
+    rr.reduce((sum, value) => sum + value, 0) / Math.max(1, rr.length);
   return {
     totalTrades: BigInt(trades.length),
     wins: BigInt(wins.length),
@@ -636,21 +789,74 @@ export function computeStats(trades: TradeResult[]): PerformanceStats {
   };
 }
 
-export function runHealthChecks(candles: Candle[], integrity: DataIntegrityReport): RuleHealthCheck[] {
+export function runHealthChecks(
+  candles: Candle[],
+  integrity: DataIntegrityReport,
+): RuleHealthCheck[] {
   const fixture = [1, 2, 3, 4, 5, 6, 7];
   const h1 = byTimeframe(candles, Timeframe.H1);
   const fvgs = detectFvgs(h1);
   return [
-    { name: "Mock-data rejection", passed: integrity.mode !== "none", detail: integrity.mode === "none" ? "Backtest disabled with no imported real data." : "Real imported data is present." },
-    { name: "SMA calculation", passed: sma(fixture, 3).at(-1) === 6, detail: "SMA(5,6,7) equals 6." },
-    { name: "EMA calculation", passed: ema(fixture, 3).at(-1) !== undefined, detail: "EMA returns only after enough candles." },
-    { name: "ATR calculation", passed: h1.length === 0 || atr(h1).length === h1.length, detail: "ATR is calculated without future candles." },
-    { name: "RSI calculation", passed: rsi(fixture.concat([8, 9, 10, 11, 12, 13, 14, 15]), 14).at(-1) !== undefined, detail: "RSI fixture produces a bounded value." },
-    { name: "FVG detection", passed: h1.length < 3 || Array.isArray(fvgs), detail: `${fvgs.length} FVG zone(s) detected from imported 1H data.` },
-    { name: "Sunday levels", passed: candles.length === 0 || Array.isArray(deriveSundayLevels(candles)), detail: "Sunday levels derive from candle timestamps, not manual placeholders." },
-    { name: "No-lookahead", passed: true, detail: "Signals use candles with timestamp <= available_at; pivots are not read from future candles." },
-    { name: "Prop rules", passed: true, detail: "MVP blocks only hard risk breaches; extended profiles remain configurable next." },
-    { name: "Fail closed", passed: !integrity.canRunBacktest || integrity.blockers.length === 0, detail: "Results are refused whenever required data/settings are missing." },
+    {
+      name: "Mock-data rejection",
+      passed: integrity.mode !== "none",
+      detail:
+        integrity.mode === "none"
+          ? "Backtest disabled with no imported real data."
+          : "Real imported data is present.",
+    },
+    {
+      name: "SMA calculation",
+      passed: sma(fixture, 3).at(-1) === 6,
+      detail: "SMA(5,6,7) equals 6.",
+    },
+    {
+      name: "EMA calculation",
+      passed: ema(fixture, 3).at(-1) !== undefined,
+      detail: "EMA returns only after enough candles.",
+    },
+    {
+      name: "ATR calculation",
+      passed: h1.length === 0 || atr(h1).length === h1.length,
+      detail: "ATR is calculated without future candles.",
+    },
+    {
+      name: "RSI calculation",
+      passed:
+        rsi(fixture.concat([8, 9, 10, 11, 12, 13, 14, 15]), 14).at(-1) !==
+        undefined,
+      detail: "RSI fixture produces a bounded value.",
+    },
+    {
+      name: "FVG detection",
+      passed: h1.length < 3 || Array.isArray(fvgs),
+      detail: `${fvgs.length} FVG zone(s) detected from imported 1H data.`,
+    },
+    {
+      name: "Sunday levels",
+      passed:
+        candles.length === 0 || Array.isArray(deriveSundayLevels(candles)),
+      detail:
+        "Sunday levels derive from candle timestamps, not manual placeholders.",
+    },
+    {
+      name: "No-lookahead",
+      passed: true,
+      detail:
+        "Signals use candles with timestamp <= available_at; pivots are not read from future candles.",
+    },
+    {
+      name: "Prop rules",
+      passed: true,
+      detail:
+        "MVP blocks only hard risk breaches; extended profiles remain configurable next.",
+    },
+    {
+      name: "Fail closed",
+      passed: !integrity.canRunBacktest || integrity.blockers.length === 0,
+      detail:
+        "Results are refused whenever required data/settings are missing.",
+    },
   ];
 }
 
@@ -659,7 +865,19 @@ export function exportJson(run: EngineRun): string {
 }
 
 export function exportCsv(signals: SignalAudit[]): string {
-  const headers = ["timestamp", "symbol", "timeframe", "setup", "accepted", "score", "entry", "stop", "tp1", "reasons", "blockers"];
+  const headers = [
+    "timestamp",
+    "symbol",
+    "timeframe",
+    "setup",
+    "accepted",
+    "score",
+    "entry",
+    "stop",
+    "tp1",
+    "reasons",
+    "blockers",
+  ];
   const rows = signals.map((signal) =>
     [
       new Date(signal.timestamp).toISOString(),
@@ -671,8 +889,14 @@ export function exportCsv(signals: SignalAudit[]): string {
       signal.entry,
       signal.stop,
       signal.tp1,
-      signal.reasons.filter((item) => item.passed).map((item) => item.label).join("; "),
-      signal.blockers.filter((item) => item.passed).map((item) => item.label).join("; "),
+      signal.reasons
+        .filter((item) => item.passed)
+        .map((item) => item.label)
+        .join("; "),
+      signal.blockers
+        .filter((item) => item.passed)
+        .map((item) => item.label)
+        .join("; "),
     ]
       .map((value) => `"${String(value).replaceAll('"', '""')}"`)
       .join(","),

@@ -75,6 +75,7 @@ export interface SundayLevel {
   weekTimestamp: Timestamp;
   price: Price;
   levelLabel: string;
+  symbol?: string;
   fridayClose?: Price;
   sundayOpen?: Price;
   sundayHigh?: Price;
@@ -88,6 +89,7 @@ export interface FVGZone {
   top: Price;
   bottom: Price;
   isBullish: boolean;
+  symbol?: string;
   timeframe?: Timeframe;
   status?: "fresh" | "partially filled" | "fully filled" | "invalidated";
 }
@@ -117,7 +119,10 @@ export interface SignalAudit {
   availableAt: number;
   symbol: string;
   timeframe: Timeframe;
-  setupType: "Bullish Continuation" | "Bearish Continuation" | "Countertrend Scalp";
+  setupType:
+    | "Bullish Continuation"
+    | "Bearish Continuation"
+    | "Countertrend Scalp";
   direction: TradeDirection;
   accepted: boolean;
   marketState: MarketState;
