@@ -13,6 +13,19 @@ const TIMEFRAME_ORDER = [
   Timeframe.Weekly,
 ];
 
+function parseUtcDatetimeLocal(value: string): number {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+  if (!match) return 0;
+  const [, year, month, day, hour, minute] = match;
+  return Date.UTC(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+  );
+}
+
 export default function ReplayPage() {
   const { candles, run } = useStrategyWorkspace();
   const symbols = useMemo(
@@ -54,7 +67,7 @@ export default function ReplayPage() {
     if (!replayTime && defaultTime) setReplayTime(defaultTime);
   }, [defaultTime, replayTime]);
 
-  const cutoff = replayTime ? Date.parse(replayTime) : 0;
+  const cutoff = replayTime ? parseUtcDatetimeLocal(replayTime) : 0;
   const visibleCandles = replayCandles.filter(
     (candle) => Number(candle.timestamp) <= cutoff,
   );
@@ -85,7 +98,7 @@ export default function ReplayPage() {
         <div className="grid gap-3 md:grid-cols-[1fr_160px_140px]">
           <label className="block">
             <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              Replay cutoff
+              Replay cutoff UTC
             </span>
             <input
               className="mt-2 block w-full border border-border bg-background px-3 py-2 font-mono text-sm"
