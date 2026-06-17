@@ -1,6 +1,6 @@
 import { runEngine } from "@/lib/strategyEngine";
 import type { Candle, EngineRun } from "@/types/strategy";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 const LEGACY_STORAGE_KEY = "ict-ma-strategy-workspace-v1";
 const DB_NAME = "ict-ma-strategy-workspace";
@@ -23,10 +23,15 @@ const emptyWorkspace: StoredWorkspace = {
 };
 
 let currentWorkspace = emptyWorkspace;
+let currentCandles: Candle[] = [];
 let hasLoaded = false;
+let revision = 0;
+let cachedEngineKey = "";
+let cachedEngineRun: EngineRun | null = null;
 const listeners = new Set<() => void>();
 
 function emitChange() {
+  revision += 1;
   for (const listener of listeners) listener();
 }
 
@@ -151,6 +156,7 @@ async function loadWorkspace() {
     const indexedWorkspace = await readFromIndexedDb();
     if (indexedWorkspace) {
       currentWorkspace = normalizeWorkspace(indexedWorkspace);
+      currentCandles = reviveCandles(currentWorkspace);
       emitChange();
       return;
     }
@@ -158,6 +164,7 @@ async function loadWorkspace() {
     const legacyWorkspace = readLegacyLocalStorage();
     if (legacyWorkspace && legacyWorkspace.candles.length > 0) {
       currentWorkspace = legacyWorkspace;
+      currentCandles = reviveCandles(currentWorkspace);
       await writeToIndexedDb(legacyWorkspace);
       window.localStorage.removeItem(LEGACY_STORAGE_KEY);
       emitChange();
@@ -168,7 +175,26 @@ async function loadWorkspace() {
   }
 
   currentWorkspace = emptyWorkspace;
+  currentCandles = [];
   emitChange();
+}
+
+function getCachedEngineRun(workspace: StoredWorkspace): EngineRun {
+  const key = [
+    workspace.importedAt ?? 0,
+    currentCandles.length,
+    workspace.invalidRows ?? 0,
+    workspace.missingColumns.join("|"),
+  ].join(":");
+
+  if (cachedEngineRun && cachedEngineKey === key) return cachedEngineRun;
+  cachedEngineKey = key;
+  cachedEngineRun = runEngine(
+    currentCandles,
+    workspace.invalidRows ?? 0,
+    workspace.missingColumns ?? [],
+  );
+  return cachedEngineRun;
 }
 
 export async function saveWorkspace(
@@ -186,6 +212,8 @@ export async function saveWorkspace(
   };
 
   currentWorkspace = payload;
+  currentCandles = candles;
+  cachedEngineRun = null;
   emitChange();
   await writeToIndexedDb(payload);
   window.localStorage.removeItem(LEGACY_STORAGE_KEY);
@@ -193,6 +221,8 @@ export async function saveWorkspace(
 
 export async function clearWorkspace() {
   currentWorkspace = emptyWorkspace;
+  currentCandles = [];
+  cachedEngineRun = null;
   emitChange();
   await clearIndexedDb();
   window.localStorage.removeItem(LEGACY_STORAGE_KEY);
@@ -207,32 +237,25 @@ export function useStrategyWorkspace(): {
   fileName?: string;
   isLoading: boolean;
 } {
-  const [workspace, setWorkspace] = useState(currentWorkspace);
+  const [, setWorkspaceRevision] = useState(revision);
   const [isLoading, setIsLoading] = useState(!hasLoaded);
 
   useEffect(() => {
     const unsubscribe = subscribe(() => {
-      setWorkspace(currentWorkspace);
+      setWorkspaceRevision(revision);
       setIsLoading(false);
     });
     void loadWorkspace().finally(() => setIsLoading(false));
     return unsubscribe;
   }, []);
 
-  return useMemo(() => {
-    const candles = reviveCandles(workspace);
-    return {
-      candles,
-      importedAt: workspace.importedAt,
-      invalidRows: workspace.invalidRows ?? 0,
-      missingColumns: workspace.missingColumns ?? [],
-      fileName: workspace.fileName,
-      isLoading,
-      run: runEngine(
-        candles,
-        workspace.invalidRows ?? 0,
-        workspace.missingColumns ?? [],
-      ),
-    };
-  }, [workspace, isLoading]);
+  return {
+    candles: currentCandles,
+    importedAt: currentWorkspace.importedAt,
+    invalidRows: currentWorkspace.invalidRows ?? 0,
+    missingColumns: currentWorkspace.missingColumns ?? [],
+    fileName: currentWorkspace.fileName,
+    isLoading,
+    run: getCachedEngineRun(currentWorkspace),
+  };
 }
