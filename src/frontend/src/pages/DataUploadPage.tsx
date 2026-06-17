@@ -1,16 +1,24 @@
 import { Button } from "@/components/ui/button";
-import { parseCandleCsv } from "@/lib/strategyEngine";
 import {
   clearWorkspace,
   saveWorkspace,
   useStrategyWorkspace,
 } from "@/hooks/useStrategyWorkspace";
-import { AlertTriangle, CheckCircle2, Database, FileUp, Trash2 } from "lucide-react";
+import { parseCandleCsv } from "@/lib/strategyEngine";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Database,
+  FileUp,
+  Trash2,
+} from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 function fmtDate(value?: number) {
-  return value ? new Date(value).toISOString().slice(0, 16).replace("T", " ") : "n/a";
+  return value
+    ? new Date(value).toISOString().slice(0, 16).replace("T", " ")
+    : "n/a";
 }
 
 function Metric({ label, value }: { label: string; value: string | number }) {
@@ -19,14 +27,16 @@ function Metric({ label, value }: { label: string; value: string | number }) {
       <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
         {label}
       </p>
-      <p className="mt-2 font-mono text-lg font-bold text-foreground">{value}</p>
+      <p className="mt-2 font-mono text-lg font-bold text-foreground">
+        {value}
+      </p>
     </div>
   );
 }
 
 export default function DataUploadPage() {
   const fileRef = useRef<HTMLInputElement>(null);
-  const { run } = useStrategyWorkspace();
+  const { run, fileName: storedFileName, isLoading } = useStrategyWorkspace();
   const [fileName, setFileName] = useState("");
   const [preview, setPreview] = useState("");
 
@@ -44,15 +54,34 @@ export default function DataUploadPage() {
         )
         .join("\n"),
     );
-    saveWorkspace(result.candles, result.invalidRows, result.missingColumns);
-    if (result.missingColumns.length > 0 || result.candles.length === 0) {
-      toast.error("CSV refused. Required columns or valid rows are missing.");
-    } else {
-      toast.success(`Imported ${result.candles.length} real candles`);
+    try {
+      await saveWorkspace(
+        result.candles,
+        result.invalidRows,
+        result.missingColumns,
+        file.name,
+      );
+      if (result.missingColumns.length > 0 || result.candles.length === 0) {
+        toast.error("CSV refused. Required columns or valid rows are missing.");
+      } else {
+        toast.success(`Imported ${result.candles.length} real candles`);
+      }
+    } catch (error) {
+      toast.error("Import failed while saving the dataset in browser storage.");
+      console.error(error);
     }
   }
 
+  async function handleClear() {
+    await clearWorkspace();
+    setFileName("");
+    setPreview("");
+    if (fileRef.current) fileRef.current.value = "";
+    toast.success("Cleared imported candle data");
+  }
+
   const { integrity } = run;
+  const displayFileName = fileName || storedFileName;
 
   return (
     <div className="space-y-6 p-4 md:p-6" data-ocid="data.page">
@@ -61,8 +90,8 @@ export default function DataUploadPage() {
           Data Integrity
         </h1>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-          Import real OHLCV CSV data first. The engine refuses to generate signals
-          until required fields and minimum timeframes are present.
+          Import real OHLCV CSV data first. The engine refuses to generate
+          signals until required fields and minimum timeframes are present.
         </p>
       </div>
 
@@ -81,7 +110,7 @@ export default function DataUploadPage() {
               <FileUp className="mr-2 h-4 w-4" />
               Import CSV
             </Button>
-            <Button type="button" variant="outline" onClick={clearWorkspace}>
+            <Button type="button" variant="outline" onClick={handleClear}>
               <Trash2 className="mr-2 h-4 w-4" />
               Clear
             </Button>
@@ -94,17 +123,30 @@ export default function DataUploadPage() {
             onChange={(event) => handleFile(event.target.files?.[0])}
           />
         </div>
-        {fileName && (
+        {displayFileName && (
           <p className="mt-4 font-mono text-xs text-muted-foreground">
-            Last import: <span className="text-foreground">{fileName}</span>
+            Last import:{" "}
+            <span className="text-foreground">{displayFileName}</span>
           </p>
         )}
       </div>
 
+      {isLoading && (
+        <div className="border border-border bg-card p-4 font-mono text-xs text-muted-foreground">
+          Loading saved candle dataset...
+        </div>
+      )}
+
       <div className="grid gap-3 md:grid-cols-4">
         <Metric label="Candles" value={integrity.candleCount} />
-        <Metric label="Symbols" value={integrity.symbols.join(", ") || "none"} />
-        <Metric label="Timeframes" value={integrity.timeframes.join(", ") || "none"} />
+        <Metric
+          label="Symbols"
+          value={integrity.symbols.join(", ") || "none"}
+        />
+        <Metric
+          label="Timeframes"
+          value={integrity.timeframes.join(", ") || "none"}
+        />
         <Metric label="Timezone" value={integrity.timezone} />
         <Metric label="Start" value={fmtDate(integrity.start)} />
         <Metric label="End" value={fmtDate(integrity.end)} />
@@ -151,8 +193,8 @@ export default function DataUploadPage() {
       )}
       <div className="flex items-center gap-2 border border-border bg-card p-4 font-mono text-xs text-muted-foreground">
         <Database className="h-4 w-4 text-primary" />
-        Browser-side processing is intentional for MVP: raw historical candles are
-        not pushed on-chain repeatedly.
+        Browser-side processing is intentional for MVP: raw historical candles
+        are not pushed on-chain repeatedly.
       </div>
     </div>
   );
