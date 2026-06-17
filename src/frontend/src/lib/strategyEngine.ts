@@ -4,6 +4,7 @@ import {
   type DataIntegrityReport,
   type EngineRun,
   type FVGZone,
+  type MarketStructureSnapshot,
   type MovingAverages,
   type PerformanceStats,
   type RuleHealthCheck,
@@ -237,6 +238,77 @@ function bySymbol(candles: Candle[], symbol: string): Candle[] {
   return candles.filter((candle) => candle.symbol === symbol);
 }
 
+function aggregateCandles(
+  candles: Candle[],
+  targetTimeframe: Timeframe,
+  sourceTimeframe: Timeframe,
+  expectedCandlesPerBucket: number,
+): Candle[] {
+  const interval = timeframeIntervalMs(targetTimeframe);
+  if (!interval) return [];
+  const source = byTimeframe(candles, sourceTimeframe);
+  const grouped = new Map<string, Candle[]>();
+  for (const candle of source) {
+    const bucket = Math.floor(ms(candle) / interval) * interval;
+    const key = `${candle.symbol}:${bucket}`;
+    const bucketCandles = grouped.get(key) ?? [];
+    bucketCandles.push(candle);
+    grouped.set(key, bucketCandles);
+  }
+
+  return [...grouped.entries()]
+    .flatMap(([, bucketCandles]) => {
+      const sorted = bucketCandles.sort((a, b) => ms(a) - ms(b));
+      if (sorted.length < expectedCandlesPerBucket) return [];
+      const first = sorted[0];
+      const last = sorted.at(-1)!;
+      return [
+        {
+          timestamp: BigInt(
+            Math.floor(ms(first) / interval) * interval,
+          ) as Candle["timestamp"],
+          open: first.open,
+          high: Math.max(...sorted.map((candle) => candle.high)),
+          low: Math.min(...sorted.map((candle) => candle.low)),
+          close: last.close,
+          volume: sorted.reduce((sum, candle) => sum + candle.volume, 0),
+          symbol: first.symbol,
+          timeframe: targetTimeframe,
+          timezone: first.timezone,
+          source: `${first.source} derived ${targetTimeframe}`,
+        },
+      ];
+    })
+    .sort((a, b) => ms(a) - ms(b));
+}
+
+function enrichWithDerivedTimeframes(candles: Candle[]): {
+  analysisCandles: Candle[];
+  derivedTimeframes: Timeframe[];
+} {
+  const existing = new Set(candles.map((candle) => candle.timeframe));
+  const derived: Candle[] = [];
+  const derivedTimeframes: Timeframe[] = [];
+  if (!existing.has(Timeframe.M15) && existing.has(Timeframe.M5)) {
+    const m15 = aggregateCandles(candles, Timeframe.M15, Timeframe.M5, 3);
+    if (m15.length > 0) {
+      derived.push(...m15);
+      derivedTimeframes.push(Timeframe.M15);
+    }
+  }
+  if (!existing.has(Timeframe.H4) && existing.has(Timeframe.H1)) {
+    const h4 = aggregateCandles(candles, Timeframe.H4, Timeframe.H1, 4);
+    if (h4.length > 0) {
+      derived.push(...h4);
+      derivedTimeframes.push(Timeframe.H4);
+    }
+  }
+  return {
+    analysisCandles: [...candles, ...derived].sort((a, b) => ms(a) - ms(b)),
+    derivedTimeframes,
+  };
+}
+
 export function sma(values: number[], period: number): (number | undefined)[] {
   return values.map((_, index) => {
     if (index + 1 < period) return undefined;
@@ -466,12 +538,143 @@ function nearestBuysideLiquidity(
   return swingHighs.sort((a, b) => a - b)[0];
 }
 
+function dayKey(timestamp: number): number {
+  const date = new Date(timestamp);
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+}
+
+function weekKey(timestamp: number): number {
+  const date = new Date(timestamp);
+  const day = date.getUTCDay();
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  return Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate() + mondayOffset,
+  );
+}
+
+function structureSnapshot(
+  candle: Candle,
+  h1Candles: Candle[],
+  dailyCandles: Candle[],
+  sundayLevels: SundayLevel[],
+  fvgZones: FVGZone[],
+): MarketStructureSnapshot {
+  const timestamp = ms(candle);
+  const priorDaily = dailyCandles.filter(
+    (item) => ms(item) < dayKey(timestamp),
+  );
+  const previousDay = priorDaily.at(-1);
+  const currentWeek = weekKey(timestamp);
+  const weekCandles = h1Candles.filter((item) => {
+    const itemTime = ms(item);
+    return itemTime < timestamp && weekKey(itemTime) === currentWeek;
+  });
+  const oldSundayLevels = sundayLevels.filter(
+    (level) => Number(level.weekTimestamp) < dayKey(timestamp),
+  );
+  const sundayAbove = oldSundayLevels
+    .map((level) => level.price)
+    .filter((price) => price > candle.close)
+    .sort((a, b) => a - b)[0];
+  const sundayBelow = oldSundayLevels
+    .map((level) => level.price)
+    .filter((price) => price < candle.close)
+    .sort((a, b) => b - a)[0];
+  const bullishFvgFill = fvgZones
+    .filter(
+      (zone) =>
+        zone.isBullish &&
+        Number(zone.timestamp) < timestamp &&
+        zone.top > candle.close,
+    )
+    .map((zone) => zone.top)
+    .sort((a, b) => a - b)[0];
+  const bearishFvgFill = fvgZones
+    .filter(
+      (zone) =>
+        !zone.isBullish &&
+        Number(zone.timestamp) < timestamp &&
+        zone.bottom < candle.close,
+    )
+    .map((zone) => zone.bottom)
+    .sort((a, b) => b - a)[0];
+
+  const previousDayHigh = previousDay?.high;
+  const weeklyLow =
+    weekCandles.length > 0
+      ? Math.min(...weekCandles.map((item) => item.low))
+      : undefined;
+  const targetCandidates = [
+    previousDayHigh && previousDayHigh > candle.close
+      ? { label: "previous day high", price: previousDayHigh }
+      : undefined,
+    sundayAbove ? { label: "old Sunday level", price: sundayAbove } : undefined,
+    bullishFvgFill
+      ? { label: "major bullish FVG fill", price: bullishFvgFill }
+      : undefined,
+  ].filter(Boolean) as { label: string; price: number }[];
+  const nearestTarget = targetCandidates.sort((a, b) => a.price - b.price)[0];
+
+  return {
+    symbol: candle.symbol,
+    timestamp,
+    previousDayHigh,
+    previousDayLow: previousDay?.low,
+    currentWeekHigh:
+      weekCandles.length > 0
+        ? Math.max(...weekCandles.map((item) => item.high))
+        : undefined,
+    currentWeekLow: weeklyLow,
+    nearestOldSundayAbove: sundayAbove,
+    nearestOldSundayBelow: sundayBelow,
+    nearestBullishFvgFill: bullishFvgFill,
+    nearestBearishFvgFill: bearishFvgFill,
+    targetModel: nearestTarget
+      ? `nearest Coco TP: ${nearestTarget.label}`
+      : "fallback TP: prior swing liquidity",
+    stopModel:
+      weeklyLow && weeklyLow < candle.close
+        ? "Coco context: weekly low / MA structure below entry"
+        : "Coco context: moving-average structure below entry",
+  };
+}
+
+function bestLongTarget(
+  currentPrice: number,
+  atrValue: number,
+  structure: MarketStructureSnapshot,
+  candles: Candle[],
+): { price: number; model: string } {
+  const targets = [
+    structure.previousDayHigh && structure.previousDayHigh > currentPrice
+      ? { price: structure.previousDayHigh, model: "previous day high" }
+      : undefined,
+    structure.nearestOldSundayAbove
+      ? { price: structure.nearestOldSundayAbove, model: "old Sunday level" }
+      : undefined,
+    structure.nearestBullishFvgFill
+      ? { price: structure.nearestBullishFvgFill, model: "bullish FVG fill" }
+      : undefined,
+    nearestBuysideLiquidity(currentPrice, candles)
+      ? {
+          price: nearestBuysideLiquidity(currentPrice, candles)!,
+          model: "prior swing buyside liquidity",
+        }
+      : undefined,
+  ].filter(Boolean) as { price: number; model: string }[];
+  const nearest = targets.sort((a, b) => a.price - b.price)[0];
+  return nearest ?? { price: currentPrice + atrValue, model: "ATR fallback" };
+}
+
 function scoreSignal(
   candles: Candle[],
   index: number,
   sundayLevels: SundayLevel[],
   fvgZones: FVGZone[],
   dailyCandles: Candle[],
+  structure: MarketStructureSnapshot,
 ): SignalAudit {
   const candle = candles[index];
   const ma = movingAveragesAt(candles, index);
@@ -501,9 +704,13 @@ function scoreSignal(
     ma.ema20 !== undefined &&
     candle.low <= ma.ema20 + tolerance &&
     candle.close >= ma.ema20;
-  const tp1 =
-    nearestBuysideLiquidity(currentPrice, candles.slice(0, index)) ??
-    currentPrice + atrValue;
+  const target = bestLongTarget(
+    currentPrice,
+    atrValue,
+    structure,
+    candles.slice(0, index),
+  );
+  const tp1 = target.price;
   const support = Math.min(
     ma.ema20 ?? currentPrice,
     ma.sma50 ?? currentPrice,
@@ -547,7 +754,7 @@ function scoreSignal(
     boolFactor(
       "TP1 buyside liquidity >= 0.8R",
       rewardR >= 0.8,
-      `Nearest prior high is ${rewardR.toFixed(2)}R away.`,
+      `${target.model} is ${rewardR.toFixed(2)}R away.`,
     ),
   ];
 
@@ -591,8 +798,15 @@ function scoreSignal(
     blockers,
     warnings:
       ma.ema200 === undefined
-        ? ["Less than 200 1H candles means EMA200 is unavailable."]
-        : [],
+        ? [
+            "Less than 200 1H candles means EMA200 is unavailable.",
+            `Coco target model: ${target.model}.`,
+            structure.stopModel ?? "Coco stop model unavailable.",
+          ]
+        : [
+            `Coco target model: ${target.model}.`,
+            structure.stopModel ?? "Coco stop model unavailable.",
+          ],
     entry: currentPrice,
     stop,
     tp1,
@@ -623,30 +837,41 @@ export function runEngine(
   missingColumns: string[] = [],
 ): EngineRun {
   const integrity = buildIntegrityReport(candles, invalidRows, missingColumns);
+  const { analysisCandles, derivedTimeframes } =
+    enrichWithDerivedTimeframes(candles);
+  if (derivedTimeframes.length > 0) {
+    integrity.warnings.push(
+      `Derived ${derivedTimeframes.join(", ")} analysis candles from imported lower timeframes.`,
+    );
+  }
   if (!integrity.canRunBacktest) {
     return {
       integrity,
+      analysisCandleCount: analysisCandles.length,
+      derivedTimeframes,
       movingAverages: {},
       sundayLevels: [],
       fvgZones: [],
+      marketStructure: [],
       acceptedSignals: [],
       rejectedSignals: [],
       trades: [],
       stats: emptyStats(),
-      health: runHealthChecks(candles, integrity),
+      health: runHealthChecks(analysisCandles, integrity),
       generatedAt: Date.now(),
     };
   }
 
-  const symbols = [...new Set(candles.map((candle) => candle.symbol))];
+  const symbols = [...new Set(analysisCandles.map((candle) => candle.symbol))];
   const sundayLevels: SundayLevel[] = [];
   const fvgZones: FVGZone[] = [];
+  const marketStructure: MarketStructureSnapshot[] = [];
   const audits: SignalAudit[] = [];
   const h1BySymbol = new Map<string, Candle[]>();
   let movingAverages: MovingAverages = {};
 
   for (const symbol of symbols) {
-    const symbolCandles = bySymbol(candles, symbol);
+    const symbolCandles = bySymbol(analysisCandles, symbol);
     const h1 = byTimeframe(symbolCandles, Timeframe.H1);
     const daily = byTimeframe(symbolCandles, Timeframe.Daily);
     if (h1.length === 0) continue;
@@ -668,12 +893,21 @@ export function runEngine(
     fvgZones.push(...symbolFvgs);
 
     for (let index = 200; index < h1.length; index += 1) {
+      const structure = structureSnapshot(
+        h1[index],
+        h1,
+        daily,
+        symbolSundayLevels,
+        symbolFvgs,
+      );
+      marketStructure.push(structure);
       const audit = scoreSignal(
         h1,
         index,
         symbolSundayLevels,
         symbolFvgs,
         daily,
+        structure,
       );
       if (
         audit.score >= 3 ||
@@ -689,14 +923,17 @@ export function runEngine(
 
   return {
     integrity,
+    analysisCandleCount: analysisCandles.length,
+    derivedTimeframes,
     movingAverages,
     sundayLevels,
     fvgZones,
+    marketStructure,
     acceptedSignals,
     rejectedSignals,
     trades,
     stats: computeStats(trades),
-    health: runHealthChecks(candles, integrity),
+    health: runHealthChecks(analysisCandles, integrity),
     generatedAt: Date.now(),
   };
 }

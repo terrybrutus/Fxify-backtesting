@@ -164,10 +164,13 @@ export default function DiscoveryLabPage() {
     };
   }, [accepted, rejected, signals]);
 
-  const hasLowerTimeframeContext = run.integrity.timeframes.some(
-    (timeframe) => timeframe === Timeframe.M15 || timeframe === Timeframe.M5,
-  );
-  const hasHoldContext = run.integrity.timeframes.includes(Timeframe.H4);
+  const hasLowerTimeframeContext =
+    run.integrity.timeframes.some(
+      (timeframe) => timeframe === Timeframe.M15 || timeframe === Timeframe.M5,
+    ) || run.derivedTimeframes.includes(Timeframe.M15);
+  const hasHoldContext =
+    run.integrity.timeframes.includes(Timeframe.H4) ||
+    run.derivedTimeframes.includes(Timeframe.H4);
 
   return (
     <div className="space-y-5 p-4 md:p-6" data-ocid="discovery.page">
@@ -200,6 +203,14 @@ export default function DiscoveryLabPage() {
               value={String(discovery.highScoreRejects.length)}
             />
             <Stat label="Median TP1 R" value={discovery.medianR.toFixed(2)} />
+            <Stat
+              label="Derived TFs"
+              value={run.derivedTimeframes.join(", ") || "none"}
+            />
+            <Stat
+              label="Structure snapshots"
+              value={String(run.marketStructure.length)}
+            />
           </div>
 
           <section className="grid gap-3 lg:grid-cols-3">
