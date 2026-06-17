@@ -182,6 +182,13 @@ export default function DataUploadPage() {
                 ))}
               </ul>
             )}
+            {integrity.warnings.length > 0 && (
+              <ul className="mt-2 space-y-1 font-mono text-xs text-muted-foreground">
+                {integrity.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </div>

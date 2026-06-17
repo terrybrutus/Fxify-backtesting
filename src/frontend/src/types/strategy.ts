@@ -60,6 +60,7 @@ export interface DataIntegrityReport {
   requiredFieldsPresent: boolean;
   canRunBacktest: boolean;
   blockers: string[];
+  warnings: string[];
 }
 
 export interface MovingAverages {
