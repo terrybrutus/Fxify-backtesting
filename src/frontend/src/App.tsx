@@ -4,6 +4,7 @@ import ChartPage from "@/pages/ChartPage";
 import DataUploadPage from "@/pages/DataUploadPage";
 import DiscoveryLabPage from "@/pages/DiscoveryLabPage";
 import ExperimentLabPage from "@/pages/ExperimentLabPage";
+import ForwardTrackerPage from "@/pages/ForwardTrackerPage";
 import RejectedSetupsPage from "@/pages/RejectedSetupsPage";
 import ReplayPage from "@/pages/ReplayPage";
 import RuleEngineHealthPage from "@/pages/RuleEngineHealthPage";
@@ -62,6 +63,12 @@ const experimentRoute = createRoute({
   component: ExperimentLabPage,
 });
 
+const forwardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/forward",
+  component: ForwardTrackerPage,
+});
+
 const replayRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/replay",
@@ -88,6 +95,7 @@ const tree = rootRoute.addChildren([
   rejectedRoute,
   discoveryRoute,
   experimentRoute,
+  forwardRoute,
   replayRoute,
   chartRoute,
   resultsRoute,

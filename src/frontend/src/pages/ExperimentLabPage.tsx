@@ -2,16 +2,21 @@ import { Button } from "@/components/ui/button";
 import { useStrategyWorkspace } from "@/hooks/useStrategyWorkspace";
 import { classifyEvidence } from "@/lib/evidence";
 import {
+  freezeVariant,
+  loadFrozenVariants,
+  saveFrozenVariants,
+} from "@/lib/forwardTracker";
+import {
   type Candle,
   type EngineRun,
   type SignalAudit,
   type TargetCandidate,
   Timeframe,
 } from "@/types/strategy";
-import { Download, FlaskConical, ShieldCheck } from "lucide-react";
-import { useMemo } from "react";
+import { Download, FlaskConical, Lock, ShieldCheck } from "lucide-react";
+import { useMemo, useState } from "react";
 
-type ExperimentVariant = {
+export type ExperimentVariant = {
   id: string;
   setup: string;
   targetModel: string;
@@ -21,7 +26,7 @@ type ExperimentVariant = {
   predicate: (signal: SignalAudit) => boolean;
 };
 
-type ExperimentTrade = {
+export type ExperimentTrade = {
   signal: SignalAudit;
   target: TargetCandidate;
   rMultiple: number;
@@ -29,7 +34,7 @@ type ExperimentTrade = {
   closed: boolean;
 };
 
-type ExperimentStats = {
+export type ExperimentStats = {
   trades: number;
   wins: number;
   losses: number;
@@ -40,7 +45,7 @@ type ExperimentStats = {
   maxDrawdownR: number;
 };
 
-type ExperimentRow = {
+export type ExperimentRow = {
   variant: ExperimentVariant;
   trades: ExperimentTrade[];
   discovery: ExperimentStats;
@@ -52,7 +57,7 @@ type ExperimentRow = {
   consistencyRisk: "Low" | "Medium" | "High";
 };
 
-type PromotionGate =
+export type PromotionGate =
   | "No validation"
   | "Needs sample"
   | "Diverged"
@@ -206,7 +211,9 @@ function fmtR(value: number) {
   return `${value.toFixed(2)}R`;
 }
 
-function sessionFor(timestamp: number): ExperimentVariant["sessionScope"] {
+export function sessionFor(
+  timestamp: number,
+): ExperimentVariant["sessionScope"] {
   const hour = new Date(timestamp).getUTCHours();
   if (hour >= 0 && hour < 7) return "Asia";
   if (hour >= 7 && hour < 13) return "London";
@@ -335,7 +342,7 @@ function consistencyRisk(
   return "Low";
 }
 
-function buildExperimentRows({
+export function buildExperimentRows({
   signals,
   candles,
   splitTimestamp,
@@ -556,6 +563,9 @@ function TradeMiniTable({ trades }: { trades: ExperimentTrade[] }) {
 
 export default function ExperimentLabPage() {
   const { candles, run } = useStrategyWorkspace();
+  const [frozenVariantIds, setFrozenVariantIds] = useState(
+    () => new Set(loadFrozenVariants().map((variant) => variant.variantId)),
+  );
   const signals = useMemo(
     () => [...run.acceptedSignals, ...run.rejectedSignals],
     [run.acceptedSignals, run.rejectedSignals],
@@ -579,6 +589,19 @@ export default function ExperimentLabPage() {
       row.promotionGate === "Watchlist" ||
       row.promotionGate === "Forward-test candidate",
   ).length;
+
+  function freezeRow(row: ExperimentRow) {
+    const existing = loadFrozenVariants();
+    if (existing.some((variant) => variant.variantId === row.variant.id)) {
+      return;
+    }
+    const next = [
+      ...existing,
+      freezeVariant(row, run.validation.discoveryEndTimestamp),
+    ];
+    saveFrozenVariants(next);
+    setFrozenVariantIds(new Set(next.map((variant) => variant.variantId)));
+  }
 
   return (
     <div className="space-y-5 p-4 md:p-6" data-ocid="experiment.page">
@@ -718,6 +741,7 @@ export default function ExperimentLabPage() {
                     <th className="py-2 text-left">Gate</th>
                     <th className="py-2 text-left">Risk</th>
                     <th className="py-2 text-left">Evidence</th>
+                    <th className="py-2 text-right">Freeze</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -759,6 +783,24 @@ export default function ExperimentLabPage() {
                         <span title={row.evidenceDetail}>
                           {row.evidenceStatus}
                         </span>
+                      </td>
+                      <td className="py-2 text-right">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={
+                            frozenVariantIds.has(row.variant.id) ||
+                            row.promotionGate === "No validation" ||
+                            row.promotionGate === "Diverged"
+                          }
+                          onClick={() => freezeRow(row)}
+                        >
+                          <Lock className="mr-2 h-3.5 w-3.5" />
+                          {frozenVariantIds.has(row.variant.id)
+                            ? "Frozen"
+                            : "Freeze"}
+                        </Button>
                       </td>
                     </tr>
                   ))}
