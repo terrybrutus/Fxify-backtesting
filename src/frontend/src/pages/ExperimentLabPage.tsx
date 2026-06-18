@@ -1,12 +1,14 @@
+import { Button } from "@/components/ui/button";
 import { useStrategyWorkspace } from "@/hooks/useStrategyWorkspace";
 import { classifyEvidence } from "@/lib/evidence";
 import {
   type Candle,
+  type EngineRun,
   type SignalAudit,
   type TargetCandidate,
   Timeframe,
 } from "@/types/strategy";
-import { FlaskConical, ShieldCheck } from "lucide-react";
+import { Download, FlaskConical, ShieldCheck } from "lucide-react";
 import { useMemo } from "react";
 
 type ExperimentVariant = {
@@ -44,6 +46,17 @@ type ExperimentRow = {
   all: ExperimentStats;
   evidenceStatus: string;
   evidenceDetail: string;
+};
+
+type ReadinessReport = {
+  score: number;
+  level:
+    | "Blocked"
+    | "Early Discovery"
+    | "Research-Ready"
+    | "Forward-Test Ready";
+  blockers: string[];
+  strengths: string[];
 };
 
 const VARIANTS: ExperimentVariant[] = [
@@ -145,6 +158,16 @@ function pct(value: number) {
 
 function fmtR(value: number) {
   return `${value.toFixed(2)}R`;
+}
+
+function downloadFile(name: string, content: string, type: string) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function Stat({
@@ -284,6 +307,115 @@ function buildExperimentRows({
   );
 }
 
+function readinessReport(
+  run: EngineRun,
+  rows: ExperimentRow[],
+): ReadinessReport {
+  if (!run.integrity.canRunBacktest) {
+    return {
+      score: 0,
+      level: "Blocked",
+      blockers: run.integrity.blockers,
+      strengths: [],
+    };
+  }
+
+  const bestValidation = rows[0];
+  const validationReady = rows.filter((row) => row.validation.trades >= 10);
+  const forwardReady = rows.filter(
+    (row) =>
+      row.validation.trades >= 30 &&
+      row.validation.avgR > 0.15 &&
+      row.validation.maxDrawdownR <= 4,
+  );
+  const scoreParts = [
+    15,
+    run.integrity.candleCount >= 40000 ? 10 : 5,
+    run.derivedTimeframes.includes(Timeframe.M15) ? 5 : 0,
+    run.derivedTimeframes.includes(Timeframe.H4) ? 5 : 0,
+    run.rejectedSignals.length >= 1000 ? 10 : 5,
+    run.acceptedSignals.length >= 20
+      ? 10
+      : run.acceptedSignals.length >= 5
+        ? 5
+        : 2,
+    validationReady.length > 0 ? 15 : bestValidation?.validation.trades ? 5 : 0,
+    bestValidation && bestValidation.validation.totalR > 0 ? 10 : 0,
+    forwardReady.length > 0 ? 20 : 0,
+  ];
+  const score = Math.min(
+    100,
+    Math.round(scoreParts.reduce((sum, value) => sum + value, 0)),
+  );
+  const blockers = [
+    run.acceptedSignals.length < 20
+      ? "Current locked rules still produce too few accepted trades."
+      : undefined,
+    validationReady.length === 0
+      ? "No experiment variant has at least 10 validation trades yet."
+      : undefined,
+    forwardReady.length === 0
+      ? "No variant has enough validation evidence to graduate to forward-test ready."
+      : undefined,
+    "Forward tracking is not implemented yet, so live-readiness remains capped.",
+  ].filter(Boolean) as string[];
+  const strengths = [
+    "Real CSV data is loaded and the integrity gate is open.",
+    "The app is testing rejected candidates instead of only accepted winners.",
+    bestValidation && bestValidation.validation.totalR > 0
+      ? "At least one variant has positive validation-period R."
+      : undefined,
+  ].filter(Boolean) as string[];
+  return {
+    score,
+    level:
+      score >= 75
+        ? "Forward-Test Ready"
+        : score >= 55
+          ? "Research-Ready"
+          : "Early Discovery",
+    blockers,
+    strengths,
+  };
+}
+
+function experimentReportJson(
+  run: EngineRun,
+  rows: ExperimentRow[],
+  readiness: ReadinessReport,
+) {
+  return JSON.stringify(
+    {
+      generatedAt: new Date().toISOString(),
+      readiness,
+      integrity: run.integrity,
+      validation: run.validation,
+      variants: rows.map((row) => ({
+        id: row.variant.id,
+        setup: row.variant.setup,
+        targetModel: row.variant.targetModel,
+        description: row.variant.description,
+        evidenceStatus: row.evidenceStatus,
+        evidenceDetail: row.evidenceDetail,
+        all: row.all,
+        discovery: row.discovery,
+        validation: row.validation,
+        sampleTrades: row.trades.slice(0, 20).map((trade) => ({
+          timestamp: new Date(trade.signal.timestamp).toISOString(),
+          symbol: trade.signal.symbol,
+          setupType: trade.signal.setupType,
+          targetModel: trade.target.model,
+          targetR: trade.target.rMultiple,
+          outcome: !trade.closed ? "Open" : trade.won ? "Win" : "Loss",
+          rMultiple: trade.rMultiple,
+        })),
+      })),
+    },
+    null,
+    2,
+  );
+}
+
 function TradeMiniTable({ trades }: { trades: ExperimentTrade[] }) {
   return (
     <div className="overflow-x-auto border border-border bg-card">
@@ -343,15 +475,34 @@ export default function ExperimentLabPage() {
   const variantsWithSample = rows.filter(
     (row) => row.validation.trades >= 10,
   ).length;
+  const readiness = useMemo(() => readinessReport(run, rows), [run, rows]);
 
   return (
     <div className="space-y-5 p-4 md:p-6" data-ocid="experiment.page">
-      <div>
-        <h1 className="font-display text-2xl font-bold">Experiment Lab</h1>
-        <p className="mt-1 max-w-4xl text-sm text-muted-foreground">
-          This page runs fixed what-if variants against the candidate pool. It
-          is for finding testable rule sets, not declaring a live trading edge.
-        </p>
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold">Experiment Lab</h1>
+          <p className="mt-1 max-w-4xl text-sm text-muted-foreground">
+            This page runs fixed what-if variants against the candidate pool. It
+            is for finding testable rule sets, not declaring a live trading
+            edge.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={!run.integrity.canRunBacktest}
+          onClick={() =>
+            downloadFile(
+              "ict-experiment-report.json",
+              experimentReportJson(run, rows, readiness),
+              "application/json",
+            )
+          }
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Export Report
+        </Button>
       </div>
 
       {!run.integrity.canRunBacktest ? (
@@ -361,6 +512,11 @@ export default function ExperimentLabPage() {
       ) : (
         <>
           <div className="grid gap-3 md:grid-cols-4">
+            <Stat
+              label="Readiness"
+              value={`${readiness.score}/100`}
+              detail={readiness.level}
+            />
             <Stat label="Variants tested" value={String(rows.length)} />
             <Stat
               label="Candidate pool"
@@ -382,6 +538,29 @@ export default function ExperimentLabPage() {
               detail={bestValidation?.variant.id ?? "No variant"}
             />
           </div>
+
+          <section className="grid gap-3 lg:grid-cols-2">
+            <article className="border border-primary/30 bg-primary/5 p-4">
+              <p className="font-mono text-xs font-bold uppercase tracking-widest">
+                Readiness Drivers
+              </p>
+              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                {readiness.strengths.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+            <article className="border border-destructive/40 bg-destructive/5 p-4">
+              <p className="font-mono text-xs font-bold uppercase tracking-widest">
+                Current Blockers
+              </p>
+              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                {readiness.blockers.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          </section>
 
           <section className="grid gap-3 lg:grid-cols-2">
             <article className="border border-destructive/40 bg-destructive/5 p-4">
