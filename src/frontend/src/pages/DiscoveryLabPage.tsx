@@ -1,4 +1,5 @@
 import { useStrategyWorkspace } from "@/hooks/useStrategyWorkspace";
+import { classifyEvidence } from "@/lib/evidence";
 import {
   type AuditFactor,
   type SignalAudit,
@@ -94,6 +95,8 @@ function summarizeAccepted(
       wins: number;
       losses: number;
       totalR: number;
+      status: string;
+      detail: string;
     }
   >();
   for (const trade of trades) {
@@ -110,11 +113,21 @@ function summarizeAccepted(
         wins: 0,
         losses: 0,
         totalR: 0,
+        status: "No evidence",
+        detail: "No closed trades exist for this group.",
       };
       row.trades += 1;
       if (trade.outcome === TradeOutcome.Win) row.wins += 1;
       if (trade.outcome === TradeOutcome.Loss) row.losses += 1;
       row.totalR += trade.rMultiple ?? 0;
+      const evidence = classifyEvidence({
+        trades: row.trades,
+        totalR: row.totalR,
+        avgR: row.totalR / Math.max(1, row.trades),
+        maxDrawdownR: 0,
+      });
+      row.status = evidence.status;
+      row.detail = evidence.detail;
       rows.set(label, row);
     }
   }
@@ -297,6 +310,7 @@ export default function DiscoveryLabPage() {
                       <th className="py-2 text-right">Trades</th>
                       <th className="py-2 text-right">W/L</th>
                       <th className="py-2 text-right">Total R</th>
+                      <th className="py-2 text-left">Evidence</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -309,6 +323,9 @@ export default function DiscoveryLabPage() {
                         </td>
                         <td className="py-2 text-right">
                           {row.totalR.toFixed(2)}R
+                        </td>
+                        <td className="py-2">
+                          <span title={row.detail}>{row.status}</span>
                         </td>
                       </tr>
                     ))}
