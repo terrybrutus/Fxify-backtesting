@@ -61869,9 +61869,10 @@ function actionFor(status, frozen) {
 }
 function buildDecisionRows({
   experiments,
-  walkRows
+  walkRows,
+  frozenVariants
 }) {
-  const frozen = loadFrozenVariants();
+  const frozen = frozenVariants ?? loadFrozenVariants();
   const walkById = new Map(walkRows.map((row) => [row.id, row]));
   return experiments.map((experiment) => {
     const walk = walkById.get(experiment.variant.id);
@@ -61933,6 +61934,9 @@ function buildDecisionRows({
 function DecisionConsolePage() {
   var _a2;
   const { candles, run } = useStrategyWorkspace();
+  const [frozenVariants, setFrozenVariants] = reactExports.useState(
+    () => loadFrozenVariants()
+  );
   const signals = reactExports.useMemo(
     () => [...run.acceptedSignals, ...run.rejectedSignals],
     [run.acceptedSignals, run.rejectedSignals]
@@ -61953,8 +61957,8 @@ function DecisionConsolePage() {
     [experiments, run.integrity.start, run.integrity.end]
   );
   const decisions = reactExports.useMemo(
-    () => buildDecisionRows({ experiments, walkRows }),
-    [experiments, walkRows]
+    () => buildDecisionRows({ experiments, walkRows, frozenVariants }),
+    [experiments, walkRows, frozenVariants]
   );
   const forwardReady = decisions.filter(
     (row) => row.status === "Forward-test candidate"
@@ -61964,6 +61968,17 @@ function DecisionConsolePage() {
   );
   const avoid = decisions.filter((row) => row.status === "Do not trade");
   const top = decisions.slice(0, 12);
+  const recommendedFreeze = decisions.find(
+    (row) => !row.frozen && row.status === "Needs evidence" && row.experiment.promotionGate === "Watchlist" && row.experiment.validation.trades >= 10 && row.experiment.validation.totalR > 0
+  );
+  function freezeDecision(row) {
+    const next = [
+      ...frozenVariants,
+      freezeVariant(row.experiment, run.validation.discoveryEndTimestamp)
+    ];
+    saveFrozenVariants(next);
+    setFrozenVariants(next);
+  }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "decision.page", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
@@ -62059,6 +62074,27 @@ function DecisionConsolePage() {
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Live Entry Gate" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "A research candidate is not a live signal. The app needs a frozen rule plus enough newer post-freeze trades before a setup can move toward actual entry/exit guidance." })
         ] })
+      ] }) }),
+      recommendedFreeze && /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-primary/30 bg-primary/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-center md:justify-between", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Recommended Freeze" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-2 text-sm text-muted-foreground", children: [
+            recommendedFreeze.id,
+            " is the strongest current watchlist rule. Freezing it starts the forward evidence clock for future imports."
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Button,
+          {
+            type: "button",
+            variant: "outline",
+            onClick: () => freezeDecision(recommendedFreeze),
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Lock, { className: "mr-2 h-4 w-4" }),
+              "Freeze Rule"
+            ]
+          }
+        )
       ] }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
