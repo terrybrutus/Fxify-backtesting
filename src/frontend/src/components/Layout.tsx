@@ -13,6 +13,7 @@ import {
   Radar,
   RotateCcw,
   ShieldCheck,
+  Target,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { path: "/experiments", label: "Experiment Lab", icon: Microscope },
   { path: "/forward", label: "Forward Tracker", icon: ShieldCheck },
   { path: "/walk-forward", label: "Walk-Forward Lab", icon: GitCompareArrows },
+  { path: "/decisions", label: "Decision Console", icon: Target },
   { path: "/replay", label: "Replay Mode", icon: RotateCcw },
   { path: "/chart", label: "Candle Viewer", icon: Radar },
   { path: "/results", label: "Results Export", icon: BarChart3 },

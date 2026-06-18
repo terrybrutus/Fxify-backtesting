@@ -1055,6 +1055,9 @@ video {
 .min-w-\[1180px\] {
   min-width: 1180px;
 }
+.min-w-\[1220px\] {
+  min-width: 1220px;
+}
 .min-w-\[12rem\] {
   min-width: 12rem;
 }
@@ -3565,6 +3568,10 @@ video {
 }
 
 @media (min-width: 1280px) {
+
+  .xl\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
   .xl\:grid-cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));

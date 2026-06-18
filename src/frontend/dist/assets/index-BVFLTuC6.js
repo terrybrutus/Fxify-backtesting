@@ -35350,7 +35350,7 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$k = [
+const __iconNode$l = [
   [
     "path",
     {
@@ -35359,7 +35359,20 @@ const __iconNode$k = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$k);
+const Activity = createLucideIcon("activity", __iconNode$l);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$k = [
+  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
+  ["path", { d: "M18 17V9", key: "2bz60n" }],
+  ["path", { d: "M13 17V5", key: "1frdt8" }],
+  ["path", { d: "M8 17v-3", key: "17ska0" }]
+];
+const ChartColumn = createLucideIcon("chart-column", __iconNode$k);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35367,12 +35380,10 @@ const Activity = createLucideIcon("activity", __iconNode$k);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$j = [
-  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
-  ["path", { d: "M18 17V9", key: "2bz60n" }],
-  ["path", { d: "M13 17V5", key: "1frdt8" }],
-  ["path", { d: "M8 17v-3", key: "17ska0" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const ChartColumn = createLucideIcon("chart-column", __iconNode$j);
+const CircleCheck = createLucideIcon("circle-check", __iconNode$j);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35381,9 +35392,10 @@ const ChartColumn = createLucideIcon("chart-column", __iconNode$j);
  */
 const __iconNode$i = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
+  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
 ];
-const CircleCheck = createLucideIcon("circle-check", __iconNode$i);
+const CircleX = createLucideIcon("circle-x", __iconNode$i);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35391,11 +35403,11 @@ const CircleCheck = createLucideIcon("circle-check", __iconNode$i);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$h = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
-  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
+  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
+  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
+  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
 ];
-const CircleX = createLucideIcon("circle-x", __iconNode$h);
+const Database = createLucideIcon("database", __iconNode$h);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35403,11 +35415,11 @@ const CircleX = createLucideIcon("circle-x", __iconNode$h);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$g = [
-  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
-  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
-  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
+  ["path", { d: "M12 15V3", key: "m9g1x1" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
+  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
 ];
-const Database = createLucideIcon("database", __iconNode$g);
+const Download = createLucideIcon("download", __iconNode$g);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35415,11 +35427,12 @@ const Database = createLucideIcon("database", __iconNode$g);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$f = [
-  ["path", { d: "M12 15V3", key: "m9g1x1" }],
-  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
-  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
+  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
+  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
+  ["path", { d: "M12 12v6", key: "3ahymv" }],
+  ["path", { d: "m15 15-3-3-3 3", key: "15xj92" }]
 ];
-const Download = createLucideIcon("download", __iconNode$f);
+const FileUp = createLucideIcon("file-up", __iconNode$f);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35428,11 +35441,10 @@ const Download = createLucideIcon("download", __iconNode$f);
  */
 const __iconNode$e = [
   ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
-  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
-  ["path", { d: "M12 12v6", key: "3ahymv" }],
-  ["path", { d: "m15 15-3-3-3 3", key: "15xj92" }]
+  ["path", { d: "M12 9v4", key: "juzpu7" }],
+  ["path", { d: "M12 17h.01", key: "p32p05" }]
 ];
-const FileUp = createLucideIcon("file-up", __iconNode$e);
+const FileWarning = createLucideIcon("file-warning", __iconNode$e);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35440,18 +35452,6 @@ const FileUp = createLucideIcon("file-up", __iconNode$e);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$d = [
-  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
-  ["path", { d: "M12 9v4", key: "juzpu7" }],
-  ["path", { d: "M12 17h.01", key: "p32p05" }]
-];
-const FileWarning = createLucideIcon("file-warning", __iconNode$d);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$c = [
   [
     "path",
     {
@@ -35462,14 +35462,14 @@ const __iconNode$c = [
   ["path", { d: "M6.453 15h11.094", key: "3shlmq" }],
   ["path", { d: "M8.5 2h7", key: "csnxdl" }]
 ];
-const FlaskConical = createLucideIcon("flask-conical", __iconNode$c);
+const FlaskConical = createLucideIcon("flask-conical", __iconNode$d);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$b = [
+const __iconNode$c = [
   ["circle", { cx: "5", cy: "6", r: "3", key: "1qnov2" }],
   ["path", { d: "M12 6h5a2 2 0 0 1 2 2v7", key: "1yj91y" }],
   ["path", { d: "m15 9-3-3 3-3", key: "1lwv8l" }],
@@ -35477,14 +35477,14 @@ const __iconNode$b = [
   ["path", { d: "M12 18H7a2 2 0 0 1-2-2V9", key: "16sdep" }],
   ["path", { d: "m9 15 3 3-3 3", key: "1m3kbl" }]
 ];
-const GitCompareArrows = createLucideIcon("git-compare-arrows", __iconNode$b);
+const GitCompareArrows = createLucideIcon("git-compare-arrows", __iconNode$c);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$a = [
+const __iconNode$b = [
   [
     "path",
     {
@@ -35494,7 +35494,21 @@ const __iconNode$a = [
   ],
   ["path", { d: "M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27", key: "1uw2ng" }]
 ];
-const HeartPulse = createLucideIcon("heart-pulse", __iconNode$a);
+const HeartPulse = createLucideIcon("heart-pulse", __iconNode$b);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$a = [
+  ["path", { d: "m3 17 2 2 4-4", key: "1jhpwq" }],
+  ["path", { d: "m3 7 2 2 4-4", key: "1obspn" }],
+  ["path", { d: "M13 6h8", key: "15sg57" }],
+  ["path", { d: "M13 12h8", key: "h98zly" }],
+  ["path", { d: "M13 18h8", key: "oe0vm4" }]
+];
+const ListChecks = createLucideIcon("list-checks", __iconNode$a);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35502,13 +35516,10 @@ const HeartPulse = createLucideIcon("heart-pulse", __iconNode$a);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$9 = [
-  ["path", { d: "m3 17 2 2 4-4", key: "1jhpwq" }],
-  ["path", { d: "m3 7 2 2 4-4", key: "1obspn" }],
-  ["path", { d: "M13 6h8", key: "15sg57" }],
-  ["path", { d: "M13 12h8", key: "h98zly" }],
-  ["path", { d: "M13 18h8", key: "oe0vm4" }]
+  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
+  ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
 ];
-const ListChecks = createLucideIcon("list-checks", __iconNode$9);
+const Lock = createLucideIcon("lock", __iconNode$9);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35516,17 +35527,6 @@ const ListChecks = createLucideIcon("list-checks", __iconNode$9);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$8 = [
-  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
-  ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
-];
-const Lock = createLucideIcon("lock", __iconNode$8);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$7 = [
   ["path", { d: "M6 18h8", key: "1borvv" }],
   ["path", { d: "M3 22h18", key: "8prr45" }],
   ["path", { d: "M14 22a7 7 0 1 0 0-14h-1", key: "1jwaiy" }],
@@ -35534,14 +35534,14 @@ const __iconNode$7 = [
   ["path", { d: "M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z", key: "1bmzmy" }],
   ["path", { d: "M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3", key: "1drr47" }]
 ];
-const Microscope = createLucideIcon("microscope", __iconNode$7);
+const Microscope = createLucideIcon("microscope", __iconNode$8);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$6 = [
+const __iconNode$7 = [
   ["path", { d: "M19.07 4.93A10 10 0 0 0 6.99 3.34", key: "z3du51" }],
   ["path", { d: "M4 6h.01", key: "oypzma" }],
   ["path", { d: "M2.29 9.62A10 10 0 1 0 21.31 8.35", key: "qzzz0" }],
@@ -35551,7 +35551,18 @@ const __iconNode$6 = [
   ["circle", { cx: "12", cy: "12", r: "2", key: "1c9p78" }],
   ["path", { d: "m13.41 10.59 5.66-5.66", key: "mhq4k0" }]
 ];
-const Radar = createLucideIcon("radar", __iconNode$6);
+const Radar = createLucideIcon("radar", __iconNode$7);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$6 = [
+  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
+  ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
+];
+const RotateCcw = createLucideIcon("rotate-ccw", __iconNode$6);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35559,10 +35570,17 @@ const Radar = createLucideIcon("radar", __iconNode$6);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$5 = [
-  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
-  ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
+  [
+    "path",
+    {
+      d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z",
+      key: "oel41y"
+    }
+  ],
+  ["path", { d: "M12 8v4", key: "1got3b" }],
+  ["path", { d: "M12 16h.01", key: "1drbdi" }]
 ];
-const RotateCcw = createLucideIcon("rotate-ccw", __iconNode$5);
+const ShieldAlert = createLucideIcon("shield-alert", __iconNode$5);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35577,10 +35595,9 @@ const __iconNode$4 = [
       key: "oel41y"
     }
   ],
-  ["path", { d: "M12 8v4", key: "1got3b" }],
-  ["path", { d: "M12 16h.01", key: "1drbdi" }]
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const ShieldAlert = createLucideIcon("shield-alert", __iconNode$4);
+const ShieldCheck = createLucideIcon("shield-check", __iconNode$4);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35588,16 +35605,11 @@ const ShieldAlert = createLucideIcon("shield-alert", __iconNode$4);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$3 = [
-  [
-    "path",
-    {
-      d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z",
-      key: "oel41y"
-    }
-  ],
-  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["circle", { cx: "12", cy: "12", r: "6", key: "1vlfrh" }],
+  ["circle", { cx: "12", cy: "12", r: "2", key: "1c9p78" }]
 ];
-const ShieldCheck = createLucideIcon("shield-check", __iconNode$3);
+const Target = createLucideIcon("target", __iconNode$3);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35650,6 +35662,7 @@ const NAV_ITEMS = [
   { path: "/experiments", label: "Experiment Lab", icon: Microscope },
   { path: "/forward", label: "Forward Tracker", icon: ShieldCheck },
   { path: "/walk-forward", label: "Walk-Forward Lab", icon: GitCompareArrows },
+  { path: "/decisions", label: "Decision Console", icon: Target },
   { path: "/replay", label: "Replay Mode", icon: RotateCcw },
   { path: "/chart", label: "Candle Viewer", icon: Radar },
   { path: "/results", label: "Results Export", icon: ChartColumn }
@@ -37272,7 +37285,7 @@ function classifyEvidence({
     detail: "Sample exists, but edge or drawdown quality is not yet strong."
   };
 }
-function downloadFile$3(name, content, type) {
+function downloadFile$4(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -37281,7 +37294,7 @@ function downloadFile$3(name, content, type) {
   link.click();
   URL.revokeObjectURL(url);
 }
-function Stat$4({
+function Stat$5({
   label,
   value,
   detail
@@ -37453,7 +37466,7 @@ function BacktestResultsPage() {
             type: "button",
             variant: "outline",
             disabled: !run.integrity.canRunBacktest,
-            onClick: () => downloadFile$3(
+            onClick: () => downloadFile$4(
               "ict-audit-log.json",
               exportJson(run),
               "application/json"
@@ -37469,7 +37482,7 @@ function BacktestResultsPage() {
           {
             type: "button",
             disabled: !run.integrity.canRunBacktest,
-            onClick: () => downloadFile$3(
+            onClick: () => downloadFile$4(
               "ict-signal-log.csv",
               exportCsv(allSignals),
               "text/csv"
@@ -37485,39 +37498,39 @@ function BacktestResultsPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Results are disabled because the integrity gate is closed." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$4,
+          Stat$5,
           {
             label: "Accepted signals",
             value: String(run.acceptedSignals.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$4,
+          Stat$5,
           {
             label: "Rejected candidates",
             value: String(run.rejectedSignals.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$4,
+          Stat$5,
           {
             label: "Win rate",
             value: `${(stats.winRate * 100).toFixed(1)}%`
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$4, { label: "Profit factor", value: stats.profitFactor.toFixed(2) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$4, { label: "Total trades", value: stats.totalTrades.toString() }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$5, { label: "Profit factor", value: stats.profitFactor.toFixed(2) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$5, { label: "Total trades", value: stats.totalTrades.toString() }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$4,
+          Stat$5,
           {
             label: "Evidence status",
             value: overallEvidence.status,
             detail: overallEvidence.detail
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$4, { label: "Avg R", value: `${stats.avgRR.toFixed(2)}R` }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$5, { label: "Avg R", value: `${stats.avgRR.toFixed(2)}R` }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$4,
+          Stat$5,
           {
             label: "Max drawdown",
             value: `${drawdownR(stats.maxDrawdown).toFixed(2)}R`,
@@ -37525,7 +37538,7 @@ function BacktestResultsPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$4,
+          Stat$5,
           {
             label: "Net P/L",
             value: `${(stats.totalPnl / 100).toFixed(2)}R`,
@@ -60752,447 +60765,6 @@ function DataUploadPage() {
     ] })
   ] });
 }
-function pct$3(value) {
-  return `${(value * 100).toFixed(1)}%`;
-}
-function rate(part, total) {
-  return total === 0 ? 0 : part / total;
-}
-function passed$1(label, signal) {
-  return signal.reasons.some(
-    (reason) => reason.label === label && reason.passed
-  );
-}
-function failed(label, signal) {
-  return signal.reasons.some(
-    (reason) => reason.label === label && !reason.passed
-  );
-}
-function countFactors(signals, predicate) {
-  const counts = /* @__PURE__ */ new Map();
-  for (const signal of signals) {
-    for (const factor of signal.reasons) {
-      if (!predicate(factor)) continue;
-      counts.set(factor.label, (counts.get(factor.label) ?? 0) + 1);
-    }
-  }
-  return [...counts.entries()].sort((a2, b2) => b2[1] - a2[1]);
-}
-function InsightCard({
-  title,
-  severity,
-  children
-}) {
-  const styles = {
-    promising: "border-chart-1/35 bg-chart-1/5",
-    watch: "border-primary/30 bg-primary/5",
-    blocked: "border-destructive/40 bg-destructive/5"
-  };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("article", { className: `border p-4 ${styles[severity]}`, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: title }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-2 text-sm leading-relaxed text-muted-foreground", children })
-  ] });
-}
-function Stat$3({ label, value }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: label }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: value })
-  ] });
-}
-function summarizeAccepted(accepted, trades) {
-  const bySignal = new Map(accepted.map((signal) => [signal.id, signal]));
-  const rows = /* @__PURE__ */ new Map();
-  for (const trade of trades) {
-    const signal = trade.auditId ? bySignal.get(trade.auditId) : void 0;
-    if (!signal) continue;
-    for (const label of [
-      signal.setupType,
-      signal.symbol,
-      `${signal.setupType} | ${signal.symbol}`
-    ]) {
-      const row = rows.get(label) ?? {
-        label,
-        trades: 0,
-        wins: 0,
-        losses: 0,
-        totalR: 0,
-        status: "No evidence",
-        detail: "No closed trades exist for this group."
-      };
-      row.trades += 1;
-      if (trade.outcome === TradeOutcome.Win) row.wins += 1;
-      if (trade.outcome === TradeOutcome.Loss) row.losses += 1;
-      row.totalR += trade.rMultiple ?? 0;
-      const evidence = classifyEvidence({
-        trades: row.trades,
-        totalR: row.totalR,
-        avgR: row.totalR / Math.max(1, row.trades),
-        maxDrawdownR: 0
-      });
-      row.status = evidence.status;
-      row.detail = evidence.detail;
-      rows.set(label, row);
-    }
-  }
-  return [...rows.values()].sort((a2, b2) => b2.totalR - a2.totalR);
-}
-function median(values) {
-  if (values.length === 0) return 0;
-  const sorted = [...values].sort((a2, b2) => a2 - b2);
-  return sorted[Math.floor((sorted.length - 1) * 0.5)];
-}
-function summarizeTargetModels(signals) {
-  const rows = /* @__PURE__ */ new Map();
-  for (const signal of signals) {
-    const candidates = signal.targetCandidates ?? [
-      {
-        model: signal.targetModel ?? "selected TP model",
-        price: signal.tp1,
-        rMultiple: signal.rMultipleToTp1
-      }
-    ];
-    for (const candidate of candidates) {
-      const row = rows.get(candidate.model) ?? {
-        model: candidate.model,
-        candidates: 0,
-        passCount: 0,
-        selected: 0,
-        acceptedSelected: 0,
-        rValues: []
-      };
-      row.candidates += 1;
-      row.rValues.push(candidate.rMultiple);
-      if (candidate.rMultiple >= 0.8) row.passCount += 1;
-      if (signal.targetModel === candidate.model) {
-        row.selected += 1;
-        if (signal.accepted) row.acceptedSelected += 1;
-      }
-      rows.set(candidate.model, row);
-    }
-  }
-  return [...rows.values()].map((row) => ({
-    model: row.model,
-    candidates: row.candidates,
-    passCount: row.passCount,
-    selected: row.selected,
-    acceptedSelected: row.acceptedSelected,
-    medianR: median(row.rValues),
-    passRate: rate(row.passCount, row.candidates)
-  })).sort((a2, b2) => b2.passCount - a2.passCount || b2.medianR - a2.medianR);
-}
-function DiscoveryLabPage() {
-  const { run } = useStrategyWorkspace();
-  const signals = reactExports.useMemo(
-    () => [...run.acceptedSignals, ...run.rejectedSignals],
-    [run.acceptedSignals, run.rejectedSignals]
-  );
-  const accepted = run.acceptedSignals;
-  const rejected = run.rejectedSignals;
-  const acceptedSummary = reactExports.useMemo(
-    () => summarizeAccepted(accepted, run.trades),
-    [accepted, run.trades]
-  );
-  const targetModelRows = reactExports.useMemo(
-    () => summarizeTargetModels(signals),
-    [signals]
-  );
-  const discovery = reactExports.useMemo(() => {
-    const tp1Passes = signals.filter(
-      (signal) => passed$1("TP1 buyside liquidity >= 0.8R", signal)
-    ).length;
-    const maHoldPasses = signals.filter(
-      (signal) => passed$1("Moving average hold", signal)
-    ).length;
-    const fvgPasses = signals.filter(
-      (signal) => passed$1("1H FVG overlap", signal)
-    ).length;
-    const sundayPasses = signals.filter(
-      (signal) => passed$1("Sunday level within 0.12 ATR", signal)
-    ).length;
-    const acceptedWithMissingMa = accepted.filter(
-      (signal) => failed("Moving average hold", signal)
-    ).length;
-    const acceptedWithMissingSunday = accepted.filter(
-      (signal) => failed("Sunday level within 0.12 ATR", signal)
-    ).length;
-    const acceptedBySymbol = accepted.reduce(
-      (totals, signal) => {
-        totals[signal.symbol] = (totals[signal.symbol] ?? 0) + 1;
-        return totals;
-      },
-      {}
-    );
-    const rejectedBySymbol = rejected.reduce(
-      (totals, signal) => {
-        totals[signal.symbol] = (totals[signal.symbol] ?? 0) + 1;
-        return totals;
-      },
-      {}
-    );
-    const scoreCounts = rejected.reduce(
-      (totals, signal) => {
-        totals[signal.score] = (totals[signal.score] ?? 0) + 1;
-        return totals;
-      },
-      {}
-    );
-    const highScoreRejects = rejected.filter((signal) => signal.score >= 5);
-    const activeRangeBlocks = rejected.filter(
-      (signal) => signal.blockers.some(
-        (blocker) => blocker.label === "Range state" && blocker.passed
-      )
-    ).length;
-    const rrValues = signals.map((signal) => signal.rMultipleToTp1).filter((value) => Number.isFinite(value)).sort((a2, b2) => a2 - b2);
-    const medianR = rrValues.length === 0 ? 0 : rrValues[Math.floor((rrValues.length - 1) * 0.5)];
-    return {
-      tp1PassRate: rate(tp1Passes, signals.length),
-      maHoldPassRate: rate(maHoldPasses, signals.length),
-      fvgPassRate: rate(fvgPasses, signals.length),
-      sundayPassRate: rate(sundayPasses, signals.length),
-      acceptedWithMissingMa,
-      acceptedWithMissingSunday,
-      acceptedBySymbol,
-      rejectedBySymbol,
-      scoreCounts,
-      highScoreRejects,
-      activeRangeBlocks,
-      medianR,
-      topMissing: countFactors(rejected, (factor) => !factor.passed).slice(
-        0,
-        5
-      )
-    };
-  }, [accepted, rejected, signals]);
-  const hasLowerTimeframeContext = run.integrity.timeframes.some(
-    (timeframe) => timeframe === Timeframe.M15 || timeframe === Timeframe.M5
-  ) || run.derivedTimeframes.includes(Timeframe.M15);
-  const hasHoldContext = run.integrity.timeframes.includes(Timeframe.H4) || run.derivedTimeframes.includes(Timeframe.H4);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "discovery.page", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-display text-2xl font-bold", children: "Discovery Lab" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "This page is for finding hypotheses, not declaring a winning system. Anything discovered here should be promoted to a locked rule only after replay review, out-of-sample testing, and forward validation." })
-    ] }),
-    !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Discovery is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$3,
-          {
-            label: "Hypothesis candidates",
-            value: String(signals.length)
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$3,
-          {
-            label: "Accepted by current rules",
-            value: String(accepted.length)
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$3,
-          {
-            label: "High-score rejects",
-            value: String(discovery.highScoreRejects.length)
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$3, { label: "Median TP1 R", value: discovery.medianR.toFixed(2) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$3,
-          {
-            label: "Derived TFs",
-            value: run.derivedTimeframes.join(", ") || "none"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$3,
-          {
-            label: "Structure snapshots",
-            value: String(run.marketStructure.length)
-          }
-        )
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 lg:grid-cols-3", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(InsightCard, { title: "Do Not Trust Yet", severity: "blocked", children: [
-          "Only ",
-          accepted.length,
-          " accepted setup(s) exist under the current rule profile. That is not enough to claim an edge, even if the current sample shows wins. Treat accepted setups as review candidates, not proof."
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(InsightCard, { title: "Validation Split", severity: "blocked", children: [
-          "Validation period has ",
-          run.validation.validationTradeCount,
-          " ",
-          "trade(s). A setup family cannot graduate until it survives later unseen data, not just the discovery period."
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(InsightCard, { title: "Coco Profile Gap", severity: "watch", children: [
-          discovery.acceptedWithMissingMa,
-          " accepted setup(s) failed moving average hold and ",
-          discovery.acceptedWithMissingSunday,
-          " failed Sunday proximity. Coco described MAs and old Sunday levels as core context, so these should become structured setup rules, not loose score bonuses."
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 lg:grid-cols-2", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(InsightCard, { title: "TP1 Bottleneck", severity: "watch", children: [
-          "TP1 liquidity passed on ",
-          pct$3(discovery.tp1PassRate),
-          " of candidates. This is the main rejection pressure. Next discovery work should compare previous-day highs, session highs, old Sunday levels, and imbalance fills as separate TP models."
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(InsightCard, { title: "Split Boundary", severity: "watch", children: [
-          "Discovery ends at",
-          " ",
-          run.validation.discoveryEndTimestamp ? new Date(run.validation.discoveryEndTimestamp).toISOString() : "n/a",
-          ". Results before and after this boundary should be judged separately."
-        ] })
-      ] }),
-      acceptedSummary.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Accepted Setup Evidence" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-sm text-muted-foreground", children: "These rows are clues, not conclusions. Anything below 20-30 trades should stay in discovery mode." }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[720px] font-mono text-xs", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Family / Index" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Trades" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "W/L" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Total R" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Evidence" })
-          ] }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: acceptedSummary.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.label }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.trades }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2 text-right", children: [
-              row.wins,
-              "/",
-              row.losses
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2 text-right", children: [
-              row.totalR.toFixed(2),
-              "R"
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { title: row.detail, children: row.status }) })
-          ] }, row.label)) })
-        ] }) })
-      ] }),
-      targetModelRows.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Target Model Comparison" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-sm text-muted-foreground", children: "This compares TP candidates across all accepted and rejected setups. It shows where the strategy has room before deciding which setup family deserves more trust." }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[860px] font-mono text-xs", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "TP model" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Candidates" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Passes 0.8R" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Pass rate" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Median R" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Selected" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Accepted selected" })
-          ] }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: targetModelRows.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.model }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.candidates }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.passCount }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$3(row.passRate) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2 text-right", children: [
-              row.medianR.toFixed(2),
-              "R"
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.selected }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.acceptedSelected })
-          ] }, row.model)) })
-        ] }) })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 lg:grid-cols-2", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(FlaskConical, { className: "h-4 w-4 text-primary" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Candidate Signals" })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 grid gap-3 md:grid-cols-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Stat$3,
-              {
-                label: "TP1 pass rate",
-                value: pct$3(discovery.tp1PassRate)
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Stat$3,
-              {
-                label: "MA hold pass rate",
-                value: pct$3(discovery.maHoldPassRate)
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Stat$3,
-              {
-                label: "FVG overlap pass rate",
-                value: pct$3(discovery.fvgPassRate)
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Stat$3,
-              {
-                label: "Sunday proximity rate",
-                value: pct$3(discovery.sundayPassRate)
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-4 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[520px] font-mono text-xs", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Missing factor" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Rejected count" })
-            ] }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: discovery.topMissing.map(([label, count]) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: label }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: count })
-            ] }, label)) })
-          ] }) })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(ShieldAlert, { className: "h-4 w-4 text-primary" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Anti-Overfit Guardrails" })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 space-y-3 text-sm text-muted-foreground", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Lock strategy rules before checking future periods. Discovery findings should create hypotheses, then replay and forward-test them without moving the goalposts." }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Keep accepted and rejected setups visible together. A good lab must explain skipped trades, late invalidations, and weak TP targets instead of only showing winners." }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-              "Current data has ",
-              hasLowerTimeframeContext ? "some" : "no",
-              " ",
-              "lower timeframe context and",
-              " ",
-              hasHoldContext ? "has" : "does not have",
-              " 4H context. Coco described 15m scalp behavior and 4H hold behavior, so timeframe-specific claims need matching candles."
-            ] })
-          ] })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(TrendingUp, { className: "h-4 w-4 text-primary" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Next Discovery Queue" })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 grid gap-3 lg:grid-cols-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            InsightCard,
-            {
-              title: "Target Models To Compare",
-              severity: "promising",
-              children: "Compare TP1 candidates independently: previous-day high/low, Asia/London/NY highs and lows, old Sunday levels, major FVG fill, and 15m 20 EMA when stretched. Do not merge these into one vague liquidity label."
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            InsightCard,
-            {
-              title: "Invalidation Models To Compare",
-              severity: "watch",
-              children: "Default invalidation should use entry-timeframe candle closes, while higher timeframe MA, 200 EMA, weekly high/low, and Sunday breaks are checked on their own timeframe. Keep wick-through vs close-through visible in the audit log."
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(InsightCard, { title: "Setup Families", severity: "promising", children: "Separate continuation, old-Sunday reaction, 200 EMA reaction, 15m retrace scalp, and higher-timeframe imbalance fill. Each family should have its own required rules, stops, and TP logic." }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(InsightCard, { title: "Forward Proof", severity: "blocked", children: "After a setup family looks promising, freeze its settings and track the next unseen signals. The app should mark them as pending, won, lost, skipped, or invalidated before using them in performance claims." })
-        ] })
-      ] })
-    ] })
-  ] });
-}
 const STORAGE_KEY = "ict-forward-tracker-frozen-v1";
 function hashText(value) {
   let hash = 0;
@@ -61266,56 +60838,56 @@ const BASE_VARIANTS = [
     setup: "200 EMA Reaction",
     targetModel: "previous day high",
     description: "Tests the core 200 EMA reaction setup against the prior daily high target.",
-    predicate: (signal) => passed(signal, "200 EMA reaction") && passed(signal, "Daily continuation bias")
+    predicate: (signal) => passed$1(signal, "200 EMA reaction") && passed$1(signal, "Daily continuation bias")
   },
   {
     id: "ema200-old-sunday",
     setup: "200 EMA Reaction",
     targetModel: "old Sunday level",
     description: "Tests whether the old Sunday level is a better fixed TP for 200 EMA reactions.",
-    predicate: (signal) => passed(signal, "200 EMA reaction") && passed(signal, "Daily continuation bias")
+    predicate: (signal) => passed$1(signal, "200 EMA reaction") && passed$1(signal, "Daily continuation bias")
   },
   {
     id: "ema200-prior-ny",
     setup: "200 EMA Reaction",
     targetModel: "prior NY high",
     description: "Tests 200 EMA reactions into prior New York session liquidity.",
-    predicate: (signal) => passed(signal, "200 EMA reaction") && passed(signal, "Daily continuation bias")
+    predicate: (signal) => passed$1(signal, "200 EMA reaction") && passed$1(signal, "Daily continuation bias")
   },
   {
     id: "ema200-prior-two-day-ny",
     setup: "200 EMA Reaction",
     targetModel: "prior two-day NY high",
     description: "Tests whether the prior two-day New York high gives cleaner target room.",
-    predicate: (signal) => passed(signal, "200 EMA reaction") && passed(signal, "Daily continuation bias")
+    predicate: (signal) => passed$1(signal, "200 EMA reaction") && passed$1(signal, "Daily continuation bias")
   },
   {
     id: "old-sunday-reaction-old-sunday",
     setup: "Old Sunday Reaction",
     targetModel: "old Sunday level",
     description: "Requires Sunday proximity plus bullish MA context, then targets the next old Sunday level.",
-    predicate: (signal) => passed(signal, "Sunday level within 0.12 ATR") && passed(signal, "Price above 200 EMA") && (passed(signal, "20 EMA > 50 SMA") || passed(signal, "Moving average hold"))
+    predicate: (signal) => passed$1(signal, "Sunday level within 0.12 ATR") && passed$1(signal, "Price above 200 EMA") && (passed$1(signal, "20 EMA > 50 SMA") || passed$1(signal, "Moving average hold"))
   },
   {
     id: "fvg-continuation-fvg-fill",
     setup: "FVG Fill Continuation",
     targetModel: "bullish FVG fill",
     description: "Tests bullish continuation with active 1H FVG overlap into a bullish FVG fill.",
-    predicate: (signal) => passed(signal, "Daily continuation bias") && passed(signal, "Price above 200 EMA") && passed(signal, "1H FVG overlap")
+    predicate: (signal) => passed$1(signal, "Daily continuation bias") && passed$1(signal, "Price above 200 EMA") && passed$1(signal, "1H FVG overlap")
   },
   {
     id: "m15-scalp-prev-day-high",
     setup: "15m 20 EMA Scalp",
     targetModel: "previous day high",
     description: "Tests lower-timeframe 20 EMA reclaim behavior against the prior daily high.",
-    predicate: (signal) => passed(signal, "15m 20 EMA hold") && passed(signal, "Price above 200 EMA")
+    predicate: (signal) => passed$1(signal, "15m 20 EMA hold") && passed$1(signal, "Price above 200 EMA")
   },
   {
     id: "ma-stack-prev-day-high",
     setup: "HTF MA Stack",
     targetModel: "previous day high",
     description: "Tests a broader higher-timeframe continuation profile with MA stack and daily bias.",
-    predicate: (signal) => passed(signal, "Daily continuation bias") && passed(signal, "Price above 200 EMA") && passed(signal, "20 EMA > 50 SMA")
+    predicate: (signal) => passed$1(signal, "Daily continuation bias") && passed$1(signal, "Price above 200 EMA") && passed$1(signal, "20 EMA > 50 SMA")
   }
 ];
 const VARIANTS = BASE_VARIANTS.flatMap(
@@ -61328,15 +60900,15 @@ const VARIANTS = BASE_VARIANTS.flatMap(
     }))
   )
 );
-function passed(signal, label) {
+function passed$1(signal, label) {
   return signal.reasons.some(
     (reason) => reason.label === label && reason.passed
   );
 }
-function pct$2(value) {
+function pct$3(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
-function fmtR$2(value) {
+function fmtR$3(value) {
   return `${value.toFixed(2)}R`;
 }
 function sessionFor(timestamp) {
@@ -61346,7 +60918,7 @@ function sessionFor(timestamp) {
   if (hour >= 13 && hour < 21) return "New York";
   return "Off session";
 }
-function downloadFile$2(name, content, type) {
+function downloadFile$3(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -61355,7 +60927,7 @@ function downloadFile$2(name, content, type) {
   link.click();
   URL.revokeObjectURL(url);
 }
-function Stat$2({
+function Stat$4({
   label,
   value,
   detail
@@ -61591,7 +61163,7 @@ function TradeMiniTable({ trades }) {
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: trade.signal.symbol }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: trade.signal.setupType }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: trade.target.model }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2 text-right", children: fmtR$2(trade.target.rMultiple) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2 text-right", children: fmtR$3(trade.target.rMultiple) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: !trade.closed ? "Open" : trade.won ? "Win" : "Loss" })
         ]
       },
@@ -61648,7 +61220,7 @@ function ExperimentLabPage() {
           type: "button",
           variant: "outline",
           disabled: !run.integrity.canRunBacktest,
-          onClick: () => downloadFile$2(
+          onClick: () => downloadFile$3(
             "ict-experiment-report.json",
             experimentReportJson(run, rows, readiness),
             "application/json"
@@ -61663,16 +61235,16 @@ function ExperimentLabPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Experiment Lab is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$2,
+          Stat$4,
           {
             label: "Readiness",
             value: `${readiness.score}/100`,
             detail: readiness.level
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$2, { label: "Variants tested", value: String(rows.length) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$4, { label: "Variants tested", value: String(rows.length) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$2,
+          Stat$4,
           {
             label: "Candidate pool",
             value: String(signals.length),
@@ -61680,7 +61252,7 @@ function ExperimentLabPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$2,
+          Stat$4,
           {
             label: "Validation-ready variants",
             value: String(variantsWithSample),
@@ -61688,7 +61260,7 @@ function ExperimentLabPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$2,
+          Stat$4,
           {
             label: "Watchlist variants",
             value: String(watchlistCount),
@@ -61696,10 +61268,10 @@ function ExperimentLabPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$2,
+          Stat$4,
           {
             label: "Best validation net",
-            value: bestValidation ? fmtR$2(bestValidation.validation.totalR) : "0.00R",
+            value: bestValidation ? fmtR$3(bestValidation.validation.totalR) : "0.00R",
             detail: (bestValidation == null ? void 0 : bestValidation.variant.id) ?? "No variant"
           }
         )
@@ -61757,12 +61329,12 @@ function ExperimentLabPage() {
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.sessionScope }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.targetModel }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.all.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$2(row.all.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$3(row.all.totalR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.discovery.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$2(row.discovery.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$3(row.discovery.totalR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.validation.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$2(row.validation.totalR) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$2(row.validation.winRate) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$3(row.validation.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$3(row.validation.winRate) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.promotionGate }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.consistencyRisk }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { title: row.evidenceDetail, children: row.evidenceStatus }) }),
@@ -61814,10 +61386,10 @@ function ExperimentLabPage() {
               "Validation sample: ",
               bestValidation.validation.trades,
               " trade (s), ",
-              fmtR$2(bestValidation.validation.totalR),
+              fmtR$3(bestValidation.validation.totalR),
               ",",
               " ",
-              pct$2(bestValidation.validation.winRate),
+              pct$3(bestValidation.validation.winRate),
               " win rate."
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "This is still not promotion-ready unless the sample grows and survives forward tracking without changing its rules." })
@@ -61828,16 +61400,1077 @@ function ExperimentLabPage() {
     ] })
   ] });
 }
+function fmtR$2(value) {
+  return `${value.toFixed(2)}R`;
+}
+function pct$2(value) {
+  return `${(value * 100).toFixed(1)}%`;
+}
+function fmtDate$1(value) {
+  return new Date(value).toISOString().slice(0, 10);
+}
+function downloadFile$2(name, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+function statsFor(trades) {
+  const closed = trades.filter((trade) => trade.closed);
+  const wins = closed.filter((trade) => trade.won);
+  const losses = closed.filter((trade) => !trade.won);
+  const totalR = closed.reduce((sum, trade) => sum + trade.rMultiple, 0);
+  let running = 0;
+  let peak = 0;
+  let maxDrawdownR = 0;
+  for (const trade of closed) {
+    running += trade.rMultiple;
+    peak = Math.max(peak, running);
+    maxDrawdownR = Math.max(maxDrawdownR, peak - running);
+  }
+  return {
+    trades: trades.length,
+    wins: wins.length,
+    losses: losses.length,
+    open: trades.length - closed.length,
+    totalR,
+    avgR: closed.length ? totalR / closed.length : 0,
+    winRate: closed.length ? wins.length / closed.length : 0,
+    maxDrawdownR
+  };
+}
+function buildWindows(start, end) {
+  if (!start || !end || end <= start) return [];
+  const count = 6;
+  const size = Math.floor((end - start) / count);
+  return Array.from({ length: count }, (_2, index2) => ({
+    index: index2,
+    start: start + size * index2,
+    end: index2 === count - 1 ? end + 1 : start + size * (index2 + 1)
+  }));
+}
+function verdictFor({
+  eligibleWindows,
+  survivedWindows,
+  forwardNetR,
+  positiveWindowRate,
+  forwardTrades
+}) {
+  if (eligibleWindows < 2 || forwardTrades < 5) return "No claim";
+  if (forwardNetR <= 0 || positiveWindowRate < 0.5) return "Unstable";
+  if (eligibleWindows >= 3 && survivedWindows >= 2 && positiveWindowRate >= 0.6) {
+    return "Repeatable candidate";
+  }
+  return "Watchlist";
+}
+function buildWalkForwardRows({
+  experimentRows,
+  windows
+}) {
+  return experimentRows.map((row) => {
+    const windowResults = windows.slice(1).map((window2) => {
+      const prior = statsFor(
+        row.trades.filter((trade) => trade.signal.timestamp < window2.start)
+      );
+      const forward = statsFor(
+        row.trades.filter(
+          (trade) => trade.signal.timestamp >= window2.start && trade.signal.timestamp < window2.end
+        )
+      );
+      const eligible2 = prior.trades >= 3 && prior.totalR > 0;
+      const status = window2.index === 0 ? "Warmup" : !eligible2 ? "Under-sampled" : forward.totalR > 0 ? "Survived" : "Failed";
+      return {
+        window: window2,
+        prior,
+        forward,
+        eligible: eligible2,
+        status
+      };
+    });
+    const eligible = windowResults.filter((item) => item.eligible);
+    const survived = eligible.filter((item) => item.forward.totalR > 0);
+    const forwardTrades = eligible.reduce(
+      (sum, item) => sum + item.forward.trades,
+      0
+    );
+    const forwardNetR = eligible.reduce(
+      (sum, item) => sum + item.forward.totalR,
+      0
+    );
+    const positiveWindowRate = eligible.length ? survived.length / eligible.length : 0;
+    const worstWindowR = eligible.length ? Math.min(...eligible.map((item) => item.forward.totalR)) : 0;
+    return {
+      id: row.variant.id,
+      setup: row.variant.setup,
+      symbolScope: row.variant.symbolScope,
+      sessionScope: row.variant.sessionScope,
+      targetModel: row.variant.targetModel,
+      windows: windowResults,
+      eligibleWindows: eligible.length,
+      survivedWindows: survived.length,
+      forwardTrades,
+      forwardNetR,
+      positiveWindowRate,
+      worstWindowR,
+      verdict: verdictFor({
+        eligibleWindows: eligible.length,
+        survivedWindows: survived.length,
+        forwardNetR,
+        positiveWindowRate,
+        forwardTrades
+      })
+    };
+  }).sort(
+    (a2, b2) => b2.forwardNetR - a2.forwardNetR || b2.eligibleWindows - a2.eligibleWindows || b2.forwardTrades - a2.forwardTrades
+  );
+}
+function Stat$3({
+  label,
+  value,
+  detail
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: label }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: value }),
+    detail && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: detail })
+  ] });
+}
+function WalkForwardPage() {
+  const { candles, run } = useStrategyWorkspace();
+  const signals = reactExports.useMemo(
+    () => [...run.acceptedSignals, ...run.rejectedSignals],
+    [run.acceptedSignals, run.rejectedSignals]
+  );
+  const experimentRows = reactExports.useMemo(
+    () => buildExperimentRows({
+      signals,
+      candles,
+      splitTimestamp: run.validation.discoveryEndTimestamp
+    }),
+    [signals, candles, run.validation.discoveryEndTimestamp]
+  );
+  const windows = reactExports.useMemo(
+    () => buildWindows(run.integrity.start, run.integrity.end),
+    [run.integrity.start, run.integrity.end]
+  );
+  const rows = reactExports.useMemo(
+    () => buildWalkForwardRows({ experimentRows, windows }),
+    [experimentRows, windows]
+  );
+  const repeatableCount = rows.filter(
+    (row) => row.verdict === "Repeatable candidate"
+  ).length;
+  const watchlistCount = rows.filter(
+    (row) => row.verdict === "Watchlist"
+  ).length;
+  const best = rows[0];
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "walk-forward.page", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-display text-2xl font-bold", children: "Walk-Forward Lab" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "This page repeats the discovery-to-validation test across multiple chronological windows. A rule must keep surviving later windows before it earns more trust." })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Button,
+        {
+          type: "button",
+          variant: "outline",
+          disabled: !run.integrity.canRunBacktest,
+          onClick: () => downloadFile$2(
+            "ict-walk-forward-report.json",
+            JSON.stringify(
+              {
+                generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+                integrity: run.integrity,
+                windows,
+                rows
+              },
+              null,
+              2
+            ),
+            "application/json"
+          ),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "mr-2 h-4 w-4" }),
+            "Export Report"
+          ]
+        }
+      )
+    ] }),
+    !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Walk-forward testing is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$3,
+          {
+            label: "Walk windows",
+            value: String(Math.max(0, windows.length - 1)),
+            detail: "Each window grades rules using later data"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$3,
+          {
+            label: "Repeatable candidates",
+            value: String(repeatableCount),
+            detail: "Survived multiple eligible windows"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$3,
+          {
+            label: "Watchlist",
+            value: String(watchlistCount),
+            detail: "Positive but still fragile"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$3,
+          {
+            label: "Best walk-forward net",
+            value: best ? fmtR$2(best.forwardNetR) : "0.00R",
+            detail: (best == null ? void 0 : best.id) ?? "No variant"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-destructive/40 bg-destructive/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ShieldAlert, { className: "mt-0.5 h-4 w-4 text-destructive" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Still Not Live Proof" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "Walk-forward evidence is stronger than one split, but it is still historical. A repeatable candidate must still be frozen and tracked on newer imported candles before it can be treated as forward-tested." })
+        ] })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(GitCompareArrows, { className: "h-4 w-4 text-primary" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Walk-Forward Scoreboard" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1120px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Variant" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Index" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Session" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Target" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Eligible" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Survived" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward trades" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward net" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Positive windows" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Worst window" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Verdict" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: rows.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.setup }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.symbolScope }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.sessionScope }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.targetModel }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.eligibleWindows }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.survivedWindows }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.forwardTrades }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$2(row.forwardNetR) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$2(row.positiveWindowRate) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$2(row.worstWindowR) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.verdict })
+          ] }, row.id)) })
+        ] }) })
+      ] }),
+      best && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Best Variant Window Detail" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-1 text-sm text-muted-foreground", children: [
+          best.setup,
+          " | ",
+          best.symbolScope,
+          " | ",
+          best.sessionScope,
+          " |",
+          " ",
+          best.targetModel
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[820px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Window" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Prior trades" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Prior net" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward trades" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward net" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward win" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Status" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: best.windows.map((windowResult) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "tr",
+            {
+              className: "border-b border-border/40",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2", children: [
+                  fmtDate$1(windowResult.window.start),
+                  " to",
+                  " ",
+                  fmtDate$1(windowResult.window.end)
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: windowResult.prior.trades }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$2(windowResult.prior.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: windowResult.forward.trades }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$2(windowResult.forward.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$2(windowResult.forward.winRate) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: windowResult.status })
+              ]
+            },
+            windowResult.window.index
+          )) })
+        ] }) })
+      ] })
+    ] })
+  ] });
+}
 function fmtR$1(value) {
   return `${value.toFixed(2)}R`;
+}
+function downloadFile$1(name, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+function Stat$2({
+  label,
+  value,
+  detail
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: label }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: value }),
+    detail && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: detail })
+  ] });
+}
+function statusFor({
+  experiment,
+  walk,
+  frozen,
+  forwardTrades,
+  forwardNetR
+}) {
+  if (experiment.promotionGate === "Diverged" || (walk == null ? void 0 : walk.verdict) === "Unstable" || experiment.validation.totalR < 0) {
+    return "Do not trade";
+  }
+  if (frozen && forwardTrades >= 10 && forwardNetR > 0 && (walk == null ? void 0 : walk.verdict) === "Repeatable candidate") {
+    return "Forward-test candidate";
+  }
+  if ((experiment.promotionGate === "Watchlist" || experiment.promotionGate === "Forward-test candidate") && ((walk == null ? void 0 : walk.verdict) === "Watchlist" || (walk == null ? void 0 : walk.verdict) === "Repeatable candidate")) {
+    return "Research candidate";
+  }
+  return "Needs evidence";
+}
+function actionFor(status, frozen) {
+  if (status === "Do not trade") return "Avoid";
+  if (status === "Forward-test candidate") return "Paper/prop-demo review";
+  if (status === "Research candidate")
+    return frozen ? "Track forward" : "Freeze";
+  return "Keep testing";
+}
+function buildDecisionRows({
+  experiments,
+  walkRows
+}) {
+  const frozen = loadFrozenVariants();
+  const walkById = new Map(walkRows.map((row) => [row.id, row]));
+  return experiments.map((experiment) => {
+    const walk = walkById.get(experiment.variant.id);
+    const frozenMatches = frozen.filter(
+      (variant) => variant.variantId === experiment.variant.id
+    );
+    const forwardTrades = frozenMatches.flatMap(
+      (variant) => experiment.trades.filter(
+        (trade) => trade.signal.timestamp > variant.frozenAt
+      )
+    );
+    const forwardStats = statsFor(forwardTrades);
+    const status = statusFor({
+      experiment,
+      walk,
+      frozen: frozenMatches.length > 0,
+      forwardTrades: forwardStats.trades,
+      forwardNetR: forwardStats.totalR
+    });
+    const reasons = [
+      `Experiment gate: ${experiment.promotionGate}`,
+      `Validation: ${experiment.validation.trades} trade(s), ${fmtR$1(
+        experiment.validation.totalR
+      )}`,
+      walk ? `Walk-forward: ${walk.verdict}, ${walk.survivedWindows}/${walk.eligibleWindows} survived` : "Walk-forward: unavailable",
+      frozenMatches.length ? `Frozen variants: ${frozenMatches.length}` : "Frozen variants: none"
+    ];
+    const blockers = [
+      experiment.validation.trades < 10 ? "Validation sample below 10 trades." : void 0,
+      walk && walk.eligibleWindows < 2 ? "Walk-forward has fewer than two eligible windows." : void 0,
+      !frozenMatches.length ? "Rule has not been frozen for future imports." : void 0,
+      frozenMatches.length && forwardStats.trades < 10 ? "Forward evidence below 10 post-freeze trades." : void 0
+    ].filter(Boolean);
+    const score = experiment.validation.totalR + ((walk == null ? void 0 : walk.forwardNetR) ?? 0) + forwardStats.totalR - blockers.length * 0.25;
+    return {
+      id: experiment.variant.id,
+      setup: experiment.variant.setup,
+      symbolScope: experiment.variant.symbolScope,
+      sessionScope: experiment.variant.sessionScope,
+      targetModel: experiment.variant.targetModel,
+      status,
+      action: actionFor(status, frozenMatches.length > 0),
+      experiment,
+      walk,
+      frozen: frozenMatches.length > 0,
+      forwardTrades: forwardStats.trades,
+      forwardNetR: forwardStats.totalR,
+      score,
+      reasons,
+      blockers
+    };
+  }).sort(
+    (a2, b2) => b2.score - a2.score || b2.experiment.validation.trades - a2.experiment.validation.trades
+  );
+}
+function DecisionConsolePage() {
+  var _a2;
+  const { candles, run } = useStrategyWorkspace();
+  const signals = reactExports.useMemo(
+    () => [...run.acceptedSignals, ...run.rejectedSignals],
+    [run.acceptedSignals, run.rejectedSignals]
+  );
+  const experiments = reactExports.useMemo(
+    () => buildExperimentRows({
+      signals,
+      candles,
+      splitTimestamp: run.validation.discoveryEndTimestamp
+    }),
+    [signals, candles, run.validation.discoveryEndTimestamp]
+  );
+  const walkRows = reactExports.useMemo(
+    () => buildWalkForwardRows({
+      experimentRows: experiments,
+      windows: buildWindows(run.integrity.start, run.integrity.end)
+    }),
+    [experiments, run.integrity.start, run.integrity.end]
+  );
+  const decisions = reactExports.useMemo(
+    () => buildDecisionRows({ experiments, walkRows }),
+    [experiments, walkRows]
+  );
+  const forwardReady = decisions.filter(
+    (row) => row.status === "Forward-test candidate"
+  );
+  const researchCandidates = decisions.filter(
+    (row) => row.status === "Research candidate"
+  );
+  const avoid = decisions.filter((row) => row.status === "Do not trade");
+  const top = decisions.slice(0, 12);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "decision.page", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-display text-2xl font-bold", children: "Decision Console" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "This page translates the labs into guarded actions. It can promote a setup to research or forward-test review, but it refuses live trade claims without post-freeze evidence." })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Button,
+        {
+          type: "button",
+          variant: "outline",
+          disabled: !run.integrity.canRunBacktest,
+          onClick: () => downloadFile$1(
+            "ict-decision-console.json",
+            JSON.stringify(
+              {
+                generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+                integrity: run.integrity,
+                decisions: decisions.map((row) => {
+                  var _a3;
+                  return {
+                    id: row.id,
+                    setup: row.setup,
+                    symbolScope: row.symbolScope,
+                    sessionScope: row.sessionScope,
+                    targetModel: row.targetModel,
+                    status: row.status,
+                    action: row.action,
+                    score: row.score,
+                    validationTrades: row.experiment.validation.trades,
+                    validationNetR: row.experiment.validation.totalR,
+                    walkVerdict: ((_a3 = row.walk) == null ? void 0 : _a3.verdict) ?? "Unavailable",
+                    forwardTrades: row.forwardTrades,
+                    forwardNetR: row.forwardNetR,
+                    reasons: row.reasons,
+                    blockers: row.blockers
+                  };
+                })
+              },
+              null,
+              2
+            ),
+            "application/json"
+          ),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "mr-2 h-4 w-4" }),
+            "Export Decisions"
+          ]
+        }
+      )
+    ] }),
+    !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Decision Console is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$2,
+          {
+            label: "Forward-test candidates",
+            value: String(forwardReady.length),
+            detail: "Requires frozen post-import evidence"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$2,
+          {
+            label: "Research candidates",
+            value: String(researchCandidates.length),
+            detail: "Needs freeze or more forward proof"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$2,
+          {
+            label: "Avoid",
+            value: String(avoid.length),
+            detail: "Diverged or unstable evidence"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$2,
+          {
+            label: "Best score",
+            value: top[0] ? top[0].score.toFixed(2) : "0.00",
+            detail: ((_a2 = top[0]) == null ? void 0 : _a2.id) ?? "No variant"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-destructive/40 bg-destructive/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ShieldAlert, { className: "mt-0.5 h-4 w-4 text-destructive" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Live Entry Gate" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "A research candidate is not a live signal. The app needs a frozen rule plus enough newer post-freeze trades before a setup can move toward actual entry/exit guidance." })
+        ] })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Target, { className: "h-4 w-4 text-primary" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Ranked Decisions" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1220px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Setup" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Index" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Session" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Target" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Status" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Action" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val trades" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val net" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Walk" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward net" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Score" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: top.map((row) => {
+            var _a3;
+            return /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.setup }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.symbolScope }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.sessionScope }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.targetModel }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.status }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.action }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.experiment.validation.trades }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$1(row.experiment.validation.totalR) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: ((_a3 = row.walk) == null ? void 0 : _a3.verdict) ?? "Unavailable" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.forwardTrades }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$1(row.forwardNetR) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.score.toFixed(2) })
+            ] }, row.id);
+          }) })
+        ] }) })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 xl:grid-cols-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("article", { className: "border border-primary/30 bg-primary/5 p-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Top Evidence Notes" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 space-y-3 text-sm text-muted-foreground", children: top.slice(0, 3).map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-b border-border/40 pb-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-foreground", children: row.id }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1", children: row.reasons.join(" | ") })
+          ] }, row.id)) })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("article", { className: "border border-destructive/40 bg-destructive/5 p-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(CircleX, { className: "h-4 w-4 text-destructive" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Main Blockers" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 space-y-3 text-sm text-muted-foreground", children: top.slice(0, 5).map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-b border-border/40 pb-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-foreground", children: row.id }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1", children: row.blockers.length ? row.blockers.join(" ") : "No major blocker beyond ongoing forward review." })
+          ] }, row.id)) })
+        ] })
+      ] })
+    ] })
+  ] });
 }
 function pct$1(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
-function fmtDate$1(value) {
+function rate(part, total) {
+  return total === 0 ? 0 : part / total;
+}
+function passed(label, signal) {
+  return signal.reasons.some(
+    (reason) => reason.label === label && reason.passed
+  );
+}
+function failed(label, signal) {
+  return signal.reasons.some(
+    (reason) => reason.label === label && !reason.passed
+  );
+}
+function countFactors(signals, predicate) {
+  const counts = /* @__PURE__ */ new Map();
+  for (const signal of signals) {
+    for (const factor of signal.reasons) {
+      if (!predicate(factor)) continue;
+      counts.set(factor.label, (counts.get(factor.label) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()].sort((a2, b2) => b2[1] - a2[1]);
+}
+function InsightCard({
+  title,
+  severity,
+  children
+}) {
+  const styles = {
+    promising: "border-chart-1/35 bg-chart-1/5",
+    watch: "border-primary/30 bg-primary/5",
+    blocked: "border-destructive/40 bg-destructive/5"
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("article", { className: `border p-4 ${styles[severity]}`, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: title }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-2 text-sm leading-relaxed text-muted-foreground", children })
+  ] });
+}
+function Stat$1({ label, value }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: label }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: value })
+  ] });
+}
+function summarizeAccepted(accepted, trades) {
+  const bySignal = new Map(accepted.map((signal) => [signal.id, signal]));
+  const rows = /* @__PURE__ */ new Map();
+  for (const trade of trades) {
+    const signal = trade.auditId ? bySignal.get(trade.auditId) : void 0;
+    if (!signal) continue;
+    for (const label of [
+      signal.setupType,
+      signal.symbol,
+      `${signal.setupType} | ${signal.symbol}`
+    ]) {
+      const row = rows.get(label) ?? {
+        label,
+        trades: 0,
+        wins: 0,
+        losses: 0,
+        totalR: 0,
+        status: "No evidence",
+        detail: "No closed trades exist for this group."
+      };
+      row.trades += 1;
+      if (trade.outcome === TradeOutcome.Win) row.wins += 1;
+      if (trade.outcome === TradeOutcome.Loss) row.losses += 1;
+      row.totalR += trade.rMultiple ?? 0;
+      const evidence = classifyEvidence({
+        trades: row.trades,
+        totalR: row.totalR,
+        avgR: row.totalR / Math.max(1, row.trades),
+        maxDrawdownR: 0
+      });
+      row.status = evidence.status;
+      row.detail = evidence.detail;
+      rows.set(label, row);
+    }
+  }
+  return [...rows.values()].sort((a2, b2) => b2.totalR - a2.totalR);
+}
+function median(values) {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a2, b2) => a2 - b2);
+  return sorted[Math.floor((sorted.length - 1) * 0.5)];
+}
+function summarizeTargetModels(signals) {
+  const rows = /* @__PURE__ */ new Map();
+  for (const signal of signals) {
+    const candidates = signal.targetCandidates ?? [
+      {
+        model: signal.targetModel ?? "selected TP model",
+        price: signal.tp1,
+        rMultiple: signal.rMultipleToTp1
+      }
+    ];
+    for (const candidate of candidates) {
+      const row = rows.get(candidate.model) ?? {
+        model: candidate.model,
+        candidates: 0,
+        passCount: 0,
+        selected: 0,
+        acceptedSelected: 0,
+        rValues: []
+      };
+      row.candidates += 1;
+      row.rValues.push(candidate.rMultiple);
+      if (candidate.rMultiple >= 0.8) row.passCount += 1;
+      if (signal.targetModel === candidate.model) {
+        row.selected += 1;
+        if (signal.accepted) row.acceptedSelected += 1;
+      }
+      rows.set(candidate.model, row);
+    }
+  }
+  return [...rows.values()].map((row) => ({
+    model: row.model,
+    candidates: row.candidates,
+    passCount: row.passCount,
+    selected: row.selected,
+    acceptedSelected: row.acceptedSelected,
+    medianR: median(row.rValues),
+    passRate: rate(row.passCount, row.candidates)
+  })).sort((a2, b2) => b2.passCount - a2.passCount || b2.medianR - a2.medianR);
+}
+function DiscoveryLabPage() {
+  const { run } = useStrategyWorkspace();
+  const signals = reactExports.useMemo(
+    () => [...run.acceptedSignals, ...run.rejectedSignals],
+    [run.acceptedSignals, run.rejectedSignals]
+  );
+  const accepted = run.acceptedSignals;
+  const rejected = run.rejectedSignals;
+  const acceptedSummary = reactExports.useMemo(
+    () => summarizeAccepted(accepted, run.trades),
+    [accepted, run.trades]
+  );
+  const targetModelRows = reactExports.useMemo(
+    () => summarizeTargetModels(signals),
+    [signals]
+  );
+  const discovery = reactExports.useMemo(() => {
+    const tp1Passes = signals.filter(
+      (signal) => passed("TP1 buyside liquidity >= 0.8R", signal)
+    ).length;
+    const maHoldPasses = signals.filter(
+      (signal) => passed("Moving average hold", signal)
+    ).length;
+    const fvgPasses = signals.filter(
+      (signal) => passed("1H FVG overlap", signal)
+    ).length;
+    const sundayPasses = signals.filter(
+      (signal) => passed("Sunday level within 0.12 ATR", signal)
+    ).length;
+    const acceptedWithMissingMa = accepted.filter(
+      (signal) => failed("Moving average hold", signal)
+    ).length;
+    const acceptedWithMissingSunday = accepted.filter(
+      (signal) => failed("Sunday level within 0.12 ATR", signal)
+    ).length;
+    const acceptedBySymbol = accepted.reduce(
+      (totals, signal) => {
+        totals[signal.symbol] = (totals[signal.symbol] ?? 0) + 1;
+        return totals;
+      },
+      {}
+    );
+    const rejectedBySymbol = rejected.reduce(
+      (totals, signal) => {
+        totals[signal.symbol] = (totals[signal.symbol] ?? 0) + 1;
+        return totals;
+      },
+      {}
+    );
+    const scoreCounts = rejected.reduce(
+      (totals, signal) => {
+        totals[signal.score] = (totals[signal.score] ?? 0) + 1;
+        return totals;
+      },
+      {}
+    );
+    const highScoreRejects = rejected.filter((signal) => signal.score >= 5);
+    const activeRangeBlocks = rejected.filter(
+      (signal) => signal.blockers.some(
+        (blocker) => blocker.label === "Range state" && blocker.passed
+      )
+    ).length;
+    const rrValues = signals.map((signal) => signal.rMultipleToTp1).filter((value) => Number.isFinite(value)).sort((a2, b2) => a2 - b2);
+    const medianR = rrValues.length === 0 ? 0 : rrValues[Math.floor((rrValues.length - 1) * 0.5)];
+    return {
+      tp1PassRate: rate(tp1Passes, signals.length),
+      maHoldPassRate: rate(maHoldPasses, signals.length),
+      fvgPassRate: rate(fvgPasses, signals.length),
+      sundayPassRate: rate(sundayPasses, signals.length),
+      acceptedWithMissingMa,
+      acceptedWithMissingSunday,
+      acceptedBySymbol,
+      rejectedBySymbol,
+      scoreCounts,
+      highScoreRejects,
+      activeRangeBlocks,
+      medianR,
+      topMissing: countFactors(rejected, (factor) => !factor.passed).slice(
+        0,
+        5
+      )
+    };
+  }, [accepted, rejected, signals]);
+  const hasLowerTimeframeContext = run.integrity.timeframes.some(
+    (timeframe) => timeframe === Timeframe.M15 || timeframe === Timeframe.M5
+  ) || run.derivedTimeframes.includes(Timeframe.M15);
+  const hasHoldContext = run.integrity.timeframes.includes(Timeframe.H4) || run.derivedTimeframes.includes(Timeframe.H4);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "discovery.page", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-display text-2xl font-bold", children: "Discovery Lab" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "This page is for finding hypotheses, not declaring a winning system. Anything discovered here should be promoted to a locked rule only after replay review, out-of-sample testing, and forward validation." })
+    ] }),
+    !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Discovery is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$1,
+          {
+            label: "Hypothesis candidates",
+            value: String(signals.length)
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$1,
+          {
+            label: "Accepted by current rules",
+            value: String(accepted.length)
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$1,
+          {
+            label: "High-score rejects",
+            value: String(discovery.highScoreRejects.length)
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$1, { label: "Median TP1 R", value: discovery.medianR.toFixed(2) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$1,
+          {
+            label: "Derived TFs",
+            value: run.derivedTimeframes.join(", ") || "none"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$1,
+          {
+            label: "Structure snapshots",
+            value: String(run.marketStructure.length)
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 lg:grid-cols-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(InsightCard, { title: "Do Not Trust Yet", severity: "blocked", children: [
+          "Only ",
+          accepted.length,
+          " accepted setup(s) exist under the current rule profile. That is not enough to claim an edge, even if the current sample shows wins. Treat accepted setups as review candidates, not proof."
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(InsightCard, { title: "Validation Split", severity: "blocked", children: [
+          "Validation period has ",
+          run.validation.validationTradeCount,
+          " ",
+          "trade(s). A setup family cannot graduate until it survives later unseen data, not just the discovery period."
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(InsightCard, { title: "Coco Profile Gap", severity: "watch", children: [
+          discovery.acceptedWithMissingMa,
+          " accepted setup(s) failed moving average hold and ",
+          discovery.acceptedWithMissingSunday,
+          " failed Sunday proximity. Coco described MAs and old Sunday levels as core context, so these should become structured setup rules, not loose score bonuses."
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 lg:grid-cols-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(InsightCard, { title: "TP1 Bottleneck", severity: "watch", children: [
+          "TP1 liquidity passed on ",
+          pct$1(discovery.tp1PassRate),
+          " of candidates. This is the main rejection pressure. Next discovery work should compare previous-day highs, session highs, old Sunday levels, and imbalance fills as separate TP models."
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(InsightCard, { title: "Split Boundary", severity: "watch", children: [
+          "Discovery ends at",
+          " ",
+          run.validation.discoveryEndTimestamp ? new Date(run.validation.discoveryEndTimestamp).toISOString() : "n/a",
+          ". Results before and after this boundary should be judged separately."
+        ] })
+      ] }),
+      acceptedSummary.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Accepted Setup Evidence" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-sm text-muted-foreground", children: "These rows are clues, not conclusions. Anything below 20-30 trades should stay in discovery mode." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[720px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Family / Index" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Trades" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "W/L" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Total R" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Evidence" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: acceptedSummary.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.label }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.trades }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2 text-right", children: [
+              row.wins,
+              "/",
+              row.losses
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2 text-right", children: [
+              row.totalR.toFixed(2),
+              "R"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { title: row.detail, children: row.status }) })
+          ] }, row.label)) })
+        ] }) })
+      ] }),
+      targetModelRows.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Target Model Comparison" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-sm text-muted-foreground", children: "This compares TP candidates across all accepted and rejected setups. It shows where the strategy has room before deciding which setup family deserves more trust." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[860px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "TP model" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Candidates" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Passes 0.8R" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Pass rate" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Median R" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Selected" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Accepted selected" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: targetModelRows.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.model }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.candidates }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.passCount }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$1(row.passRate) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2 text-right", children: [
+              row.medianR.toFixed(2),
+              "R"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.selected }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.acceptedSelected })
+          ] }, row.model)) })
+        ] }) })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 lg:grid-cols-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(FlaskConical, { className: "h-4 w-4 text-primary" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Candidate Signals" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 grid gap-3 md:grid-cols-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Stat$1,
+              {
+                label: "TP1 pass rate",
+                value: pct$1(discovery.tp1PassRate)
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Stat$1,
+              {
+                label: "MA hold pass rate",
+                value: pct$1(discovery.maHoldPassRate)
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Stat$1,
+              {
+                label: "FVG overlap pass rate",
+                value: pct$1(discovery.fvgPassRate)
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Stat$1,
+              {
+                label: "Sunday proximity rate",
+                value: pct$1(discovery.sundayPassRate)
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-4 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[520px] font-mono text-xs", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Missing factor" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Rejected count" })
+            ] }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: discovery.topMissing.map(([label, count]) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: label }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: count })
+            ] }, label)) })
+          ] }) })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(ShieldAlert, { className: "h-4 w-4 text-primary" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Anti-Overfit Guardrails" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 space-y-3 text-sm text-muted-foreground", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Lock strategy rules before checking future periods. Discovery findings should create hypotheses, then replay and forward-test them without moving the goalposts." }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Keep accepted and rejected setups visible together. A good lab must explain skipped trades, late invalidations, and weak TP targets instead of only showing winners." }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+              "Current data has ",
+              hasLowerTimeframeContext ? "some" : "no",
+              " ",
+              "lower timeframe context and",
+              " ",
+              hasHoldContext ? "has" : "does not have",
+              " 4H context. Coco described 15m scalp behavior and 4H hold behavior, so timeframe-specific claims need matching candles."
+            ] })
+          ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TrendingUp, { className: "h-4 w-4 text-primary" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Next Discovery Queue" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 grid gap-3 lg:grid-cols-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            InsightCard,
+            {
+              title: "Target Models To Compare",
+              severity: "promising",
+              children: "Compare TP1 candidates independently: previous-day high/low, Asia/London/NY highs and lows, old Sunday levels, major FVG fill, and 15m 20 EMA when stretched. Do not merge these into one vague liquidity label."
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            InsightCard,
+            {
+              title: "Invalidation Models To Compare",
+              severity: "watch",
+              children: "Default invalidation should use entry-timeframe candle closes, while higher timeframe MA, 200 EMA, weekly high/low, and Sunday breaks are checked on their own timeframe. Keep wick-through vs close-through visible in the audit log."
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(InsightCard, { title: "Setup Families", severity: "promising", children: "Separate continuation, old-Sunday reaction, 200 EMA reaction, 15m retrace scalp, and higher-timeframe imbalance fill. Each family should have its own required rules, stops, and TP logic." }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(InsightCard, { title: "Forward Proof", severity: "blocked", children: "After a setup family looks promising, freeze its settings and track the next unseen signals. The app should mark them as pending, won, lost, skipped, or invalidated before using them in performance claims." })
+        ] })
+      ] })
+    ] })
+  ] });
+}
+function fmtR(value) {
+  return `${value.toFixed(2)}R`;
+}
+function pct(value) {
+  return `${(value * 100).toFixed(1)}%`;
+}
+function fmtDate(value) {
   return value ? new Date(value).toISOString() : "n/a";
 }
-function downloadFile$1(name, content, type) {
+function downloadFile(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -61850,7 +62483,7 @@ function forwardTradesFor(frozen, row) {
   if (!row) return [];
   return row.trades.filter((trade) => trade.signal.timestamp > frozen.frozenAt);
 }
-function Stat$1({
+function Stat({
   label,
   value,
   detail
@@ -61925,7 +62558,7 @@ function ForwardTrackerPage() {
           type: "button",
           variant: "outline",
           disabled: tracked.length === 0,
-          onClick: () => downloadFile$1(
+          onClick: () => downloadFile(
             "ict-forward-tracker.json",
             JSON.stringify(
               {
@@ -61964,7 +62597,7 @@ function ForwardTrackerPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Forward tracking is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$1,
+          Stat,
           {
             label: "Frozen variants",
             value: String(frozenVariants.length),
@@ -61972,19 +62605,19 @@ function ForwardTrackerPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$1,
+          Stat,
           {
             label: "Forward trades",
             value: String(forwardTradeCount),
             detail: "Signals after freeze timestamps"
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$1, { label: "Forward net", value: fmtR$1(forwardNetR) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat, { label: "Forward net", value: fmtR(forwardNetR) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$1,
+          Stat,
           {
             label: "Latest candle",
-            value: fmtDate$1(run.integrity.end),
+            value: fmtDate(run.integrity.end),
             detail: "New CSVs extend forward evidence"
           }
         )
@@ -62033,8 +62666,8 @@ function ForwardTrackerPage() {
                   "/",
                   item.open
                 ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$1(item.netR) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$1(item.winRate) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(item.netR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct(item.winRate) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: item.frozen.sourcePromotionGate }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
                   Button,
@@ -62421,326 +63054,6 @@ function SetupDetectorPage() {
     ] }) : signals.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-border bg-card p-6 text-sm text-muted-foreground", children: "Engine ran, but no accepted setups met the current threshold. Check Rejected Setups for the useful evidence." }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3", children: signals.map((signal) => /* @__PURE__ */ jsxRuntimeExports.jsx(SignalCard, { signal }, signal.id)) })
   ] });
 }
-function fmtR(value) {
-  return `${value.toFixed(2)}R`;
-}
-function pct(value) {
-  return `${(value * 100).toFixed(1)}%`;
-}
-function fmtDate(value) {
-  return new Date(value).toISOString().slice(0, 10);
-}
-function downloadFile(name, content, type) {
-  const blob = new Blob([content], { type });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = name;
-  link.click();
-  URL.revokeObjectURL(url);
-}
-function statsFor(trades) {
-  const closed = trades.filter((trade) => trade.closed);
-  const wins = closed.filter((trade) => trade.won);
-  const losses = closed.filter((trade) => !trade.won);
-  const totalR = closed.reduce((sum, trade) => sum + trade.rMultiple, 0);
-  let running = 0;
-  let peak = 0;
-  let maxDrawdownR = 0;
-  for (const trade of closed) {
-    running += trade.rMultiple;
-    peak = Math.max(peak, running);
-    maxDrawdownR = Math.max(maxDrawdownR, peak - running);
-  }
-  return {
-    trades: trades.length,
-    wins: wins.length,
-    losses: losses.length,
-    open: trades.length - closed.length,
-    totalR,
-    avgR: closed.length ? totalR / closed.length : 0,
-    winRate: closed.length ? wins.length / closed.length : 0,
-    maxDrawdownR
-  };
-}
-function buildWindows(start, end) {
-  if (!start || !end || end <= start) return [];
-  const count = 6;
-  const size = Math.floor((end - start) / count);
-  return Array.from({ length: count }, (_2, index2) => ({
-    index: index2,
-    start: start + size * index2,
-    end: index2 === count - 1 ? end + 1 : start + size * (index2 + 1)
-  }));
-}
-function verdictFor({
-  eligibleWindows,
-  survivedWindows,
-  forwardNetR,
-  positiveWindowRate,
-  forwardTrades
-}) {
-  if (eligibleWindows < 2 || forwardTrades < 5) return "No claim";
-  if (forwardNetR <= 0 || positiveWindowRate < 0.5) return "Unstable";
-  if (eligibleWindows >= 3 && survivedWindows >= 2 && positiveWindowRate >= 0.6) {
-    return "Repeatable candidate";
-  }
-  return "Watchlist";
-}
-function Stat({
-  label,
-  value,
-  detail
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: label }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: value }),
-    detail && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: detail })
-  ] });
-}
-function WalkForwardPage() {
-  const { candles, run } = useStrategyWorkspace();
-  const signals = reactExports.useMemo(
-    () => [...run.acceptedSignals, ...run.rejectedSignals],
-    [run.acceptedSignals, run.rejectedSignals]
-  );
-  const experimentRows = reactExports.useMemo(
-    () => buildExperimentRows({
-      signals,
-      candles,
-      splitTimestamp: run.validation.discoveryEndTimestamp
-    }),
-    [signals, candles, run.validation.discoveryEndTimestamp]
-  );
-  const windows = reactExports.useMemo(
-    () => buildWindows(run.integrity.start, run.integrity.end),
-    [run.integrity.start, run.integrity.end]
-  );
-  const rows = reactExports.useMemo(
-    () => experimentRows.map((row) => {
-      const windowResults = windows.slice(1).map((window2) => {
-        const prior = statsFor(
-          row.trades.filter(
-            (trade) => trade.signal.timestamp < window2.start
-          )
-        );
-        const forward = statsFor(
-          row.trades.filter(
-            (trade) => trade.signal.timestamp >= window2.start && trade.signal.timestamp < window2.end
-          )
-        );
-        const eligible2 = prior.trades >= 3 && prior.totalR > 0;
-        const status = window2.index === 0 ? "Warmup" : !eligible2 ? "Under-sampled" : forward.totalR > 0 ? "Survived" : "Failed";
-        return {
-          window: window2,
-          prior,
-          forward,
-          eligible: eligible2,
-          status
-        };
-      });
-      const eligible = windowResults.filter((item) => item.eligible);
-      const survived = eligible.filter((item) => item.forward.totalR > 0);
-      const forwardTrades = eligible.reduce(
-        (sum, item) => sum + item.forward.trades,
-        0
-      );
-      const forwardNetR = eligible.reduce(
-        (sum, item) => sum + item.forward.totalR,
-        0
-      );
-      const positiveWindowRate = eligible.length ? survived.length / eligible.length : 0;
-      const worstWindowR = eligible.length ? Math.min(...eligible.map((item) => item.forward.totalR)) : 0;
-      return {
-        id: row.variant.id,
-        setup: row.variant.setup,
-        symbolScope: row.variant.symbolScope,
-        sessionScope: row.variant.sessionScope,
-        targetModel: row.variant.targetModel,
-        windows: windowResults,
-        eligibleWindows: eligible.length,
-        survivedWindows: survived.length,
-        forwardTrades,
-        forwardNetR,
-        positiveWindowRate,
-        worstWindowR,
-        verdict: verdictFor({
-          eligibleWindows: eligible.length,
-          survivedWindows: survived.length,
-          forwardNetR,
-          positiveWindowRate,
-          forwardTrades
-        })
-      };
-    }).sort(
-      (a2, b2) => b2.forwardNetR - a2.forwardNetR || b2.eligibleWindows - a2.eligibleWindows || b2.forwardTrades - a2.forwardTrades
-    ),
-    [experimentRows, windows]
-  );
-  const repeatableCount = rows.filter(
-    (row) => row.verdict === "Repeatable candidate"
-  ).length;
-  const watchlistCount = rows.filter(
-    (row) => row.verdict === "Watchlist"
-  ).length;
-  const best = rows[0];
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "walk-forward.page", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-display text-2xl font-bold", children: "Walk-Forward Lab" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "This page repeats the discovery-to-validation test across multiple chronological windows. A rule must keep surviving later windows before it earns more trust." })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(
-        Button,
-        {
-          type: "button",
-          variant: "outline",
-          disabled: !run.integrity.canRunBacktest,
-          onClick: () => downloadFile(
-            "ict-walk-forward-report.json",
-            JSON.stringify(
-              {
-                generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
-                integrity: run.integrity,
-                windows,
-                rows
-              },
-              null,
-              2
-            ),
-            "application/json"
-          ),
-          children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "mr-2 h-4 w-4" }),
-            "Export Report"
-          ]
-        }
-      )
-    ] }),
-    !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Walk-forward testing is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat,
-          {
-            label: "Walk windows",
-            value: String(Math.max(0, windows.length - 1)),
-            detail: "Each window grades rules using later data"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat,
-          {
-            label: "Repeatable candidates",
-            value: String(repeatableCount),
-            detail: "Survived multiple eligible windows"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat,
-          {
-            label: "Watchlist",
-            value: String(watchlistCount),
-            detail: "Positive but still fragile"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat,
-          {
-            label: "Best walk-forward net",
-            value: best ? fmtR(best.forwardNetR) : "0.00R",
-            detail: (best == null ? void 0 : best.id) ?? "No variant"
-          }
-        )
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-destructive/40 bg-destructive/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(ShieldAlert, { className: "mt-0.5 h-4 w-4 text-destructive" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Still Not Live Proof" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "Walk-forward evidence is stronger than one split, but it is still historical. A repeatable candidate must still be frozen and tracked on newer imported candles before it can be treated as forward-tested." })
-        ] })
-      ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(GitCompareArrows, { className: "h-4 w-4 text-primary" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Walk-Forward Scoreboard" })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1120px] font-mono text-xs", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Variant" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Index" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Session" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Target" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Eligible" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Survived" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward trades" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward net" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Positive windows" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Worst window" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Verdict" })
-          ] }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: rows.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.setup }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.symbolScope }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.sessionScope }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.targetModel }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.eligibleWindows }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.survivedWindows }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.forwardTrades }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(row.forwardNetR) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct(row.positiveWindowRate) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(row.worstWindowR) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.verdict })
-          ] }, row.id)) })
-        ] }) })
-      ] }),
-      best && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Best Variant Window Detail" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-1 text-sm text-muted-foreground", children: [
-          best.setup,
-          " | ",
-          best.symbolScope,
-          " | ",
-          best.sessionScope,
-          " |",
-          " ",
-          best.targetModel
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[820px] font-mono text-xs", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Window" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Prior trades" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Prior net" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward trades" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward net" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward win" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Status" })
-          ] }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: best.windows.map((windowResult) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            "tr",
-            {
-              className: "border-b border-border/40",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2", children: [
-                  fmtDate(windowResult.window.start),
-                  " to",
-                  " ",
-                  fmtDate(windowResult.window.end)
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: windowResult.prior.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(windowResult.prior.totalR) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: windowResult.forward.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(windowResult.forward.totalR) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct(windowResult.forward.winRate) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: windowResult.status })
-              ]
-            },
-            windowResult.window.index
-          )) })
-        ] }) })
-      ] })
-    ] })
-  ] });
-}
 const rootRoute = createRootRoute({ component: Layout });
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -62789,6 +63102,11 @@ const walkForwardRoute = createRoute({
   path: "/walk-forward",
   component: WalkForwardPage
 });
+const decisionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/decisions",
+  component: DecisionConsolePage
+});
 const replayRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/replay",
@@ -62814,6 +63132,7 @@ const tree = rootRoute.addChildren([
   experimentRoute,
   forwardRoute,
   walkForwardRoute,
+  decisionRoute,
   replayRoute,
   chartRoute,
   resultsRoute
