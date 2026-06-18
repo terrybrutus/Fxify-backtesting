@@ -16,6 +16,7 @@ type ExperimentVariant = {
   setup: string;
   targetModel: string;
   symbolScope: "All" | "NAS100" | "US30" | "US500";
+  sessionScope: "All" | "Asia" | "London" | "New York" | "Off session";
   description: string;
   predicate: (signal: SignalAudit) => boolean;
 };
@@ -60,7 +61,10 @@ type ReadinessReport = {
   strengths: string[];
 };
 
-type BaseVariant = Omit<ExperimentVariant, "id" | "symbolScope"> & {
+type BaseVariant = Omit<
+  ExperimentVariant,
+  "id" | "symbolScope" | "sessionScope"
+> & {
   id: string;
 };
 
@@ -69,6 +73,14 @@ const SYMBOL_SCOPES: ExperimentVariant["symbolScope"][] = [
   "NAS100",
   "US30",
   "US500",
+];
+
+const SESSION_SCOPES: ExperimentVariant["sessionScope"][] = [
+  "All",
+  "Asia",
+  "London",
+  "New York",
+  "Off session",
 ];
 
 const BASE_VARIANTS: BaseVariant[] = [
@@ -159,11 +171,16 @@ const BASE_VARIANTS: BaseVariant[] = [
 ];
 
 const VARIANTS: ExperimentVariant[] = BASE_VARIANTS.flatMap((variant) =>
-  SYMBOL_SCOPES.map((symbolScope) => ({
-    ...variant,
-    symbolScope,
-    id: `${variant.id}-${symbolScope.toLowerCase()}`,
-  })),
+  SYMBOL_SCOPES.flatMap((symbolScope) =>
+    SESSION_SCOPES.map((sessionScope) => ({
+      ...variant,
+      symbolScope,
+      sessionScope,
+      id: `${variant.id}-${symbolScope.toLowerCase()}-${sessionScope
+        .toLowerCase()
+        .replace(/\s+/g, "-")}`,
+    })),
+  ),
 );
 
 function passed(signal: SignalAudit, label: string) {
@@ -178,6 +195,14 @@ function pct(value: number) {
 
 function fmtR(value: number) {
   return `${value.toFixed(2)}R`;
+}
+
+function sessionFor(timestamp: number): ExperimentVariant["sessionScope"] {
+  const hour = new Date(timestamp).getUTCHours();
+  if (hour >= 0 && hour < 7) return "Asia";
+  if (hour >= 7 && hour < 13) return "London";
+  if (hour >= 13 && hour < 21) return "New York";
+  return "Off session";
 }
 
 function downloadFile(name: string, content: string, type: string) {
@@ -293,6 +318,11 @@ function buildExperimentRows({
       if (
         variant.symbolScope !== "All" &&
         signal.symbol !== variant.symbolScope
+      )
+        return [];
+      if (
+        variant.sessionScope !== "All" &&
+        sessionFor(signal.timestamp) !== variant.sessionScope
       )
         return [];
       if (!variant.predicate(signal)) return [];
@@ -419,6 +449,7 @@ function experimentReportJson(
         id: row.variant.id,
         setup: row.variant.setup,
         symbolScope: row.variant.symbolScope,
+        sessionScope: row.variant.sessionScope,
         targetModel: row.variant.targetModel,
         description: row.variant.description,
         evidenceStatus: row.evidenceStatus,
@@ -429,6 +460,7 @@ function experimentReportJson(
         sampleTrades: row.trades.slice(0, 20).map((trade) => ({
           timestamp: new Date(trade.signal.timestamp).toISOString(),
           symbol: trade.signal.symbol,
+          session: sessionFor(trade.signal.timestamp),
           setupType: trade.signal.setupType,
           targetModel: trade.target.model,
           targetR: trade.target.rMultiple,
@@ -624,6 +656,7 @@ export default function ExperimentLabPage() {
                   <tr>
                     <th className="py-2 text-left">Variant</th>
                     <th className="py-2 text-left">Index</th>
+                    <th className="py-2 text-left">Session</th>
                     <th className="py-2 text-left">Target</th>
                     <th className="py-2 text-right">All trades</th>
                     <th className="py-2 text-right">All net</th>
@@ -647,6 +680,7 @@ export default function ExperimentLabPage() {
                         </span>
                       </td>
                       <td className="py-2">{row.variant.symbolScope}</td>
+                      <td className="py-2">{row.variant.sessionScope}</td>
                       <td className="py-2">{row.variant.targetModel}</td>
                       <td className="py-2 text-right">{row.all.trades}</td>
                       <td className="py-2 text-right">
@@ -696,6 +730,10 @@ export default function ExperimentLabPage() {
                     targeting{" "}
                     <span className="font-mono text-foreground">
                       {bestValidation.variant.symbolScope}
+                    </span>{" "}
+                    during{" "}
+                    <span className="font-mono text-foreground">
+                      {bestValidation.variant.sessionScope}
                     </span>{" "}
                     into{" "}
                     <span className="font-mono text-foreground">
