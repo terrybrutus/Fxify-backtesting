@@ -10,6 +10,7 @@ import LiveCandidatePage from "@/pages/LiveCandidatePage";
 import RejectedSetupsPage from "@/pages/RejectedSetupsPage";
 import ReplayPage from "@/pages/ReplayPage";
 import RuleEngineHealthPage from "@/pages/RuleEngineHealthPage";
+import SampleExpansionPage from "@/pages/SampleExpansionPage";
 import SetupDetectorPage from "@/pages/SetupDetectorPage";
 import WalkForwardPage from "@/pages/WalkForwardPage";
 import {
@@ -66,6 +67,12 @@ const experimentRoute = createRoute({
   component: ExperimentLabPage,
 });
 
+const sampleExpansionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/sample-expansion",
+  component: SampleExpansionPage,
+});
+
 const forwardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/forward",
@@ -116,6 +123,7 @@ const tree = rootRoute.addChildren([
   rejectedRoute,
   discoveryRoute,
   experimentRoute,
+  sampleExpansionRoute,
   forwardRoute,
   walkForwardRoute,
   decisionRoute,

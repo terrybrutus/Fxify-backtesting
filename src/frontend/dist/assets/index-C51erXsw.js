@@ -35350,7 +35350,7 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$m = [
+const __iconNode$n = [
   [
     "path",
     {
@@ -35359,7 +35359,20 @@ const __iconNode$m = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$m);
+const Activity = createLucideIcon("activity", __iconNode$n);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$m = [
+  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
+  ["path", { d: "M18 17V9", key: "2bz60n" }],
+  ["path", { d: "M13 17V5", key: "1frdt8" }],
+  ["path", { d: "M8 17v-3", key: "17ska0" }]
+];
+const ChartColumn = createLucideIcon("chart-column", __iconNode$m);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35367,12 +35380,10 @@ const Activity = createLucideIcon("activity", __iconNode$m);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$l = [
-  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
-  ["path", { d: "M18 17V9", key: "2bz60n" }],
-  ["path", { d: "M13 17V5", key: "1frdt8" }],
-  ["path", { d: "M8 17v-3", key: "17ska0" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const ChartColumn = createLucideIcon("chart-column", __iconNode$l);
+const CircleCheck = createLucideIcon("circle-check", __iconNode$l);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35381,9 +35392,10 @@ const ChartColumn = createLucideIcon("chart-column", __iconNode$l);
  */
 const __iconNode$k = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
+  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
 ];
-const CircleCheck = createLucideIcon("circle-check", __iconNode$k);
+const CircleX = createLucideIcon("circle-x", __iconNode$k);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35391,11 +35403,11 @@ const CircleCheck = createLucideIcon("circle-check", __iconNode$k);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$j = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
-  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
+  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
+  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
+  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
 ];
-const CircleX = createLucideIcon("circle-x", __iconNode$j);
+const Database = createLucideIcon("database", __iconNode$j);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35403,11 +35415,11 @@ const CircleX = createLucideIcon("circle-x", __iconNode$j);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$i = [
-  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
-  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
-  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
+  ["path", { d: "M12 15V3", key: "m9g1x1" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
+  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
 ];
-const Database = createLucideIcon("database", __iconNode$i);
+const Download = createLucideIcon("download", __iconNode$i);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35415,11 +35427,12 @@ const Database = createLucideIcon("database", __iconNode$i);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$h = [
-  ["path", { d: "M12 15V3", key: "m9g1x1" }],
-  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
-  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
+  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
+  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
+  ["path", { d: "M12 12v6", key: "3ahymv" }],
+  ["path", { d: "m15 15-3-3-3 3", key: "15xj92" }]
 ];
-const Download = createLucideIcon("download", __iconNode$h);
+const FileUp = createLucideIcon("file-up", __iconNode$h);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35428,11 +35441,10 @@ const Download = createLucideIcon("download", __iconNode$h);
  */
 const __iconNode$g = [
   ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
-  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
-  ["path", { d: "M12 12v6", key: "3ahymv" }],
-  ["path", { d: "m15 15-3-3-3 3", key: "15xj92" }]
+  ["path", { d: "M12 9v4", key: "juzpu7" }],
+  ["path", { d: "M12 17h.01", key: "p32p05" }]
 ];
-const FileUp = createLucideIcon("file-up", __iconNode$g);
+const FileWarning = createLucideIcon("file-warning", __iconNode$g);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35440,18 +35452,6 @@ const FileUp = createLucideIcon("file-up", __iconNode$g);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$f = [
-  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
-  ["path", { d: "M12 9v4", key: "juzpu7" }],
-  ["path", { d: "M12 17h.01", key: "p32p05" }]
-];
-const FileWarning = createLucideIcon("file-warning", __iconNode$f);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$e = [
   [
     "path",
     {
@@ -35462,7 +35462,23 @@ const __iconNode$e = [
   ["path", { d: "M6.453 15h11.094", key: "3shlmq" }],
   ["path", { d: "M8.5 2h7", key: "csnxdl" }]
 ];
-const FlaskConical = createLucideIcon("flask-conical", __iconNode$e);
+const FlaskConical = createLucideIcon("flask-conical", __iconNode$f);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$e = [
+  [
+    "path",
+    {
+      d: "M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z",
+      key: "sc7q7i"
+    }
+  ]
+];
+const Funnel = createLucideIcon("funnel", __iconNode$e);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35674,6 +35690,7 @@ const NAV_ITEMS = [
   { path: "/rejected", label: "Rejected Setups", icon: FileWarning },
   { path: "/discovery", label: "Discovery Lab", icon: FlaskConical },
   { path: "/experiments", label: "Experiment Lab", icon: Microscope },
+  { path: "/sample-expansion", label: "Sample Expansion", icon: Funnel },
   { path: "/forward", label: "Forward Tracker", icon: ShieldCheck },
   { path: "/walk-forward", label: "Walk-Forward Lab", icon: GitCompareArrows },
   { path: "/decisions", label: "Decision Console", icon: Target },
@@ -37300,7 +37317,7 @@ function classifyEvidence({
     detail: "Sample exists, but edge or drawdown quality is not yet strong."
   };
 }
-function downloadFile$5(name, content, type) {
+function downloadFile$6(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -37309,7 +37326,7 @@ function downloadFile$5(name, content, type) {
   link.click();
   URL.revokeObjectURL(url);
 }
-function Stat$6({
+function Stat$7({
   label,
   value,
   detail
@@ -37481,7 +37498,7 @@ function BacktestResultsPage() {
             type: "button",
             variant: "outline",
             disabled: !run.integrity.canRunBacktest,
-            onClick: () => downloadFile$5(
+            onClick: () => downloadFile$6(
               "ict-audit-log.json",
               exportJson(run),
               "application/json"
@@ -37497,7 +37514,7 @@ function BacktestResultsPage() {
           {
             type: "button",
             disabled: !run.integrity.canRunBacktest,
-            onClick: () => downloadFile$5(
+            onClick: () => downloadFile$6(
               "ict-signal-log.csv",
               exportCsv(allSignals),
               "text/csv"
@@ -37513,39 +37530,39 @@ function BacktestResultsPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Results are disabled because the integrity gate is closed." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$6,
+          Stat$7,
           {
             label: "Accepted signals",
             value: String(run.acceptedSignals.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$6,
+          Stat$7,
           {
             label: "Rejected candidates",
             value: String(run.rejectedSignals.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$6,
+          Stat$7,
           {
             label: "Win rate",
             value: `${(stats.winRate * 100).toFixed(1)}%`
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$6, { label: "Profit factor", value: stats.profitFactor.toFixed(2) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$6, { label: "Total trades", value: stats.totalTrades.toString() }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$7, { label: "Profit factor", value: stats.profitFactor.toFixed(2) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$7, { label: "Total trades", value: stats.totalTrades.toString() }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$6,
+          Stat$7,
           {
             label: "Evidence status",
             value: overallEvidence.status,
             detail: overallEvidence.detail
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$6, { label: "Avg R", value: `${stats.avgRR.toFixed(2)}R` }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$7, { label: "Avg R", value: `${stats.avgRR.toFixed(2)}R` }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$6,
+          Stat$7,
           {
             label: "Max drawdown",
             value: `${drawdownR(stats.maxDrawdown).toFixed(2)}R`,
@@ -37553,7 +37570,7 @@ function BacktestResultsPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$6,
+          Stat$7,
           {
             label: "Net P/L",
             value: `${(stats.totalPnl / 100).toFixed(2)}R`,
@@ -60853,56 +60870,56 @@ const BASE_VARIANTS = [
     setup: "200 EMA Reaction",
     targetModel: "previous day high",
     description: "Tests the core 200 EMA reaction setup against the prior daily high target.",
-    predicate: (signal) => passed$1(signal, "200 EMA reaction") && passed$1(signal, "Daily continuation bias")
+    predicate: (signal) => passed$2(signal, "200 EMA reaction") && passed$2(signal, "Daily continuation bias")
   },
   {
     id: "ema200-old-sunday",
     setup: "200 EMA Reaction",
     targetModel: "old Sunday level",
     description: "Tests whether the old Sunday level is a better fixed TP for 200 EMA reactions.",
-    predicate: (signal) => passed$1(signal, "200 EMA reaction") && passed$1(signal, "Daily continuation bias")
+    predicate: (signal) => passed$2(signal, "200 EMA reaction") && passed$2(signal, "Daily continuation bias")
   },
   {
     id: "ema200-prior-ny",
     setup: "200 EMA Reaction",
     targetModel: "prior NY high",
     description: "Tests 200 EMA reactions into prior New York session liquidity.",
-    predicate: (signal) => passed$1(signal, "200 EMA reaction") && passed$1(signal, "Daily continuation bias")
+    predicate: (signal) => passed$2(signal, "200 EMA reaction") && passed$2(signal, "Daily continuation bias")
   },
   {
     id: "ema200-prior-two-day-ny",
     setup: "200 EMA Reaction",
     targetModel: "prior two-day NY high",
     description: "Tests whether the prior two-day New York high gives cleaner target room.",
-    predicate: (signal) => passed$1(signal, "200 EMA reaction") && passed$1(signal, "Daily continuation bias")
+    predicate: (signal) => passed$2(signal, "200 EMA reaction") && passed$2(signal, "Daily continuation bias")
   },
   {
     id: "old-sunday-reaction-old-sunday",
     setup: "Old Sunday Reaction",
     targetModel: "old Sunday level",
     description: "Requires Sunday proximity plus bullish MA context, then targets the next old Sunday level.",
-    predicate: (signal) => passed$1(signal, "Sunday level within 0.12 ATR") && passed$1(signal, "Price above 200 EMA") && (passed$1(signal, "20 EMA > 50 SMA") || passed$1(signal, "Moving average hold"))
+    predicate: (signal) => passed$2(signal, "Sunday level within 0.12 ATR") && passed$2(signal, "Price above 200 EMA") && (passed$2(signal, "20 EMA > 50 SMA") || passed$2(signal, "Moving average hold"))
   },
   {
     id: "fvg-continuation-fvg-fill",
     setup: "FVG Fill Continuation",
     targetModel: "bullish FVG fill",
     description: "Tests bullish continuation with active 1H FVG overlap into a bullish FVG fill.",
-    predicate: (signal) => passed$1(signal, "Daily continuation bias") && passed$1(signal, "Price above 200 EMA") && passed$1(signal, "1H FVG overlap")
+    predicate: (signal) => passed$2(signal, "Daily continuation bias") && passed$2(signal, "Price above 200 EMA") && passed$2(signal, "1H FVG overlap")
   },
   {
     id: "m15-scalp-prev-day-high",
     setup: "15m 20 EMA Scalp",
     targetModel: "previous day high",
     description: "Tests lower-timeframe 20 EMA reclaim behavior against the prior daily high.",
-    predicate: (signal) => passed$1(signal, "15m 20 EMA hold") && passed$1(signal, "Price above 200 EMA")
+    predicate: (signal) => passed$2(signal, "15m 20 EMA hold") && passed$2(signal, "Price above 200 EMA")
   },
   {
     id: "ma-stack-prev-day-high",
     setup: "HTF MA Stack",
     targetModel: "previous day high",
     description: "Tests a broader higher-timeframe continuation profile with MA stack and daily bias.",
-    predicate: (signal) => passed$1(signal, "Daily continuation bias") && passed$1(signal, "Price above 200 EMA") && passed$1(signal, "20 EMA > 50 SMA")
+    predicate: (signal) => passed$2(signal, "Daily continuation bias") && passed$2(signal, "Price above 200 EMA") && passed$2(signal, "20 EMA > 50 SMA")
   }
 ];
 const VARIANTS = BASE_VARIANTS.flatMap(
@@ -60915,15 +60932,15 @@ const VARIANTS = BASE_VARIANTS.flatMap(
     }))
   )
 );
-function passed$1(signal, label) {
+function passed$2(signal, label) {
   return signal.reasons.some(
     (reason) => reason.label === label && reason.passed
   );
 }
-function pct$3(value) {
+function pct$4(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
-function fmtR$4(value) {
+function fmtR$5(value) {
   return `${value.toFixed(2)}R`;
 }
 function sessionFor(timestamp) {
@@ -60933,7 +60950,7 @@ function sessionFor(timestamp) {
   if (hour >= 13 && hour < 21) return "New York";
   return "Off session";
 }
-function downloadFile$4(name, content, type) {
+function downloadFile$5(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -60942,7 +60959,7 @@ function downloadFile$4(name, content, type) {
   link.click();
   URL.revokeObjectURL(url);
 }
-function Stat$5({
+function Stat$6({
   label,
   value,
   detail
@@ -60953,7 +60970,7 @@ function Stat$5({
     detail && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: detail })
   ] });
 }
-function h1BySymbol(candles) {
+function h1BySymbol$1(candles) {
   const groups = /* @__PURE__ */ new Map();
   for (const candle of candles) {
     if (candle.timeframe !== Timeframe.H1) continue;
@@ -60966,7 +60983,7 @@ function h1BySymbol(candles) {
   }
   return groups;
 }
-function targetFor(signal, model) {
+function targetFor$1(signal, model) {
   var _a2;
   return (_a2 = signal.targetCandidates) == null ? void 0 : _a2.find(
     (candidate) => candidate.model === model && candidate.rMultiple >= 0.8
@@ -61034,7 +61051,7 @@ function buildExperimentRows({
   candles,
   splitTimestamp
 }) {
-  const candlesBySymbol = h1BySymbol(candles);
+  const candlesBySymbol = h1BySymbol$1(candles);
   return VARIANTS.map((variant) => {
     const trades = signals.flatMap((signal) => {
       if (signal.blockers.some((blocker) => blocker.passed)) return [];
@@ -61044,7 +61061,7 @@ function buildExperimentRows({
       if (variant.sessionScope !== "All" && sessionFor(signal.timestamp) !== variant.sessionScope)
         return [];
       if (!variant.predicate(signal)) return [];
-      const target = targetFor(signal, variant.targetModel);
+      const target = targetFor$1(signal, variant.targetModel);
       if (!target) return [];
       const h1 = candlesBySymbol.get(signal.symbol) ?? [];
       return [simulateExperimentTrade(signal, target, h1)];
@@ -61178,7 +61195,7 @@ function TradeMiniTable({ trades }) {
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: trade.signal.symbol }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: trade.signal.setupType }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: trade.target.model }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2 text-right", children: fmtR$4(trade.target.rMultiple) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2 text-right", children: fmtR$5(trade.target.rMultiple) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: !trade.closed ? "Open" : trade.won ? "Win" : "Loss" })
         ]
       },
@@ -61235,7 +61252,7 @@ function ExperimentLabPage() {
           type: "button",
           variant: "outline",
           disabled: !run.integrity.canRunBacktest,
-          onClick: () => downloadFile$4(
+          onClick: () => downloadFile$5(
             "ict-experiment-report.json",
             experimentReportJson(run, rows, readiness),
             "application/json"
@@ -61250,16 +61267,16 @@ function ExperimentLabPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Experiment Lab is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$5,
+          Stat$6,
           {
             label: "Readiness",
             value: `${readiness.score}/100`,
             detail: readiness.level
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$5, { label: "Variants tested", value: String(rows.length) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$6, { label: "Variants tested", value: String(rows.length) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$5,
+          Stat$6,
           {
             label: "Candidate pool",
             value: String(signals.length),
@@ -61267,7 +61284,7 @@ function ExperimentLabPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$5,
+          Stat$6,
           {
             label: "Validation-ready variants",
             value: String(variantsWithSample),
@@ -61275,7 +61292,7 @@ function ExperimentLabPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$5,
+          Stat$6,
           {
             label: "Watchlist variants",
             value: String(watchlistCount),
@@ -61283,10 +61300,10 @@ function ExperimentLabPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$5,
+          Stat$6,
           {
             label: "Best validation net",
-            value: bestValidation ? fmtR$4(bestValidation.validation.totalR) : "0.00R",
+            value: bestValidation ? fmtR$5(bestValidation.validation.totalR) : "0.00R",
             detail: (bestValidation == null ? void 0 : bestValidation.variant.id) ?? "No variant"
           }
         )
@@ -61344,12 +61361,12 @@ function ExperimentLabPage() {
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.sessionScope }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.targetModel }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.all.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$4(row.all.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$5(row.all.totalR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.discovery.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$4(row.discovery.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$5(row.discovery.totalR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.validation.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$4(row.validation.totalR) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$3(row.validation.winRate) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$5(row.validation.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$4(row.validation.winRate) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.promotionGate }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.consistencyRisk }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { title: row.evidenceDetail, children: row.evidenceStatus }) }),
@@ -61401,10 +61418,10 @@ function ExperimentLabPage() {
               "Validation sample: ",
               bestValidation.validation.trades,
               " trade (s), ",
-              fmtR$4(bestValidation.validation.totalR),
+              fmtR$5(bestValidation.validation.totalR),
               ",",
               " ",
-              pct$3(bestValidation.validation.winRate),
+              pct$4(bestValidation.validation.winRate),
               " win rate."
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "This is still not promotion-ready unless the sample grows and survives forward tracking without changing its rules." })
@@ -61415,16 +61432,16 @@ function ExperimentLabPage() {
     ] })
   ] });
 }
-function fmtR$3(value) {
+function fmtR$4(value) {
   return `${value.toFixed(2)}R`;
 }
-function pct$2(value) {
+function pct$3(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
 function fmtDate$1(value) {
   return new Date(value).toISOString().slice(0, 10);
 }
-function downloadFile$3(name, content, type) {
+function downloadFile$4(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -61433,7 +61450,7 @@ function downloadFile$3(name, content, type) {
   link.click();
   URL.revokeObjectURL(url);
 }
-function statsFor(trades) {
+function statsFor$1(trades) {
   const closed = trades.filter((trade) => trade.closed);
   const wins = closed.filter((trade) => trade.won);
   const losses = closed.filter((trade) => !trade.won);
@@ -61467,7 +61484,7 @@ function buildWindows(start, end) {
     end: index2 === count - 1 ? end + 1 : start + size * (index2 + 1)
   }));
 }
-function verdictFor({
+function verdictFor$1({
   eligibleWindows,
   survivedWindows,
   forwardNetR,
@@ -61487,10 +61504,10 @@ function buildWalkForwardRows({
 }) {
   return experimentRows.map((row) => {
     const windowResults = windows.slice(1).map((window2) => {
-      const prior = statsFor(
+      const prior = statsFor$1(
         row.trades.filter((trade) => trade.signal.timestamp < window2.start)
       );
-      const forward = statsFor(
+      const forward = statsFor$1(
         row.trades.filter(
           (trade) => trade.signal.timestamp >= window2.start && trade.signal.timestamp < window2.end
         )
@@ -61530,7 +61547,7 @@ function buildWalkForwardRows({
       forwardNetR,
       positiveWindowRate,
       worstWindowR,
-      verdict: verdictFor({
+      verdict: verdictFor$1({
         eligibleWindows: eligible.length,
         survivedWindows: survived.length,
         forwardNetR,
@@ -61542,7 +61559,7 @@ function buildWalkForwardRows({
     (a2, b2) => b2.forwardNetR - a2.forwardNetR || b2.eligibleWindows - a2.eligibleWindows || b2.forwardTrades - a2.forwardTrades
   );
 }
-function Stat$4({
+function Stat$5({
   label,
   value,
   detail
@@ -61594,7 +61611,7 @@ function WalkForwardPage() {
           type: "button",
           variant: "outline",
           disabled: !run.integrity.canRunBacktest,
-          onClick: () => downloadFile$3(
+          onClick: () => downloadFile$4(
             "ict-walk-forward-report.json",
             JSON.stringify(
               {
@@ -61618,7 +61635,7 @@ function WalkForwardPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Walk-forward testing is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$4,
+          Stat$5,
           {
             label: "Walk windows",
             value: String(Math.max(0, windows.length - 1)),
@@ -61626,7 +61643,7 @@ function WalkForwardPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$4,
+          Stat$5,
           {
             label: "Repeatable candidates",
             value: String(repeatableCount),
@@ -61634,7 +61651,7 @@ function WalkForwardPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$4,
+          Stat$5,
           {
             label: "Watchlist",
             value: String(watchlistCount),
@@ -61642,10 +61659,10 @@ function WalkForwardPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$4,
+          Stat$5,
           {
             label: "Best walk-forward net",
-            value: best ? fmtR$3(best.forwardNetR) : "0.00R",
+            value: best ? fmtR$4(best.forwardNetR) : "0.00R",
             detail: (best == null ? void 0 : best.id) ?? "No variant"
           }
         )
@@ -61684,9 +61701,9 @@ function WalkForwardPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.eligibleWindows }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.survivedWindows }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.forwardTrades }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$3(row.forwardNetR) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$2(row.positiveWindowRate) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$3(row.worstWindowR) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$4(row.forwardNetR) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$3(row.positiveWindowRate) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$4(row.worstWindowR) }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.verdict })
           ] }, row.id)) })
         ] }) })
@@ -61725,10 +61742,10 @@ function WalkForwardPage() {
                   fmtDate$1(windowResult.window.end)
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: windowResult.prior.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$3(windowResult.prior.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$4(windowResult.prior.totalR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: windowResult.forward.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$3(windowResult.forward.totalR) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$2(windowResult.forward.winRate) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$4(windowResult.forward.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$3(windowResult.forward.winRate) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: windowResult.status })
               ]
             },
@@ -61739,10 +61756,10 @@ function WalkForwardPage() {
     ] })
   ] });
 }
-function fmtR$2(value) {
+function fmtR$3(value) {
   return `${value.toFixed(2)}R`;
 }
-function downloadFile$2(name, content, type) {
+function downloadFile$3(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -61751,7 +61768,7 @@ function downloadFile$2(name, content, type) {
   link.click();
   URL.revokeObjectURL(url);
 }
-function Stat$3({
+function Stat$4({
   label,
   value,
   detail
@@ -61803,7 +61820,7 @@ function buildDecisionRows({
         (trade) => trade.signal.timestamp > variant.frozenAt
       )
     );
-    const forwardStats = statsFor(forwardTrades);
+    const forwardStats = statsFor$1(forwardTrades);
     const status = statusFor({
       experiment,
       walk,
@@ -61813,7 +61830,7 @@ function buildDecisionRows({
     });
     const reasons = [
       `Experiment gate: ${experiment.promotionGate}`,
-      `Validation: ${experiment.validation.trades} trade(s), ${fmtR$2(
+      `Validation: ${experiment.validation.trades} trade(s), ${fmtR$3(
         experiment.validation.totalR
       )}`,
       walk ? `Walk-forward: ${walk.verdict}, ${walk.survivedWindows}/${walk.eligibleWindows} survived` : "Walk-forward: unavailable",
@@ -61893,7 +61910,7 @@ function DecisionConsolePage() {
           type: "button",
           variant: "outline",
           disabled: !run.integrity.canRunBacktest,
-          onClick: () => downloadFile$2(
+          onClick: () => downloadFile$3(
             "ict-decision-console.json",
             JSON.stringify(
               {
@@ -61935,7 +61952,7 @@ function DecisionConsolePage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Decision Console is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$3,
+          Stat$4,
           {
             label: "Forward-test candidates",
             value: String(forwardReady.length),
@@ -61943,7 +61960,7 @@ function DecisionConsolePage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$3,
+          Stat$4,
           {
             label: "Research candidates",
             value: String(researchCandidates.length),
@@ -61951,7 +61968,7 @@ function DecisionConsolePage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$3,
+          Stat$4,
           {
             label: "Avoid",
             value: String(avoid.length),
@@ -61959,7 +61976,7 @@ function DecisionConsolePage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$3,
+          Stat$4,
           {
             label: "Best score",
             value: top[0] ? top[0].score.toFixed(2) : "0.00",
@@ -62004,10 +62021,10 @@ function DecisionConsolePage() {
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.status }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.action }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.experiment.validation.trades }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$2(row.experiment.validation.totalR) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$3(row.experiment.validation.totalR) }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: ((_a3 = row.walk) == null ? void 0 : _a3.verdict) ?? "Unavailable" }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.forwardTrades }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$2(row.forwardNetR) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$3(row.forwardNetR) }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.score.toFixed(2) })
             ] }, row.id);
           }) })
@@ -62035,13 +62052,13 @@ function DecisionConsolePage() {
     ] })
   ] });
 }
-function pct$1(value) {
+function pct$2(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
 function rate(part, total) {
   return total === 0 ? 0 : part / total;
 }
-function passed(label, signal) {
+function passed$1(label, signal) {
   return signal.reasons.some(
     (reason) => reason.label === label && reason.passed
   );
@@ -62076,7 +62093,7 @@ function InsightCard({
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-2 text-sm leading-relaxed text-muted-foreground", children })
   ] });
 }
-function Stat$2({ label, value }) {
+function Stat$3({ label, value }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: label }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: value })
@@ -62181,16 +62198,16 @@ function DiscoveryLabPage() {
   );
   const discovery = reactExports.useMemo(() => {
     const tp1Passes = signals.filter(
-      (signal) => passed("TP1 buyside liquidity >= 0.8R", signal)
+      (signal) => passed$1("TP1 buyside liquidity >= 0.8R", signal)
     ).length;
     const maHoldPasses = signals.filter(
-      (signal) => passed("Moving average hold", signal)
+      (signal) => passed$1("Moving average hold", signal)
     ).length;
     const fvgPasses = signals.filter(
-      (signal) => passed("1H FVG overlap", signal)
+      (signal) => passed$1("1H FVG overlap", signal)
     ).length;
     const sundayPasses = signals.filter(
-      (signal) => passed("Sunday level within 0.12 ATR", signal)
+      (signal) => passed$1("Sunday level within 0.12 ATR", signal)
     ).length;
     const acceptedWithMissingMa = accepted.filter(
       (signal) => failed("Moving average hold", signal)
@@ -62258,36 +62275,36 @@ function DiscoveryLabPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Discovery is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$2,
+          Stat$3,
           {
             label: "Hypothesis candidates",
             value: String(signals.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$2,
+          Stat$3,
           {
             label: "Accepted by current rules",
             value: String(accepted.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$2,
+          Stat$3,
           {
             label: "High-score rejects",
             value: String(discovery.highScoreRejects.length)
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$2, { label: "Median TP1 R", value: discovery.medianR.toFixed(2) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$3, { label: "Median TP1 R", value: discovery.medianR.toFixed(2) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$2,
+          Stat$3,
           {
             label: "Derived TFs",
             value: run.derivedTimeframes.join(", ") || "none"
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$2,
+          Stat$3,
           {
             label: "Structure snapshots",
             value: String(run.marketStructure.length)
@@ -62316,7 +62333,7 @@ function DiscoveryLabPage() {
       /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 lg:grid-cols-2", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs(InsightCard, { title: "TP1 Bottleneck", severity: "watch", children: [
           "TP1 liquidity passed on ",
-          pct$1(discovery.tp1PassRate),
+          pct$2(discovery.tp1PassRate),
           " of candidates. This is the main rejection pressure. Next discovery work should compare previous-day highs, session highs, old Sunday levels, and imbalance fills as separate TP models."
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs(InsightCard, { title: "Split Boundary", severity: "watch", children: [
@@ -62370,7 +62387,7 @@ function DiscoveryLabPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.model }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.candidates }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.passCount }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$1(row.passRate) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$2(row.passRate) }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2 text-right", children: [
               row.medianR.toFixed(2),
               "R"
@@ -62388,31 +62405,31 @@ function DiscoveryLabPage() {
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 grid gap-3 md:grid-cols-2", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Stat$2,
+              Stat$3,
               {
                 label: "TP1 pass rate",
-                value: pct$1(discovery.tp1PassRate)
+                value: pct$2(discovery.tp1PassRate)
               }
             ),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Stat$2,
+              Stat$3,
               {
                 label: "MA hold pass rate",
-                value: pct$1(discovery.maHoldPassRate)
+                value: pct$2(discovery.maHoldPassRate)
               }
             ),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Stat$2,
+              Stat$3,
               {
                 label: "FVG overlap pass rate",
-                value: pct$1(discovery.fvgPassRate)
+                value: pct$2(discovery.fvgPassRate)
               }
             ),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Stat$2,
+              Stat$3,
               {
                 label: "Sunday proximity rate",
-                value: pct$1(discovery.sundayPassRate)
+                value: pct$2(discovery.sundayPassRate)
               }
             )
           ] }),
@@ -62476,16 +62493,16 @@ function DiscoveryLabPage() {
     ] })
   ] });
 }
-function fmtR$1(value) {
+function fmtR$2(value) {
   return `${value.toFixed(2)}R`;
 }
-function pct(value) {
+function pct$1(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
 function fmtDate(value) {
   return value ? new Date(value).toISOString() : "n/a";
 }
-function downloadFile$1(name, content, type) {
+function downloadFile$2(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -62498,7 +62515,7 @@ function forwardTradesFor(frozen, row) {
   if (!row) return [];
   return row.trades.filter((trade) => trade.signal.timestamp > frozen.frozenAt);
 }
-function Stat$1({
+function Stat$2({
   label,
   value,
   detail
@@ -62573,7 +62590,7 @@ function ForwardTrackerPage() {
           type: "button",
           variant: "outline",
           disabled: tracked.length === 0,
-          onClick: () => downloadFile$1(
+          onClick: () => downloadFile$2(
             "ict-forward-tracker.json",
             JSON.stringify(
               {
@@ -62612,7 +62629,7 @@ function ForwardTrackerPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Forward tracking is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$1,
+          Stat$2,
           {
             label: "Frozen variants",
             value: String(frozenVariants.length),
@@ -62620,16 +62637,16 @@ function ForwardTrackerPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$1,
+          Stat$2,
           {
             label: "Forward trades",
             value: String(forwardTradeCount),
             detail: "Signals after freeze timestamps"
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$1, { label: "Forward net", value: fmtR$1(forwardNetR) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$2, { label: "Forward net", value: fmtR$2(forwardNetR) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$1,
+          Stat$2,
           {
             label: "Latest candle",
             value: fmtDate(run.integrity.end),
@@ -62681,8 +62698,8 @@ function ForwardTrackerPage() {
                   "/",
                   item.open
                 ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$1(item.netR) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct(item.winRate) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$2(item.netR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$1(item.winRate) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: item.frozen.sourcePromotionGate }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
                   Button,
@@ -62709,10 +62726,10 @@ function ForwardTrackerPage() {
 function fmtPrice(value) {
   return value.toFixed(2);
 }
-function fmtR(value) {
+function fmtR$1(value) {
   return `${value.toFixed(2)}R`;
 }
-function downloadFile(name, content, type) {
+function downloadFile$1(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -62765,7 +62782,7 @@ function buildCandidate({
     blockers
   };
 }
-function Stat({
+function Stat$1({
   label,
   value,
   detail
@@ -62830,7 +62847,7 @@ function LiveCandidatePage() {
           type: "button",
           variant: "outline",
           disabled: !run.integrity.canRunBacktest,
-          onClick: () => downloadFile(
+          onClick: () => downloadFile$1(
             "ict-live-candidates.json",
             JSON.stringify(
               {
@@ -62870,7 +62887,7 @@ function LiveCandidatePage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Live Candidate Replay is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat,
+          Stat$1,
           {
             label: "Latest candle",
             value: latestTimestamp ? new Date(latestTimestamp).toISOString().slice(0, 16) : "n/a",
@@ -62878,7 +62895,7 @@ function LiveCandidatePage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat,
+          Stat$1,
           {
             label: "Forward-test review",
             value: String(forwardReview),
@@ -62886,7 +62903,7 @@ function LiveCandidatePage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat,
+          Stat$1,
           {
             label: "Research only",
             value: String(researchOnly),
@@ -62894,7 +62911,7 @@ function LiveCandidatePage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat,
+          Stat$1,
           {
             label: "Blocked",
             value: String(blocked),
@@ -62953,7 +62970,7 @@ function LiveCandidatePage() {
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-mono text-xs", children: [
                   "R: ",
-                  fmtR(candidate.signal.rMultipleToTp1)
+                  fmtR$1(candidate.signal.rMultipleToTp1)
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-mono text-xs", children: [
                   "Score: ",
@@ -63258,6 +63275,358 @@ function RuleEngineHealthPage() {
     )) })
   ] });
 }
+function passed(signal, label) {
+  return signal.reasons.some(
+    (reason) => reason.label === label && reason.passed
+  );
+}
+function noHardBlocker(signal) {
+  return !signal.blockers.some((blocker) => blocker.passed);
+}
+function hasViableTarget(signal) {
+  return signal.rMultipleToTp1 >= 0.8 || (signal.targetCandidates ?? []).some(
+    (candidate) => candidate.rMultiple >= 0.8
+  );
+}
+function targetFor(signal) {
+  var _a2;
+  return ((_a2 = signal.targetCandidates) == null ? void 0 : _a2.filter((candidate) => candidate.rMultiple >= 0.8).sort((a2, b2) => a2.rMultiple - b2.rMultiple)[0]) ?? {
+    model: signal.targetModel ?? "current TP1",
+    price: signal.tp1,
+    rMultiple: signal.rMultipleToTp1
+  };
+}
+function h1BySymbol(candles) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const candle of candles) {
+    if (candle.timeframe !== Timeframe.H1) continue;
+    const group = groups.get(candle.symbol) ?? [];
+    group.push(candle);
+    groups.set(candle.symbol, group);
+  }
+  for (const group of groups.values()) {
+    group.sort((a2, b2) => Number(a2.timestamp) - Number(b2.timestamp));
+  }
+  return groups;
+}
+function simulateTrade(signal, target, candles) {
+  const future = candles.filter(
+    (candle) => Number(candle.timestamp) > signal.timestamp
+  );
+  const exit = future.find(
+    (candle) => candle.low <= signal.stop || candle.high >= target.price
+  );
+  const won = exit ? exit.high >= target.price : false;
+  return {
+    signal,
+    target,
+    closed: !!exit,
+    won,
+    rMultiple: exit ? won ? target.rMultiple : -1 : 0
+  };
+}
+function statsFor(trades) {
+  const closed = trades.filter((trade) => trade.closed);
+  const wins = closed.filter((trade) => trade.won);
+  const losses = closed.filter((trade) => !trade.won);
+  const totalR = closed.reduce((sum, trade) => sum + trade.rMultiple, 0);
+  let running = 0;
+  let peak = 0;
+  let maxDrawdownR = 0;
+  for (const trade of closed) {
+    running += trade.rMultiple;
+    peak = Math.max(peak, running);
+    maxDrawdownR = Math.max(maxDrawdownR, peak - running);
+  }
+  return {
+    trades: trades.length,
+    wins: wins.length,
+    losses: losses.length,
+    open: trades.length - closed.length,
+    totalR,
+    avgR: closed.length ? totalR / closed.length : 0,
+    winRate: closed.length ? wins.length / closed.length : 0,
+    maxDrawdownR
+  };
+}
+function fmtR(value) {
+  return `${value.toFixed(2)}R`;
+}
+function pct(value) {
+  return `${(value * 100).toFixed(1)}%`;
+}
+function downloadFile(name, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+const PROFILES = [
+  {
+    id: "locked-accepted",
+    label: "Current locked accepts",
+    hypothesis: "Baseline only; this is the current strict rule output.",
+    predicate: (signal) => signal.accepted
+  },
+  {
+    id: "score-5-no-hard-blocker",
+    label: "Score 5+ no hard blocker",
+    hypothesis: "Tests whether high-score rejected candidates are useful before choosing which gate to rewrite.",
+    predicate: (signal) => noHardBlocker(signal) && signal.score >= 5 && hasViableTarget(signal)
+  },
+  {
+    id: "score-4-no-hard-blocker",
+    label: "Score 4+ no hard blocker",
+    hypothesis: "Stress test. If this improves sample but collapses validation, lower-score expansion is too loose.",
+    predicate: (signal) => noHardBlocker(signal) && signal.score >= 4 && hasViableTarget(signal)
+  },
+  {
+    id: "ema200-family",
+    label: "200 EMA reaction family",
+    hypothesis: "Tests Coco-style 200 EMA reactions as their own family instead of forcing every confluence label.",
+    predicate: (signal) => noHardBlocker(signal) && passed(signal, "200 EMA reaction") && passed(signal, "Price above 200 EMA") && hasViableTarget(signal)
+  },
+  {
+    id: "daily-ema-target-no-sunday",
+    label: "No Sunday proximity requirement",
+    hypothesis: "Tests whether Sunday proximity is over-filtering otherwise clean continuation ideas.",
+    predicate: (signal) => noHardBlocker(signal) && passed(signal, "Daily continuation bias") && passed(signal, "Price above 200 EMA") && passed(signal, "20 EMA > 50 SMA") && hasViableTarget(signal)
+  },
+  {
+    id: "daily-ema-target-no-ma-hold",
+    label: "No MA-hold requirement",
+    hypothesis: "Tests whether MA hold should be context instead of a hard requirement.",
+    predicate: (signal) => noHardBlocker(signal) && passed(signal, "Daily continuation bias") && passed(signal, "Price above 200 EMA") && passed(signal, "1H FVG overlap") && hasViableTarget(signal)
+  },
+  {
+    id: "m15-scalp-family",
+    label: "15m 20 EMA scalp family",
+    hypothesis: "Tests lower-timeframe scalp behavior separately from 1H continuation rules.",
+    predicate: (signal) => noHardBlocker(signal) && passed(signal, "15m 20 EMA hold") && hasViableTarget(signal)
+  }
+];
+function verdictFor(row) {
+  if (row.validation.trades < 10) return "No claim";
+  if (row.validation.totalR <= 0 || row.validation.maxDrawdownR > 6) {
+    return "Too loose";
+  }
+  if (row.validation.trades >= 30 && row.validation.avgR > 0.1) {
+    return "Candidate";
+  }
+  if (row.sampleLift > 1 && row.validation.totalR > 0) return "Watchlist";
+  return "No claim";
+}
+function Stat({
+  label,
+  value,
+  detail
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: label }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: value }),
+    detail && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: detail })
+  ] });
+}
+function SampleExpansionPage() {
+  const { candles, run } = useStrategyWorkspace();
+  const signals = reactExports.useMemo(
+    () => [...run.acceptedSignals, ...run.rejectedSignals],
+    [run.acceptedSignals, run.rejectedSignals]
+  );
+  const rows = reactExports.useMemo(() => {
+    const candlesBySymbol = h1BySymbol(candles);
+    const baselineCount = Math.max(1, run.acceptedSignals.length);
+    return PROFILES.map((profile) => {
+      const trades = signals.flatMap((signal) => {
+        if (signal.stop >= signal.entry) return [];
+        if (!profile.predicate(signal)) return [];
+        const h1 = candlesBySymbol.get(signal.symbol) ?? [];
+        return [simulateTrade(signal, targetFor(signal), h1)];
+      });
+      const discovery = run.validation.discoveryEndTimestamp === void 0 ? statsFor([]) : statsFor(
+        trades.filter(
+          (trade) => trade.signal.timestamp <= (run.validation.discoveryEndTimestamp ?? 0)
+        )
+      );
+      const validation = run.validation.discoveryEndTimestamp === void 0 ? statsFor([]) : statsFor(
+        trades.filter(
+          (trade) => trade.signal.timestamp > (run.validation.discoveryEndTimestamp ?? 0)
+        )
+      );
+      const sampleLift = trades.length / baselineCount;
+      const notes = [
+        `${trades.length} total simulated trade(s), ${sampleLift.toFixed(
+          1
+        )}x current accepted sample.`,
+        `Dominant sessions: ${[
+          ...new Set(
+            trades.slice(0, 8).map((trade) => sessionFor(trade.signal.timestamp))
+          )
+        ].slice(0, 4).join(", ") || "n/a"}.`
+      ];
+      return {
+        profile,
+        trades,
+        discovery,
+        validation,
+        sampleLift,
+        verdict: verdictFor({ validation, sampleLift }),
+        notes
+      };
+    }).sort(
+      (a2, b2) => b2.validation.totalR - a2.validation.totalR || b2.validation.trades - a2.validation.trades
+    );
+  }, [
+    candles,
+    signals,
+    run.acceptedSignals.length,
+    run.validation.discoveryEndTimestamp
+  ]);
+  const candidates = rows.filter((row) => row.verdict === "Candidate").length;
+  const watchlist = rows.filter((row) => row.verdict === "Watchlist").length;
+  const tooLoose = rows.filter((row) => row.verdict === "Too loose").length;
+  const best = rows[0];
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "sample-expansion.page", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-display text-2xl font-bold", children: "Sample Expansion Lab" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "This page tests controlled ways to expand the trade sample. It does not promote a looser rule unless validation survives." })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Button,
+        {
+          type: "button",
+          variant: "outline",
+          disabled: !run.integrity.canRunBacktest,
+          onClick: () => downloadFile(
+            "ict-sample-expansion.json",
+            JSON.stringify(
+              {
+                generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+                integrity: run.integrity,
+                baselineAccepted: run.acceptedSignals.length,
+                rows: rows.map((row) => ({
+                  id: row.profile.id,
+                  label: row.profile.label,
+                  hypothesis: row.profile.hypothesis,
+                  verdict: row.verdict,
+                  sampleLift: row.sampleLift,
+                  discovery: row.discovery,
+                  validation: row.validation,
+                  notes: row.notes
+                }))
+              },
+              null,
+              2
+            ),
+            "application/json"
+          ),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "mr-2 h-4 w-4" }),
+            "Export Expansion"
+          ]
+        }
+      )
+    ] }),
+    !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Sample Expansion Lab is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat,
+          {
+            label: "Locked accepts",
+            value: String(run.acceptedSignals.length),
+            detail: "Current strict strategy sample"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat,
+          {
+            label: "Expansion candidates",
+            value: String(candidates),
+            detail: "Validation survived with larger sample"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat,
+          {
+            label: "Watchlist relaxations",
+            value: String(watchlist),
+            detail: "Useful, still not proof"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat,
+          {
+            label: "Too loose",
+            value: String(tooLoose),
+            detail: "Sample grew but validation failed"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-destructive/40 bg-destructive/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ShieldAlert, { className: "mt-0.5 h-4 w-4 text-destructive" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Anti-Overfit Rule" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "A larger sample is only useful if the validation side stays positive. This page should create hypotheses for Experiment Lab, not silently replace the locked rules." })
+        ] })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Funnel, { className: "h-4 w-4 text-primary" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Expansion Scoreboard" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1120px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Profile" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Verdict" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Total" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Lift" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Discovery" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Discovery net" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Validation" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Validation net" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val win" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val DD" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: rows.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "tr",
+            {
+              className: "border-b border-border/40",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { title: row.profile.hypothesis, children: row.profile.label }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.verdict }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.trades.length }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2 text-right", children: [
+                  row.sampleLift.toFixed(1),
+                  "x"
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.discovery.trades }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(row.discovery.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.validation.trades }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(row.validation.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct(row.validation.winRate) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(row.validation.maxDrawdownR) })
+              ]
+            },
+            row.profile.id
+          )) })
+        ] }) })
+      ] }),
+      best && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Current Best Expansion" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-2 text-sm text-muted-foreground", children: [
+          best.profile.label,
+          ": ",
+          best.profile.hypothesis
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 grid gap-3 md:grid-cols-3", children: best.notes.map((note) => /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-border p-3 text-sm", children: note }, note)) })
+      ] })
+    ] })
+  ] });
+}
 function SignalCard({ signal }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("article", { className: "border border-border bg-card p-4", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
@@ -63382,6 +63751,11 @@ const experimentRoute = createRoute({
   path: "/experiments",
   component: ExperimentLabPage
 });
+const sampleExpansionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/sample-expansion",
+  component: SampleExpansionPage
+});
 const forwardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/forward",
@@ -63425,6 +63799,7 @@ const tree = rootRoute.addChildren([
   rejectedRoute,
   discoveryRoute,
   experimentRoute,
+  sampleExpansionRoute,
   forwardRoute,
   walkForwardRoute,
   decisionRoute,
