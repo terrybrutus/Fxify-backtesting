@@ -6,6 +6,7 @@ import DecisionConsolePage from "@/pages/DecisionConsolePage";
 import DiscoveryLabPage from "@/pages/DiscoveryLabPage";
 import ExperimentLabPage from "@/pages/ExperimentLabPage";
 import ForwardTrackerPage from "@/pages/ForwardTrackerPage";
+import LiveCandidatePage from "@/pages/LiveCandidatePage";
 import RejectedSetupsPage from "@/pages/RejectedSetupsPage";
 import ReplayPage from "@/pages/ReplayPage";
 import RuleEngineHealthPage from "@/pages/RuleEngineHealthPage";
@@ -83,6 +84,12 @@ const decisionRoute = createRoute({
   component: DecisionConsolePage,
 });
 
+const liveCandidateRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/live-candidates",
+  component: LiveCandidatePage,
+});
+
 const replayRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/replay",
@@ -112,6 +119,7 @@ const tree = rootRoute.addChildren([
   forwardRoute,
   walkForwardRoute,
   decisionRoute,
+  liveCandidateRoute,
   replayRoute,
   chartRoute,
   resultsRoute,

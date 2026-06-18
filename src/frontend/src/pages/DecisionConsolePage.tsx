@@ -14,13 +14,13 @@ import {
 import { Download, ShieldAlert, Target, XCircle } from "lucide-react";
 import { useMemo } from "react";
 
-type DecisionStatus =
+export type DecisionStatus =
   | "Do not trade"
   | "Needs evidence"
   | "Research candidate"
   | "Forward-test candidate";
 
-type DecisionRow = {
+export type DecisionRow = {
   id: string;
   setup: string;
   symbolScope: string;
@@ -118,7 +118,7 @@ function actionFor(status: DecisionStatus, frozen: boolean) {
   return "Keep testing";
 }
 
-function buildDecisionRows({
+export function buildDecisionRows({
   experiments,
   walkRows,
 }: {
