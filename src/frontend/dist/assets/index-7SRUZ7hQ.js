@@ -60810,6 +60810,7 @@ function ruleHashForRow(row) {
   return hashText(
     [
       row.variant.setup,
+      row.variant.ruleFamily,
       row.variant.symbolScope,
       row.variant.sessionScope,
       row.variant.targetModel,
@@ -60821,6 +60822,7 @@ function freezeVariant(row, discoveryEndTimestamp) {
   return {
     id: `${row.variant.id}-${Date.now()}`,
     variantId: row.variant.id,
+    ruleFamily: row.variant.ruleFamily,
     setup: row.variant.setup,
     symbolScope: row.variant.symbolScope,
     sessionScope: row.variant.sessionScope,
@@ -60867,6 +60869,7 @@ const SESSION_SCOPES = [
 const BASE_VARIANTS = [
   {
     id: "ema200-prev-day-high",
+    ruleFamily: "Strict 200 EMA + daily bias",
     setup: "200 EMA Reaction",
     targetModel: "previous day high",
     description: "Tests the core 200 EMA reaction setup against the prior daily high target.",
@@ -60874,6 +60877,7 @@ const BASE_VARIANTS = [
   },
   {
     id: "ema200-old-sunday",
+    ruleFamily: "Strict 200 EMA + daily bias",
     setup: "200 EMA Reaction",
     targetModel: "old Sunday level",
     description: "Tests whether the old Sunday level is a better fixed TP for 200 EMA reactions.",
@@ -60881,6 +60885,7 @@ const BASE_VARIANTS = [
   },
   {
     id: "ema200-prior-ny",
+    ruleFamily: "Strict 200 EMA + daily bias",
     setup: "200 EMA Reaction",
     targetModel: "prior NY high",
     description: "Tests 200 EMA reactions into prior New York session liquidity.",
@@ -60888,13 +60893,55 @@ const BASE_VARIANTS = [
   },
   {
     id: "ema200-prior-two-day-ny",
+    ruleFamily: "Strict 200 EMA + daily bias",
     setup: "200 EMA Reaction",
     targetModel: "prior two-day NY high",
     description: "Tests whether the prior two-day New York high gives cleaner target room.",
     predicate: (signal) => passed$2(signal, "200 EMA reaction") && passed$2(signal, "Daily continuation bias")
   },
   {
+    id: "ema200-family-prev-day-high",
+    ruleFamily: "200 EMA reaction family",
+    setup: "200 EMA Reaction",
+    targetModel: "previous day high",
+    description: "Promoted from Sample Expansion: tests 200 EMA reactions without requiring daily continuation bias.",
+    predicate: (signal) => passed$2(signal, "200 EMA reaction") && passed$2(signal, "Price above 200 EMA")
+  },
+  {
+    id: "ema200-family-old-sunday",
+    ruleFamily: "200 EMA reaction family",
+    setup: "200 EMA Reaction",
+    targetModel: "old Sunday level",
+    description: "Promoted from Sample Expansion: tests 200 EMA reactions into old Sunday liquidity without daily-bias gating.",
+    predicate: (signal) => passed$2(signal, "200 EMA reaction") && passed$2(signal, "Price above 200 EMA")
+  },
+  {
+    id: "ema200-family-prior-ny",
+    ruleFamily: "200 EMA reaction family",
+    setup: "200 EMA Reaction",
+    targetModel: "prior NY high",
+    description: "Promoted from Sample Expansion: tests 200 EMA reactions into prior New York highs.",
+    predicate: (signal) => passed$2(signal, "200 EMA reaction") && passed$2(signal, "Price above 200 EMA")
+  },
+  {
+    id: "ema200-family-prior-two-day-ny",
+    ruleFamily: "200 EMA reaction family",
+    setup: "200 EMA Reaction",
+    targetModel: "prior two-day NY high",
+    description: "Promoted from Sample Expansion: tests broader 200 EMA reaction room into prior two-day New York highs.",
+    predicate: (signal) => passed$2(signal, "200 EMA reaction") && passed$2(signal, "Price above 200 EMA")
+  },
+  {
+    id: "ema200-family-fvg-fill",
+    ruleFamily: "200 EMA reaction family",
+    setup: "200 EMA Reaction",
+    targetModel: "bullish FVG fill",
+    description: "Promoted from Sample Expansion: tests 200 EMA reactions into nearby bullish FVG fills.",
+    predicate: (signal) => passed$2(signal, "200 EMA reaction") && passed$2(signal, "Price above 200 EMA")
+  },
+  {
     id: "old-sunday-reaction-old-sunday",
+    ruleFamily: "Old Sunday reaction",
     setup: "Old Sunday Reaction",
     targetModel: "old Sunday level",
     description: "Requires Sunday proximity plus bullish MA context, then targets the next old Sunday level.",
@@ -60902,6 +60949,7 @@ const BASE_VARIANTS = [
   },
   {
     id: "fvg-continuation-fvg-fill",
+    ruleFamily: "FVG continuation",
     setup: "FVG Fill Continuation",
     targetModel: "bullish FVG fill",
     description: "Tests bullish continuation with active 1H FVG overlap into a bullish FVG fill.",
@@ -60909,6 +60957,7 @@ const BASE_VARIANTS = [
   },
   {
     id: "m15-scalp-prev-day-high",
+    ruleFamily: "15m 20 EMA scalp",
     setup: "15m 20 EMA Scalp",
     targetModel: "previous day high",
     description: "Tests lower-timeframe 20 EMA reclaim behavior against the prior daily high.",
@@ -60916,6 +60965,7 @@ const BASE_VARIANTS = [
   },
   {
     id: "ma-stack-prev-day-high",
+    ruleFamily: "HTF MA stack",
     setup: "HTF MA Stack",
     targetModel: "previous day high",
     description: "Tests a broader higher-timeframe continuation profile with MA stack and daily bias.",
@@ -61148,6 +61198,7 @@ function experimentReportJson(run, rows, readiness) {
       validation: run.validation,
       variants: rows.map((row) => ({
         id: row.variant.id,
+        ruleFamily: row.variant.ruleFamily,
         setup: row.variant.setup,
         symbolScope: row.variant.symbolScope,
         sessionScope: row.variant.sessionScope,
@@ -61336,6 +61387,7 @@ function ExperimentLabPage() {
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1180px] font-mono text-xs", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Variant" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Rule family" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Index" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Session" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Target" }),
@@ -61357,6 +61409,7 @@ function ExperimentLabPage() {
               className: "border-b border-border/40",
               children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { title: row.variant.description, children: row.variant.setup }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.ruleFamily }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.symbolScope }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.sessionScope }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.targetModel }),
@@ -61399,6 +61452,10 @@ function ExperimentLabPage() {
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 space-y-3 text-sm text-muted-foreground", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-foreground", children: bestValidation.variant.setup }),
+              " ",
+              "under",
+              " ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-foreground", children: bestValidation.variant.ruleFamily }),
               " ",
               "targeting",
               " ",
@@ -61845,6 +61902,7 @@ function buildDecisionRows({
     const score = experiment.validation.totalR + ((walk == null ? void 0 : walk.forwardNetR) ?? 0) + forwardStats.totalR - blockers.length * 0.25;
     return {
       id: experiment.variant.id,
+      ruleFamily: experiment.variant.ruleFamily,
       setup: experiment.variant.setup,
       symbolScope: experiment.variant.symbolScope,
       sessionScope: experiment.variant.sessionScope,
@@ -61921,6 +61979,7 @@ function DecisionConsolePage() {
                   return {
                     id: row.id,
                     setup: row.setup,
+                    ruleFamily: row.ruleFamily,
                     symbolScope: row.symbolScope,
                     sessionScope: row.sessionScope,
                     targetModel: row.targetModel,
@@ -61999,6 +62058,7 @@ function DecisionConsolePage() {
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1220px] font-mono text-xs", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Setup" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Rule family" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Index" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Session" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Target" }),
@@ -62015,6 +62075,7 @@ function DecisionConsolePage() {
             var _a3;
             return /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.setup }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.ruleFamily }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.symbolScope }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.sessionScope }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.targetModel }),
@@ -62669,6 +62730,7 @@ function ForwardTrackerPage() {
         tracked.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-3 text-sm text-muted-foreground", children: "No variants are frozen yet. Freeze a watchlist or forward-test candidate from Experiment Lab, then future imports will score only candles after the freeze time." }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1080px] font-mono text-xs", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Frozen rule" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Rule family" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Index" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Session" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Target" }),
@@ -62686,6 +62748,7 @@ function ForwardTrackerPage() {
               className: "border-b border-border/40",
               children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { title: item.frozen.ruleHash, children: item.frozen.setup }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: item.frozen.ruleFamily }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: item.frozen.symbolScope }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: item.frozen.sessionScope }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: item.frozen.targetModel }),

@@ -231,6 +231,7 @@ export default function ForwardTrackerPage() {
                   <thead className="border-b border-border text-muted-foreground">
                     <tr>
                       <th className="py-2 text-left">Frozen rule</th>
+                      <th className="py-2 text-left">Rule family</th>
                       <th className="py-2 text-left">Index</th>
                       <th className="py-2 text-left">Session</th>
                       <th className="py-2 text-left">Target</th>
@@ -254,6 +255,7 @@ export default function ForwardTrackerPage() {
                             {item.frozen.setup}
                           </span>
                         </td>
+                        <td className="py-2">{item.frozen.ruleFamily}</td>
                         <td className="py-2">{item.frozen.symbolScope}</td>
                         <td className="py-2">{item.frozen.sessionScope}</td>
                         <td className="py-2">{item.frozen.targetModel}</td>

@@ -3,6 +3,7 @@ import type { ExperimentRow } from "@/pages/ExperimentLabPage";
 export type FrozenVariant = {
   id: string;
   variantId: string;
+  ruleFamily: string;
   setup: string;
   symbolScope: string;
   sessionScope: string;
@@ -31,6 +32,7 @@ export function ruleHashForRow(row: ExperimentRow) {
   return hashText(
     [
       row.variant.setup,
+      row.variant.ruleFamily,
       row.variant.symbolScope,
       row.variant.sessionScope,
       row.variant.targetModel,
@@ -46,6 +48,7 @@ export function freezeVariant(
   return {
     id: `${row.variant.id}-${Date.now()}`,
     variantId: row.variant.id,
+    ruleFamily: row.variant.ruleFamily,
     setup: row.variant.setup,
     symbolScope: row.variant.symbolScope,
     sessionScope: row.variant.sessionScope,
