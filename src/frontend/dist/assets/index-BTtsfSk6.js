@@ -61165,7 +61165,13 @@ function DiscoveryLabPage() {
     ] })
   ] });
 }
-const VARIANTS = [
+const SYMBOL_SCOPES = [
+  "All",
+  "NAS100",
+  "US30",
+  "US500"
+];
+const BASE_VARIANTS = [
   {
     id: "ema200-prev-day-high",
     setup: "200 EMA Reaction",
@@ -61223,6 +61229,13 @@ const VARIANTS = [
     predicate: (signal) => passed(signal, "Daily continuation bias") && passed(signal, "Price above 200 EMA") && passed(signal, "20 EMA > 50 SMA")
   }
 ];
+const VARIANTS = BASE_VARIANTS.flatMap(
+  (variant) => SYMBOL_SCOPES.map((symbolScope) => ({
+    ...variant,
+    symbolScope,
+    id: `${variant.id}-${symbolScope.toLowerCase()}`
+  }))
+);
 function passed(signal, label) {
   return signal.reasons.some(
     (reason) => reason.label === label && reason.passed
@@ -61323,6 +61336,8 @@ function buildExperimentRows({
     const trades = signals.flatMap((signal) => {
       if (signal.blockers.some((blocker) => blocker.passed)) return [];
       if (signal.stop >= signal.entry) return [];
+      if (variant.symbolScope !== "All" && signal.symbol !== variant.symbolScope)
+        return [];
       if (!variant.predicate(signal)) return [];
       const target = targetFor(signal, variant.targetModel);
       if (!target) return [];
@@ -61408,6 +61423,7 @@ function experimentReportJson(run, rows, readiness) {
       variants: rows.map((row) => ({
         id: row.variant.id,
         setup: row.variant.setup,
+        symbolScope: row.variant.symbolScope,
         targetModel: row.variant.targetModel,
         description: row.variant.description,
         evidenceStatus: row.evidenceStatus,
@@ -61564,6 +61580,7 @@ function ExperimentLabPage() {
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1180px] font-mono text-xs", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Variant" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Index" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Target" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "All trades" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "All net" }),
@@ -61580,6 +61597,7 @@ function ExperimentLabPage() {
               className: "border-b border-border/40",
               children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { title: row.variant.description, children: row.variant.setup }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.symbolScope }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.targetModel }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.all.trades }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(row.all.totalR) }),
@@ -61606,6 +61624,10 @@ function ExperimentLabPage() {
               /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-foreground", children: bestValidation.variant.setup }),
               " ",
               "targeting",
+              " ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-foreground", children: bestValidation.variant.symbolScope }),
+              " ",
+              "into",
               " ",
               /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-foreground", children: bestValidation.variant.targetModel }),
               " ",
