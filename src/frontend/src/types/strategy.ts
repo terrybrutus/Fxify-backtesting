@@ -139,9 +139,17 @@ export interface SignalAudit {
   stop: Price;
   tp1: Price;
   rMultipleToTp1: number;
+  targetModel?: string;
+  targetCandidates?: TargetCandidate[];
   dataSource: string;
   ruleEngineVersion: string;
   explanation: string;
+}
+
+export interface TargetCandidate {
+  model: string;
+  price: Price;
+  rMultiple: number;
 }
 
 export interface MarketStructureSnapshot {
@@ -149,6 +157,16 @@ export interface MarketStructureSnapshot {
   timestamp: number;
   previousDayHigh?: Price;
   previousDayLow?: Price;
+  asiaHigh?: Price;
+  asiaLow?: Price;
+  londonHigh?: Price;
+  londonLow?: Price;
+  nyHigh?: Price;
+  nyLow?: Price;
+  priorNyHigh?: Price;
+  priorNyLow?: Price;
+  priorTwoDayNyHigh?: Price;
+  priorTwoDayNyLow?: Price;
   currentWeekHigh?: Price;
   currentWeekLow?: Price;
   nearestOldSundayAbove?: Price;
