@@ -22,6 +22,7 @@ export type DecisionStatus =
 
 export type DecisionRow = {
   id: string;
+  ruleFamily: string;
   setup: string;
   symbolScope: string;
   sessionScope: string;
@@ -179,6 +180,7 @@ export function buildDecisionRows({
         blockers.length * 0.25;
       return {
         id: experiment.variant.id,
+        ruleFamily: experiment.variant.ruleFamily,
         setup: experiment.variant.setup,
         symbolScope: experiment.variant.symbolScope,
         sessionScope: experiment.variant.sessionScope,
@@ -263,6 +265,7 @@ export default function DecisionConsolePage() {
                   decisions: decisions.map((row) => ({
                     id: row.id,
                     setup: row.setup,
+                    ruleFamily: row.ruleFamily,
                     symbolScope: row.symbolScope,
                     sessionScope: row.sessionScope,
                     targetModel: row.targetModel,
@@ -347,6 +350,7 @@ export default function DecisionConsolePage() {
                 <thead className="border-b border-border text-muted-foreground">
                   <tr>
                     <th className="py-2 text-left">Setup</th>
+                    <th className="py-2 text-left">Rule family</th>
                     <th className="py-2 text-left">Index</th>
                     <th className="py-2 text-left">Session</th>
                     <th className="py-2 text-left">Target</th>
@@ -364,6 +368,7 @@ export default function DecisionConsolePage() {
                   {top.map((row) => (
                     <tr key={row.id} className="border-b border-border/40">
                       <td className="py-2">{row.setup}</td>
+                      <td className="py-2">{row.ruleFamily}</td>
                       <td className="py-2">{row.symbolScope}</td>
                       <td className="py-2">{row.sessionScope}</td>
                       <td className="py-2">{row.targetModel}</td>

@@ -18,6 +18,7 @@ import { useMemo, useState } from "react";
 
 export type ExperimentVariant = {
   id: string;
+  ruleFamily: string;
   setup: string;
   targetModel: string;
   symbolScope: "All" | "NAS100" | "US30" | "US500";
@@ -100,6 +101,7 @@ const SESSION_SCOPES: ExperimentVariant["sessionScope"][] = [
 const BASE_VARIANTS: BaseVariant[] = [
   {
     id: "ema200-prev-day-high",
+    ruleFamily: "Strict 200 EMA + daily bias",
     setup: "200 EMA Reaction",
     targetModel: "previous day high",
     description:
@@ -110,6 +112,7 @@ const BASE_VARIANTS: BaseVariant[] = [
   },
   {
     id: "ema200-old-sunday",
+    ruleFamily: "Strict 200 EMA + daily bias",
     setup: "200 EMA Reaction",
     targetModel: "old Sunday level",
     description:
@@ -120,6 +123,7 @@ const BASE_VARIANTS: BaseVariant[] = [
   },
   {
     id: "ema200-prior-ny",
+    ruleFamily: "Strict 200 EMA + daily bias",
     setup: "200 EMA Reaction",
     targetModel: "prior NY high",
     description:
@@ -130,6 +134,7 @@ const BASE_VARIANTS: BaseVariant[] = [
   },
   {
     id: "ema200-prior-two-day-ny",
+    ruleFamily: "Strict 200 EMA + daily bias",
     setup: "200 EMA Reaction",
     targetModel: "prior two-day NY high",
     description:
@@ -139,7 +144,63 @@ const BASE_VARIANTS: BaseVariant[] = [
       passed(signal, "Daily continuation bias"),
   },
   {
+    id: "ema200-family-prev-day-high",
+    ruleFamily: "200 EMA reaction family",
+    setup: "200 EMA Reaction",
+    targetModel: "previous day high",
+    description:
+      "Promoted from Sample Expansion: tests 200 EMA reactions without requiring daily continuation bias.",
+    predicate: (signal) =>
+      passed(signal, "200 EMA reaction") &&
+      passed(signal, "Price above 200 EMA"),
+  },
+  {
+    id: "ema200-family-old-sunday",
+    ruleFamily: "200 EMA reaction family",
+    setup: "200 EMA Reaction",
+    targetModel: "old Sunday level",
+    description:
+      "Promoted from Sample Expansion: tests 200 EMA reactions into old Sunday liquidity without daily-bias gating.",
+    predicate: (signal) =>
+      passed(signal, "200 EMA reaction") &&
+      passed(signal, "Price above 200 EMA"),
+  },
+  {
+    id: "ema200-family-prior-ny",
+    ruleFamily: "200 EMA reaction family",
+    setup: "200 EMA Reaction",
+    targetModel: "prior NY high",
+    description:
+      "Promoted from Sample Expansion: tests 200 EMA reactions into prior New York highs.",
+    predicate: (signal) =>
+      passed(signal, "200 EMA reaction") &&
+      passed(signal, "Price above 200 EMA"),
+  },
+  {
+    id: "ema200-family-prior-two-day-ny",
+    ruleFamily: "200 EMA reaction family",
+    setup: "200 EMA Reaction",
+    targetModel: "prior two-day NY high",
+    description:
+      "Promoted from Sample Expansion: tests broader 200 EMA reaction room into prior two-day New York highs.",
+    predicate: (signal) =>
+      passed(signal, "200 EMA reaction") &&
+      passed(signal, "Price above 200 EMA"),
+  },
+  {
+    id: "ema200-family-fvg-fill",
+    ruleFamily: "200 EMA reaction family",
+    setup: "200 EMA Reaction",
+    targetModel: "bullish FVG fill",
+    description:
+      "Promoted from Sample Expansion: tests 200 EMA reactions into nearby bullish FVG fills.",
+    predicate: (signal) =>
+      passed(signal, "200 EMA reaction") &&
+      passed(signal, "Price above 200 EMA"),
+  },
+  {
     id: "old-sunday-reaction-old-sunday",
+    ruleFamily: "Old Sunday reaction",
     setup: "Old Sunday Reaction",
     targetModel: "old Sunday level",
     description:
@@ -152,6 +213,7 @@ const BASE_VARIANTS: BaseVariant[] = [
   },
   {
     id: "fvg-continuation-fvg-fill",
+    ruleFamily: "FVG continuation",
     setup: "FVG Fill Continuation",
     targetModel: "bullish FVG fill",
     description:
@@ -163,6 +225,7 @@ const BASE_VARIANTS: BaseVariant[] = [
   },
   {
     id: "m15-scalp-prev-day-high",
+    ruleFamily: "15m 20 EMA scalp",
     setup: "15m 20 EMA Scalp",
     targetModel: "previous day high",
     description:
@@ -173,6 +236,7 @@ const BASE_VARIANTS: BaseVariant[] = [
   },
   {
     id: "ma-stack-prev-day-high",
+    ruleFamily: "HTF MA stack",
     setup: "HTF MA Stack",
     targetModel: "previous day high",
     description:
@@ -492,6 +556,7 @@ function experimentReportJson(
       validation: run.validation,
       variants: rows.map((row) => ({
         id: row.variant.id,
+        ruleFamily: row.variant.ruleFamily,
         setup: row.variant.setup,
         symbolScope: row.variant.symbolScope,
         sessionScope: row.variant.sessionScope,
@@ -728,6 +793,7 @@ export default function ExperimentLabPage() {
                 <thead className="border-b border-border text-muted-foreground">
                   <tr>
                     <th className="py-2 text-left">Variant</th>
+                    <th className="py-2 text-left">Rule family</th>
                     <th className="py-2 text-left">Index</th>
                     <th className="py-2 text-left">Session</th>
                     <th className="py-2 text-left">Target</th>
@@ -755,6 +821,7 @@ export default function ExperimentLabPage() {
                           {row.variant.setup}
                         </span>
                       </td>
+                      <td className="py-2">{row.variant.ruleFamily}</td>
                       <td className="py-2">{row.variant.symbolScope}</td>
                       <td className="py-2">{row.variant.sessionScope}</td>
                       <td className="py-2">{row.variant.targetModel}</td>
@@ -822,6 +889,10 @@ export default function ExperimentLabPage() {
                   <p>
                     <span className="font-mono text-foreground">
                       {bestValidation.variant.setup}
+                    </span>{" "}
+                    under{" "}
+                    <span className="font-mono text-foreground">
+                      {bestValidation.variant.ruleFamily}
                     </span>{" "}
                     targeting{" "}
                     <span className="font-mono text-foreground">
