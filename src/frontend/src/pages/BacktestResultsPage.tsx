@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useStrategyWorkspace } from "@/hooks/useStrategyWorkspace";
+import { classifyEvidence } from "@/lib/evidence";
 import { exportCsv, exportJson } from "@/lib/strategyEngine";
 import {
   type SignalAudit,
@@ -19,6 +20,8 @@ type Breakdown = {
   avgR: number;
   winRate: number;
   maxDrawdownR: number;
+  status: string;
+  statusDetail: string;
 };
 
 function downloadFile(name: string, content: string, type: string) {
@@ -94,6 +97,14 @@ function buildBreakdown(
         (sum, trade) => sum + (trade.rMultiple ?? 0),
         0,
       );
+      const avgR = closed.length ? totalR / closed.length : 0;
+      const maxDrawdownR = equityDrawdownR(group);
+      const evidence = classifyEvidence({
+        trades: group.length,
+        totalR,
+        avgR,
+        maxDrawdownR,
+      });
       return {
         key,
         trades: group.length,
@@ -101,9 +112,11 @@ function buildBreakdown(
         losses: losses.length,
         open: open.length,
         totalR,
-        avgR: closed.length ? totalR / closed.length : 0,
+        avgR,
         winRate: closed.length ? wins.length / closed.length : 0,
-        maxDrawdownR: equityDrawdownR(group),
+        maxDrawdownR,
+        status: evidence.status,
+        statusDetail: evidence.detail,
       };
     })
     .sort((a, b) => b.totalR - a.totalR);
@@ -130,6 +143,7 @@ function BreakdownTable({
               <th className="py-2 text-right">Total R</th>
               <th className="py-2 text-right">Avg R</th>
               <th className="py-2 text-right">Max DD</th>
+              <th className="py-2 text-left">Evidence</th>
             </tr>
           </thead>
           <tbody>
@@ -147,6 +161,9 @@ function BreakdownTable({
                 <td className="py-2 text-right">{row.avgR.toFixed(2)}R</td>
                 <td className="py-2 text-right">
                   {row.maxDrawdownR.toFixed(2)}R
+                </td>
+                <td className="py-2">
+                  <span title={row.statusDetail}>{row.status}</span>
                 </td>
               </tr>
             ))}
@@ -193,6 +210,12 @@ export default function BacktestResultsPage() {
   const losingTrades = run.trades.filter(
     (trade) => trade.outcome === TradeOutcome.Loss,
   );
+  const overallEvidence = classifyEvidence({
+    trades: run.trades.length,
+    totalR: stats.totalPnl / 100,
+    avgR: stats.avgRR,
+    maxDrawdownR: drawdownR(stats.maxDrawdown),
+  });
 
   return (
     <div className="space-y-5 p-4 md:p-6" data-ocid="results.page">
@@ -258,6 +281,11 @@ export default function BacktestResultsPage() {
             />
             <Stat label="Profit factor" value={stats.profitFactor.toFixed(2)} />
             <Stat label="Total trades" value={stats.totalTrades.toString()} />
+            <Stat
+              label="Evidence status"
+              value={overallEvidence.status}
+              detail={overallEvidence.detail}
+            />
             <Stat label="Avg R" value={`${stats.avgRR.toFixed(2)}R`} />
             <Stat
               label="Max drawdown"
