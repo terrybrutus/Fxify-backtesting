@@ -15,6 +15,7 @@ type ExperimentVariant = {
   id: string;
   setup: string;
   targetModel: string;
+  symbolScope: "All" | "NAS100" | "US30" | "US500";
   description: string;
   predicate: (signal: SignalAudit) => boolean;
 };
@@ -59,7 +60,18 @@ type ReadinessReport = {
   strengths: string[];
 };
 
-const VARIANTS: ExperimentVariant[] = [
+type BaseVariant = Omit<ExperimentVariant, "id" | "symbolScope"> & {
+  id: string;
+};
+
+const SYMBOL_SCOPES: ExperimentVariant["symbolScope"][] = [
+  "All",
+  "NAS100",
+  "US30",
+  "US500",
+];
+
+const BASE_VARIANTS: BaseVariant[] = [
   {
     id: "ema200-prev-day-high",
     setup: "200 EMA Reaction",
@@ -145,6 +157,14 @@ const VARIANTS: ExperimentVariant[] = [
       passed(signal, "20 EMA > 50 SMA"),
   },
 ];
+
+const VARIANTS: ExperimentVariant[] = BASE_VARIANTS.flatMap((variant) =>
+  SYMBOL_SCOPES.map((symbolScope) => ({
+    ...variant,
+    symbolScope,
+    id: `${variant.id}-${symbolScope.toLowerCase()}`,
+  })),
+);
 
 function passed(signal: SignalAudit, label: string) {
   return signal.reasons.some(
@@ -270,6 +290,11 @@ function buildExperimentRows({
     const trades = signals.flatMap((signal) => {
       if (signal.blockers.some((blocker) => blocker.passed)) return [];
       if (signal.stop >= signal.entry) return [];
+      if (
+        variant.symbolScope !== "All" &&
+        signal.symbol !== variant.symbolScope
+      )
+        return [];
       if (!variant.predicate(signal)) return [];
       const target = targetFor(signal, variant.targetModel);
       if (!target) return [];
@@ -393,6 +418,7 @@ function experimentReportJson(
       variants: rows.map((row) => ({
         id: row.variant.id,
         setup: row.variant.setup,
+        symbolScope: row.variant.symbolScope,
         targetModel: row.variant.targetModel,
         description: row.variant.description,
         evidenceStatus: row.evidenceStatus,
@@ -597,6 +623,7 @@ export default function ExperimentLabPage() {
                 <thead className="border-b border-border text-muted-foreground">
                   <tr>
                     <th className="py-2 text-left">Variant</th>
+                    <th className="py-2 text-left">Index</th>
                     <th className="py-2 text-left">Target</th>
                     <th className="py-2 text-right">All trades</th>
                     <th className="py-2 text-right">All net</th>
@@ -619,6 +646,7 @@ export default function ExperimentLabPage() {
                           {row.variant.setup}
                         </span>
                       </td>
+                      <td className="py-2">{row.variant.symbolScope}</td>
                       <td className="py-2">{row.variant.targetModel}</td>
                       <td className="py-2 text-right">{row.all.trades}</td>
                       <td className="py-2 text-right">
@@ -666,6 +694,10 @@ export default function ExperimentLabPage() {
                       {bestValidation.variant.setup}
                     </span>{" "}
                     targeting{" "}
+                    <span className="font-mono text-foreground">
+                      {bestValidation.variant.symbolScope}
+                    </span>{" "}
+                    into{" "}
                     <span className="font-mono text-foreground">
                       {bestValidation.variant.targetModel}
                     </span>{" "}
