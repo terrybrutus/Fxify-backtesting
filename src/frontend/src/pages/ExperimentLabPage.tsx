@@ -457,7 +457,7 @@ function readinessReport(
     forwardReady.length === 0
       ? "No variant has enough validation evidence to graduate to forward-test ready."
       : undefined,
-    "Forward tracking is not implemented yet, so live-readiness remains capped.",
+    "Forward tracking is available, but live-readiness still requires newer candles after a rule is frozen.",
   ].filter(Boolean) as string[];
   const strengths = [
     "Real CSV data is loaded and the integrity gate is open.",

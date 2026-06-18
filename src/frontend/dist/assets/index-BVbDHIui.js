@@ -35350,7 +35350,7 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$j = [
+const __iconNode$k = [
   [
     "path",
     {
@@ -35359,7 +35359,20 @@ const __iconNode$j = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$j);
+const Activity = createLucideIcon("activity", __iconNode$k);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$j = [
+  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
+  ["path", { d: "M18 17V9", key: "2bz60n" }],
+  ["path", { d: "M13 17V5", key: "1frdt8" }],
+  ["path", { d: "M8 17v-3", key: "17ska0" }]
+];
+const ChartColumn = createLucideIcon("chart-column", __iconNode$j);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35367,12 +35380,10 @@ const Activity = createLucideIcon("activity", __iconNode$j);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$i = [
-  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
-  ["path", { d: "M18 17V9", key: "2bz60n" }],
-  ["path", { d: "M13 17V5", key: "1frdt8" }],
-  ["path", { d: "M8 17v-3", key: "17ska0" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const ChartColumn = createLucideIcon("chart-column", __iconNode$i);
+const CircleCheck = createLucideIcon("circle-check", __iconNode$i);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35381,9 +35392,10 @@ const ChartColumn = createLucideIcon("chart-column", __iconNode$i);
  */
 const __iconNode$h = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
+  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
 ];
-const CircleCheck = createLucideIcon("circle-check", __iconNode$h);
+const CircleX = createLucideIcon("circle-x", __iconNode$h);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35391,11 +35403,11 @@ const CircleCheck = createLucideIcon("circle-check", __iconNode$h);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$g = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
-  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
+  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
+  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
+  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
 ];
-const CircleX = createLucideIcon("circle-x", __iconNode$g);
+const Database = createLucideIcon("database", __iconNode$g);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35403,11 +35415,11 @@ const CircleX = createLucideIcon("circle-x", __iconNode$g);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$f = [
-  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
-  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
-  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
+  ["path", { d: "M12 15V3", key: "m9g1x1" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
+  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
 ];
-const Database = createLucideIcon("database", __iconNode$f);
+const Download = createLucideIcon("download", __iconNode$f);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35415,11 +35427,12 @@ const Database = createLucideIcon("database", __iconNode$f);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$e = [
-  ["path", { d: "M12 15V3", key: "m9g1x1" }],
-  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
-  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
+  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
+  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
+  ["path", { d: "M12 12v6", key: "3ahymv" }],
+  ["path", { d: "m15 15-3-3-3 3", key: "15xj92" }]
 ];
-const Download = createLucideIcon("download", __iconNode$e);
+const FileUp = createLucideIcon("file-up", __iconNode$e);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35428,11 +35441,10 @@ const Download = createLucideIcon("download", __iconNode$e);
  */
 const __iconNode$d = [
   ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
-  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
-  ["path", { d: "M12 12v6", key: "3ahymv" }],
-  ["path", { d: "m15 15-3-3-3 3", key: "15xj92" }]
+  ["path", { d: "M12 9v4", key: "juzpu7" }],
+  ["path", { d: "M12 17h.01", key: "p32p05" }]
 ];
-const FileUp = createLucideIcon("file-up", __iconNode$d);
+const FileWarning = createLucideIcon("file-warning", __iconNode$d);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35440,18 +35452,6 @@ const FileUp = createLucideIcon("file-up", __iconNode$d);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$c = [
-  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
-  ["path", { d: "M12 9v4", key: "juzpu7" }],
-  ["path", { d: "M12 17h.01", key: "p32p05" }]
-];
-const FileWarning = createLucideIcon("file-warning", __iconNode$c);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$b = [
   [
     "path",
     {
@@ -35462,7 +35462,22 @@ const __iconNode$b = [
   ["path", { d: "M6.453 15h11.094", key: "3shlmq" }],
   ["path", { d: "M8.5 2h7", key: "csnxdl" }]
 ];
-const FlaskConical = createLucideIcon("flask-conical", __iconNode$b);
+const FlaskConical = createLucideIcon("flask-conical", __iconNode$c);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$b = [
+  ["circle", { cx: "5", cy: "6", r: "3", key: "1qnov2" }],
+  ["path", { d: "M12 6h5a2 2 0 0 1 2 2v7", key: "1yj91y" }],
+  ["path", { d: "m15 9-3-3 3-3", key: "1lwv8l" }],
+  ["circle", { cx: "19", cy: "18", r: "3", key: "1qljk2" }],
+  ["path", { d: "M12 18H7a2 2 0 0 1-2-2V9", key: "16sdep" }],
+  ["path", { d: "m9 15 3 3-3 3", key: "1m3kbl" }]
+];
+const GitCompareArrows = createLucideIcon("git-compare-arrows", __iconNode$b);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35634,6 +35649,7 @@ const NAV_ITEMS = [
   { path: "/discovery", label: "Discovery Lab", icon: FlaskConical },
   { path: "/experiments", label: "Experiment Lab", icon: Microscope },
   { path: "/forward", label: "Forward Tracker", icon: ShieldCheck },
+  { path: "/walk-forward", label: "Walk-Forward Lab", icon: GitCompareArrows },
   { path: "/replay", label: "Replay Mode", icon: RotateCcw },
   { path: "/chart", label: "Candle Viewer", icon: Radar },
   { path: "/results", label: "Results Export", icon: ChartColumn }
@@ -37256,7 +37272,7 @@ function classifyEvidence({
     detail: "Sample exists, but edge or drawdown quality is not yet strong."
   };
 }
-function downloadFile$2(name, content, type) {
+function downloadFile$3(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -37265,7 +37281,7 @@ function downloadFile$2(name, content, type) {
   link.click();
   URL.revokeObjectURL(url);
 }
-function Stat$3({
+function Stat$4({
   label,
   value,
   detail
@@ -37279,7 +37295,7 @@ function Stat$3({
 function drawdownR(maxDrawdownUnits) {
   return maxDrawdownUnits / 100;
 }
-function fmtDate$2(value) {
+function fmtDate$3(value) {
   return value ? new Date(value).toISOString() : "n/a";
 }
 function equityDrawdownR(trades) {
@@ -37437,7 +37453,7 @@ function BacktestResultsPage() {
             type: "button",
             variant: "outline",
             disabled: !run.integrity.canRunBacktest,
-            onClick: () => downloadFile$2(
+            onClick: () => downloadFile$3(
               "ict-audit-log.json",
               exportJson(run),
               "application/json"
@@ -37453,7 +37469,7 @@ function BacktestResultsPage() {
           {
             type: "button",
             disabled: !run.integrity.canRunBacktest,
-            onClick: () => downloadFile$2(
+            onClick: () => downloadFile$3(
               "ict-signal-log.csv",
               exportCsv(allSignals),
               "text/csv"
@@ -37469,39 +37485,39 @@ function BacktestResultsPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Results are disabled because the integrity gate is closed." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$3,
+          Stat$4,
           {
             label: "Accepted signals",
             value: String(run.acceptedSignals.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$3,
+          Stat$4,
           {
             label: "Rejected candidates",
             value: String(run.rejectedSignals.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$3,
+          Stat$4,
           {
             label: "Win rate",
             value: `${(stats.winRate * 100).toFixed(1)}%`
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$3, { label: "Profit factor", value: stats.profitFactor.toFixed(2) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$3, { label: "Total trades", value: stats.totalTrades.toString() }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$4, { label: "Profit factor", value: stats.profitFactor.toFixed(2) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$4, { label: "Total trades", value: stats.totalTrades.toString() }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$3,
+          Stat$4,
           {
             label: "Evidence status",
             value: overallEvidence.status,
             detail: overallEvidence.detail
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$3, { label: "Avg R", value: `${stats.avgRR.toFixed(2)}R` }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$4, { label: "Avg R", value: `${stats.avgRR.toFixed(2)}R` }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$3,
+          Stat$4,
           {
             label: "Max drawdown",
             value: `${drawdownR(stats.maxDrawdown).toFixed(2)}R`,
@@ -37509,7 +37525,7 @@ function BacktestResultsPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$3,
+          Stat$4,
           {
             label: "Net P/L",
             value: `${(stats.totalPnl / 100).toFixed(2)}R`,
@@ -37522,7 +37538,7 @@ function BacktestResultsPage() {
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-sm text-muted-foreground", children: run.validation.method }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-1 font-mono text-xs text-muted-foreground", children: [
           "Discovery ends at ",
-          fmtDate$2(run.validation.discoveryEndTimestamp)
+          fmtDate$3(run.validation.discoveryEndTimestamp)
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 grid gap-3 md:grid-cols-2", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-background p-4", children: [
@@ -60590,7 +60606,7 @@ reactExports.forwardRef(function(e3, t2) {
     })) : null;
   }));
 });
-function fmtDate$1(value) {
+function fmtDate$2(value) {
   return value ? new Date(value).toISOString().slice(0, 16).replace("T", " ") : "n/a";
 }
 function Metric({ label, value }) {
@@ -60710,8 +60726,8 @@ function DataUploadPage() {
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Metric, { label: "Timezone", value: integrity.timezone }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Metric, { label: "Start", value: fmtDate$1(integrity.start) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Metric, { label: "End", value: fmtDate$1(integrity.end) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Metric, { label: "Start", value: fmtDate$2(integrity.start) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Metric, { label: "End", value: fmtDate$2(integrity.end) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Metric, { label: "Missing candles", value: integrity.missingCandles }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Metric, { label: "Duplicate candles", value: integrity.duplicateCandles })
     ] }),
@@ -60736,7 +60752,7 @@ function DataUploadPage() {
     ] })
   ] });
 }
-function pct$2(value) {
+function pct$3(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
 function rate(part, total) {
@@ -60777,7 +60793,7 @@ function InsightCard({
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-2 text-sm leading-relaxed text-muted-foreground", children })
   ] });
 }
-function Stat$2({ label, value }) {
+function Stat$3({ label, value }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: label }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: value })
@@ -60959,36 +60975,36 @@ function DiscoveryLabPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Discovery is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$2,
+          Stat$3,
           {
             label: "Hypothesis candidates",
             value: String(signals.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$2,
+          Stat$3,
           {
             label: "Accepted by current rules",
             value: String(accepted.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$2,
+          Stat$3,
           {
             label: "High-score rejects",
             value: String(discovery.highScoreRejects.length)
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$2, { label: "Median TP1 R", value: discovery.medianR.toFixed(2) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$3, { label: "Median TP1 R", value: discovery.medianR.toFixed(2) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$2,
+          Stat$3,
           {
             label: "Derived TFs",
             value: run.derivedTimeframes.join(", ") || "none"
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$2,
+          Stat$3,
           {
             label: "Structure snapshots",
             value: String(run.marketStructure.length)
@@ -61017,7 +61033,7 @@ function DiscoveryLabPage() {
       /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 lg:grid-cols-2", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs(InsightCard, { title: "TP1 Bottleneck", severity: "watch", children: [
           "TP1 liquidity passed on ",
-          pct$2(discovery.tp1PassRate),
+          pct$3(discovery.tp1PassRate),
           " of candidates. This is the main rejection pressure. Next discovery work should compare previous-day highs, session highs, old Sunday levels, and imbalance fills as separate TP models."
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs(InsightCard, { title: "Split Boundary", severity: "watch", children: [
@@ -61071,7 +61087,7 @@ function DiscoveryLabPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.model }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.candidates }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.passCount }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$2(row.passRate) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$3(row.passRate) }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2 text-right", children: [
               row.medianR.toFixed(2),
               "R"
@@ -61089,31 +61105,31 @@ function DiscoveryLabPage() {
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 grid gap-3 md:grid-cols-2", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Stat$2,
+              Stat$3,
               {
                 label: "TP1 pass rate",
-                value: pct$2(discovery.tp1PassRate)
+                value: pct$3(discovery.tp1PassRate)
               }
             ),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Stat$2,
+              Stat$3,
               {
                 label: "MA hold pass rate",
-                value: pct$2(discovery.maHoldPassRate)
+                value: pct$3(discovery.maHoldPassRate)
               }
             ),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Stat$2,
+              Stat$3,
               {
                 label: "FVG overlap pass rate",
-                value: pct$2(discovery.fvgPassRate)
+                value: pct$3(discovery.fvgPassRate)
               }
             ),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Stat$2,
+              Stat$3,
               {
                 label: "Sunday proximity rate",
-                value: pct$2(discovery.sundayPassRate)
+                value: pct$3(discovery.sundayPassRate)
               }
             )
           ] }),
@@ -61317,10 +61333,10 @@ function passed(signal, label) {
     (reason) => reason.label === label && reason.passed
   );
 }
-function pct$1(value) {
+function pct$2(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
-function fmtR$1(value) {
+function fmtR$2(value) {
   return `${value.toFixed(2)}R`;
 }
 function sessionFor(timestamp) {
@@ -61330,7 +61346,7 @@ function sessionFor(timestamp) {
   if (hour >= 13 && hour < 21) return "New York";
   return "Off session";
 }
-function downloadFile$1(name, content, type) {
+function downloadFile$2(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -61339,7 +61355,7 @@ function downloadFile$1(name, content, type) {
   link.click();
   URL.revokeObjectURL(url);
 }
-function Stat$1({
+function Stat$2({
   label,
   value,
   detail
@@ -61505,7 +61521,7 @@ function readinessReport(run, rows) {
     run.acceptedSignals.length < 20 ? "Current locked rules still produce too few accepted trades." : void 0,
     validationReady.length === 0 ? "No experiment variant has at least 10 validation trades yet." : void 0,
     forwardReady.length === 0 ? "No variant has enough validation evidence to graduate to forward-test ready." : void 0,
-    "Forward tracking is not implemented yet, so live-readiness remains capped."
+    "Forward tracking is available, but live-readiness still requires newer candles after a rule is frozen."
   ].filter(Boolean);
   const strengths = [
     "Real CSV data is loaded and the integrity gate is open.",
@@ -61575,7 +61591,7 @@ function TradeMiniTable({ trades }) {
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: trade.signal.symbol }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: trade.signal.setupType }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: trade.target.model }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2 text-right", children: fmtR$1(trade.target.rMultiple) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2 text-right", children: fmtR$2(trade.target.rMultiple) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: !trade.closed ? "Open" : trade.won ? "Win" : "Loss" })
         ]
       },
@@ -61632,7 +61648,7 @@ function ExperimentLabPage() {
           type: "button",
           variant: "outline",
           disabled: !run.integrity.canRunBacktest,
-          onClick: () => downloadFile$1(
+          onClick: () => downloadFile$2(
             "ict-experiment-report.json",
             experimentReportJson(run, rows, readiness),
             "application/json"
@@ -61647,16 +61663,16 @@ function ExperimentLabPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Experiment Lab is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$1,
+          Stat$2,
           {
             label: "Readiness",
             value: `${readiness.score}/100`,
             detail: readiness.level
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$1, { label: "Variants tested", value: String(rows.length) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$2, { label: "Variants tested", value: String(rows.length) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$1,
+          Stat$2,
           {
             label: "Candidate pool",
             value: String(signals.length),
@@ -61664,7 +61680,7 @@ function ExperimentLabPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$1,
+          Stat$2,
           {
             label: "Validation-ready variants",
             value: String(variantsWithSample),
@@ -61672,7 +61688,7 @@ function ExperimentLabPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$1,
+          Stat$2,
           {
             label: "Watchlist variants",
             value: String(watchlistCount),
@@ -61680,10 +61696,10 @@ function ExperimentLabPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$1,
+          Stat$2,
           {
             label: "Best validation net",
-            value: bestValidation ? fmtR$1(bestValidation.validation.totalR) : "0.00R",
+            value: bestValidation ? fmtR$2(bestValidation.validation.totalR) : "0.00R",
             detail: (bestValidation == null ? void 0 : bestValidation.variant.id) ?? "No variant"
           }
         )
@@ -61741,12 +61757,12 @@ function ExperimentLabPage() {
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.sessionScope }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.targetModel }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.all.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$1(row.all.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$2(row.all.totalR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.discovery.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$1(row.discovery.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$2(row.discovery.totalR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.validation.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$1(row.validation.totalR) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$1(row.validation.winRate) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$2(row.validation.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$2(row.validation.winRate) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.promotionGate }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.consistencyRisk }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { title: row.evidenceDetail, children: row.evidenceStatus }) }),
@@ -61798,10 +61814,10 @@ function ExperimentLabPage() {
               "Validation sample: ",
               bestValidation.validation.trades,
               " trade (s), ",
-              fmtR$1(bestValidation.validation.totalR),
+              fmtR$2(bestValidation.validation.totalR),
               ",",
               " ",
-              pct$1(bestValidation.validation.winRate),
+              pct$2(bestValidation.validation.winRate),
               " win rate."
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "This is still not promotion-ready unless the sample grows and survives forward tracking without changing its rules." })
@@ -61812,16 +61828,16 @@ function ExperimentLabPage() {
     ] })
   ] });
 }
-function fmtR(value) {
+function fmtR$1(value) {
   return `${value.toFixed(2)}R`;
 }
-function pct(value) {
+function pct$1(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
-function fmtDate(value) {
+function fmtDate$1(value) {
   return value ? new Date(value).toISOString() : "n/a";
 }
-function downloadFile(name, content, type) {
+function downloadFile$1(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -61834,7 +61850,7 @@ function forwardTradesFor(frozen, row) {
   if (!row) return [];
   return row.trades.filter((trade) => trade.signal.timestamp > frozen.frozenAt);
 }
-function Stat({
+function Stat$1({
   label,
   value,
   detail
@@ -61909,7 +61925,7 @@ function ForwardTrackerPage() {
           type: "button",
           variant: "outline",
           disabled: tracked.length === 0,
-          onClick: () => downloadFile(
+          onClick: () => downloadFile$1(
             "ict-forward-tracker.json",
             JSON.stringify(
               {
@@ -61948,7 +61964,7 @@ function ForwardTrackerPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Forward tracking is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat,
+          Stat$1,
           {
             label: "Frozen variants",
             value: String(frozenVariants.length),
@@ -61956,19 +61972,19 @@ function ForwardTrackerPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat,
+          Stat$1,
           {
             label: "Forward trades",
             value: String(forwardTradeCount),
             detail: "Signals after freeze timestamps"
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat, { label: "Forward net", value: fmtR(forwardNetR) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$1, { label: "Forward net", value: fmtR$1(forwardNetR) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat,
+          Stat$1,
           {
             label: "Latest candle",
-            value: fmtDate(run.integrity.end),
+            value: fmtDate$1(run.integrity.end),
             detail: "New CSVs extend forward evidence"
           }
         )
@@ -62017,8 +62033,8 @@ function ForwardTrackerPage() {
                   "/",
                   item.open
                 ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(item.netR) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct(item.winRate) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$1(item.netR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$1(item.winRate) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: item.frozen.sourcePromotionGate }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
                   Button,
@@ -62405,6 +62421,326 @@ function SetupDetectorPage() {
     ] }) : signals.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-border bg-card p-6 text-sm text-muted-foreground", children: "Engine ran, but no accepted setups met the current threshold. Check Rejected Setups for the useful evidence." }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3", children: signals.map((signal) => /* @__PURE__ */ jsxRuntimeExports.jsx(SignalCard, { signal }, signal.id)) })
   ] });
 }
+function fmtR(value) {
+  return `${value.toFixed(2)}R`;
+}
+function pct(value) {
+  return `${(value * 100).toFixed(1)}%`;
+}
+function fmtDate(value) {
+  return new Date(value).toISOString().slice(0, 10);
+}
+function downloadFile(name, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+function statsFor(trades) {
+  const closed = trades.filter((trade) => trade.closed);
+  const wins = closed.filter((trade) => trade.won);
+  const losses = closed.filter((trade) => !trade.won);
+  const totalR = closed.reduce((sum, trade) => sum + trade.rMultiple, 0);
+  let running = 0;
+  let peak = 0;
+  let maxDrawdownR = 0;
+  for (const trade of closed) {
+    running += trade.rMultiple;
+    peak = Math.max(peak, running);
+    maxDrawdownR = Math.max(maxDrawdownR, peak - running);
+  }
+  return {
+    trades: trades.length,
+    wins: wins.length,
+    losses: losses.length,
+    open: trades.length - closed.length,
+    totalR,
+    avgR: closed.length ? totalR / closed.length : 0,
+    winRate: closed.length ? wins.length / closed.length : 0,
+    maxDrawdownR
+  };
+}
+function buildWindows(start, end) {
+  if (!start || !end || end <= start) return [];
+  const count = 6;
+  const size = Math.floor((end - start) / count);
+  return Array.from({ length: count }, (_2, index2) => ({
+    index: index2,
+    start: start + size * index2,
+    end: index2 === count - 1 ? end + 1 : start + size * (index2 + 1)
+  }));
+}
+function verdictFor({
+  eligibleWindows,
+  survivedWindows,
+  forwardNetR,
+  positiveWindowRate,
+  forwardTrades
+}) {
+  if (eligibleWindows < 2 || forwardTrades < 5) return "No claim";
+  if (forwardNetR <= 0 || positiveWindowRate < 0.5) return "Unstable";
+  if (eligibleWindows >= 3 && survivedWindows >= 2 && positiveWindowRate >= 0.6) {
+    return "Repeatable candidate";
+  }
+  return "Watchlist";
+}
+function Stat({
+  label,
+  value,
+  detail
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: label }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: value }),
+    detail && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: detail })
+  ] });
+}
+function WalkForwardPage() {
+  const { candles, run } = useStrategyWorkspace();
+  const signals = reactExports.useMemo(
+    () => [...run.acceptedSignals, ...run.rejectedSignals],
+    [run.acceptedSignals, run.rejectedSignals]
+  );
+  const experimentRows = reactExports.useMemo(
+    () => buildExperimentRows({
+      signals,
+      candles,
+      splitTimestamp: run.validation.discoveryEndTimestamp
+    }),
+    [signals, candles, run.validation.discoveryEndTimestamp]
+  );
+  const windows = reactExports.useMemo(
+    () => buildWindows(run.integrity.start, run.integrity.end),
+    [run.integrity.start, run.integrity.end]
+  );
+  const rows = reactExports.useMemo(
+    () => experimentRows.map((row) => {
+      const windowResults = windows.slice(1).map((window2) => {
+        const prior = statsFor(
+          row.trades.filter(
+            (trade) => trade.signal.timestamp < window2.start
+          )
+        );
+        const forward = statsFor(
+          row.trades.filter(
+            (trade) => trade.signal.timestamp >= window2.start && trade.signal.timestamp < window2.end
+          )
+        );
+        const eligible2 = prior.trades >= 3 && prior.totalR > 0;
+        const status = window2.index === 0 ? "Warmup" : !eligible2 ? "Under-sampled" : forward.totalR > 0 ? "Survived" : "Failed";
+        return {
+          window: window2,
+          prior,
+          forward,
+          eligible: eligible2,
+          status
+        };
+      });
+      const eligible = windowResults.filter((item) => item.eligible);
+      const survived = eligible.filter((item) => item.forward.totalR > 0);
+      const forwardTrades = eligible.reduce(
+        (sum, item) => sum + item.forward.trades,
+        0
+      );
+      const forwardNetR = eligible.reduce(
+        (sum, item) => sum + item.forward.totalR,
+        0
+      );
+      const positiveWindowRate = eligible.length ? survived.length / eligible.length : 0;
+      const worstWindowR = eligible.length ? Math.min(...eligible.map((item) => item.forward.totalR)) : 0;
+      return {
+        id: row.variant.id,
+        setup: row.variant.setup,
+        symbolScope: row.variant.symbolScope,
+        sessionScope: row.variant.sessionScope,
+        targetModel: row.variant.targetModel,
+        windows: windowResults,
+        eligibleWindows: eligible.length,
+        survivedWindows: survived.length,
+        forwardTrades,
+        forwardNetR,
+        positiveWindowRate,
+        worstWindowR,
+        verdict: verdictFor({
+          eligibleWindows: eligible.length,
+          survivedWindows: survived.length,
+          forwardNetR,
+          positiveWindowRate,
+          forwardTrades
+        })
+      };
+    }).sort(
+      (a2, b2) => b2.forwardNetR - a2.forwardNetR || b2.eligibleWindows - a2.eligibleWindows || b2.forwardTrades - a2.forwardTrades
+    ),
+    [experimentRows, windows]
+  );
+  const repeatableCount = rows.filter(
+    (row) => row.verdict === "Repeatable candidate"
+  ).length;
+  const watchlistCount = rows.filter(
+    (row) => row.verdict === "Watchlist"
+  ).length;
+  const best = rows[0];
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "walk-forward.page", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-display text-2xl font-bold", children: "Walk-Forward Lab" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "This page repeats the discovery-to-validation test across multiple chronological windows. A rule must keep surviving later windows before it earns more trust." })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Button,
+        {
+          type: "button",
+          variant: "outline",
+          disabled: !run.integrity.canRunBacktest,
+          onClick: () => downloadFile(
+            "ict-walk-forward-report.json",
+            JSON.stringify(
+              {
+                generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+                integrity: run.integrity,
+                windows,
+                rows
+              },
+              null,
+              2
+            ),
+            "application/json"
+          ),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "mr-2 h-4 w-4" }),
+            "Export Report"
+          ]
+        }
+      )
+    ] }),
+    !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Walk-forward testing is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat,
+          {
+            label: "Walk windows",
+            value: String(Math.max(0, windows.length - 1)),
+            detail: "Each window grades rules using later data"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat,
+          {
+            label: "Repeatable candidates",
+            value: String(repeatableCount),
+            detail: "Survived multiple eligible windows"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat,
+          {
+            label: "Watchlist",
+            value: String(watchlistCount),
+            detail: "Positive but still fragile"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat,
+          {
+            label: "Best walk-forward net",
+            value: best ? fmtR(best.forwardNetR) : "0.00R",
+            detail: (best == null ? void 0 : best.id) ?? "No variant"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-destructive/40 bg-destructive/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ShieldAlert, { className: "mt-0.5 h-4 w-4 text-destructive" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Still Not Live Proof" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "Walk-forward evidence is stronger than one split, but it is still historical. A repeatable candidate must still be frozen and tracked on newer imported candles before it can be treated as forward-tested." })
+        ] })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(GitCompareArrows, { className: "h-4 w-4 text-primary" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Walk-Forward Scoreboard" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1120px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Variant" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Index" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Session" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Target" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Eligible" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Survived" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward trades" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward net" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Positive windows" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Worst window" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Verdict" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: rows.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.setup }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.symbolScope }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.sessionScope }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.targetModel }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.eligibleWindows }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.survivedWindows }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.forwardTrades }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(row.forwardNetR) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct(row.positiveWindowRate) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(row.worstWindowR) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.verdict })
+          ] }, row.id)) })
+        ] }) })
+      ] }),
+      best && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Best Variant Window Detail" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-1 text-sm text-muted-foreground", children: [
+          best.setup,
+          " | ",
+          best.symbolScope,
+          " | ",
+          best.sessionScope,
+          " |",
+          " ",
+          best.targetModel
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[820px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Window" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Prior trades" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Prior net" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward trades" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward net" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Forward win" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Status" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: best.windows.map((windowResult) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "tr",
+            {
+              className: "border-b border-border/40",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2", children: [
+                  fmtDate(windowResult.window.start),
+                  " to",
+                  " ",
+                  fmtDate(windowResult.window.end)
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: windowResult.prior.trades }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(windowResult.prior.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: windowResult.forward.trades }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(windowResult.forward.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct(windowResult.forward.winRate) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: windowResult.status })
+              ]
+            },
+            windowResult.window.index
+          )) })
+        ] }) })
+      ] })
+    ] })
+  ] });
+}
 const rootRoute = createRootRoute({ component: Layout });
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -62448,6 +62784,11 @@ const forwardRoute = createRoute({
   path: "/forward",
   component: ForwardTrackerPage
 });
+const walkForwardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/walk-forward",
+  component: WalkForwardPage
+});
 const replayRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/replay",
@@ -62472,6 +62813,7 @@ const tree = rootRoute.addChildren([
   discoveryRoute,
   experimentRoute,
   forwardRoute,
+  walkForwardRoute,
   replayRoute,
   chartRoute,
   resultsRoute

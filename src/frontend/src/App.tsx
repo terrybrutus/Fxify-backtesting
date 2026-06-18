@@ -9,6 +9,7 @@ import RejectedSetupsPage from "@/pages/RejectedSetupsPage";
 import ReplayPage from "@/pages/ReplayPage";
 import RuleEngineHealthPage from "@/pages/RuleEngineHealthPage";
 import SetupDetectorPage from "@/pages/SetupDetectorPage";
+import WalkForwardPage from "@/pages/WalkForwardPage";
 import {
   RouterProvider,
   createRootRoute,
@@ -69,6 +70,12 @@ const forwardRoute = createRoute({
   component: ForwardTrackerPage,
 });
 
+const walkForwardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/walk-forward",
+  component: WalkForwardPage,
+});
+
 const replayRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/replay",
@@ -96,6 +103,7 @@ const tree = rootRoute.addChildren([
   discoveryRoute,
   experimentRoute,
   forwardRoute,
+  walkForwardRoute,
   replayRoute,
   chartRoute,
   resultsRoute,
