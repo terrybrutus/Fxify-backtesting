@@ -61171,6 +61171,13 @@ const SYMBOL_SCOPES = [
   "US30",
   "US500"
 ];
+const SESSION_SCOPES = [
+  "All",
+  "Asia",
+  "London",
+  "New York",
+  "Off session"
+];
 const BASE_VARIANTS = [
   {
     id: "ema200-prev-day-high",
@@ -61230,11 +61237,14 @@ const BASE_VARIANTS = [
   }
 ];
 const VARIANTS = BASE_VARIANTS.flatMap(
-  (variant) => SYMBOL_SCOPES.map((symbolScope) => ({
-    ...variant,
-    symbolScope,
-    id: `${variant.id}-${symbolScope.toLowerCase()}`
-  }))
+  (variant) => SYMBOL_SCOPES.flatMap(
+    (symbolScope) => SESSION_SCOPES.map((sessionScope) => ({
+      ...variant,
+      symbolScope,
+      sessionScope,
+      id: `${variant.id}-${symbolScope.toLowerCase()}-${sessionScope.toLowerCase().replace(/\s+/g, "-")}`
+    }))
+  )
 );
 function passed(signal, label) {
   return signal.reasons.some(
@@ -61246,6 +61256,13 @@ function pct(value) {
 }
 function fmtR(value) {
   return `${value.toFixed(2)}R`;
+}
+function sessionFor(timestamp) {
+  const hour = new Date(timestamp).getUTCHours();
+  if (hour >= 0 && hour < 7) return "Asia";
+  if (hour >= 7 && hour < 13) return "London";
+  if (hour >= 13 && hour < 21) return "New York";
+  return "Off session";
 }
 function downloadFile(name, content, type) {
   const blob = new Blob([content], { type });
@@ -61338,6 +61355,8 @@ function buildExperimentRows({
       if (signal.stop >= signal.entry) return [];
       if (variant.symbolScope !== "All" && signal.symbol !== variant.symbolScope)
         return [];
+      if (variant.sessionScope !== "All" && sessionFor(signal.timestamp) !== variant.sessionScope)
+        return [];
       if (!variant.predicate(signal)) return [];
       const target = targetFor(signal, variant.targetModel);
       if (!target) return [];
@@ -61424,6 +61443,7 @@ function experimentReportJson(run, rows, readiness) {
         id: row.variant.id,
         setup: row.variant.setup,
         symbolScope: row.variant.symbolScope,
+        sessionScope: row.variant.sessionScope,
         targetModel: row.variant.targetModel,
         description: row.variant.description,
         evidenceStatus: row.evidenceStatus,
@@ -61434,6 +61454,7 @@ function experimentReportJson(run, rows, readiness) {
         sampleTrades: row.trades.slice(0, 20).map((trade) => ({
           timestamp: new Date(trade.signal.timestamp).toISOString(),
           symbol: trade.signal.symbol,
+          session: sessionFor(trade.signal.timestamp),
           setupType: trade.signal.setupType,
           targetModel: trade.target.model,
           targetR: trade.target.rMultiple,
@@ -61581,6 +61602,7 @@ function ExperimentLabPage() {
           /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Variant" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Index" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Session" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Target" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "All trades" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "All net" }),
@@ -61598,6 +61620,7 @@ function ExperimentLabPage() {
               children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { title: row.variant.description, children: row.variant.setup }) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.symbolScope }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.sessionScope }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.targetModel }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.all.trades }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(row.all.totalR) }),
@@ -61626,6 +61649,10 @@ function ExperimentLabPage() {
               "targeting",
               " ",
               /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-foreground", children: bestValidation.variant.symbolScope }),
+              " ",
+              "during",
+              " ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-foreground", children: bestValidation.variant.sessionScope }),
               " ",
               "into",
               " ",
