@@ -278,6 +278,11 @@ export default function DiscoveryLabPage() {
               current sample shows wins. Treat accepted setups as review
               candidates, not proof.
             </InsightCard>
+            <InsightCard title="Validation Split" severity="blocked">
+              Validation period has {run.validation.validationTradeCount}{" "}
+              trade(s). A setup family cannot graduate until it survives later
+              unseen data, not just the discovery period.
+            </InsightCard>
             <InsightCard title="Coco Profile Gap" severity="watch">
               {discovery.acceptedWithMissingMa} accepted setup(s) failed moving
               average hold and {discovery.acceptedWithMissingSunday} failed
@@ -285,11 +290,22 @@ export default function DiscoveryLabPage() {
               context, so these should become structured setup rules, not loose
               score bonuses.
             </InsightCard>
+          </section>
+
+          <section className="grid gap-3 lg:grid-cols-2">
             <InsightCard title="TP1 Bottleneck" severity="watch">
               TP1 liquidity passed on {pct(discovery.tp1PassRate)} of
               candidates. This is the main rejection pressure. Next discovery
               work should compare previous-day highs, session highs, old Sunday
               levels, and imbalance fills as separate TP models.
+            </InsightCard>
+            <InsightCard title="Split Boundary" severity="watch">
+              Discovery ends at{" "}
+              {run.validation.discoveryEndTimestamp
+                ? new Date(run.validation.discoveryEndTimestamp).toISOString()
+                : "n/a"}
+              . Results before and after this boundary should be judged
+              separately.
             </InsightCard>
           </section>
 

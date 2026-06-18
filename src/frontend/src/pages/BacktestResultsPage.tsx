@@ -58,6 +58,10 @@ function drawdownR(maxDrawdownUnits: number) {
   return maxDrawdownUnits / 100;
 }
 
+function fmtDate(value?: number) {
+  return value ? new Date(value).toISOString() : "n/a";
+}
+
 function equityDrawdownR(trades: TradeResult[]) {
   let running = 0;
   let peak = 0;
@@ -298,6 +302,67 @@ export default function BacktestResultsPage() {
               detail={`${stats.totalPnl.toFixed(2)} audit units`}
             />
           </div>
+
+          <section className="border border-border bg-card p-4">
+            <h2 className="font-display text-lg font-bold">
+              Discovery vs Validation
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {run.validation.method}
+            </p>
+            <p className="mt-1 font-mono text-xs text-muted-foreground">
+              Discovery ends at {fmtDate(run.validation.discoveryEndTimestamp)}
+            </p>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <div className="border border-border bg-background p-4">
+                <p className="font-mono text-xs font-bold uppercase tracking-widest">
+                  Discovery period
+                </p>
+                <div className="mt-3 grid gap-2 font-mono text-xs text-muted-foreground">
+                  <p>Trades: {run.validation.discoveryTradeCount}</p>
+                  <p>
+                    Win rate:{" "}
+                    {(run.validation.discoveryStats.winRate * 100).toFixed(1)}%
+                  </p>
+                  <p>
+                    Net:{" "}
+                    {(run.validation.discoveryStats.totalPnl / 100).toFixed(2)}R
+                  </p>
+                  <p>
+                    Max DD:{" "}
+                    {drawdownR(
+                      run.validation.discoveryStats.maxDrawdown,
+                    ).toFixed(2)}
+                    R
+                  </p>
+                </div>
+              </div>
+              <div className="border border-border bg-background p-4">
+                <p className="font-mono text-xs font-bold uppercase tracking-widest">
+                  Validation period
+                </p>
+                <div className="mt-3 grid gap-2 font-mono text-xs text-muted-foreground">
+                  <p>Trades: {run.validation.validationTradeCount}</p>
+                  <p>
+                    Win rate:{" "}
+                    {(run.validation.validationStats.winRate * 100).toFixed(1)}%
+                  </p>
+                  <p>
+                    Net:{" "}
+                    {(run.validation.validationStats.totalPnl / 100).toFixed(2)}
+                    R
+                  </p>
+                  <p>
+                    Max DD:{" "}
+                    {drawdownR(
+                      run.validation.validationStats.maxDrawdown,
+                    ).toFixed(2)}
+                    R
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
 
           <div className="grid gap-3 xl:grid-cols-3">
             <BreakdownTable title="By Setup Family" rows={familyRows} />

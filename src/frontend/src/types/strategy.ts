@@ -212,6 +212,15 @@ export interface BacktestSession {
   sessionLabel: string;
 }
 
+export interface ValidationSplit {
+  discoveryEndTimestamp?: number;
+  discoveryStats: PerformanceStats;
+  validationStats: PerformanceStats;
+  discoveryTradeCount: number;
+  validationTradeCount: number;
+  method: string;
+}
+
 export interface AccountSettings {
   accountSize: number;
   baseLotSize: number;
@@ -236,6 +245,7 @@ export interface EngineRun {
   rejectedSignals: SignalAudit[];
   trades: TradeResult[];
   stats: PerformanceStats;
+  validation: ValidationSplit;
   health: RuleHealthCheck[];
   generatedAt: number;
 }

@@ -14,9 +14,11 @@ import {
   TradeDirection,
   TradeOutcome,
   type TradeResult,
+  type ValidationSplit,
 } from "@/types/strategy";
 
 export const RULE_ENGINE_VERSION = "ict-ma-audit-mvp-0.1";
+const VALIDATION_SPLIT_RATIO = 0.7;
 
 const REQUIRED_COLUMNS = [
   "timestamp",
@@ -993,6 +995,7 @@ export function runEngine(
       rejectedSignals: [],
       trades: [],
       stats: emptyStats(),
+      validation: emptyValidationSplit(),
       health: runHealthChecks(analysisCandles, integrity),
       generatedAt: Date.now(),
     };
@@ -1058,6 +1061,7 @@ export function runEngine(
   const acceptedSignals = audits.filter((audit) => audit.accepted);
   const rejectedSignals = audits.filter((audit) => !audit.accepted);
   const trades = simulateTrades(acceptedSignals, h1BySymbol);
+  const validation = buildValidationSplit(trades, analysisCandles);
 
   return {
     integrity,
@@ -1071,6 +1075,7 @@ export function runEngine(
     rejectedSignals,
     trades,
     stats: computeStats(trades),
+    validation,
     health: runHealthChecks(analysisCandles, integrity),
     generatedAt: Date.now(),
   };
@@ -1154,6 +1159,47 @@ function emptyStats(): PerformanceStats {
     maxDrawdown: 0,
     avgRR: 0,
     expectancy: 0,
+  };
+}
+
+function emptyValidationSplit(): ValidationSplit {
+  return {
+    discoveryStats: emptyStats(),
+    validationStats: emptyStats(),
+    discoveryTradeCount: 0,
+    validationTradeCount: 0,
+    method: "70/30 chronological split; unavailable until real trades exist.",
+  };
+}
+
+function buildValidationSplit(
+  trades: TradeResult[],
+  candles: Candle[],
+): ValidationSplit {
+  if (candles.length === 0) return emptyValidationSplit();
+  const sorted = [...candles].sort((a, b) => ms(a) - ms(b));
+  const splitIndex = Math.max(
+    0,
+    Math.min(
+      sorted.length - 1,
+      Math.floor((sorted.length - 1) * VALIDATION_SPLIT_RATIO),
+    ),
+  );
+  const discoveryEndTimestamp = ms(sorted[splitIndex]);
+  const discoveryTrades = trades.filter(
+    (trade) => Number(trade.entryTimestamp) <= discoveryEndTimestamp,
+  );
+  const validationTrades = trades.filter(
+    (trade) => Number(trade.entryTimestamp) > discoveryEndTimestamp,
+  );
+  return {
+    discoveryEndTimestamp,
+    discoveryStats: computeStats(discoveryTrades),
+    validationStats: computeStats(validationTrades),
+    discoveryTradeCount: discoveryTrades.length,
+    validationTradeCount: validationTrades.length,
+    method:
+      "70/30 chronological split. Discovery period is earlier data; validation period is later unseen data.",
   };
 }
 
