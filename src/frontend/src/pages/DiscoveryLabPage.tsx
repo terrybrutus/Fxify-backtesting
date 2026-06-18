@@ -3,6 +3,7 @@ import { classifyEvidence } from "@/lib/evidence";
 import {
   type AuditFactor,
   type SignalAudit,
+  type TargetCandidate,
   Timeframe,
   TradeOutcome,
 } from "@/types/strategy";
@@ -10,6 +11,16 @@ import { FlaskConical, ShieldAlert, TrendingUp } from "lucide-react";
 import { useMemo } from "react";
 
 type InsightSeverity = "watch" | "promising" | "blocked";
+
+type TargetModelRow = {
+  model: string;
+  candidates: number;
+  passCount: number;
+  selected: number;
+  acceptedSelected: number;
+  medianR: number;
+  passRate: number;
+};
 
 function pct(value: number) {
   return `${(value * 100).toFixed(1)}%`;
@@ -134,6 +145,66 @@ function summarizeAccepted(
   return [...rows.values()].sort((a, b) => b.totalR - a.totalR);
 }
 
+function median(values: number[]) {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor((sorted.length - 1) * 0.5)];
+}
+
+function summarizeTargetModels(signals: SignalAudit[]): TargetModelRow[] {
+  const rows = new Map<
+    string,
+    {
+      model: string;
+      candidates: number;
+      passCount: number;
+      selected: number;
+      acceptedSelected: number;
+      rValues: number[];
+    }
+  >();
+
+  for (const signal of signals) {
+    const candidates: TargetCandidate[] = signal.targetCandidates ?? [
+      {
+        model: signal.targetModel ?? "selected TP model",
+        price: signal.tp1,
+        rMultiple: signal.rMultipleToTp1,
+      },
+    ];
+    for (const candidate of candidates) {
+      const row = rows.get(candidate.model) ?? {
+        model: candidate.model,
+        candidates: 0,
+        passCount: 0,
+        selected: 0,
+        acceptedSelected: 0,
+        rValues: [],
+      };
+      row.candidates += 1;
+      row.rValues.push(candidate.rMultiple);
+      if (candidate.rMultiple >= 0.8) row.passCount += 1;
+      if (signal.targetModel === candidate.model) {
+        row.selected += 1;
+        if (signal.accepted) row.acceptedSelected += 1;
+      }
+      rows.set(candidate.model, row);
+    }
+  }
+
+  return [...rows.values()]
+    .map((row) => ({
+      model: row.model,
+      candidates: row.candidates,
+      passCount: row.passCount,
+      selected: row.selected,
+      acceptedSelected: row.acceptedSelected,
+      medianR: median(row.rValues),
+      passRate: rate(row.passCount, row.candidates),
+    }))
+    .sort((a, b) => b.passCount - a.passCount || b.medianR - a.medianR);
+}
+
 export default function DiscoveryLabPage() {
   const { run } = useStrategyWorkspace();
   const signals = useMemo(
@@ -145,6 +216,10 @@ export default function DiscoveryLabPage() {
   const acceptedSummary = useMemo(
     () => summarizeAccepted(accepted, run.trades),
     [accepted, run.trades],
+  );
+  const targetModelRows = useMemo(
+    () => summarizeTargetModels(signals),
+    [signals],
   );
 
   const discovery = useMemo(() => {
@@ -342,6 +417,51 @@ export default function DiscoveryLabPage() {
                         </td>
                         <td className="py-2">
                           <span title={row.detail}>{row.status}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {targetModelRows.length > 0 && (
+            <section className="border border-border bg-card p-4">
+              <h2 className="font-display text-lg font-bold">
+                Target Model Comparison
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                This compares TP candidates across all accepted and rejected
+                setups. It shows where the strategy has room before deciding
+                which setup family deserves more trust.
+              </p>
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full min-w-[860px] font-mono text-xs">
+                  <thead className="border-b border-border text-muted-foreground">
+                    <tr>
+                      <th className="py-2 text-left">TP model</th>
+                      <th className="py-2 text-right">Candidates</th>
+                      <th className="py-2 text-right">Passes 0.8R</th>
+                      <th className="py-2 text-right">Pass rate</th>
+                      <th className="py-2 text-right">Median R</th>
+                      <th className="py-2 text-right">Selected</th>
+                      <th className="py-2 text-right">Accepted selected</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {targetModelRows.map((row) => (
+                      <tr key={row.model} className="border-b border-border/40">
+                        <td className="py-2">{row.model}</td>
+                        <td className="py-2 text-right">{row.candidates}</td>
+                        <td className="py-2 text-right">{row.passCount}</td>
+                        <td className="py-2 text-right">{pct(row.passRate)}</td>
+                        <td className="py-2 text-right">
+                          {row.medianR.toFixed(2)}R
+                        </td>
+                        <td className="py-2 text-right">{row.selected}</td>
+                        <td className="py-2 text-right">
+                          {row.acceptedSelected}
                         </td>
                       </tr>
                     ))}

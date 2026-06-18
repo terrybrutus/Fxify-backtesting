@@ -10,6 +10,7 @@ import {
   type RuleHealthCheck,
   type SignalAudit,
   type SundayLevel,
+  type TargetCandidate,
   Timeframe,
   TradeDirection,
   TradeOutcome,
@@ -556,6 +557,28 @@ function weekKey(timestamp: number): number {
   );
 }
 
+type PriceLevel = { model: string; price: number };
+
+function sessionRange(
+  candles: Candle[],
+  dayStart: number,
+  startHourUtc: number,
+  endHourUtc: number,
+  beforeTimestamp = Number.POSITIVE_INFINITY,
+): { high?: number; low?: number } {
+  const start = dayStart + startHourUtc * 60 * 60 * 1000;
+  const end = dayStart + endHourUtc * 60 * 60 * 1000;
+  const sessionCandles = candles.filter((item) => {
+    const itemTime = ms(item);
+    return itemTime >= start && itemTime < end && itemTime < beforeTimestamp;
+  });
+  if (sessionCandles.length === 0) return {};
+  return {
+    high: Math.max(...sessionCandles.map((item) => item.high)),
+    low: Math.min(...sessionCandles.map((item) => item.low)),
+  };
+}
+
 function structureSnapshot(
   candle: Candle,
   h1Candles: Candle[],
@@ -564,9 +587,8 @@ function structureSnapshot(
   fvgZones: FVGZone[],
 ): MarketStructureSnapshot {
   const timestamp = ms(candle);
-  const priorDaily = dailyCandles.filter(
-    (item) => ms(item) < dayKey(timestamp),
-  );
+  const currentDay = dayKey(timestamp);
+  const priorDaily = dailyCandles.filter((item) => ms(item) < currentDay);
   const previousDay = priorDaily.at(-1);
   const currentWeek = weekKey(timestamp);
   const weekCandles = h1Candles.filter((item) => {
@@ -604,19 +626,55 @@ function structureSnapshot(
     .sort((a, b) => b - a)[0];
 
   const previousDayHigh = previousDay?.high;
+  const asia = sessionRange(h1Candles, currentDay, 0, 7, timestamp);
+  const london = sessionRange(h1Candles, currentDay, 7, 13, timestamp);
+  const ny = sessionRange(h1Candles, currentDay, 13, 21, timestamp);
+  const priorNy = sessionRange(
+    h1Candles,
+    currentDay - 24 * 60 * 60 * 1000,
+    13,
+    21,
+  );
+  const twoDayNy = [
+    priorNy,
+    sessionRange(h1Candles, currentDay - 2 * 24 * 60 * 60 * 1000, 13, 21),
+  ].filter((range) => range.high !== undefined || range.low !== undefined);
+  const priorTwoDayNyHigh =
+    twoDayNy.length > 0
+      ? Math.max(...twoDayNy.flatMap((range) => range.high ?? []))
+      : undefined;
+  const priorTwoDayNyLow =
+    twoDayNy.length > 0
+      ? Math.min(...twoDayNy.flatMap((range) => range.low ?? []))
+      : undefined;
   const weeklyLow =
     weekCandles.length > 0
       ? Math.min(...weekCandles.map((item) => item.low))
       : undefined;
   const targetCandidates = [
     previousDayHigh && previousDayHigh > candle.close
-      ? { label: "previous day high", price: previousDayHigh }
+      ? { model: "previous day high", price: previousDayHigh }
       : undefined,
-    sundayAbove ? { label: "old Sunday level", price: sundayAbove } : undefined,
+    sundayAbove ? { model: "old Sunday level", price: sundayAbove } : undefined,
+    asia.high && asia.high > candle.close
+      ? { model: "Asia session high", price: asia.high }
+      : undefined,
+    london.high && london.high > candle.close
+      ? { model: "London session high", price: london.high }
+      : undefined,
+    ny.high && ny.high > candle.close
+      ? { model: "NY session high", price: ny.high }
+      : undefined,
+    priorNy.high && priorNy.high > candle.close
+      ? { model: "prior NY high", price: priorNy.high }
+      : undefined,
+    priorTwoDayNyHigh && priorTwoDayNyHigh > candle.close
+      ? { model: "prior two-day NY high", price: priorTwoDayNyHigh }
+      : undefined,
     bullishFvgFill
-      ? { label: "major bullish FVG fill", price: bullishFvgFill }
+      ? { model: "major bullish FVG fill", price: bullishFvgFill }
       : undefined,
-  ].filter(Boolean) as { label: string; price: number }[];
+  ].filter(Boolean) as PriceLevel[];
   const nearestTarget = targetCandidates.sort((a, b) => a.price - b.price)[0];
 
   return {
@@ -624,6 +682,16 @@ function structureSnapshot(
     timestamp,
     previousDayHigh,
     previousDayLow: previousDay?.low,
+    asiaHigh: asia.high,
+    asiaLow: asia.low,
+    londonHigh: london.high,
+    londonLow: london.low,
+    nyHigh: ny.high,
+    nyLow: ny.low,
+    priorNyHigh: priorNy.high,
+    priorNyLow: priorNy.low,
+    priorTwoDayNyHigh,
+    priorTwoDayNyLow,
     currentWeekHigh:
       weekCandles.length > 0
         ? Math.max(...weekCandles.map((item) => item.high))
@@ -634,7 +702,7 @@ function structureSnapshot(
     nearestBullishFvgFill: bullishFvgFill,
     nearestBearishFvgFill: bearishFvgFill,
     targetModel: nearestTarget
-      ? `nearest Coco TP: ${nearestTarget.label}`
+      ? `nearest Coco TP: ${nearestTarget.model}`
       : "fallback TP: prior swing liquidity",
     stopModel:
       weeklyLow && weeklyLow < candle.close
@@ -643,15 +711,33 @@ function structureSnapshot(
   };
 }
 
-function bestLongTarget(
+function rawLongTargets(
   currentPrice: number,
-  atrValue: number,
   structure: MarketStructureSnapshot,
   candles: Candle[],
-): { price: number; model: string } {
-  const targets = [
+): PriceLevel[] {
+  const swing = nearestBuysideLiquidity(currentPrice, candles);
+  return [
     structure.previousDayHigh && structure.previousDayHigh > currentPrice
       ? { price: structure.previousDayHigh, model: "previous day high" }
+      : undefined,
+    structure.asiaHigh && structure.asiaHigh > currentPrice
+      ? { price: structure.asiaHigh, model: "Asia session high" }
+      : undefined,
+    structure.londonHigh && structure.londonHigh > currentPrice
+      ? { price: structure.londonHigh, model: "London session high" }
+      : undefined,
+    structure.nyHigh && structure.nyHigh > currentPrice
+      ? { price: structure.nyHigh, model: "NY session high" }
+      : undefined,
+    structure.priorNyHigh && structure.priorNyHigh > currentPrice
+      ? { price: structure.priorNyHigh, model: "prior NY high" }
+      : undefined,
+    structure.priorTwoDayNyHigh && structure.priorTwoDayNyHigh > currentPrice
+      ? {
+          price: structure.priorTwoDayNyHigh,
+          model: "prior two-day NY high",
+        }
       : undefined,
     structure.nearestOldSundayAbove
       ? { price: structure.nearestOldSundayAbove, model: "old Sunday level" }
@@ -659,15 +745,44 @@ function bestLongTarget(
     structure.nearestBullishFvgFill
       ? { price: structure.nearestBullishFvgFill, model: "bullish FVG fill" }
       : undefined,
-    nearestBuysideLiquidity(currentPrice, candles)
+    swing
       ? {
-          price: nearestBuysideLiquidity(currentPrice, candles)!,
+          price: swing,
           model: "prior swing buyside liquidity",
         }
       : undefined,
-  ].filter(Boolean) as { price: number; model: string }[];
+  ].filter(Boolean) as PriceLevel[];
+}
+
+function bestLongTarget(
+  currentPrice: number,
+  atrValue: number,
+  structure: MarketStructureSnapshot,
+  candles: Candle[],
+): { price: number; model: string } {
+  const targets = rawLongTargets(currentPrice, structure, candles);
   const nearest = targets.sort((a, b) => a.price - b.price)[0];
   return nearest ?? { price: currentPrice + atrValue, model: "ATR fallback" };
+}
+
+function targetCandidateEvidence(
+  currentPrice: number,
+  risk: number,
+  structure: MarketStructureSnapshot,
+  candles: Candle[],
+): TargetCandidate[] {
+  const deduped = new Map<string, PriceLevel>();
+  for (const target of rawLongTargets(currentPrice, structure, candles)) {
+    const key = `${target.model}:${target.price.toFixed(5)}`;
+    deduped.set(key, target);
+  }
+  return [...deduped.values()]
+    .map((target) => ({
+      model: target.model,
+      price: target.price,
+      rMultiple: (target.price - currentPrice) / risk,
+    }))
+    .sort((a, b) => a.price - b.price);
 }
 
 type CocoSetupFamily = {
@@ -828,6 +943,12 @@ function scoreSignal(
   const stop = Math.min(support - atrValue * 0.15, candle.low - atrValue * 0.1);
   const risk = Math.max(currentPrice - stop, 0.01);
   const rewardR = (tp1 - currentPrice) / risk;
+  const targetCandidates = targetCandidateEvidence(
+    currentPrice,
+    risk,
+    structure,
+    candles.slice(0, index),
+  );
   const setupFamily = chooseCocoSetupFamily({
     bullishDaily,
     priceAbove200,
@@ -949,6 +1070,8 @@ function scoreSignal(
     stop,
     tp1,
     rMultipleToTp1: rewardR,
+    targetModel: target.model,
+    targetCandidates,
     dataSource: candle.source,
     ruleEngineVersion: RULE_ENGINE_VERSION,
     explanation: accepted
