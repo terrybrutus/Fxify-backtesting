@@ -2,6 +2,7 @@ import Layout from "@/components/Layout";
 import BacktestResultsPage from "@/pages/BacktestResultsPage";
 import ChartPage from "@/pages/ChartPage";
 import DataUploadPage from "@/pages/DataUploadPage";
+import DecisionConsolePage from "@/pages/DecisionConsolePage";
 import DiscoveryLabPage from "@/pages/DiscoveryLabPage";
 import ExperimentLabPage from "@/pages/ExperimentLabPage";
 import ForwardTrackerPage from "@/pages/ForwardTrackerPage";
@@ -76,6 +77,12 @@ const walkForwardRoute = createRoute({
   component: WalkForwardPage,
 });
 
+const decisionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/decisions",
+  component: DecisionConsolePage,
+});
+
 const replayRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/replay",
@@ -104,6 +111,7 @@ const tree = rootRoute.addChildren([
   experimentRoute,
   forwardRoute,
   walkForwardRoute,
+  decisionRoute,
   replayRoute,
   chartRoute,
   resultsRoute,

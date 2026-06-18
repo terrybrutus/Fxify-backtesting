@@ -8,13 +8,13 @@ import {
 import { Download, GitCompareArrows, ShieldAlert } from "lucide-react";
 import { useMemo } from "react";
 
-type WalkWindow = {
+export type WalkWindow = {
   index: number;
   start: number;
   end: number;
 };
 
-type WindowResult = {
+export type WindowResult = {
   window: WalkWindow;
   prior: ExperimentStats;
   forward: ExperimentStats;
@@ -22,7 +22,7 @@ type WindowResult = {
   status: "Warmup" | "Under-sampled" | "Survived" | "Failed";
 };
 
-type WalkRow = {
+export type WalkRow = {
   id: string;
   setup: string;
   symbolScope: string;
@@ -60,7 +60,7 @@ function downloadFile(name: string, content: string, type: string) {
   URL.revokeObjectURL(url);
 }
 
-function statsFor(trades: ExperimentTrade[]): ExperimentStats {
+export function statsFor(trades: ExperimentTrade[]): ExperimentStats {
   const closed = trades.filter((trade) => trade.closed);
   const wins = closed.filter((trade) => trade.won);
   const losses = closed.filter((trade) => !trade.won);
@@ -85,7 +85,7 @@ function statsFor(trades: ExperimentTrade[]): ExperimentStats {
   };
 }
 
-function buildWindows(start?: number, end?: number): WalkWindow[] {
+export function buildWindows(start?: number, end?: number): WalkWindow[] {
   if (!start || !end || end <= start) return [];
   const count = 6;
   const size = Math.floor((end - start) / count);
@@ -120,6 +120,98 @@ function verdictFor({
     return "Repeatable candidate";
   }
   return "Watchlist";
+}
+
+export function buildWalkForwardRows({
+  experimentRows,
+  windows,
+}: {
+  experimentRows: Array<{
+    variant: {
+      id: string;
+      setup: string;
+      symbolScope: string;
+      sessionScope: string;
+      targetModel: string;
+    };
+    trades: ExperimentTrade[];
+  }>;
+  windows: WalkWindow[];
+}): WalkRow[] {
+  return experimentRows
+    .map((row) => {
+      const windowResults = windows.slice(1).map((window) => {
+        const prior = statsFor(
+          row.trades.filter((trade) => trade.signal.timestamp < window.start),
+        );
+        const forward = statsFor(
+          row.trades.filter(
+            (trade) =>
+              trade.signal.timestamp >= window.start &&
+              trade.signal.timestamp < window.end,
+          ),
+        );
+        const eligible = prior.trades >= 3 && prior.totalR > 0;
+        const status: WindowResult["status"] =
+          window.index === 0
+            ? "Warmup"
+            : !eligible
+              ? "Under-sampled"
+              : forward.totalR > 0
+                ? "Survived"
+                : "Failed";
+        return {
+          window,
+          prior,
+          forward,
+          eligible,
+          status,
+        };
+      });
+      const eligible = windowResults.filter((item) => item.eligible);
+      const survived = eligible.filter((item) => item.forward.totalR > 0);
+      const forwardTrades = eligible.reduce(
+        (sum, item) => sum + item.forward.trades,
+        0,
+      );
+      const forwardNetR = eligible.reduce(
+        (sum, item) => sum + item.forward.totalR,
+        0,
+      );
+      const positiveWindowRate = eligible.length
+        ? survived.length / eligible.length
+        : 0;
+      const worstWindowR = eligible.length
+        ? Math.min(...eligible.map((item) => item.forward.totalR))
+        : 0;
+      return {
+        id: row.variant.id,
+        setup: row.variant.setup,
+        symbolScope: row.variant.symbolScope,
+        sessionScope: row.variant.sessionScope,
+        targetModel: row.variant.targetModel,
+        windows: windowResults,
+        eligibleWindows: eligible.length,
+        survivedWindows: survived.length,
+        forwardTrades,
+        forwardNetR,
+        positiveWindowRate,
+        worstWindowR,
+        verdict: verdictFor({
+          eligibleWindows: eligible.length,
+          survivedWindows: survived.length,
+          forwardNetR,
+          positiveWindowRate,
+          forwardTrades,
+        }),
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.forwardNetR - a.forwardNetR ||
+        b.eligibleWindows - a.eligibleWindows ||
+        b.forwardTrades - a.forwardTrades,
+    );
 }
 
 function Stat({
@@ -162,83 +254,7 @@ export default function WalkForwardPage() {
     [run.integrity.start, run.integrity.end],
   );
   const rows = useMemo<WalkRow[]>(
-    () =>
-      experimentRows
-        .map((row) => {
-          const windowResults = windows.slice(1).map((window) => {
-            const prior = statsFor(
-              row.trades.filter(
-                (trade) => trade.signal.timestamp < window.start,
-              ),
-            );
-            const forward = statsFor(
-              row.trades.filter(
-                (trade) =>
-                  trade.signal.timestamp >= window.start &&
-                  trade.signal.timestamp < window.end,
-              ),
-            );
-            const eligible = prior.trades >= 3 && prior.totalR > 0;
-            const status: WindowResult["status"] =
-              window.index === 0
-                ? "Warmup"
-                : !eligible
-                  ? "Under-sampled"
-                  : forward.totalR > 0
-                    ? "Survived"
-                    : "Failed";
-            return {
-              window,
-              prior,
-              forward,
-              eligible,
-              status,
-            };
-          });
-          const eligible = windowResults.filter((item) => item.eligible);
-          const survived = eligible.filter((item) => item.forward.totalR > 0);
-          const forwardTrades = eligible.reduce(
-            (sum, item) => sum + item.forward.trades,
-            0,
-          );
-          const forwardNetR = eligible.reduce(
-            (sum, item) => sum + item.forward.totalR,
-            0,
-          );
-          const positiveWindowRate = eligible.length
-            ? survived.length / eligible.length
-            : 0;
-          const worstWindowR = eligible.length
-            ? Math.min(...eligible.map((item) => item.forward.totalR))
-            : 0;
-          return {
-            id: row.variant.id,
-            setup: row.variant.setup,
-            symbolScope: row.variant.symbolScope,
-            sessionScope: row.variant.sessionScope,
-            targetModel: row.variant.targetModel,
-            windows: windowResults,
-            eligibleWindows: eligible.length,
-            survivedWindows: survived.length,
-            forwardTrades,
-            forwardNetR,
-            positiveWindowRate,
-            worstWindowR,
-            verdict: verdictFor({
-              eligibleWindows: eligible.length,
-              survivedWindows: survived.length,
-              forwardNetR,
-              positiveWindowRate,
-              forwardTrades,
-            }),
-          };
-        })
-        .sort(
-          (a, b) =>
-            b.forwardNetR - a.forwardNetR ||
-            b.eligibleWindows - a.eligibleWindows ||
-            b.forwardTrades - a.forwardTrades,
-        ),
+    () => buildWalkForwardRows({ experimentRows, windows }),
     [experimentRows, windows],
   );
   const repeatableCount = rows.filter(
