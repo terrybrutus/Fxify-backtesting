@@ -61343,6 +61343,23 @@ function computeExperimentStats(trades) {
     maxDrawdownR
   };
 }
+function promotionGate(discovery, validation) {
+  if (validation.trades === 0) return "No validation";
+  if (validation.trades < 10) return "Needs sample";
+  if (validation.totalR <= 0 || validation.avgR <= 0) return "Diverged";
+  if (validation.trades >= 30 && validation.avgR > 0.15) {
+    return "Forward-test candidate";
+  }
+  if (discovery.totalR > 0 && validation.totalR > 0) return "Watchlist";
+  return "Diverged";
+}
+function consistencyRisk(discovery, validation) {
+  if (validation.trades < 10) return "High";
+  if (discovery.totalR > 0 && validation.totalR <= 0) return "High";
+  if (Math.abs(discovery.avgR - validation.avgR) > 0.75) return "Medium";
+  if (validation.maxDrawdownR > 4) return "Medium";
+  return "Low";
+}
 function buildExperimentRows({
   signals,
   candles,
@@ -61366,20 +61383,24 @@ function buildExperimentRows({
     const discoveryTrades = splitTimestamp === void 0 ? [] : trades.filter((trade) => trade.signal.timestamp <= splitTimestamp);
     const validationTrades = splitTimestamp === void 0 ? [] : trades.filter((trade) => trade.signal.timestamp > splitTimestamp);
     const all = computeExperimentStats(trades);
+    const discovery = computeExperimentStats(discoveryTrades);
+    const validation = computeExperimentStats(validationTrades);
     const evidence = classifyEvidence({
       trades: validationTrades.length,
-      totalR: computeExperimentStats(validationTrades).totalR,
-      avgR: computeExperimentStats(validationTrades).avgR,
-      maxDrawdownR: computeExperimentStats(validationTrades).maxDrawdownR
+      totalR: validation.totalR,
+      avgR: validation.avgR,
+      maxDrawdownR: validation.maxDrawdownR
     });
     return {
       variant,
       trades,
-      discovery: computeExperimentStats(discoveryTrades),
-      validation: computeExperimentStats(validationTrades),
+      discovery,
+      validation,
       all,
       evidenceStatus: evidence.status,
-      evidenceDetail: evidence.detail
+      evidenceDetail: evidence.detail,
+      promotionGate: promotionGate(discovery, validation),
+      consistencyRisk: consistencyRisk(discovery, validation)
     };
   }).sort(
     (a2, b2) => b2.validation.totalR - a2.validation.totalR || b2.validation.trades - a2.validation.trades
@@ -61448,6 +61469,8 @@ function experimentReportJson(run, rows, readiness) {
         description: row.variant.description,
         evidenceStatus: row.evidenceStatus,
         evidenceDetail: row.evidenceDetail,
+        promotionGate: row.promotionGate,
+        consistencyRisk: row.consistencyRisk,
         all: row.all,
         discovery: row.discovery,
         validation: row.validation,
@@ -61513,6 +61536,9 @@ function ExperimentLabPage() {
     (row) => row.validation.trades >= 10
   ).length;
   const readiness = reactExports.useMemo(() => readinessReport(run, rows), [run, rows]);
+  const watchlistCount = rows.filter(
+    (row) => row.promotionGate === "Watchlist" || row.promotionGate === "Forward-test candidate"
+  ).length;
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "experiment.page", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
@@ -61567,6 +61593,14 @@ function ExperimentLabPage() {
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           Stat,
           {
+            label: "Watchlist variants",
+            value: String(watchlistCount),
+            detail: "Positive validation, still gated by sample"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat,
+          {
             label: "Best validation net",
             value: bestValidation ? fmtR(bestValidation.validation.totalR) : "0.00R",
             detail: (bestValidation == null ? void 0 : bestValidation.variant.id) ?? "No variant"
@@ -61611,6 +61645,8 @@ function ExperimentLabPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Validation" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Validation net" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val win" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Gate" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Risk" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Evidence" })
           ] }) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: rows.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -61629,6 +61665,8 @@ function ExperimentLabPage() {
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.validation.trades }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(row.validation.totalR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct(row.validation.winRate) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.promotionGate }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.consistencyRisk }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { title: row.evidenceDetail, children: row.evidenceStatus }) })
               ]
             },
