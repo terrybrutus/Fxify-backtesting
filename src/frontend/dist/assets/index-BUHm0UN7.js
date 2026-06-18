@@ -61816,6 +61816,9 @@ function WalkForwardPage() {
 function fmtR$3(value) {
   return `${value.toFixed(2)}R`;
 }
+function isValidationPositiveDivergence(experiment) {
+  return experiment.promotionGate === "Diverged" && experiment.validation.trades > 0 && experiment.validation.totalR > 0;
+}
 function downloadFile$3(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
@@ -61843,8 +61846,11 @@ function statusFor({
   forwardTrades,
   forwardNetR
 }) {
-  if (experiment.promotionGate === "Diverged" || (walk == null ? void 0 : walk.verdict) === "Unstable" || experiment.validation.totalR < 0) {
+  if ((walk == null ? void 0 : walk.verdict) === "Unstable" || experiment.validation.totalR < 0) {
     return "Do not trade";
+  }
+  if (experiment.promotionGate === "Diverged") {
+    return isValidationPositiveDivergence(experiment) ? "Needs evidence" : "Do not trade";
   }
   if (frozen && forwardTrades >= 10 && forwardNetR > 0 && (walk == null ? void 0 : walk.verdict) === "Repeatable candidate") {
     return "Forward-test candidate";
@@ -61894,6 +61900,8 @@ function buildDecisionRows({
       frozenMatches.length ? `Frozen variants: ${frozenMatches.length}` : "Frozen variants: none"
     ];
     const blockers = [
+      experiment.promotionGate === "Diverged" ? isValidationPositiveDivergence(experiment) ? "Discovery and validation diverged; treat as regime-shift evidence, not proof." : "Experiment gate diverged." : void 0,
+      experiment.consistencyRisk !== "Low" ? `Consistency risk is ${experiment.consistencyRisk}.` : void 0,
       experiment.validation.trades < 10 ? "Validation sample below 10 trades." : void 0,
       walk && walk.eligibleWindows < 2 ? "Walk-forward has fewer than two eligible windows." : void 0,
       !frozenMatches.length ? "Rule has not been frozen for future imports." : void 0,
@@ -61985,6 +61993,8 @@ function DecisionConsolePage() {
                     targetModel: row.targetModel,
                     status: row.status,
                     action: row.action,
+                    experimentGate: row.experiment.promotionGate,
+                    consistencyRisk: row.experiment.consistencyRisk,
                     score: row.score,
                     validationTrades: row.experiment.validation.trades,
                     validationNetR: row.experiment.validation.totalR,
@@ -62064,6 +62074,7 @@ function DecisionConsolePage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Target" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Status" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Action" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Gate" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val trades" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val net" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Walk" }),
@@ -62081,6 +62092,7 @@ function DecisionConsolePage() {
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.targetModel }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.status }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.action }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.experiment.promotionGate }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.experiment.validation.trades }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$3(row.experiment.validation.totalR) }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: ((_a3 = row.walk) == null ? void 0 : _a3.verdict) ?? "Unavailable" }),
