@@ -11,6 +11,7 @@ import {
   Microscope,
   Radar,
   RotateCcw,
+  ShieldCheck,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { path: "/rejected", label: "Rejected Setups", icon: FileWarning },
   { path: "/discovery", label: "Discovery Lab", icon: FlaskConical },
   { path: "/experiments", label: "Experiment Lab", icon: Microscope },
+  { path: "/forward", label: "Forward Tracker", icon: ShieldCheck },
   { path: "/replay", label: "Replay Mode", icon: RotateCcw },
   { path: "/chart", label: "Candle Viewer", icon: Radar },
   { path: "/results", label: "Results Export", icon: BarChart3 },
