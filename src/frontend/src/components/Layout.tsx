@@ -8,6 +8,7 @@ import {
   FlaskConical,
   HeartPulse,
   ListChecks,
+  Microscope,
   Radar,
   RotateCcw,
 } from "lucide-react";
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
   { path: "/audit", label: "Signal Audit", icon: ListChecks },
   { path: "/rejected", label: "Rejected Setups", icon: FileWarning },
   { path: "/discovery", label: "Discovery Lab", icon: FlaskConical },
+  { path: "/experiments", label: "Experiment Lab", icon: Microscope },
   { path: "/replay", label: "Replay Mode", icon: RotateCcw },
   { path: "/chart", label: "Candle Viewer", icon: Radar },
   { path: "/results", label: "Results Export", icon: BarChart3 },

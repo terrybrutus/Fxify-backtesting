@@ -3,6 +3,7 @@ import BacktestResultsPage from "@/pages/BacktestResultsPage";
 import ChartPage from "@/pages/ChartPage";
 import DataUploadPage from "@/pages/DataUploadPage";
 import DiscoveryLabPage from "@/pages/DiscoveryLabPage";
+import ExperimentLabPage from "@/pages/ExperimentLabPage";
 import RejectedSetupsPage from "@/pages/RejectedSetupsPage";
 import ReplayPage from "@/pages/ReplayPage";
 import RuleEngineHealthPage from "@/pages/RuleEngineHealthPage";
@@ -55,6 +56,12 @@ const discoveryRoute = createRoute({
   component: DiscoveryLabPage,
 });
 
+const experimentRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/experiments",
+  component: ExperimentLabPage,
+});
+
 const replayRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/replay",
@@ -80,6 +87,7 @@ const tree = rootRoute.addChildren([
   auditRoute,
   rejectedRoute,
   discoveryRoute,
+  experimentRoute,
   replayRoute,
   chartRoute,
   resultsRoute,
