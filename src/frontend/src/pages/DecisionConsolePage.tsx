@@ -1,6 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { useStrategyWorkspace } from "@/hooks/useStrategyWorkspace";
-import { loadFrozenVariants } from "@/lib/forwardTracker";
+import {
+  type FrozenVariant,
+  freezeVariant,
+  loadFrozenVariants,
+  saveFrozenVariants,
+} from "@/lib/forwardTracker";
 import {
   type ExperimentRow,
   buildExperimentRows,
@@ -11,8 +16,8 @@ import {
   buildWindows,
   statsFor,
 } from "@/pages/WalkForwardPage";
-import { Download, ShieldAlert, Target, XCircle } from "lucide-react";
-import { useMemo } from "react";
+import { Download, Lock, ShieldAlert, Target, XCircle } from "lucide-react";
+import { useMemo, useState } from "react";
 
 export type DecisionStatus =
   | "Do not trade"
@@ -131,11 +136,13 @@ function actionFor(status: DecisionStatus, frozen: boolean) {
 export function buildDecisionRows({
   experiments,
   walkRows,
+  frozenVariants,
 }: {
   experiments: ExperimentRow[];
   walkRows: WalkRow[];
+  frozenVariants?: FrozenVariant[];
 }): DecisionRow[] {
-  const frozen = loadFrozenVariants();
+  const frozen = frozenVariants ?? loadFrozenVariants();
   const walkById = new Map(walkRows.map((row) => [row.id, row]));
   return experiments
     .map((experiment) => {
@@ -223,6 +230,9 @@ export function buildDecisionRows({
 
 export default function DecisionConsolePage() {
   const { candles, run } = useStrategyWorkspace();
+  const [frozenVariants, setFrozenVariants] = useState<FrozenVariant[]>(() =>
+    loadFrozenVariants(),
+  );
   const signals = useMemo(
     () => [...run.acceptedSignals, ...run.rejectedSignals],
     [run.acceptedSignals, run.rejectedSignals],
@@ -245,8 +255,8 @@ export default function DecisionConsolePage() {
     [experiments, run.integrity.start, run.integrity.end],
   );
   const decisions = useMemo(
-    () => buildDecisionRows({ experiments, walkRows }),
-    [experiments, walkRows],
+    () => buildDecisionRows({ experiments, walkRows, frozenVariants }),
+    [experiments, walkRows, frozenVariants],
   );
   const forwardReady = decisions.filter(
     (row) => row.status === "Forward-test candidate",
@@ -256,6 +266,23 @@ export default function DecisionConsolePage() {
   );
   const avoid = decisions.filter((row) => row.status === "Do not trade");
   const top = decisions.slice(0, 12);
+  const recommendedFreeze = decisions.find(
+    (row) =>
+      !row.frozen &&
+      row.status === "Needs evidence" &&
+      row.experiment.promotionGate === "Watchlist" &&
+      row.experiment.validation.trades >= 10 &&
+      row.experiment.validation.totalR > 0,
+  );
+
+  function freezeDecision(row: DecisionRow) {
+    const next = [
+      ...frozenVariants,
+      freezeVariant(row.experiment, run.validation.discoveryEndTimestamp),
+    ];
+    saveFrozenVariants(next);
+    setFrozenVariants(next);
+  }
 
   return (
     <div className="space-y-5 p-4 md:p-6" data-ocid="decision.page">
@@ -356,6 +383,31 @@ export default function DecisionConsolePage() {
               </div>
             </div>
           </section>
+
+          {recommendedFreeze && (
+            <section className="border border-primary/30 bg-primary/5 p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="font-mono text-xs font-bold uppercase tracking-widest">
+                    Recommended Freeze
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {recommendedFreeze.id} is the strongest current watchlist
+                    rule. Freezing it starts the forward evidence clock for
+                    future imports.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => freezeDecision(recommendedFreeze)}
+                >
+                  <Lock className="mr-2 h-4 w-4" />
+                  Freeze Rule
+                </Button>
+              </div>
+            </section>
+          )}
 
           <section className="border border-border bg-card p-4">
             <div className="flex items-center gap-2">
