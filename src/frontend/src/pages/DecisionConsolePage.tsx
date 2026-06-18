@@ -43,6 +43,14 @@ function fmtR(value: number) {
   return `${value.toFixed(2)}R`;
 }
 
+function isValidationPositiveDivergence(experiment: ExperimentRow) {
+  return (
+    experiment.promotionGate === "Diverged" &&
+    experiment.validation.trades > 0 &&
+    experiment.validation.totalR > 0
+  );
+}
+
 function downloadFile(name: string, content: string, type: string) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
@@ -86,12 +94,13 @@ function statusFor({
   forwardTrades: number;
   forwardNetR: number;
 }): DecisionStatus {
-  if (
-    experiment.promotionGate === "Diverged" ||
-    walk?.verdict === "Unstable" ||
-    experiment.validation.totalR < 0
-  ) {
+  if (walk?.verdict === "Unstable" || experiment.validation.totalR < 0) {
     return "Do not trade";
+  }
+  if (experiment.promotionGate === "Diverged") {
+    return isValidationPositiveDivergence(experiment)
+      ? "Needs evidence"
+      : "Do not trade";
   }
   if (
     frozen &&
@@ -160,6 +169,14 @@ export function buildDecisionRows({
           : "Frozen variants: none",
       ];
       const blockers = [
+        experiment.promotionGate === "Diverged"
+          ? isValidationPositiveDivergence(experiment)
+            ? "Discovery and validation diverged; treat as regime-shift evidence, not proof."
+            : "Experiment gate diverged."
+          : undefined,
+        experiment.consistencyRisk !== "Low"
+          ? `Consistency risk is ${experiment.consistencyRisk}.`
+          : undefined,
         experiment.validation.trades < 10
           ? "Validation sample below 10 trades."
           : undefined,
@@ -271,6 +288,8 @@ export default function DecisionConsolePage() {
                     targetModel: row.targetModel,
                     status: row.status,
                     action: row.action,
+                    experimentGate: row.experiment.promotionGate,
+                    consistencyRisk: row.experiment.consistencyRisk,
                     score: row.score,
                     validationTrades: row.experiment.validation.trades,
                     validationNetR: row.experiment.validation.totalR,
@@ -356,6 +375,7 @@ export default function DecisionConsolePage() {
                     <th className="py-2 text-left">Target</th>
                     <th className="py-2 text-left">Status</th>
                     <th className="py-2 text-left">Action</th>
+                    <th className="py-2 text-left">Gate</th>
                     <th className="py-2 text-right">Val trades</th>
                     <th className="py-2 text-right">Val net</th>
                     <th className="py-2 text-left">Walk</th>
@@ -374,6 +394,7 @@ export default function DecisionConsolePage() {
                       <td className="py-2">{row.targetModel}</td>
                       <td className="py-2">{row.status}</td>
                       <td className="py-2">{row.action}</td>
+                      <td className="py-2">{row.experiment.promotionGate}</td>
                       <td className="py-2 text-right">
                         {row.experiment.validation.trades}
                       </td>
