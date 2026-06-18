@@ -48,7 +48,16 @@ type ExperimentRow = {
   all: ExperimentStats;
   evidenceStatus: string;
   evidenceDetail: string;
+  promotionGate: PromotionGate;
+  consistencyRisk: "Low" | "Medium" | "High";
 };
+
+type PromotionGate =
+  | "No validation"
+  | "Needs sample"
+  | "Diverged"
+  | "Watchlist"
+  | "Forward-test candidate";
 
 type ReadinessReport = {
   score: number;
@@ -301,6 +310,31 @@ function computeExperimentStats(trades: ExperimentTrade[]): ExperimentStats {
   };
 }
 
+function promotionGate(
+  discovery: ExperimentStats,
+  validation: ExperimentStats,
+): PromotionGate {
+  if (validation.trades === 0) return "No validation";
+  if (validation.trades < 10) return "Needs sample";
+  if (validation.totalR <= 0 || validation.avgR <= 0) return "Diverged";
+  if (validation.trades >= 30 && validation.avgR > 0.15) {
+    return "Forward-test candidate";
+  }
+  if (discovery.totalR > 0 && validation.totalR > 0) return "Watchlist";
+  return "Diverged";
+}
+
+function consistencyRisk(
+  discovery: ExperimentStats,
+  validation: ExperimentStats,
+): ExperimentRow["consistencyRisk"] {
+  if (validation.trades < 10) return "High";
+  if (discovery.totalR > 0 && validation.totalR <= 0) return "High";
+  if (Math.abs(discovery.avgR - validation.avgR) > 0.75) return "Medium";
+  if (validation.maxDrawdownR > 4) return "Medium";
+  return "Low";
+}
+
 function buildExperimentRows({
   signals,
   candles,
@@ -340,20 +374,24 @@ function buildExperimentRows({
         ? []
         : trades.filter((trade) => trade.signal.timestamp > splitTimestamp);
     const all = computeExperimentStats(trades);
+    const discovery = computeExperimentStats(discoveryTrades);
+    const validation = computeExperimentStats(validationTrades);
     const evidence = classifyEvidence({
       trades: validationTrades.length,
-      totalR: computeExperimentStats(validationTrades).totalR,
-      avgR: computeExperimentStats(validationTrades).avgR,
-      maxDrawdownR: computeExperimentStats(validationTrades).maxDrawdownR,
+      totalR: validation.totalR,
+      avgR: validation.avgR,
+      maxDrawdownR: validation.maxDrawdownR,
     });
     return {
       variant,
       trades,
-      discovery: computeExperimentStats(discoveryTrades),
-      validation: computeExperimentStats(validationTrades),
+      discovery,
+      validation,
       all,
       evidenceStatus: evidence.status,
       evidenceDetail: evidence.detail,
+      promotionGate: promotionGate(discovery, validation),
+      consistencyRisk: consistencyRisk(discovery, validation),
     };
   }).sort(
     (a, b) =>
@@ -454,6 +492,8 @@ function experimentReportJson(
         description: row.variant.description,
         evidenceStatus: row.evidenceStatus,
         evidenceDetail: row.evidenceDetail,
+        promotionGate: row.promotionGate,
+        consistencyRisk: row.consistencyRisk,
         all: row.all,
         discovery: row.discovery,
         validation: row.validation,
@@ -534,6 +574,11 @@ export default function ExperimentLabPage() {
     (row) => row.validation.trades >= 10,
   ).length;
   const readiness = useMemo(() => readinessReport(run, rows), [run, rows]);
+  const watchlistCount = rows.filter(
+    (row) =>
+      row.promotionGate === "Watchlist" ||
+      row.promotionGate === "Forward-test candidate",
+  ).length;
 
   return (
     <div className="space-y-5 p-4 md:p-6" data-ocid="experiment.page">
@@ -585,6 +630,11 @@ export default function ExperimentLabPage() {
               label="Validation-ready variants"
               value={String(variantsWithSample)}
               detail="Requires at least 10 validation trades"
+            />
+            <Stat
+              label="Watchlist variants"
+              value={String(watchlistCount)}
+              detail="Positive validation, still gated by sample"
             />
             <Stat
               label="Best validation net"
@@ -665,6 +715,8 @@ export default function ExperimentLabPage() {
                     <th className="py-2 text-right">Validation</th>
                     <th className="py-2 text-right">Validation net</th>
                     <th className="py-2 text-right">Val win</th>
+                    <th className="py-2 text-left">Gate</th>
+                    <th className="py-2 text-left">Risk</th>
                     <th className="py-2 text-left">Evidence</th>
                   </tr>
                 </thead>
@@ -701,6 +753,8 @@ export default function ExperimentLabPage() {
                       <td className="py-2 text-right">
                         {pct(row.validation.winRate)}
                       </td>
+                      <td className="py-2">{row.promotionGate}</td>
+                      <td className="py-2">{row.consistencyRisk}</td>
                       <td className="py-2">
                         <span title={row.evidenceDetail}>
                           {row.evidenceStatus}
