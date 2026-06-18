@@ -27,8 +27,18 @@ type ExpansionRow = {
   discovery: ExperimentStats;
   validation: ExperimentStats;
   sampleLift: number;
+  symbolBreakdown: SegmentRow[];
+  sessionBreakdown: SegmentRow[];
   verdict: "No claim" | "Too loose" | "Watchlist" | "Candidate";
   notes: string[];
+};
+
+type SegmentRow = {
+  label: string;
+  trades: number;
+  totalR: number;
+  winRate: number;
+  maxDrawdownR: number;
 };
 
 function passed(signal: SignalAudit, label: string) {
@@ -120,6 +130,31 @@ function statsFor(trades: ExperimentTrade[]): ExperimentStats {
     winRate: closed.length ? wins.length / closed.length : 0,
     maxDrawdownR,
   };
+}
+
+function segmentBreakdown(
+  trades: ExperimentTrade[],
+  labelFor: (trade: ExperimentTrade) => string,
+): SegmentRow[] {
+  const groups = new Map<string, ExperimentTrade[]>();
+  for (const trade of trades) {
+    const label = labelFor(trade);
+    const group = groups.get(label) ?? [];
+    group.push(trade);
+    groups.set(label, group);
+  }
+  return [...groups.entries()]
+    .map(([label, group]) => {
+      const stats = statsFor(group);
+      return {
+        label,
+        trades: stats.trades,
+        totalR: stats.totalR,
+        winRate: stats.winRate,
+        maxDrawdownR: stats.maxDrawdownR,
+      };
+    })
+    .sort((a, b) => b.totalR - a.totalR || b.trades - a.trades);
 }
 
 function fmtR(value: number) {
@@ -304,6 +339,22 @@ export default function SampleExpansionPage() {
         discovery,
         validation,
         sampleLift,
+        symbolBreakdown: segmentBreakdown(
+          trades.filter(
+            (trade) =>
+              trade.signal.timestamp >
+              (run.validation.discoveryEndTimestamp ?? 0),
+          ),
+          (trade) => trade.signal.symbol,
+        ),
+        sessionBreakdown: segmentBreakdown(
+          trades.filter(
+            (trade) =>
+              trade.signal.timestamp >
+              (run.validation.discoveryEndTimestamp ?? 0),
+          ),
+          (trade) => sessionFor(trade.signal.timestamp),
+        ),
         verdict: verdictFor({ validation, sampleLift }),
         notes,
       };
@@ -355,6 +406,8 @@ export default function SampleExpansionPage() {
                     sampleLift: row.sampleLift,
                     discovery: row.discovery,
                     validation: row.validation,
+                    symbolBreakdown: row.symbolBreakdown,
+                    sessionBreakdown: row.sessionBreakdown,
                     notes: row.notes,
                   })),
                 },
@@ -480,20 +533,78 @@ export default function SampleExpansionPage() {
           </section>
 
           {best && (
-            <section className="border border-border bg-card p-4">
-              <h2 className="font-display text-lg font-bold">
-                Current Best Expansion
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {best.profile.label}: {best.profile.hypothesis}
-              </p>
-              <div className="mt-3 grid gap-3 md:grid-cols-3">
-                {best.notes.map((note) => (
-                  <div key={note} className="border border-border p-3 text-sm">
-                    {note}
+            <section className="grid gap-3 xl:grid-cols-[1fr_1.2fr]">
+              <article className="border border-border bg-card p-4">
+                <h2 className="font-display text-lg font-bold">
+                  Current Best Expansion
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {best.profile.label}: {best.profile.hypothesis}
+                </p>
+                <div className="mt-3 grid gap-3 md:grid-cols-3">
+                  {best.notes.map((note) => (
+                    <div
+                      key={note}
+                      className="border border-border p-3 text-sm"
+                    >
+                      {note}
+                    </div>
+                  ))}
+                </div>
+              </article>
+              <article className="border border-border bg-card p-4">
+                <h2 className="font-display text-lg font-bold">
+                  Best Expansion Segments
+                </h2>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      By index
+                    </p>
+                    <table className="mt-2 w-full font-mono text-xs">
+                      <tbody>
+                        {best.symbolBreakdown.map((segment) => (
+                          <tr
+                            key={segment.label}
+                            className="border-b border-border/40"
+                          >
+                            <td className="py-2">{segment.label}</td>
+                            <td className="py-2 text-right">
+                              {segment.trades}
+                            </td>
+                            <td className="py-2 text-right">
+                              {fmtR(segment.totalR)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                ))}
-              </div>
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      By session
+                    </p>
+                    <table className="mt-2 w-full font-mono text-xs">
+                      <tbody>
+                        {best.sessionBreakdown.map((segment) => (
+                          <tr
+                            key={segment.label}
+                            className="border-b border-border/40"
+                          >
+                            <td className="py-2">{segment.label}</td>
+                            <td className="py-2 text-right">
+                              {segment.trades}
+                            </td>
+                            <td className="py-2 text-right">
+                              {fmtR(segment.totalR)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </article>
             </section>
           )}
         </>

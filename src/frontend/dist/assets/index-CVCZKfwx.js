@@ -63349,6 +63349,25 @@ function statsFor(trades) {
     maxDrawdownR
   };
 }
+function segmentBreakdown(trades, labelFor) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const trade of trades) {
+    const label = labelFor(trade);
+    const group = groups.get(label) ?? [];
+    group.push(trade);
+    groups.set(label, group);
+  }
+  return [...groups.entries()].map(([label, group]) => {
+    const stats = statsFor(group);
+    return {
+      label,
+      trades: stats.trades,
+      totalR: stats.totalR,
+      winRate: stats.winRate,
+      maxDrawdownR: stats.maxDrawdownR
+    };
+  }).sort((a2, b2) => b2.totalR - a2.totalR || b2.trades - a2.trades);
+}
 function fmtR(value) {
   return `${value.toFixed(2)}R`;
 }
@@ -63473,6 +63492,18 @@ function SampleExpansionPage() {
         discovery,
         validation,
         sampleLift,
+        symbolBreakdown: segmentBreakdown(
+          trades.filter(
+            (trade) => trade.signal.timestamp > (run.validation.discoveryEndTimestamp ?? 0)
+          ),
+          (trade) => trade.signal.symbol
+        ),
+        sessionBreakdown: segmentBreakdown(
+          trades.filter(
+            (trade) => trade.signal.timestamp > (run.validation.discoveryEndTimestamp ?? 0)
+          ),
+          (trade) => sessionFor(trade.signal.timestamp)
+        ),
         verdict: verdictFor({ validation, sampleLift }),
         notes
       };
@@ -63516,6 +63547,8 @@ function SampleExpansionPage() {
                   sampleLift: row.sampleLift,
                   discovery: row.discovery,
                   validation: row.validation,
+                  symbolBreakdown: row.symbolBreakdown,
+                  sessionBreakdown: row.sessionBreakdown,
                   notes: row.notes
                 }))
               },
@@ -63615,14 +63648,58 @@ function SampleExpansionPage() {
           )) })
         ] }) })
       ] }),
-      best && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Current Best Expansion" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-2 text-sm text-muted-foreground", children: [
-          best.profile.label,
-          ": ",
-          best.profile.hypothesis
+      best && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 xl:grid-cols-[1fr_1.2fr]", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("article", { className: "border border-border bg-card p-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Current Best Expansion" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-2 text-sm text-muted-foreground", children: [
+            best.profile.label,
+            ": ",
+            best.profile.hypothesis
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 grid gap-3 md:grid-cols-3", children: best.notes.map((note) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "div",
+            {
+              className: "border border-border p-3 text-sm",
+              children: note
+            },
+            note
+          )) })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 grid gap-3 md:grid-cols-3", children: best.notes.map((note) => /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-border p-3 text-sm", children: note }, note)) })
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("article", { className: "border border-border bg-card p-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Best Expansion Segments" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 grid gap-3 md:grid-cols-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: "By index" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("table", { className: "mt-2 w-full font-mono text-xs", children: /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: best.symbolBreakdown.map((segment) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "tr",
+                {
+                  className: "border-b border-border/40",
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: segment.label }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: segment.trades }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(segment.totalR) })
+                  ]
+                },
+                segment.label
+              )) }) })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: "By session" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("table", { className: "mt-2 w-full font-mono text-xs", children: /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: best.sessionBreakdown.map((segment) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "tr",
+                {
+                  className: "border-b border-border/40",
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: segment.label }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: segment.trades }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(segment.totalR) })
+                  ]
+                },
+                segment.label
+              )) }) })
+            ] })
+          ] })
+        ] })
       ] })
     ] })
   ] });
