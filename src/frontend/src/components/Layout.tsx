@@ -15,6 +15,7 @@ import {
   Radar,
   Radio,
   RotateCcw,
+  Scale,
   ShieldCheck,
   Target,
 } from "lucide-react";
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { path: "/health", label: "Rule Health", icon: HeartPulse },
   { path: "/audit", label: "Signal Audit", icon: ListChecks },
   { path: "/truth-audit", label: "Truth Audit", icon: FileSearch },
+  { path: "/coco-risk", label: "Coco Risk Lab", icon: Scale },
   { path: "/rejected", label: "Rejected Setups", icon: FileWarning },
   { path: "/discovery", label: "Discovery Lab", icon: FlaskConical },
   { path: "/experiments", label: "Experiment Lab", icon: Microscope },
