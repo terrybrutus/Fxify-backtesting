@@ -61183,13 +61183,19 @@ function buildExperimentRows({
     (a2, b2) => b2.validation.totalR - a2.validation.totalR || b2.validation.trades - a2.validation.trades
   );
 }
-function readinessReport(run, rows) {
+function readinessReport(run, rows, frozenVariants) {
   if (!run.integrity.canRunBacktest) {
     return {
       score: 0,
+      researchScore: 0,
+      liveScore: 0,
       level: "Blocked",
+      researchLevel: "Blocked",
+      liveLevel: "Blocked",
       blockers: run.integrity.blockers,
-      strengths: []
+      liveBlockers: run.integrity.blockers,
+      strengths: [],
+      liveStrengths: []
     };
   }
   const bestValidation = rows[0];
@@ -61197,6 +61203,16 @@ function readinessReport(run, rows) {
   const forwardReady = rows.filter(
     (row) => row.validation.trades >= 30 && row.validation.avgR > 0.15 && row.validation.maxDrawdownR <= 4
   );
+  const frozenWithRows = frozenVariants.map((frozen) => ({
+    frozen,
+    row: rows.find((row) => row.variant.id === frozen.variantId)
+  })).filter(
+    (item) => Boolean(item.row)
+  );
+  const frozenForwardTrades = frozenWithRows.flatMap(
+    ({ frozen, row }) => row.trades.filter((trade) => trade.signal.timestamp > frozen.frozenAt)
+  );
+  const forwardStats = computeExperimentStats(frozenForwardTrades);
   const scoreParts = [
     15,
     run.integrity.candleCount >= 4e4 ? 10 : 5,
@@ -61208,9 +61224,28 @@ function readinessReport(run, rows) {
     bestValidation && bestValidation.validation.totalR > 0 ? 10 : 0,
     forwardReady.length > 0 ? 20 : 0
   ];
-  const score = Math.min(
+  const researchScore = Math.min(
     100,
     Math.round(scoreParts.reduce((sum, value) => sum + value, 0))
+  );
+  const hasPositiveValidation = bestValidation !== void 0 && bestValidation.validation.trades >= 10 && bestValidation.validation.totalR > 0;
+  const liveScoreParts = [
+    10,
+    run.integrity.candleCount >= 4e4 ? 5 : 0,
+    rows.some((row) => row.validation.trades >= 10) ? 5 : 0,
+    hasPositiveValidation ? 10 : 0,
+    frozenVariants.length > 0 ? 10 : 0,
+    forwardStats.trades >= 10 && forwardStats.totalR > 0 ? 35 : forwardStats.trades >= 5 && forwardStats.totalR > 0 ? 20 : forwardStats.trades > 0 ? 5 : 0,
+    forwardReady.length > 0 ? 10 : 0,
+    rows.some(
+      (row) => row.validation.trades >= 10 && row.validation.totalR > 0 && row.consistencyRisk === "Low"
+    ) ? 15 : rows.some(
+      (row) => row.validation.trades >= 10 && row.validation.totalR > 0 && row.consistencyRisk === "Medium"
+    ) ? 5 : 0
+  ];
+  const liveScore = Math.min(
+    100,
+    Math.round(liveScoreParts.reduce((sum, value) => sum + value, 0))
   );
   const blockers = [
     run.acceptedSignals.length < 20 ? "Current locked rules still produce too few accepted trades." : void 0,
@@ -61218,16 +61253,36 @@ function readinessReport(run, rows) {
     forwardReady.length === 0 ? "No variant has enough validation evidence to graduate to forward-test ready." : void 0,
     "Forward tracking is available, but live-readiness still requires newer candles after a rule is frozen."
   ].filter(Boolean);
+  const liveBlockers = [
+    frozenVariants.length === 0 ? "No frozen variants exist, so no rule has a locked forward-test clock." : void 0,
+    forwardStats.trades === 0 ? "Frozen rules have zero post-freeze trades. Newer candles are required before live-use claims." : void 0,
+    forwardStats.trades > 0 && forwardStats.trades < 10 ? "Post-freeze sample is still below 10 trades." : void 0,
+    forwardStats.trades >= 10 && forwardStats.totalR <= 0 ? "Post-freeze trades are not net positive." : void 0,
+    forwardReady.length === 0 ? "No variant currently satisfies the stricter forward-test evidence gate." : void 0
+  ].filter(Boolean);
   const strengths = [
     "Real CSV data is loaded and the integrity gate is open.",
     "The app is testing rejected candidates instead of only accepted winners.",
     bestValidation && bestValidation.validation.totalR > 0 ? "At least one variant has positive validation-period R." : void 0
   ].filter(Boolean);
+  const liveStrengths = [
+    frozenVariants.length > 0 ? `${frozenVariants.length} frozen variant(s) are being tracked without moving the goalposts.` : void 0,
+    hasPositiveValidation ? "At least one locked-style variant has positive validation evidence." : void 0,
+    forwardStats.trades > 0 ? `${forwardStats.trades} post-freeze trade(s) are available for live-readiness review.` : void 0
+  ].filter(Boolean);
+  const researchLevel = researchScore >= 75 ? "Forward-Test Ready" : researchScore >= 55 ? "Research-Ready" : "Early Discovery";
+  const liveLevel = liveScore >= 75 ? "Paper Review Ready" : liveScore >= 55 ? "Forward Evidence Needed" : "Not Live Ready";
   return {
-    score,
-    level: score >= 75 ? "Forward-Test Ready" : score >= 55 ? "Research-Ready" : "Early Discovery",
+    score: researchScore,
+    researchScore,
+    liveScore,
+    level: researchLevel,
+    researchLevel,
+    liveLevel,
     blockers,
-    strengths
+    liveBlockers,
+    strengths,
+    liveStrengths
   };
 }
 function experimentReportJson(run, rows, readiness) {
@@ -61297,8 +61352,12 @@ function TradeMiniTable({ trades }) {
 }
 function ExperimentLabPage() {
   const { candles, run } = useStrategyWorkspace();
-  const [frozenVariantIds, setFrozenVariantIds] = reactExports.useState(
-    () => new Set(loadFrozenVariants().map((variant) => variant.variantId))
+  const [frozenVariants, setFrozenVariants] = reactExports.useState(
+    () => loadFrozenVariants()
+  );
+  const frozenVariantIds = reactExports.useMemo(
+    () => new Set(frozenVariants.map((variant) => variant.variantId)),
+    [frozenVariants]
   );
   const signals = reactExports.useMemo(
     () => [...run.acceptedSignals, ...run.rejectedSignals],
@@ -61316,7 +61375,10 @@ function ExperimentLabPage() {
   const variantsWithSample = rows.filter(
     (row) => row.validation.trades >= 10
   ).length;
-  const readiness = reactExports.useMemo(() => readinessReport(run, rows), [run, rows]);
+  const readiness = reactExports.useMemo(
+    () => readinessReport(run, rows, frozenVariants),
+    [run, rows, frozenVariants]
+  );
   const watchlistCount = rows.filter(
     (row) => row.promotionGate === "Watchlist" || row.promotionGate === "Forward-test candidate"
   ).length;
@@ -61330,7 +61392,7 @@ function ExperimentLabPage() {
       freezeVariant(row, run.validation.discoveryEndTimestamp)
     ];
     saveFrozenVariants(next);
-    setFrozenVariantIds(new Set(next.map((variant) => variant.variantId)));
+    setFrozenVariants(next);
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "experiment.page", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
@@ -61361,9 +61423,17 @@ function ExperimentLabPage() {
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           Stat$6,
           {
-            label: "Readiness",
-            value: `${readiness.score}/100`,
-            detail: readiness.level
+            label: "Research readiness",
+            value: `${readiness.researchScore}/100`,
+            detail: readiness.researchLevel
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$6,
+          {
+            label: "Live decision readiness",
+            value: `${readiness.liveScore}/100`,
+            detail: readiness.liveLevel
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$6, { label: "Variants tested", value: String(rows.length) }),
@@ -61402,12 +61472,22 @@ function ExperimentLabPage() {
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 lg:grid-cols-2", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("article", { className: "border border-primary/30 bg-primary/5 p-4", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Readiness Drivers" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Research Readiness Drivers" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "mt-3 space-y-2 text-sm text-muted-foreground", children: readiness.strengths.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: item }, item)) })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("article", { className: "border border-destructive/40 bg-destructive/5 p-4", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Current Blockers" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Research Blockers" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "mt-3 space-y-2 text-sm text-muted-foreground", children: readiness.blockers.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: item }, item)) })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 lg:grid-cols-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("article", { className: "border border-primary/30 bg-primary/5 p-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Live Decision Strengths" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "mt-3 space-y-2 text-sm text-muted-foreground", children: readiness.liveStrengths.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: item }, item)) })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("article", { className: "border border-destructive/40 bg-destructive/5 p-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Live Decision Blockers" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "mt-3 space-y-2 text-sm text-muted-foreground", children: readiness.liveBlockers.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: item }, item)) })
         ] })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 lg:grid-cols-2", children: [

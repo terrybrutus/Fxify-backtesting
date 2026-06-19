@@ -67,13 +67,27 @@ export type PromotionGate =
 
 type ReadinessReport = {
   score: number;
+  researchScore: number;
+  liveScore: number;
   level:
     | "Blocked"
     | "Early Discovery"
     | "Research-Ready"
     | "Forward-Test Ready";
+  researchLevel:
+    | "Blocked"
+    | "Early Discovery"
+    | "Research-Ready"
+    | "Forward-Test Ready";
+  liveLevel:
+    | "Blocked"
+    | "Not Live Ready"
+    | "Forward Evidence Needed"
+    | "Paper Review Ready";
   blockers: string[];
+  liveBlockers: string[];
   strengths: string[];
+  liveStrengths: string[];
 };
 
 type BaseVariant = Omit<
@@ -474,13 +488,20 @@ export function buildExperimentRows({
 function readinessReport(
   run: EngineRun,
   rows: ExperimentRow[],
+  frozenVariants: ReturnType<typeof loadFrozenVariants>,
 ): ReadinessReport {
   if (!run.integrity.canRunBacktest) {
     return {
       score: 0,
+      researchScore: 0,
+      liveScore: 0,
       level: "Blocked",
+      researchLevel: "Blocked",
+      liveLevel: "Blocked",
       blockers: run.integrity.blockers,
+      liveBlockers: run.integrity.blockers,
       strengths: [],
+      liveStrengths: [],
     };
   }
 
@@ -492,6 +513,23 @@ function readinessReport(
       row.validation.avgR > 0.15 &&
       row.validation.maxDrawdownR <= 4,
   );
+  const frozenWithRows = frozenVariants
+    .map((frozen) => ({
+      frozen,
+      row: rows.find((row) => row.variant.id === frozen.variantId),
+    }))
+    .filter(
+      (
+        item,
+      ): item is {
+        frozen: (typeof frozenVariants)[number];
+        row: ExperimentRow;
+      } => Boolean(item.row),
+    );
+  const frozenForwardTrades = frozenWithRows.flatMap(({ frozen, row }) =>
+    row.trades.filter((trade) => trade.signal.timestamp > frozen.frozenAt),
+  );
+  const forwardStats = computeExperimentStats(frozenForwardTrades);
   const scoreParts = [
     15,
     run.integrity.candleCount >= 40000 ? 10 : 5,
@@ -507,9 +545,47 @@ function readinessReport(
     bestValidation && bestValidation.validation.totalR > 0 ? 10 : 0,
     forwardReady.length > 0 ? 20 : 0,
   ];
-  const score = Math.min(
+  const researchScore = Math.min(
     100,
     Math.round(scoreParts.reduce((sum, value) => sum + value, 0)),
+  );
+  const hasPositiveValidation =
+    bestValidation !== undefined &&
+    bestValidation.validation.trades >= 10 &&
+    bestValidation.validation.totalR > 0;
+  const liveScoreParts = [
+    10,
+    run.integrity.candleCount >= 40000 ? 5 : 0,
+    rows.some((row) => row.validation.trades >= 10) ? 5 : 0,
+    hasPositiveValidation ? 10 : 0,
+    frozenVariants.length > 0 ? 10 : 0,
+    forwardStats.trades >= 10 && forwardStats.totalR > 0
+      ? 35
+      : forwardStats.trades >= 5 && forwardStats.totalR > 0
+        ? 20
+        : forwardStats.trades > 0
+          ? 5
+          : 0,
+    forwardReady.length > 0 ? 10 : 0,
+    rows.some(
+      (row) =>
+        row.validation.trades >= 10 &&
+        row.validation.totalR > 0 &&
+        row.consistencyRisk === "Low",
+    )
+      ? 15
+      : rows.some(
+            (row) =>
+              row.validation.trades >= 10 &&
+              row.validation.totalR > 0 &&
+              row.consistencyRisk === "Medium",
+          )
+        ? 5
+        : 0,
+  ];
+  const liveScore = Math.min(
+    100,
+    Math.round(liveScoreParts.reduce((sum, value) => sum + value, 0)),
   );
   const blockers = [
     run.acceptedSignals.length < 20
@@ -523,6 +599,23 @@ function readinessReport(
       : undefined,
     "Forward tracking is available, but live-readiness still requires newer candles after a rule is frozen.",
   ].filter(Boolean) as string[];
+  const liveBlockers = [
+    frozenVariants.length === 0
+      ? "No frozen variants exist, so no rule has a locked forward-test clock."
+      : undefined,
+    forwardStats.trades === 0
+      ? "Frozen rules have zero post-freeze trades. Newer candles are required before live-use claims."
+      : undefined,
+    forwardStats.trades > 0 && forwardStats.trades < 10
+      ? "Post-freeze sample is still below 10 trades."
+      : undefined,
+    forwardStats.trades >= 10 && forwardStats.totalR <= 0
+      ? "Post-freeze trades are not net positive."
+      : undefined,
+    forwardReady.length === 0
+      ? "No variant currently satisfies the stricter forward-test evidence gate."
+      : undefined,
+  ].filter(Boolean) as string[];
   const strengths = [
     "Real CSV data is loaded and the integrity gate is open.",
     "The app is testing rejected candidates instead of only accepted winners.",
@@ -530,16 +623,40 @@ function readinessReport(
       ? "At least one variant has positive validation-period R."
       : undefined,
   ].filter(Boolean) as string[];
+  const liveStrengths = [
+    frozenVariants.length > 0
+      ? `${frozenVariants.length} frozen variant(s) are being tracked without moving the goalposts.`
+      : undefined,
+    hasPositiveValidation
+      ? "At least one locked-style variant has positive validation evidence."
+      : undefined,
+    forwardStats.trades > 0
+      ? `${forwardStats.trades} post-freeze trade(s) are available for live-readiness review.`
+      : undefined,
+  ].filter(Boolean) as string[];
+  const researchLevel =
+    researchScore >= 75
+      ? "Forward-Test Ready"
+      : researchScore >= 55
+        ? "Research-Ready"
+        : "Early Discovery";
+  const liveLevel =
+    liveScore >= 75
+      ? "Paper Review Ready"
+      : liveScore >= 55
+        ? "Forward Evidence Needed"
+        : "Not Live Ready";
   return {
-    score,
-    level:
-      score >= 75
-        ? "Forward-Test Ready"
-        : score >= 55
-          ? "Research-Ready"
-          : "Early Discovery",
+    score: researchScore,
+    researchScore,
+    liveScore,
+    level: researchLevel,
+    researchLevel,
+    liveLevel,
     blockers,
+    liveBlockers,
     strengths,
+    liveStrengths,
   };
 }
 
@@ -628,8 +745,12 @@ function TradeMiniTable({ trades }: { trades: ExperimentTrade[] }) {
 
 export default function ExperimentLabPage() {
   const { candles, run } = useStrategyWorkspace();
-  const [frozenVariantIds, setFrozenVariantIds] = useState(
-    () => new Set(loadFrozenVariants().map((variant) => variant.variantId)),
+  const [frozenVariants, setFrozenVariants] = useState(() =>
+    loadFrozenVariants(),
+  );
+  const frozenVariantIds = useMemo(
+    () => new Set(frozenVariants.map((variant) => variant.variantId)),
+    [frozenVariants],
   );
   const signals = useMemo(
     () => [...run.acceptedSignals, ...run.rejectedSignals],
@@ -648,7 +769,10 @@ export default function ExperimentLabPage() {
   const variantsWithSample = rows.filter(
     (row) => row.validation.trades >= 10,
   ).length;
-  const readiness = useMemo(() => readinessReport(run, rows), [run, rows]);
+  const readiness = useMemo(
+    () => readinessReport(run, rows, frozenVariants),
+    [run, rows, frozenVariants],
+  );
   const watchlistCount = rows.filter(
     (row) =>
       row.promotionGate === "Watchlist" ||
@@ -665,7 +789,7 @@ export default function ExperimentLabPage() {
       freezeVariant(row, run.validation.discoveryEndTimestamp),
     ];
     saveFrozenVariants(next);
-    setFrozenVariantIds(new Set(next.map((variant) => variant.variantId)));
+    setFrozenVariants(next);
   }
 
   return (
@@ -704,9 +828,14 @@ export default function ExperimentLabPage() {
         <>
           <div className="grid gap-3 md:grid-cols-4">
             <Stat
-              label="Readiness"
-              value={`${readiness.score}/100`}
-              detail={readiness.level}
+              label="Research readiness"
+              value={`${readiness.researchScore}/100`}
+              detail={readiness.researchLevel}
+            />
+            <Stat
+              label="Live decision readiness"
+              value={`${readiness.liveScore}/100`}
+              detail={readiness.liveLevel}
             />
             <Stat label="Variants tested" value={String(rows.length)} />
             <Stat
@@ -738,7 +867,7 @@ export default function ExperimentLabPage() {
           <section className="grid gap-3 lg:grid-cols-2">
             <article className="border border-primary/30 bg-primary/5 p-4">
               <p className="font-mono text-xs font-bold uppercase tracking-widest">
-                Readiness Drivers
+                Research Readiness Drivers
               </p>
               <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
                 {readiness.strengths.map((item) => (
@@ -748,10 +877,33 @@ export default function ExperimentLabPage() {
             </article>
             <article className="border border-destructive/40 bg-destructive/5 p-4">
               <p className="font-mono text-xs font-bold uppercase tracking-widest">
-                Current Blockers
+                Research Blockers
               </p>
               <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
                 {readiness.blockers.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          </section>
+
+          <section className="grid gap-3 lg:grid-cols-2">
+            <article className="border border-primary/30 bg-primary/5 p-4">
+              <p className="font-mono text-xs font-bold uppercase tracking-widest">
+                Live Decision Strengths
+              </p>
+              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                {readiness.liveStrengths.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+            <article className="border border-destructive/40 bg-destructive/5 p-4">
+              <p className="font-mono text-xs font-bold uppercase tracking-widest">
+                Live Decision Blockers
+              </p>
+              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                {readiness.liveBlockers.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
