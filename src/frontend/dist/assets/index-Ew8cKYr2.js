@@ -64114,6 +64114,15 @@ function buildTruthRows({
     const exactWeeklyLowStop = (_a2 = signal.stopCandidates) == null ? void 0 : _a2.find(
       (candidate) => candidate.model === "Coco exact weekly low stop"
     );
+    const targetCandidatesWithWeeklyLowR = targetCandidates.map(
+      (candidate) => ({
+        ...candidate,
+        weeklyLowR: exactWeeklyLowStop ? (candidate.price - signal.entry) / exactWeeklyLowStop.risk : void 0
+      })
+    );
+    const bestWeeklyLowTarget = targetCandidatesWithWeeklyLowR.filter(
+      (candidate) => candidate.weeklyLowR !== void 0 && candidate.weeklyLowR >= 0
+    ).sort((a2, b2) => (b2.weeklyLowR ?? 0) - (a2.weeklyLowR ?? 0))[0];
     const weeklyLowStopGap = weeklyLow === void 0 ? void 0 : signal.stop - weeklyLow;
     const weeklyLowStopMatch = weeklyLow === void 0 || weeklyLow >= signal.entry ? "Not weekly-low stop" : Math.abs(signal.stop - weeklyLow) <= Math.max(signal.entry * 2e-4, 2) ? "Exact" : signal.stop > weeklyLow ? "Not weekly-low stop" : "Approximate";
     return {
@@ -64139,6 +64148,11 @@ function buildTruthRows({
             candidate.rMultiple
           )})`
         ).join(" | "),
+        targetCandidatesWithWeeklyLowR: targetCandidatesWithWeeklyLowR.map(
+          (candidate) => `${candidate.model}: ${fmtPrice(candidate.price)} (engine ${fmtR(
+            candidate.rMultiple
+          )}, weekly-low ${fmtR(candidate.weeklyLowR)})`
+        ).join(" | "),
         stopCandidates: (signal.stopCandidates ?? []).map(
           (candidate) => `${candidate.active ? "ACTIVE " : ""}${candidate.model}: ${fmtPrice(
             candidate.price
@@ -64146,6 +64160,8 @@ function buildTruthRows({
         ).join(" | "),
         exactWeeklyLowRisk: exactWeeklyLowStop == null ? void 0 : exactWeeklyLowStop.risk,
         selectedTargetRWithWeeklyLow: exactWeeklyLowStop && signal.tp1 > signal.entry ? (signal.tp1 - signal.entry) / exactWeeklyLowStop.risk : void 0,
+        bestWeeklyLowTargetModel: bestWeeklyLowTarget == null ? void 0 : bestWeeklyLowTarget.model,
+        bestWeeklyLowTargetR: bestWeeklyLowTarget == null ? void 0 : bestWeeklyLowTarget.weeklyLowR,
         stopModel: warningValue(signal, "Coco context:") ?? warningValue(signal, "Coco stop model") ?? "No explicit Coco stop model warning."
       }
     };
@@ -64359,10 +64375,17 @@ function TruthAuditPage() {
                     "Weekly-low TP R",
                     " ",
                     fmtR(row.cocoFit.selectedTargetRWithWeeklyLow)
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground", children: [
+                    "Best TP",
+                    " ",
+                    row.cocoFit.bestWeeklyLowTargetModel ?? "n/a",
+                    " ",
+                    fmtR(row.cocoFit.bestWeeklyLowTargetR)
                   ] })
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "max-w-[330px] py-2 text-muted-foreground", children: row.cocoFit.stopCandidates || "No stop candidates" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "max-w-[360px] py-2 text-muted-foreground", children: row.cocoFit.targetCandidates || "No target candidates" })
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "max-w-[360px] py-2 text-muted-foreground", children: row.cocoFit.targetCandidatesWithWeeklyLowR || "No target candidates" })
               ]
             },
             `${row.signal.id}-${row.signal.accepted}`
