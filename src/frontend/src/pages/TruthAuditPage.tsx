@@ -28,9 +28,12 @@ type TruthAuditRow = {
     weeklyLowStopMatch: "Exact" | "Approximate" | "Not weekly-low stop";
     selectedTarget: string;
     targetCandidates: string;
+    targetCandidatesWithWeeklyLowR: string;
     stopCandidates: string;
     exactWeeklyLowRisk?: number;
     selectedTargetRWithWeeklyLow?: number;
+    bestWeeklyLowTargetModel?: string;
+    bestWeeklyLowTargetR?: number;
     stopModel: string;
   };
 };
@@ -101,6 +104,20 @@ function buildTruthRows({
     const exactWeeklyLowStop = signal.stopCandidates?.find(
       (candidate) => candidate.model === "Coco exact weekly low stop",
     );
+    const targetCandidatesWithWeeklyLowR = targetCandidates.map(
+      (candidate) => ({
+        ...candidate,
+        weeklyLowR: exactWeeklyLowStop
+          ? (candidate.price - signal.entry) / exactWeeklyLowStop.risk
+          : undefined,
+      }),
+    );
+    const bestWeeklyLowTarget = targetCandidatesWithWeeklyLowR
+      .filter(
+        (candidate) =>
+          candidate.weeklyLowR !== undefined && candidate.weeklyLowR >= 0,
+      )
+      .sort((a, b) => (b.weeklyLowR ?? 0) - (a.weeklyLowR ?? 0))[0];
     const weeklyLowStopGap =
       weeklyLow === undefined ? undefined : signal.stop - weeklyLow;
     const weeklyLowStopMatch =
@@ -140,6 +157,14 @@ function buildTruthRows({
               )})`,
           )
           .join(" | "),
+        targetCandidatesWithWeeklyLowR: targetCandidatesWithWeeklyLowR
+          .map(
+            (candidate) =>
+              `${candidate.model}: ${fmtPrice(candidate.price)} (engine ${fmtR(
+                candidate.rMultiple,
+              )}, weekly-low ${fmtR(candidate.weeklyLowR)})`,
+          )
+          .join(" | "),
         stopCandidates: (signal.stopCandidates ?? [])
           .map(
             (candidate) =>
@@ -153,6 +178,8 @@ function buildTruthRows({
           exactWeeklyLowStop && signal.tp1 > signal.entry
             ? (signal.tp1 - signal.entry) / exactWeeklyLowStop.risk
             : undefined,
+        bestWeeklyLowTargetModel: bestWeeklyLowTarget?.model,
+        bestWeeklyLowTargetR: bestWeeklyLowTarget?.weeklyLowR,
         stopModel:
           warningValue(signal, "Coco context:") ??
           warningValue(signal, "Coco stop model") ??
@@ -409,12 +436,18 @@ export default function TruthAuditPage() {
                           Weekly-low TP R{" "}
                           {fmtR(row.cocoFit.selectedTargetRWithWeeklyLow)}
                         </p>
+                        <p className="text-muted-foreground">
+                          Best TP{" "}
+                          {row.cocoFit.bestWeeklyLowTargetModel ?? "n/a"}{" "}
+                          {fmtR(row.cocoFit.bestWeeklyLowTargetR)}
+                        </p>
                       </td>
                       <td className="max-w-[330px] py-2 text-muted-foreground">
                         {row.cocoFit.stopCandidates || "No stop candidates"}
                       </td>
                       <td className="max-w-[360px] py-2 text-muted-foreground">
-                        {row.cocoFit.targetCandidates || "No target candidates"}
+                        {row.cocoFit.targetCandidatesWithWeeklyLowR ||
+                          "No target candidates"}
                       </td>
                     </tr>
                   ))}
