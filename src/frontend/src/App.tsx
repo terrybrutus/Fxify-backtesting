@@ -1,6 +1,7 @@
 import Layout from "@/components/Layout";
 import BacktestResultsPage from "@/pages/BacktestResultsPage";
 import ChartPage from "@/pages/ChartPage";
+import CocoRiskLabPage from "@/pages/CocoRiskLabPage";
 import DataUploadPage from "@/pages/DataUploadPage";
 import DecisionConsolePage from "@/pages/DecisionConsolePage";
 import DiscoveryLabPage from "@/pages/DiscoveryLabPage";
@@ -54,6 +55,12 @@ const truthAuditRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/truth-audit",
   component: TruthAuditPage,
+});
+
+const cocoRiskRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/coco-risk",
+  component: CocoRiskLabPage,
 });
 
 const rejectedRoute = createRoute({
@@ -128,6 +135,7 @@ const tree = rootRoute.addChildren([
   healthRoute,
   auditRoute,
   truthAuditRoute,
+  cocoRiskRoute,
   rejectedRoute,
   discoveryRoute,
   experimentRoute,

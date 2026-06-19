@@ -35350,7 +35350,7 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$o = [
+const __iconNode$p = [
   [
     "path",
     {
@@ -35359,7 +35359,20 @@ const __iconNode$o = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$o);
+const Activity = createLucideIcon("activity", __iconNode$p);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$o = [
+  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
+  ["path", { d: "M18 17V9", key: "2bz60n" }],
+  ["path", { d: "M13 17V5", key: "1frdt8" }],
+  ["path", { d: "M8 17v-3", key: "17ska0" }]
+];
+const ChartColumn = createLucideIcon("chart-column", __iconNode$o);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35367,12 +35380,10 @@ const Activity = createLucideIcon("activity", __iconNode$o);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$n = [
-  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
-  ["path", { d: "M18 17V9", key: "2bz60n" }],
-  ["path", { d: "M13 17V5", key: "1frdt8" }],
-  ["path", { d: "M8 17v-3", key: "17ska0" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const ChartColumn = createLucideIcon("chart-column", __iconNode$n);
+const CircleCheck = createLucideIcon("circle-check", __iconNode$n);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35381,9 +35392,10 @@ const ChartColumn = createLucideIcon("chart-column", __iconNode$n);
  */
 const __iconNode$m = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
+  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
 ];
-const CircleCheck = createLucideIcon("circle-check", __iconNode$m);
+const CircleX = createLucideIcon("circle-x", __iconNode$m);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35391,11 +35403,11 @@ const CircleCheck = createLucideIcon("circle-check", __iconNode$m);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$l = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
-  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
+  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
+  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
+  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
 ];
-const CircleX = createLucideIcon("circle-x", __iconNode$l);
+const Database = createLucideIcon("database", __iconNode$l);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35403,11 +35415,11 @@ const CircleX = createLucideIcon("circle-x", __iconNode$l);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$k = [
-  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
-  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
-  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
+  ["path", { d: "M12 15V3", key: "m9g1x1" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
+  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
 ];
-const Database = createLucideIcon("database", __iconNode$k);
+const Download = createLucideIcon("download", __iconNode$k);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35415,18 +35427,6 @@ const Database = createLucideIcon("database", __iconNode$k);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$j = [
-  ["path", { d: "M12 15V3", key: "m9g1x1" }],
-  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
-  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
-];
-const Download = createLucideIcon("download", __iconNode$j);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$i = [
   ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
   [
     "path",
@@ -35435,7 +35435,20 @@ const __iconNode$i = [
   ["path", { d: "m9 18-1.5-1.5", key: "1j6qii" }],
   ["circle", { cx: "5", cy: "14", r: "3", key: "ufru5t" }]
 ];
-const FileSearch = createLucideIcon("file-search", __iconNode$i);
+const FileSearch = createLucideIcon("file-search", __iconNode$j);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$i = [
+  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
+  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
+  ["path", { d: "M12 12v6", key: "3ahymv" }],
+  ["path", { d: "m15 15-3-3-3 3", key: "15xj92" }]
+];
+const FileUp = createLucideIcon("file-up", __iconNode$i);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35444,11 +35457,10 @@ const FileSearch = createLucideIcon("file-search", __iconNode$i);
  */
 const __iconNode$h = [
   ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
-  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
-  ["path", { d: "M12 12v6", key: "3ahymv" }],
-  ["path", { d: "m15 15-3-3-3 3", key: "15xj92" }]
+  ["path", { d: "M12 9v4", key: "juzpu7" }],
+  ["path", { d: "M12 17h.01", key: "p32p05" }]
 ];
-const FileUp = createLucideIcon("file-up", __iconNode$h);
+const FileWarning = createLucideIcon("file-warning", __iconNode$h);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35456,18 +35468,6 @@ const FileUp = createLucideIcon("file-up", __iconNode$h);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$g = [
-  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
-  ["path", { d: "M12 9v4", key: "juzpu7" }],
-  ["path", { d: "M12 17h.01", key: "p32p05" }]
-];
-const FileWarning = createLucideIcon("file-warning", __iconNode$g);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$f = [
   [
     "path",
     {
@@ -35478,14 +35478,14 @@ const __iconNode$f = [
   ["path", { d: "M6.453 15h11.094", key: "3shlmq" }],
   ["path", { d: "M8.5 2h7", key: "csnxdl" }]
 ];
-const FlaskConical = createLucideIcon("flask-conical", __iconNode$f);
+const FlaskConical = createLucideIcon("flask-conical", __iconNode$g);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$e = [
+const __iconNode$f = [
   [
     "path",
     {
@@ -35494,14 +35494,14 @@ const __iconNode$e = [
     }
   ]
 ];
-const Funnel = createLucideIcon("funnel", __iconNode$e);
+const Funnel = createLucideIcon("funnel", __iconNode$f);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$d = [
+const __iconNode$e = [
   ["circle", { cx: "5", cy: "6", r: "3", key: "1qnov2" }],
   ["path", { d: "M12 6h5a2 2 0 0 1 2 2v7", key: "1yj91y" }],
   ["path", { d: "m15 9-3-3 3-3", key: "1lwv8l" }],
@@ -35509,14 +35509,14 @@ const __iconNode$d = [
   ["path", { d: "M12 18H7a2 2 0 0 1-2-2V9", key: "16sdep" }],
   ["path", { d: "m9 15 3 3-3 3", key: "1m3kbl" }]
 ];
-const GitCompareArrows = createLucideIcon("git-compare-arrows", __iconNode$d);
+const GitCompareArrows = createLucideIcon("git-compare-arrows", __iconNode$e);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$c = [
+const __iconNode$d = [
   [
     "path",
     {
@@ -35526,7 +35526,21 @@ const __iconNode$c = [
   ],
   ["path", { d: "M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27", key: "1uw2ng" }]
 ];
-const HeartPulse = createLucideIcon("heart-pulse", __iconNode$c);
+const HeartPulse = createLucideIcon("heart-pulse", __iconNode$d);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$c = [
+  ["path", { d: "m3 17 2 2 4-4", key: "1jhpwq" }],
+  ["path", { d: "m3 7 2 2 4-4", key: "1obspn" }],
+  ["path", { d: "M13 6h8", key: "15sg57" }],
+  ["path", { d: "M13 12h8", key: "h98zly" }],
+  ["path", { d: "M13 18h8", key: "oe0vm4" }]
+];
+const ListChecks = createLucideIcon("list-checks", __iconNode$c);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35534,13 +35548,10 @@ const HeartPulse = createLucideIcon("heart-pulse", __iconNode$c);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$b = [
-  ["path", { d: "m3 17 2 2 4-4", key: "1jhpwq" }],
-  ["path", { d: "m3 7 2 2 4-4", key: "1obspn" }],
-  ["path", { d: "M13 6h8", key: "15sg57" }],
-  ["path", { d: "M13 12h8", key: "h98zly" }],
-  ["path", { d: "M13 18h8", key: "oe0vm4" }]
+  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
+  ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
 ];
-const ListChecks = createLucideIcon("list-checks", __iconNode$b);
+const Lock = createLucideIcon("lock", __iconNode$b);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35548,17 +35559,6 @@ const ListChecks = createLucideIcon("list-checks", __iconNode$b);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$a = [
-  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
-  ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
-];
-const Lock = createLucideIcon("lock", __iconNode$a);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$9 = [
   ["path", { d: "M6 18h8", key: "1borvv" }],
   ["path", { d: "M3 22h18", key: "8prr45" }],
   ["path", { d: "M14 22a7 7 0 1 0 0-14h-1", key: "1jwaiy" }],
@@ -35566,14 +35566,14 @@ const __iconNode$9 = [
   ["path", { d: "M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z", key: "1bmzmy" }],
   ["path", { d: "M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3", key: "1drr47" }]
 ];
-const Microscope = createLucideIcon("microscope", __iconNode$9);
+const Microscope = createLucideIcon("microscope", __iconNode$a);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$8 = [
+const __iconNode$9 = [
   ["path", { d: "M19.07 4.93A10 10 0 0 0 6.99 3.34", key: "z3du51" }],
   ["path", { d: "M4 6h.01", key: "oypzma" }],
   ["path", { d: "M2.29 9.62A10 10 0 1 0 21.31 8.35", key: "qzzz0" }],
@@ -35583,7 +35583,21 @@ const __iconNode$8 = [
   ["circle", { cx: "12", cy: "12", r: "2", key: "1c9p78" }],
   ["path", { d: "m13.41 10.59 5.66-5.66", key: "mhq4k0" }]
 ];
-const Radar = createLucideIcon("radar", __iconNode$8);
+const Radar = createLucideIcon("radar", __iconNode$9);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$8 = [
+  ["path", { d: "M4.9 19.1C1 15.2 1 8.8 4.9 4.9", key: "1vaf9d" }],
+  ["path", { d: "M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5", key: "u1ii0m" }],
+  ["circle", { cx: "12", cy: "12", r: "2", key: "1c9p78" }],
+  ["path", { d: "M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5", key: "1j5fej" }],
+  ["path", { d: "M19.1 4.9C23 8.8 23 15.1 19.1 19", key: "10b0cb" }]
+];
+const Radio = createLucideIcon("radio", __iconNode$8);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35591,13 +35605,10 @@ const Radar = createLucideIcon("radar", __iconNode$8);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$7 = [
-  ["path", { d: "M4.9 19.1C1 15.2 1 8.8 4.9 4.9", key: "1vaf9d" }],
-  ["path", { d: "M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5", key: "u1ii0m" }],
-  ["circle", { cx: "12", cy: "12", r: "2", key: "1c9p78" }],
-  ["path", { d: "M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5", key: "1j5fej" }],
-  ["path", { d: "M19.1 4.9C23 8.8 23 15.1 19.1 19", key: "10b0cb" }]
+  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
+  ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
 ];
-const Radio = createLucideIcon("radio", __iconNode$7);
+const RotateCcw = createLucideIcon("rotate-ccw", __iconNode$7);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35605,10 +35616,13 @@ const Radio = createLucideIcon("radio", __iconNode$7);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$6 = [
-  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
-  ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
+  ["path", { d: "m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z", key: "7g6ntu" }],
+  ["path", { d: "m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z", key: "ijws7r" }],
+  ["path", { d: "M7 21h10", key: "1b0cd5" }],
+  ["path", { d: "M12 3v18", key: "108xh3" }],
+  ["path", { d: "M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2", key: "3gwbw2" }]
 ];
-const RotateCcw = createLucideIcon("rotate-ccw", __iconNode$6);
+const Scale = createLucideIcon("scale", __iconNode$6);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35704,6 +35718,7 @@ const NAV_ITEMS = [
   { path: "/health", label: "Rule Health", icon: HeartPulse },
   { path: "/audit", label: "Signal Audit", icon: ListChecks },
   { path: "/truth-audit", label: "Truth Audit", icon: FileSearch },
+  { path: "/coco-risk", label: "Coco Risk Lab", icon: Scale },
   { path: "/rejected", label: "Rejected Setups", icon: FileWarning },
   { path: "/discovery", label: "Discovery Lab", icon: FlaskConical },
   { path: "/experiments", label: "Experiment Lab", icon: Microscope },
@@ -37355,7 +37370,7 @@ function classifyEvidence({
     detail: "Sample exists, but edge or drawdown quality is not yet strong."
   };
 }
-function downloadFile$7(name, content, type) {
+function downloadFile$8(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -37364,7 +37379,7 @@ function downloadFile$7(name, content, type) {
   link.click();
   URL.revokeObjectURL(url);
 }
-function Stat$7({
+function Stat$8({
   label,
   value,
   detail
@@ -37536,7 +37551,7 @@ function BacktestResultsPage() {
             type: "button",
             variant: "outline",
             disabled: !run.integrity.canRunBacktest,
-            onClick: () => downloadFile$7(
+            onClick: () => downloadFile$8(
               "ict-audit-log.json",
               exportJson(run),
               "application/json"
@@ -37552,7 +37567,7 @@ function BacktestResultsPage() {
           {
             type: "button",
             disabled: !run.integrity.canRunBacktest,
-            onClick: () => downloadFile$7(
+            onClick: () => downloadFile$8(
               "ict-signal-log.csv",
               exportCsv(allSignals),
               "text/csv"
@@ -37568,39 +37583,39 @@ function BacktestResultsPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Results are disabled because the integrity gate is closed." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$7,
+          Stat$8,
           {
             label: "Accepted signals",
             value: String(run.acceptedSignals.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$7,
+          Stat$8,
           {
             label: "Rejected candidates",
             value: String(run.rejectedSignals.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$7,
+          Stat$8,
           {
             label: "Win rate",
             value: `${(stats.winRate * 100).toFixed(1)}%`
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$7, { label: "Profit factor", value: stats.profitFactor.toFixed(2) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$7, { label: "Total trades", value: stats.totalTrades.toString() }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$8, { label: "Profit factor", value: stats.profitFactor.toFixed(2) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$8, { label: "Total trades", value: stats.totalTrades.toString() }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$7,
+          Stat$8,
           {
             label: "Evidence status",
             value: overallEvidence.status,
             detail: overallEvidence.detail
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$7, { label: "Avg R", value: `${stats.avgRR.toFixed(2)}R` }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$8, { label: "Avg R", value: `${stats.avgRR.toFixed(2)}R` }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$7,
+          Stat$8,
           {
             label: "Max drawdown",
             value: `${drawdownR(stats.maxDrawdown).toFixed(2)}R`,
@@ -37608,7 +37623,7 @@ function BacktestResultsPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$7,
+          Stat$8,
           {
             label: "Net P/L",
             value: `${(stats.totalPnl / 100).toFixed(2)}R`,
@@ -60413,6 +60428,402 @@ function ChartPage() {
     ) }) })
   ] });
 }
+const RISK_MODELS = [
+  {
+    id: "engine-selected",
+    label: "Engine stop + selected TP",
+    description: "Current active stop and current nearest TP selection."
+  },
+  {
+    id: "weekly-selected",
+    label: "Weekly low + selected TP",
+    description: "Coco weekly-low stop with the current selected TP."
+  },
+  {
+    id: "weekly-nearest-1-5r",
+    label: "Weekly low + nearest >= 1.5R",
+    description: "Coco weekly-low stop with the nearest target candidate that still gives at least 1.5R."
+  },
+  {
+    id: "weekly-max-r",
+    label: "Weekly low + max R target",
+    description: "Coco weekly-low stop with the farthest available target candidate."
+  },
+  {
+    id: "weekly-previous-day-high",
+    label: "Weekly low + previous day high",
+    description: "Coco weekly-low stop targeting prior daily high liquidity."
+  },
+  {
+    id: "weekly-prior-ny-high",
+    label: "Weekly low + prior NY high",
+    description: "Coco weekly-low stop targeting prior New York session high."
+  },
+  {
+    id: "weekly-prior-two-day-ny-high",
+    label: "Weekly low + prior two-day NY high",
+    description: "Coco weekly-low stop targeting the higher high across the prior two New York sessions."
+  },
+  {
+    id: "weekly-old-sunday",
+    label: "Weekly low + old Sunday",
+    description: "Coco weekly-low stop targeting the next old Sunday level."
+  },
+  {
+    id: "weekly-fvg-fill",
+    label: "Weekly low + FVG fill",
+    description: "Coco weekly-low stop targeting the nearest bullish FVG fill."
+  }
+];
+function fmtR$7(value) {
+  return `${value.toFixed(2)}R`;
+}
+function pct$5(value) {
+  return `${(value * 100).toFixed(1)}%`;
+}
+function downloadFile$7(name, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+function h1BySymbol$2(candles) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const candle of candles) {
+    if (candle.timeframe !== Timeframe.H1) continue;
+    const group = groups.get(candle.symbol) ?? [];
+    group.push(candle);
+    groups.set(candle.symbol, group);
+  }
+  for (const group of groups.values()) {
+    group.sort((a2, b2) => Number(a2.timestamp) - Number(b2.timestamp));
+  }
+  return groups;
+}
+function selectedTarget(signal) {
+  return (signal.targetCandidates ?? []).find(
+    (candidate) => candidate.model === signal.targetModel && Math.abs(candidate.price - signal.tp1) < 0.01
+  );
+}
+function weeklyLowStop(signal) {
+  var _a2;
+  return (_a2 = signal.stopCandidates) == null ? void 0 : _a2.find(
+    (candidate) => candidate.model === "Coco exact weekly low stop"
+  );
+}
+function targetForModel(signal, model, stopPrice) {
+  const candidates = (signal.targetCandidates ?? []).map((candidate) => ({
+    ...candidate,
+    rMultiple: (candidate.price - signal.entry) / (signal.entry - stopPrice)
+  })).filter((candidate) => candidate.price > signal.entry);
+  if (model.id === "engine-selected") return selectedTarget(signal);
+  if (model.id === "weekly-selected") return selectedTarget(signal);
+  if (model.id === "weekly-nearest-1-5r") {
+    return candidates.filter((candidate) => candidate.rMultiple >= 1.5).sort((a2, b2) => a2.price - b2.price)[0];
+  }
+  if (model.id === "weekly-max-r") {
+    return candidates.sort((a2, b2) => b2.rMultiple - a2.rMultiple)[0];
+  }
+  const targetNameByModel = {
+    "weekly-previous-day-high": "previous day high",
+    "weekly-prior-ny-high": "prior NY high",
+    "weekly-prior-two-day-ny-high": "prior two-day NY high",
+    "weekly-old-sunday": "old Sunday level",
+    "weekly-fvg-fill": "bullish FVG fill"
+  };
+  const targetName = targetNameByModel[model.id];
+  return candidates.find((candidate) => candidate.model === targetName);
+}
+function simulateRiskTrade(signal, model, h1) {
+  var _a2;
+  const stopPrice = model.id === "engine-selected" ? signal.stop : (_a2 = weeklyLowStop(signal)) == null ? void 0 : _a2.price;
+  if (stopPrice === void 0 || stopPrice >= signal.entry) return void 0;
+  const target = targetForModel(signal, model, stopPrice);
+  if (!target || target.price <= signal.entry) return void 0;
+  const risk = signal.entry - stopPrice;
+  const targetR = (target.price - signal.entry) / risk;
+  if (targetR <= 0) return void 0;
+  const future = h1.filter(
+    (candle) => Number(candle.timestamp) > signal.timestamp
+  );
+  const exit = future.find(
+    (candle) => candle.low <= stopPrice || candle.high >= target.price
+  );
+  const ambiguous = !!exit && exit.low <= stopPrice && exit.high >= target.price;
+  const won = !!exit && !ambiguous && exit.high >= target.price;
+  return {
+    signal,
+    model,
+    stopPrice,
+    target,
+    targetR,
+    closed: !!exit,
+    won,
+    ambiguous,
+    rMultiple: exit ? won ? targetR : -1 : 0
+  };
+}
+function statsFor$2(trades) {
+  const closed = trades.filter((trade) => trade.closed);
+  const wins = closed.filter((trade) => trade.won);
+  const ambiguous = closed.filter((trade) => trade.ambiguous);
+  const losses = closed.length - wins.length;
+  const totalR = closed.reduce((sum, trade) => sum + trade.rMultiple, 0);
+  let running = 0;
+  let peak = 0;
+  let maxDrawdownR = 0;
+  for (const trade of closed) {
+    running += trade.rMultiple;
+    peak = Math.max(peak, running);
+    maxDrawdownR = Math.max(maxDrawdownR, peak - running);
+  }
+  return {
+    trades: trades.length,
+    wins: wins.length,
+    losses,
+    open: trades.length - closed.length,
+    ambiguous: ambiguous.length,
+    totalR,
+    avgR: closed.length ? totalR / closed.length : 0,
+    winRate: closed.length ? wins.length / closed.length : 0,
+    maxDrawdownR
+  };
+}
+function buildRiskRows({
+  signals,
+  candles,
+  splitTimestamp
+}) {
+  const candlesBySymbol = h1BySymbol$2(candles);
+  const candidates = signals.filter(
+    (signal) => !signal.blockers.some((blocker) => blocker.passed) && (signal.accepted || signal.score >= 5) && signal.entry > 0
+  );
+  return RISK_MODELS.map((model) => {
+    const trades = candidates.flatMap((signal) => {
+      const h1 = candlesBySymbol.get(signal.symbol) ?? [];
+      const trade = simulateRiskTrade(signal, model, h1);
+      return trade ? [trade] : [];
+    });
+    const discovery = splitTimestamp === void 0 ? [] : trades.filter((trade) => trade.signal.timestamp <= splitTimestamp);
+    const validation = splitTimestamp === void 0 ? [] : trades.filter((trade) => trade.signal.timestamp > splitTimestamp);
+    return {
+      model,
+      all: statsFor$2(trades),
+      discovery: statsFor$2(discovery),
+      validation: statsFor$2(validation),
+      sample: trades.slice(0, 20)
+    };
+  }).sort(
+    (a2, b2) => b2.validation.totalR - a2.validation.totalR || b2.validation.trades - a2.validation.trades
+  );
+}
+function Stat$7({
+  label,
+  value,
+  detail
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: label }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: value }),
+    detail && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: detail })
+  ] });
+}
+function CocoRiskLabPage() {
+  const { candles, run } = useStrategyWorkspace();
+  const signals = reactExports.useMemo(
+    () => [...run.acceptedSignals, ...run.rejectedSignals],
+    [run.acceptedSignals, run.rejectedSignals]
+  );
+  const rows = reactExports.useMemo(
+    () => buildRiskRows({
+      signals,
+      candles,
+      splitTimestamp: run.validation.discoveryEndTimestamp
+    }),
+    [signals, candles, run.validation.discoveryEndTimestamp]
+  );
+  const best = rows[0];
+  const weeklyRows = rows.filter((row) => row.model.id !== "engine-selected");
+  const viableWeekly = weeklyRows.filter(
+    (row) => row.validation.trades >= 10 && row.validation.totalR > 0
+  );
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "coco-risk.page", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-display text-2xl font-bold", children: "Coco Risk Lab" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "This page compares stop/target models without changing live scoring. Ambiguous candles that touch stop and target are counted as losses to avoid optimistic backtest claims." })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Button,
+        {
+          type: "button",
+          variant: "outline",
+          disabled: !run.integrity.canRunBacktest,
+          onClick: () => downloadFile$7(
+            "ict-coco-risk-lab.json",
+            JSON.stringify(
+              {
+                generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+                integrity: run.integrity,
+                split: run.validation,
+                rows: rows.map((row) => ({
+                  id: row.model.id,
+                  label: row.model.label,
+                  description: row.model.description,
+                  all: row.all,
+                  discovery: row.discovery,
+                  validation: row.validation,
+                  sample: row.sample.map((trade) => ({
+                    timestamp: new Date(trade.signal.timestamp).toISOString(),
+                    symbol: trade.signal.symbol,
+                    setup: trade.signal.setupType,
+                    score: trade.signal.score,
+                    accepted: trade.signal.accepted,
+                    entry: trade.signal.entry,
+                    stop: trade.stopPrice,
+                    target: trade.target.price,
+                    targetModel: trade.target.model,
+                    targetR: trade.targetR,
+                    outcome: !trade.closed ? "Open" : trade.won ? "Win" : trade.ambiguous ? "Ambiguous stop-first loss" : "Loss",
+                    rMultiple: trade.rMultiple
+                  }))
+                }))
+              },
+              null,
+              2
+            ),
+            "application/json"
+          ),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "mr-2 h-4 w-4" }),
+            "Export Coco Risk Lab"
+          ]
+        }
+      )
+    ] }),
+    !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Coco Risk Lab is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$7,
+          {
+            label: "Risk models",
+            value: String(rows.length),
+            detail: "Stop/TP combinations tested"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$7,
+          {
+            label: "Viable weekly models",
+            value: String(viableWeekly.length),
+            detail: "10+ validation trades and positive validation R"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$7,
+          {
+            label: "Best validation",
+            value: best ? fmtR$7(best.validation.totalR) : "0.00R",
+            detail: (best == null ? void 0 : best.model.label) ?? "No model"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$7,
+          {
+            label: "Best sample",
+            value: best ? String(best.validation.trades) : "0",
+            detail: "Validation-period trades"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-primary/30 bg-primary/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Scale, { className: "mt-0.5 h-4 w-4 text-primary" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Interpretation" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "If weekly-low + selected TP performs poorly while weekly-low + farther targets performs well, the strategy issue is target selection rather than the weekly-low stop itself." })
+        ] })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Risk Model Scoreboard" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1120px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Model" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "All trades" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "All net" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Discovery" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Discovery net" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Validation" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Validation net" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val win" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val avg" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val DD" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Ambig" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: rows.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "tr",
+            {
+              className: "border-b border-border/40",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "max-w-[260px] py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { title: row.model.description, children: row.model.label }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.all.trades }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(row.all.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.discovery.trades }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(row.discovery.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.validation.trades }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(row.validation.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$5(row.validation.winRate) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(row.validation.avgR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(row.validation.maxDrawdownR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.validation.ambiguous })
+              ]
+            },
+            row.model.id
+          )) })
+        ] }) })
+      ] }),
+      best && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Best Model Sample" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[980px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Time" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Index" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Setup" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Score" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Entry" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Stop" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Target" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Target R" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Outcome" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: best.sample.slice(0, 12).map((trade) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "tr",
+            {
+              className: "border-b border-border/40",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: new Date(trade.signal.timestamp).toISOString() }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: trade.signal.symbol }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: trade.signal.setupType }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2 text-right", children: [
+                  trade.signal.score,
+                  "/10"
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: trade.signal.entry.toFixed(2) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: trade.stopPrice.toFixed(2) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: trade.target.model }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(trade.targetR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: !trade.closed ? "Open" : trade.won ? "Win" : trade.ambiguous ? "Ambiguous loss" : "Loss" })
+              ]
+            },
+            `${trade.model.id}-${trade.signal.id}-${trade.target.model}`
+          )) })
+        ] }) })
+      ] })
+    ] })
+  ] });
+}
 var jt = (n2) => {
   switch (n2) {
     case "success":
@@ -64423,6 +64834,11 @@ const truthAuditRoute = createRoute({
   path: "/truth-audit",
   component: TruthAuditPage
 });
+const cocoRiskRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/coco-risk",
+  component: CocoRiskLabPage
+});
 const rejectedRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/rejected",
@@ -64484,6 +64900,7 @@ const tree = rootRoute.addChildren([
   healthRoute,
   auditRoute,
   truthAuditRoute,
+  cocoRiskRoute,
   rejectedRoute,
   discoveryRoute,
   experimentRoute,
