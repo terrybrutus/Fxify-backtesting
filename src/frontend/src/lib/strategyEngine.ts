@@ -9,6 +9,7 @@ import {
   type PerformanceStats,
   type RuleHealthCheck,
   type SignalAudit,
+  type StopCandidate,
   type SundayLevel,
   type TargetCandidate,
   Timeframe,
@@ -785,6 +786,33 @@ function targetCandidateEvidence(
     .sort((a, b) => a.price - b.price);
 }
 
+function stopCandidateEvidence(
+  currentPrice: number,
+  engineStop: number,
+  structure: MarketStructureSnapshot,
+): StopCandidate[] {
+  const candidates: StopCandidate[] = [
+    {
+      model: "engine MA/ATR structure stop",
+      price: engineStop,
+      risk: currentPrice - engineStop,
+      active: true,
+    },
+  ];
+  if (
+    structure.currentWeekLow !== undefined &&
+    structure.currentWeekLow < currentPrice
+  ) {
+    candidates.push({
+      model: "Coco exact weekly low stop",
+      price: structure.currentWeekLow,
+      risk: currentPrice - structure.currentWeekLow,
+      active: false,
+    });
+  }
+  return candidates.filter((candidate) => candidate.risk > 0);
+}
+
 type CocoSetupFamily = {
   setupType: SignalAudit["setupType"];
   passed: boolean;
@@ -949,6 +977,7 @@ function scoreSignal(
     structure,
     candles.slice(0, index),
   );
+  const stopCandidates = stopCandidateEvidence(currentPrice, stop, structure);
   const setupFamily = chooseCocoSetupFamily({
     bullishDaily,
     priceAbove200,
@@ -1072,6 +1101,7 @@ function scoreSignal(
     rMultipleToTp1: rewardR,
     targetModel: target.model,
     targetCandidates,
+    stopCandidates,
     dataSource: candle.source,
     ruleEngineVersion: RULE_ENGINE_VERSION,
     explanation: accepted
