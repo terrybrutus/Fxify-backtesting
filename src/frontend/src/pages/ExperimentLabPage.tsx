@@ -583,10 +583,16 @@ function readinessReport(
         ? 5
         : 0,
   ];
-  const liveScore = Math.min(
+  const uncappedLiveScore = Math.min(
     100,
     Math.round(liveScoreParts.reduce((sum, value) => sum + value, 0)),
   );
+  const liveScore =
+    forwardStats.trades === 0
+      ? Math.min(45, uncappedLiveScore)
+      : forwardStats.trades < 10
+        ? Math.min(60, uncappedLiveScore)
+        : uncappedLiveScore;
   const blockers = [
     run.acceptedSignals.length < 20
       ? "Current locked rules still produce too few accepted trades."
