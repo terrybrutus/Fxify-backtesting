@@ -9,11 +9,15 @@ import {
   AlertTriangle,
   CheckCircle2,
   Database,
+  Download,
   FileUp,
   Trash2,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+
+const YAHOO_PROXY_DATA_PATH = "/data/yahoo_futures_proxy_latest.csv";
+const YAHOO_PROXY_DATA_NAME = "yahoo_futures_proxy_latest.csv";
 
 function fmtDate(value?: number) {
   return value
@@ -39,12 +43,11 @@ export default function DataUploadPage() {
   const { run, fileName: storedFileName, isLoading } = useStrategyWorkspace();
   const [fileName, setFileName] = useState("");
   const [preview, setPreview] = useState("");
+  const [isLoadingProxyData, setIsLoadingProxyData] = useState(false);
 
-  async function handleFile(file?: File) {
-    if (!file) return;
-    setFileName(file.name);
-    const text = await file.text();
-    const result = parseCandleCsv(text, file.name);
+  async function importCsvText(text: string, sourceName: string) {
+    setFileName(sourceName);
+    const result = parseCandleCsv(text, sourceName);
     setPreview(
       result.candles
         .slice(0, 5)
@@ -59,7 +62,7 @@ export default function DataUploadPage() {
         result.candles,
         result.invalidRows,
         result.missingColumns,
-        file.name,
+        sourceName,
       );
       if (result.missingColumns.length > 0 || result.candles.length === 0) {
         toast.error("CSV refused. Required columns or valid rows are missing.");
@@ -69,6 +72,35 @@ export default function DataUploadPage() {
     } catch (error) {
       toast.error("Import failed while saving the dataset in browser storage.");
       console.error(error);
+    }
+  }
+
+  async function handleFile(file?: File) {
+    if (!file) return;
+    const text = await file.text();
+    await importCsvText(text, file.name);
+  }
+
+  async function handleLoadYahooProxyData() {
+    setIsLoadingProxyData(true);
+    try {
+      const response = await fetch(YAHOO_PROXY_DATA_PATH, {
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        throw new Error(
+          `Bundled Yahoo proxy data failed to load: ${response.status}`,
+        );
+      }
+      const text = await response.text();
+      await importCsvText(text, YAHOO_PROXY_DATA_NAME);
+    } catch (error) {
+      toast.error(
+        "Auto-load failed. The app refused to import because the bundled real dataset could not be loaded.",
+      );
+      console.error(error);
+    } finally {
+      setIsLoadingProxyData(false);
     }
   }
 
@@ -105,7 +137,16 @@ export default function DataUploadPage() {
               timestamp,open,high,low,close,volume,symbol,timeframe,timezone
             </code>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={isLoadingProxyData}
+              onClick={handleLoadYahooProxyData}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              {isLoadingProxyData ? "Loading..." : "Load Yahoo Proxy Data"}
+            </Button>
             <Button type="button" onClick={() => fileRef.current?.click()}>
               <FileUp className="mr-2 h-4 w-4" />
               Import CSV

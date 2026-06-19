@@ -60651,6 +60651,8 @@ reactExports.forwardRef(function(e3, t2) {
     })) : null;
   }));
 });
+const YAHOO_PROXY_DATA_PATH = "/data/yahoo_futures_proxy_latest.csv";
+const YAHOO_PROXY_DATA_NAME = "yahoo_futures_proxy_latest.csv";
 function fmtDate$2(value) {
   return value ? new Date(value).toISOString().slice(0, 16).replace("T", " ") : "n/a";
 }
@@ -60665,11 +60667,10 @@ function DataUploadPage() {
   const { run, fileName: storedFileName, isLoading } = useStrategyWorkspace();
   const [fileName, setFileName] = reactExports.useState("");
   const [preview, setPreview] = reactExports.useState("");
-  async function handleFile(file) {
-    if (!file) return;
-    setFileName(file.name);
-    const text = await file.text();
-    const result = parseCandleCsv(text, file.name);
+  const [isLoadingProxyData, setIsLoadingProxyData] = reactExports.useState(false);
+  async function importCsvText(text, sourceName) {
+    setFileName(sourceName);
+    const result = parseCandleCsv(text, sourceName);
     setPreview(
       result.candles.slice(0, 5).map(
         (candle) => `${new Date(Number(candle.timestamp)).toISOString()} ${candle.symbol} ${candle.timeframe} O:${candle.open} H:${candle.high} L:${candle.low} C:${candle.close}`
@@ -60680,7 +60681,7 @@ function DataUploadPage() {
         result.candles,
         result.invalidRows,
         result.missingColumns,
-        file.name
+        sourceName
       );
       if (result.missingColumns.length > 0 || result.candles.length === 0) {
         ue.error("CSV refused. Required columns or valid rows are missing.");
@@ -60690,6 +60691,33 @@ function DataUploadPage() {
     } catch (error) {
       ue.error("Import failed while saving the dataset in browser storage.");
       console.error(error);
+    }
+  }
+  async function handleFile(file) {
+    if (!file) return;
+    const text = await file.text();
+    await importCsvText(text, file.name);
+  }
+  async function handleLoadYahooProxyData() {
+    setIsLoadingProxyData(true);
+    try {
+      const response = await fetch(YAHOO_PROXY_DATA_PATH, {
+        cache: "no-store"
+      });
+      if (!response.ok) {
+        throw new Error(
+          `Bundled Yahoo proxy data failed to load: ${response.status}`
+        );
+      }
+      const text = await response.text();
+      await importCsvText(text, YAHOO_PROXY_DATA_NAME);
+    } catch (error) {
+      ue.error(
+        "Auto-load failed. The app refused to import because the bundled real dataset could not be loaded."
+      );
+      console.error(error);
+    } finally {
+      setIsLoadingProxyData(false);
     }
   }
   async function handleClear() {
@@ -60712,7 +60740,20 @@ function DataUploadPage() {
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs uppercase tracking-widest text-primary", children: "Required CSV schema" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("code", { className: "mt-2 block whitespace-pre-wrap bg-background p-3 font-mono text-xs text-muted-foreground", children: "timestamp,open,high,low,close,volume,symbol,timeframe,timezone" })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Button,
+            {
+              type: "button",
+              variant: "secondary",
+              disabled: isLoadingProxyData,
+              onClick: handleLoadYahooProxyData,
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "mr-2 h-4 w-4" }),
+                isLoadingProxyData ? "Loading..." : "Load Yahoo Proxy Data"
+              ]
+            }
+          ),
           /* @__PURE__ */ jsxRuntimeExports.jsxs(Button, { type: "button", onClick: () => {
             var _a2;
             return (_a2 = fileRef.current) == null ? void 0 : _a2.click();
