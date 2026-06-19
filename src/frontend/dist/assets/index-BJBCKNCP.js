@@ -36533,6 +36533,25 @@ function targetCandidateEvidence(currentPrice, risk, structure, candles) {
     rMultiple: (target.price - currentPrice) / risk
   })).sort((a2, b2) => a2.price - b2.price);
 }
+function stopCandidateEvidence(currentPrice, engineStop, structure) {
+  const candidates = [
+    {
+      model: "engine MA/ATR structure stop",
+      price: engineStop,
+      risk: currentPrice - engineStop,
+      active: true
+    }
+  ];
+  if (structure.currentWeekLow !== void 0 && structure.currentWeekLow < currentPrice) {
+    candidates.push({
+      model: "Coco exact weekly low stop",
+      price: structure.currentWeekLow,
+      risk: currentPrice - structure.currentWeekLow,
+      active: false
+    });
+  }
+  return candidates.filter((candidate) => candidate.risk > 0);
+}
 function latestMovingAveragesBefore(candles, timestamp) {
   const index2 = candles.findLastIndex((candle) => ms(candle) <= timestamp);
   return index2 >= 0 ? movingAveragesAt(candles, index2) : {};
@@ -36633,6 +36652,7 @@ function scoreSignal(candles, index2, sundayLevels, fvgZones, dailyCandles, m15C
     structure,
     candles.slice(0, index2)
   );
+  const stopCandidates = stopCandidateEvidence(currentPrice, stop, structure);
   const setupFamily = chooseCocoSetupFamily({
     bullishDaily,
     priceAbove200,
@@ -36745,6 +36765,7 @@ function scoreSignal(candles, index2, sundayLevels, fvgZones, dailyCandles, m15C
     rMultipleToTp1: rewardR,
     targetModel: target.model,
     targetCandidates,
+    stopCandidates,
     dataSource: candle.source,
     ruleEngineVersion: RULE_ENGINE_VERSION,
     explanation: accepted ? `${setupFamily.setupType} candidate accepted because ${reasons.filter((item) => item.passed).map((item) => item.label.toLowerCase()).join(", ")}.` : `Trade rejected because ${[
@@ -64080,6 +64101,7 @@ function buildTruthRows({
     ])
   );
   return signals.map((signal) => {
+    var _a2;
     const entryCandle = h1ByKey.get(`${signal.symbol}-${signal.timestamp}`);
     const structure = structureByKey.get(
       `${signal.symbol}-${signal.timestamp}`
@@ -64089,6 +64111,9 @@ function buildTruthRows({
       (candidate) => candidate.model === signal.targetModel && Math.abs(candidate.price - signal.tp1) < 0.01
     );
     const weeklyLow = structure == null ? void 0 : structure.currentWeekLow;
+    const exactWeeklyLowStop = (_a2 = signal.stopCandidates) == null ? void 0 : _a2.find(
+      (candidate) => candidate.model === "Coco exact weekly low stop"
+    );
     const weeklyLowStopGap = weeklyLow === void 0 ? void 0 : signal.stop - weeklyLow;
     const weeklyLowStopMatch = weeklyLow === void 0 || weeklyLow >= signal.entry ? "Not weekly-low stop" : Math.abs(signal.stop - weeklyLow) <= Math.max(signal.entry * 2e-4, 2) ? "Exact" : signal.stop > weeklyLow ? "Not weekly-low stop" : "Approximate";
     return {
@@ -64114,6 +64139,13 @@ function buildTruthRows({
             candidate.rMultiple
           )})`
         ).join(" | "),
+        stopCandidates: (signal.stopCandidates ?? []).map(
+          (candidate) => `${candidate.active ? "ACTIVE " : ""}${candidate.model}: ${fmtPrice(
+            candidate.price
+          )} (${fmtR(candidate.risk)})`
+        ).join(" | "),
+        exactWeeklyLowRisk: exactWeeklyLowStop == null ? void 0 : exactWeeklyLowStop.risk,
+        selectedTargetRWithWeeklyLow: exactWeeklyLowStop && signal.tp1 > signal.entry ? (signal.tp1 - signal.entry) / exactWeeklyLowStop.risk : void 0,
         stopModel: warningValue(signal, "Coco context:") ?? warningValue(signal, "Coco stop model") ?? "No explicit Coco stop model warning."
       }
     };
@@ -64180,6 +64212,7 @@ function TruthAuditPage() {
                   targetModel: row.signal.targetModel,
                   checks: row.checks,
                   cocoFit: row.cocoFit,
+                  stopCandidates: row.signal.stopCandidates,
                   entryCandle: row.entryCandle ? {
                     timestamp: iso(row.entryCandle.timestamp),
                     open: row.entryCandle.open,
@@ -64244,6 +64277,7 @@ function TruthAuditPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "TP model" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Trace" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Weekly low stop" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Stop candidates" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Known targets" })
           ] }) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: rows.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -64320,8 +64354,14 @@ function TruthAuditPage() {
                   /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground", children: [
                     "Stop gap ",
                     fmtPrice(row.cocoFit.weeklyLowStopGap)
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground", children: [
+                    "Weekly-low TP R",
+                    " ",
+                    fmtR(row.cocoFit.selectedTargetRWithWeeklyLow)
                   ] })
                 ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "max-w-[330px] py-2 text-muted-foreground", children: row.cocoFit.stopCandidates || "No stop candidates" }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "max-w-[360px] py-2 text-muted-foreground", children: row.cocoFit.targetCandidates || "No target candidates" })
               ]
             },

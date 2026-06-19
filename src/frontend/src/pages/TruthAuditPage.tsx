@@ -28,6 +28,9 @@ type TruthAuditRow = {
     weeklyLowStopMatch: "Exact" | "Approximate" | "Not weekly-low stop";
     selectedTarget: string;
     targetCandidates: string;
+    stopCandidates: string;
+    exactWeeklyLowRisk?: number;
+    selectedTargetRWithWeeklyLow?: number;
     stopModel: string;
   };
 };
@@ -95,6 +98,9 @@ function buildTruthRows({
         Math.abs(candidate.price - signal.tp1) < 0.01,
     );
     const weeklyLow = structure?.currentWeekLow;
+    const exactWeeklyLowStop = signal.stopCandidates?.find(
+      (candidate) => candidate.model === "Coco exact weekly low stop",
+    );
     const weeklyLowStopGap =
       weeklyLow === undefined ? undefined : signal.stop - weeklyLow;
     const weeklyLowStopMatch =
@@ -134,6 +140,19 @@ function buildTruthRows({
               )})`,
           )
           .join(" | "),
+        stopCandidates: (signal.stopCandidates ?? [])
+          .map(
+            (candidate) =>
+              `${candidate.active ? "ACTIVE " : ""}${candidate.model}: ${fmtPrice(
+                candidate.price,
+              )} (${fmtR(candidate.risk)})`,
+          )
+          .join(" | "),
+        exactWeeklyLowRisk: exactWeeklyLowStop?.risk,
+        selectedTargetRWithWeeklyLow:
+          exactWeeklyLowStop && signal.tp1 > signal.entry
+            ? (signal.tp1 - signal.entry) / exactWeeklyLowStop.risk
+            : undefined,
         stopModel:
           warningValue(signal, "Coco context:") ??
           warningValue(signal, "Coco stop model") ??
@@ -218,6 +237,7 @@ export default function TruthAuditPage() {
                     targetModel: row.signal.targetModel,
                     checks: row.checks,
                     cocoFit: row.cocoFit,
+                    stopCandidates: row.signal.stopCandidates,
                     entryCandle: row.entryCandle
                       ? {
                           timestamp: iso(row.entryCandle.timestamp),
@@ -318,6 +338,7 @@ export default function TruthAuditPage() {
                     <th className="py-2 text-left">TP model</th>
                     <th className="py-2 text-left">Trace</th>
                     <th className="py-2 text-left">Weekly low stop</th>
+                    <th className="py-2 text-left">Stop candidates</th>
                     <th className="py-2 text-left">Known targets</th>
                   </tr>
                 </thead>
@@ -384,6 +405,13 @@ export default function TruthAuditPage() {
                         <p className="text-muted-foreground">
                           Stop gap {fmtPrice(row.cocoFit.weeklyLowStopGap)}
                         </p>
+                        <p className="text-muted-foreground">
+                          Weekly-low TP R{" "}
+                          {fmtR(row.cocoFit.selectedTargetRWithWeeklyLow)}
+                        </p>
+                      </td>
+                      <td className="max-w-[330px] py-2 text-muted-foreground">
+                        {row.cocoFit.stopCandidates || "No stop candidates"}
                       </td>
                       <td className="max-w-[360px] py-2 text-muted-foreground">
                         {row.cocoFit.targetCandidates || "No target candidates"}

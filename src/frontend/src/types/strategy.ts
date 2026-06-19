@@ -141,6 +141,7 @@ export interface SignalAudit {
   rMultipleToTp1: number;
   targetModel?: string;
   targetCandidates?: TargetCandidate[];
+  stopCandidates?: StopCandidate[];
   dataSource: string;
   ruleEngineVersion: string;
   explanation: string;
@@ -150,6 +151,13 @@ export interface TargetCandidate {
   model: string;
   price: Price;
   rMultiple: number;
+}
+
+export interface StopCandidate {
+  model: string;
+  price: Price;
+  risk: number;
+  active: boolean;
 }
 
 export interface MarketStructureSnapshot {
