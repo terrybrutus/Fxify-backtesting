@@ -12,6 +12,7 @@ import ReplayPage from "@/pages/ReplayPage";
 import RuleEngineHealthPage from "@/pages/RuleEngineHealthPage";
 import SampleExpansionPage from "@/pages/SampleExpansionPage";
 import SetupDetectorPage from "@/pages/SetupDetectorPage";
+import TruthAuditPage from "@/pages/TruthAuditPage";
 import WalkForwardPage from "@/pages/WalkForwardPage";
 import {
   RouterProvider,
@@ -47,6 +48,12 @@ const auditRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/audit",
   component: SetupDetectorPage,
+});
+
+const truthAuditRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/truth-audit",
+  component: TruthAuditPage,
 });
 
 const rejectedRoute = createRoute({
@@ -120,6 +127,7 @@ const tree = rootRoute.addChildren([
   dataRoute,
   healthRoute,
   auditRoute,
+  truthAuditRoute,
   rejectedRoute,
   discoveryRoute,
   experimentRoute,

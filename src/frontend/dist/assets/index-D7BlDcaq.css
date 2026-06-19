@@ -1061,6 +1061,9 @@ video {
 .min-w-\[12rem\] {
   min-width: 12rem;
 }
+.min-w-\[1500px\] {
+  min-width: 1500px;
+}
 .min-w-\[520px\] {
   min-width: 520px;
 }
@@ -1087,6 +1090,15 @@ video {
 }
 .max-w-4xl {
   max-width: 56rem;
+}
+.max-w-\[230px\] {
+  max-width: 230px;
+}
+.max-w-\[250px\] {
+  max-width: 250px;
+}
+.max-w-\[360px\] {
+  max-width: 360px;
 }
 .max-w-\[calc\(100\%-2rem\)\] {
   max-width: calc(100% - 2rem);
@@ -1645,6 +1657,9 @@ video {
 }
 .text-right {
   text-align: right;
+}
+.align-top {
+  vertical-align: top;
 }
 .align-middle {
   vertical-align: middle;

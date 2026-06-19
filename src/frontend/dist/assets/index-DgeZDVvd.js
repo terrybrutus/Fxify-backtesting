@@ -35350,7 +35350,7 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$n = [
+const __iconNode$o = [
   [
     "path",
     {
@@ -35359,7 +35359,20 @@ const __iconNode$n = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$n);
+const Activity = createLucideIcon("activity", __iconNode$o);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$n = [
+  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
+  ["path", { d: "M18 17V9", key: "2bz60n" }],
+  ["path", { d: "M13 17V5", key: "1frdt8" }],
+  ["path", { d: "M8 17v-3", key: "17ska0" }]
+];
+const ChartColumn = createLucideIcon("chart-column", __iconNode$n);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35367,12 +35380,10 @@ const Activity = createLucideIcon("activity", __iconNode$n);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$m = [
-  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
-  ["path", { d: "M18 17V9", key: "2bz60n" }],
-  ["path", { d: "M13 17V5", key: "1frdt8" }],
-  ["path", { d: "M8 17v-3", key: "17ska0" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const ChartColumn = createLucideIcon("chart-column", __iconNode$m);
+const CircleCheck = createLucideIcon("circle-check", __iconNode$m);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35381,9 +35392,10 @@ const ChartColumn = createLucideIcon("chart-column", __iconNode$m);
  */
 const __iconNode$l = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
+  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
 ];
-const CircleCheck = createLucideIcon("circle-check", __iconNode$l);
+const CircleX = createLucideIcon("circle-x", __iconNode$l);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35391,11 +35403,11 @@ const CircleCheck = createLucideIcon("circle-check", __iconNode$l);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$k = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
-  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
+  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
+  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
+  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
 ];
-const CircleX = createLucideIcon("circle-x", __iconNode$k);
+const Database = createLucideIcon("database", __iconNode$k);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35403,11 +35415,11 @@ const CircleX = createLucideIcon("circle-x", __iconNode$k);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$j = [
-  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
-  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
-  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
+  ["path", { d: "M12 15V3", key: "m9g1x1" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
+  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
 ];
-const Database = createLucideIcon("database", __iconNode$j);
+const Download = createLucideIcon("download", __iconNode$j);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35415,11 +35427,15 @@ const Database = createLucideIcon("database", __iconNode$j);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$i = [
-  ["path", { d: "M12 15V3", key: "m9g1x1" }],
-  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
-  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
+  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
+  [
+    "path",
+    { d: "M4.268 21a2 2 0 0 0 1.727 1H18a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v3", key: "ms7g94" }
+  ],
+  ["path", { d: "m9 18-1.5-1.5", key: "1j6qii" }],
+  ["circle", { cx: "5", cy: "14", r: "3", key: "ufru5t" }]
 ];
-const Download = createLucideIcon("download", __iconNode$i);
+const FileSearch = createLucideIcon("file-search", __iconNode$i);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35687,6 +35703,7 @@ const NAV_ITEMS = [
   { path: "/data", label: "Data Integrity", icon: Database },
   { path: "/health", label: "Rule Health", icon: HeartPulse },
   { path: "/audit", label: "Signal Audit", icon: ListChecks },
+  { path: "/truth-audit", label: "Truth Audit", icon: FileSearch },
   { path: "/rejected", label: "Rejected Setups", icon: FileWarning },
   { path: "/discovery", label: "Discovery Lab", icon: FlaskConical },
   { path: "/experiments", label: "Experiment Lab", icon: Microscope },
@@ -37317,7 +37334,7 @@ function classifyEvidence({
     detail: "Sample exists, but edge or drawdown quality is not yet strong."
   };
 }
-function downloadFile$6(name, content, type) {
+function downloadFile$7(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -37498,7 +37515,7 @@ function BacktestResultsPage() {
             type: "button",
             variant: "outline",
             disabled: !run.integrity.canRunBacktest,
-            onClick: () => downloadFile$6(
+            onClick: () => downloadFile$7(
               "ict-audit-log.json",
               exportJson(run),
               "application/json"
@@ -37514,7 +37531,7 @@ function BacktestResultsPage() {
           {
             type: "button",
             disabled: !run.integrity.canRunBacktest,
-            onClick: () => downloadFile$6(
+            onClick: () => downloadFile$7(
               "ict-signal-log.csv",
               exportCsv(allSignals),
               "text/csv"
@@ -61031,7 +61048,7 @@ function passed$2(signal, label) {
 function pct$4(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
-function fmtR$5(value) {
+function fmtR$6(value) {
   return `${value.toFixed(2)}R`;
 }
 function sessionFor(timestamp) {
@@ -61041,7 +61058,7 @@ function sessionFor(timestamp) {
   if (hour >= 13 && hour < 21) return "New York";
   return "Off session";
 }
-function downloadFile$5(name, content, type) {
+function downloadFile$6(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -61343,7 +61360,7 @@ function TradeMiniTable({ trades }) {
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: trade.signal.symbol }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: trade.signal.setupType }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: trade.target.model }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2 text-right", children: fmtR$5(trade.target.rMultiple) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2 text-right", children: fmtR$6(trade.target.rMultiple) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-3 py-2", children: !trade.closed ? "Open" : trade.won ? "Win" : "Loss" })
         ]
       },
@@ -61407,7 +61424,7 @@ function ExperimentLabPage() {
           type: "button",
           variant: "outline",
           disabled: !run.integrity.canRunBacktest,
-          onClick: () => downloadFile$5(
+          onClick: () => downloadFile$6(
             "ict-experiment-report.json",
             experimentReportJson(run, rows, readiness),
             "application/json"
@@ -61466,7 +61483,7 @@ function ExperimentLabPage() {
           Stat$6,
           {
             label: "Best validation net",
-            value: bestValidation ? fmtR$5(bestValidation.validation.totalR) : "0.00R",
+            value: bestValidation ? fmtR$6(bestValidation.validation.totalR) : "0.00R",
             detail: (bestValidation == null ? void 0 : bestValidation.variant.id) ?? "No variant"
           }
         )
@@ -61536,11 +61553,11 @@ function ExperimentLabPage() {
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.sessionScope }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.targetModel }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.all.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$5(row.all.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$6(row.all.totalR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.discovery.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$5(row.discovery.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$6(row.discovery.totalR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.validation.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$5(row.validation.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$6(row.validation.totalR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$4(row.validation.winRate) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.promotionGate }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.consistencyRisk }),
@@ -61597,7 +61614,7 @@ function ExperimentLabPage() {
               "Validation sample: ",
               bestValidation.validation.trades,
               " trade (s), ",
-              fmtR$5(bestValidation.validation.totalR),
+              fmtR$6(bestValidation.validation.totalR),
               ",",
               " ",
               pct$4(bestValidation.validation.winRate),
@@ -61611,7 +61628,7 @@ function ExperimentLabPage() {
     ] })
   ] });
 }
-function fmtR$4(value) {
+function fmtR$5(value) {
   return `${value.toFixed(2)}R`;
 }
 function pct$3(value) {
@@ -61620,7 +61637,7 @@ function pct$3(value) {
 function fmtDate$1(value) {
   return new Date(value).toISOString().slice(0, 10);
 }
-function downloadFile$4(name, content, type) {
+function downloadFile$5(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -61790,7 +61807,7 @@ function WalkForwardPage() {
           type: "button",
           variant: "outline",
           disabled: !run.integrity.canRunBacktest,
-          onClick: () => downloadFile$4(
+          onClick: () => downloadFile$5(
             "ict-walk-forward-report.json",
             JSON.stringify(
               {
@@ -61841,7 +61858,7 @@ function WalkForwardPage() {
           Stat$5,
           {
             label: "Best walk-forward net",
-            value: best ? fmtR$4(best.forwardNetR) : "0.00R",
+            value: best ? fmtR$5(best.forwardNetR) : "0.00R",
             detail: (best == null ? void 0 : best.id) ?? "No variant"
           }
         )
@@ -61880,9 +61897,9 @@ function WalkForwardPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.eligibleWindows }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.survivedWindows }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.forwardTrades }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$4(row.forwardNetR) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$5(row.forwardNetR) }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$3(row.positiveWindowRate) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$4(row.worstWindowR) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$5(row.worstWindowR) }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.verdict })
           ] }, row.id)) })
         ] }) })
@@ -61921,9 +61938,9 @@ function WalkForwardPage() {
                   fmtDate$1(windowResult.window.end)
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: windowResult.prior.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$4(windowResult.prior.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$5(windowResult.prior.totalR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: windowResult.forward.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$4(windowResult.forward.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$5(windowResult.forward.totalR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$3(windowResult.forward.winRate) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: windowResult.status })
               ]
@@ -61935,13 +61952,13 @@ function WalkForwardPage() {
     ] })
   ] });
 }
-function fmtR$3(value) {
+function fmtR$4(value) {
   return `${value.toFixed(2)}R`;
 }
 function isValidationPositiveDivergence(experiment) {
   return experiment.promotionGate === "Diverged" && experiment.validation.trades > 0 && experiment.validation.totalR > 0;
 }
-function downloadFile$3(name, content, type) {
+function downloadFile$4(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -62016,7 +62033,7 @@ function buildDecisionRows({
     });
     const reasons = [
       `Experiment gate: ${experiment.promotionGate}`,
-      `Validation: ${experiment.validation.trades} trade(s), ${fmtR$3(
+      `Validation: ${experiment.validation.trades} trade(s), ${fmtR$4(
         experiment.validation.totalR
       )}`,
       walk ? `Walk-forward: ${walk.verdict}, ${walk.survivedWindows}/${walk.eligibleWindows} survived` : "Walk-forward: unavailable",
@@ -62113,7 +62130,7 @@ function DecisionConsolePage() {
           type: "button",
           variant: "outline",
           disabled: !run.integrity.canRunBacktest,
-          onClick: () => downloadFile$3(
+          onClick: () => downloadFile$4(
             "ict-decision-console.json",
             JSON.stringify(
               {
@@ -62252,10 +62269,10 @@ function DecisionConsolePage() {
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.action }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.experiment.promotionGate }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.experiment.validation.trades }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$3(row.experiment.validation.totalR) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$4(row.experiment.validation.totalR) }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: ((_a3 = row.walk) == null ? void 0 : _a3.verdict) ?? "Unavailable" }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.forwardTrades }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$3(row.forwardNetR) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$4(row.forwardNetR) }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.score.toFixed(2) })
             ] }, row.id);
           }) })
@@ -62724,7 +62741,7 @@ function DiscoveryLabPage() {
     ] })
   ] });
 }
-function fmtR$2(value) {
+function fmtR$3(value) {
   return `${value.toFixed(2)}R`;
 }
 function pct$1(value) {
@@ -62733,7 +62750,7 @@ function pct$1(value) {
 function fmtDate(value) {
   return value ? new Date(value).toISOString() : "n/a";
 }
-function downloadFile$2(name, content, type) {
+function downloadFile$3(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -62821,7 +62838,7 @@ function ForwardTrackerPage() {
           type: "button",
           variant: "outline",
           disabled: tracked.length === 0,
-          onClick: () => downloadFile$2(
+          onClick: () => downloadFile$3(
             "ict-forward-tracker.json",
             JSON.stringify(
               {
@@ -62875,7 +62892,7 @@ function ForwardTrackerPage() {
             detail: "Signals after freeze timestamps"
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$2, { label: "Forward net", value: fmtR$2(forwardNetR) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$2, { label: "Forward net", value: fmtR$3(forwardNetR) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           Stat$2,
           {
@@ -62931,7 +62948,7 @@ function ForwardTrackerPage() {
                   "/",
                   item.open
                 ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$2(item.netR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$3(item.netR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$1(item.winRate) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: item.frozen.sourcePromotionGate }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -62956,13 +62973,13 @@ function ForwardTrackerPage() {
     ] })
   ] });
 }
-function fmtPrice(value) {
+function fmtPrice$1(value) {
   return value.toFixed(2);
 }
-function fmtR$1(value) {
+function fmtR$2(value) {
   return `${value.toFixed(2)}R`;
 }
-function downloadFile$1(name, content, type) {
+function downloadFile$2(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -63080,7 +63097,7 @@ function LiveCandidatePage() {
           type: "button",
           variant: "outline",
           disabled: !run.integrity.canRunBacktest,
-          onClick: () => downloadFile$1(
+          onClick: () => downloadFile$2(
             "ict-live-candidates.json",
             JSON.stringify(
               {
@@ -63191,19 +63208,19 @@ function LiveCandidatePage() {
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 grid gap-2 md:grid-cols-5", children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-mono text-xs", children: [
                   "Entry: ",
-                  fmtPrice(candidate.signal.entry)
+                  fmtPrice$1(candidate.signal.entry)
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-mono text-xs", children: [
                   "Stop: ",
-                  fmtPrice(candidate.signal.stop)
+                  fmtPrice$1(candidate.signal.stop)
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-mono text-xs", children: [
                   "TP1: ",
-                  fmtPrice(candidate.signal.tp1)
+                  fmtPrice$1(candidate.signal.tp1)
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-mono text-xs", children: [
                   "R: ",
-                  fmtR$1(candidate.signal.rMultipleToTp1)
+                  fmtR$2(candidate.signal.rMultipleToTp1)
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-mono text-xs", children: [
                   "Score: ",
@@ -63601,13 +63618,13 @@ function segmentBreakdown(trades, labelFor) {
     };
   }).sort((a2, b2) => b2.totalR - a2.totalR || b2.trades - a2.trades);
 }
-function fmtR(value) {
+function fmtR$1(value) {
   return `${value.toFixed(2)}R`;
 }
 function pct(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
-function downloadFile(name, content, type) {
+function downloadFile$1(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -63765,7 +63782,7 @@ function SampleExpansionPage() {
           type: "button",
           variant: "outline",
           disabled: !run.integrity.canRunBacktest,
-          onClick: () => downloadFile(
+          onClick: () => downloadFile$1(
             "ict-sample-expansion.json",
             JSON.stringify(
               {
@@ -63870,11 +63887,11 @@ function SampleExpansionPage() {
                   "x"
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.discovery.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(row.discovery.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$1(row.discovery.totalR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.validation.trades }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(row.validation.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$1(row.validation.totalR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct(row.validation.winRate) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(row.validation.maxDrawdownR) })
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$1(row.validation.maxDrawdownR) })
               ]
             },
             row.profile.id
@@ -63910,7 +63927,7 @@ function SampleExpansionPage() {
                   children: [
                     /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: segment.label }),
                     /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: segment.trades }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(segment.totalR) })
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$1(segment.totalR) })
                   ]
                 },
                 segment.label
@@ -63925,7 +63942,7 @@ function SampleExpansionPage() {
                   children: [
                     /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: segment.label }),
                     /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: segment.trades }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR(segment.totalR) })
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$1(segment.totalR) })
                   ]
                 },
                 segment.label
@@ -64023,6 +64040,298 @@ function SetupDetectorPage() {
     ] }) : signals.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-border bg-card p-6 text-sm text-muted-foreground", children: "Engine ran, but no accepted setups met the current threshold. Check Rejected Setups for the useful evidence." }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3", children: signals.map((signal) => /* @__PURE__ */ jsxRuntimeExports.jsx(SignalCard, { signal }, signal.id)) })
   ] });
 }
+function fmtPrice(value) {
+  return value === void 0 ? "n/a" : value.toFixed(2);
+}
+function fmtR(value) {
+  return value === void 0 ? "n/a" : `${value.toFixed(2)}R`;
+}
+function iso(value) {
+  if (value === void 0) return "n/a";
+  return new Date(Number(value)).toISOString();
+}
+function downloadFile(name, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+function warningValue(signal, prefix2) {
+  return signal.warnings.find((warning2) => warning2.startsWith(prefix2));
+}
+function buildTruthRows({
+  candles,
+  structures,
+  signals
+}) {
+  const h1ByKey = new Map(
+    candles.filter((candle) => candle.timeframe === Timeframe.H1).map((candle) => [
+      `${candle.symbol}-${Number(candle.timestamp)}`,
+      candle
+    ])
+  );
+  const structureByKey = new Map(
+    structures.map((structure) => [
+      `${structure.symbol}-${structure.timestamp}`,
+      structure
+    ])
+  );
+  return signals.map((signal) => {
+    const entryCandle = h1ByKey.get(`${signal.symbol}-${signal.timestamp}`);
+    const structure = structureByKey.get(
+      `${signal.symbol}-${signal.timestamp}`
+    );
+    const targetCandidates = signal.targetCandidates ?? [];
+    const selectedTargetInCandidates = targetCandidates.some(
+      (candidate) => candidate.model === signal.targetModel && Math.abs(candidate.price - signal.tp1) < 0.01
+    );
+    const weeklyLow = structure == null ? void 0 : structure.currentWeekLow;
+    const weeklyLowStopGap = weeklyLow === void 0 ? void 0 : signal.stop - weeklyLow;
+    const weeklyLowStopMatch = weeklyLow === void 0 || weeklyLow >= signal.entry ? "Not weekly-low stop" : Math.abs(signal.stop - weeklyLow) <= Math.max(signal.entry * 2e-4, 2) ? "Exact" : signal.stop > weeklyLow ? "Not weekly-low stop" : "Approximate";
+    return {
+      signal,
+      entryCandle,
+      structure,
+      checks: {
+        entryCandleFound: Boolean(entryCandle),
+        noLookaheadBoundary: signal.availableAt <= signal.timestamp,
+        structureKnownAtEntry: structure ? structure.timestamp <= signal.availableAt : false,
+        hasTargetCandidates: targetCandidates.length > 0,
+        selectedTargetInCandidates,
+        stopBelowEntry: signal.stop < signal.entry,
+        selectedTpAboveEntry: signal.tp1 > signal.entry
+      },
+      cocoFit: {
+        weeklyLow,
+        weeklyLowStopGap,
+        weeklyLowStopMatch,
+        selectedTarget: signal.targetModel ?? "unknown",
+        targetCandidates: targetCandidates.map(
+          (candidate) => `${candidate.model}: ${fmtPrice(candidate.price)} (${fmtR(
+            candidate.rMultiple
+          )})`
+        ).join(" | "),
+        stopModel: warningValue(signal, "Coco context:") ?? warningValue(signal, "Coco stop model") ?? "No explicit Coco stop model warning."
+      }
+    };
+  });
+}
+function CheckPill({ passed: passed2 }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: passed2 ? "text-chart-1" : "font-bold text-destructive", children: passed2 ? "PASS" : "FAIL" });
+}
+function TruthAuditPage() {
+  const { candles, run } = useStrategyWorkspace();
+  const rows = reactExports.useMemo(() => {
+    const signals = [...run.acceptedSignals, ...run.rejectedSignals].filter((signal) => signal.accepted || signal.score >= 5).sort((a2, b2) => {
+      if (a2.accepted !== b2.accepted) return a2.accepted ? -1 : 1;
+      return b2.score - a2.score || b2.timestamp - a2.timestamp;
+    }).slice(0, 80);
+    return buildTruthRows({
+      candles,
+      structures: run.marketStructure,
+      signals
+    });
+  }, [candles, run.acceptedSignals, run.rejectedSignals, run.marketStructure]);
+  const failedRows = rows.filter(
+    (row) => Object.values(row.checks).some((passed2) => !passed2)
+  );
+  const weeklyLowExact = rows.filter(
+    (row) => row.cocoFit.weeklyLowStopMatch === "Exact"
+  ).length;
+  const weeklyLowApprox = rows.filter(
+    (row) => row.cocoFit.weeklyLowStopMatch === "Approximate"
+  ).length;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "truth-audit.page", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-display text-2xl font-bold", children: "Truth Audit" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "This page audits whether generated setups can be traced back to real candles, known-at-entry structure, explicit target candidates, and Coco-style stop/target context." })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Button,
+        {
+          type: "button",
+          variant: "outline",
+          disabled: !run.integrity.canRunBacktest,
+          onClick: () => downloadFile(
+            "ict-truth-audit.json",
+            JSON.stringify(
+              {
+                generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+                integrity: run.integrity,
+                summary: {
+                  auditedRows: rows.length,
+                  failedRows: failedRows.length,
+                  weeklyLowExact,
+                  weeklyLowApprox
+                },
+                rows: rows.map((row) => ({
+                  timestamp: iso(row.signal.timestamp),
+                  symbol: row.signal.symbol,
+                  accepted: row.signal.accepted,
+                  score: row.signal.score,
+                  setupType: row.signal.setupType,
+                  entry: row.signal.entry,
+                  stop: row.signal.stop,
+                  tp1: row.signal.tp1,
+                  targetModel: row.signal.targetModel,
+                  checks: row.checks,
+                  cocoFit: row.cocoFit,
+                  entryCandle: row.entryCandle ? {
+                    timestamp: iso(row.entryCandle.timestamp),
+                    open: row.entryCandle.open,
+                    high: row.entryCandle.high,
+                    low: row.entryCandle.low,
+                    close: row.entryCandle.close
+                  } : void 0
+                }))
+              },
+              null,
+              2
+            ),
+            "application/json"
+          ),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "mr-2 h-4 w-4" }),
+            "Export Truth Audit"
+          ]
+        }
+      )
+    ] }),
+    !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Truth Audit is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: "Audited rows" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: rows.length })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: "Failed trace checks" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: failedRows.length })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: "Exact weekly-low stops" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: weeklyLowExact })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: "Approx weekly-low stops" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: weeklyLowApprox })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-destructive/40 bg-destructive/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ShieldAlert, { className: "mt-0.5 h-4 w-4 text-destructive" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Important QA Meaning" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "If weekly-low stops are not exact, the current engine is not fully modeling Coco's SL rule yet. That is not a pass or fail on the strategy; it tells us the rule needs a stricter stop/target module before live-readiness can rise." })
+        ] })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(FileSearch, { className: "h-4 w-4 text-primary" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Traceable Setup Rows" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1500px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Time" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Index" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Setup" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "State" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Entry" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Stop" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "TP1" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "TP model" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Trace" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Weekly low stop" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Known targets" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: rows.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "tr",
+            {
+              className: "border-b border-border/40 align-top",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: iso(row.signal.timestamp) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.signal.symbol }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.signal.setupType }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2", children: [
+                  row.signal.accepted ? "Accepted" : "Rejected",
+                  " ",
+                  row.signal.score,
+                  "/7"
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPrice(row.signal.entry) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPrice(row.signal.stop) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPrice(row.signal.tp1) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.cocoFit.selectedTarget }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "max-w-[250px] py-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+                    "Candle:",
+                    " ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(CheckPill, { passed: row.checks.entryCandleFound })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+                    "No lookahead:",
+                    " ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      CheckPill,
+                      {
+                        passed: row.checks.noLookaheadBoundary
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+                    "Structure:",
+                    " ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      CheckPill,
+                      {
+                        passed: row.checks.structureKnownAtEntry
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+                    "Target list:",
+                    " ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      CheckPill,
+                      {
+                        passed: row.checks.hasTargetCandidates
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+                    "TP matched:",
+                    " ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      CheckPill,
+                      {
+                        passed: row.checks.selectedTargetInCandidates
+                      }
+                    )
+                  ] })
+                ] }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "max-w-[230px] py-2", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: row.cocoFit.weeklyLowStopMatch }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground", children: [
+                    "Weekly low ",
+                    fmtPrice(row.cocoFit.weeklyLow)
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground", children: [
+                    "Stop gap ",
+                    fmtPrice(row.cocoFit.weeklyLowStopGap)
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "max-w-[360px] py-2 text-muted-foreground", children: row.cocoFit.targetCandidates || "No target candidates" })
+              ]
+            },
+            `${row.signal.id}-${row.signal.accepted}`
+          )) })
+        ] }) })
+      ] })
+    ] })
+  ] });
+}
 const rootRoute = createRootRoute({ component: Layout });
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -64045,6 +64354,11 @@ const auditRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/audit",
   component: SetupDetectorPage
+});
+const truthAuditRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/truth-audit",
+  component: TruthAuditPage
 });
 const rejectedRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -64106,6 +64420,7 @@ const tree = rootRoute.addChildren([
   dataRoute,
   healthRoute,
   auditRoute,
+  truthAuditRoute,
   rejectedRoute,
   discoveryRoute,
   experimentRoute,
