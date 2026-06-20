@@ -60428,6 +60428,107 @@ function ChartPage() {
     ) }) })
   ] });
 }
+const STORAGE_KEY = "ict-forward-tracker-frozen-v1";
+function hashText(value) {
+  let hash = 0;
+  for (let index2 = 0; index2 < value.length; index2 += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index2);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(36);
+}
+function ruleHashForRow(row) {
+  return hashText(
+    [
+      row.variant.setup,
+      row.variant.ruleFamily,
+      row.variant.symbolScope,
+      row.variant.sessionScope,
+      row.variant.targetModel,
+      row.variant.description
+    ].join("|")
+  );
+}
+function freezeVariant(row, discoveryEndTimestamp) {
+  return {
+    id: `${row.variant.id}-${Date.now()}`,
+    variantId: row.variant.id,
+    sourceType: "experiment",
+    ruleFamily: row.variant.ruleFamily,
+    setup: row.variant.setup,
+    symbolScope: row.variant.symbolScope,
+    sessionScope: row.variant.sessionScope,
+    targetModel: row.variant.targetModel,
+    description: row.variant.description,
+    frozenAt: Date.now(),
+    discoveryEndTimestamp,
+    sourceValidationTrades: row.validation.trades,
+    sourceValidationTotalR: row.validation.totalR,
+    sourcePromotionGate: row.promotionGate,
+    ruleHash: ruleHashForRow(row)
+  };
+}
+function freezeCocoPromotionCandidate({
+  id,
+  label,
+  rule,
+  symbolScope,
+  sessionScope,
+  sourceValidationTrades,
+  sourceValidationTotalR,
+  sourcePromotionGate,
+  discoveryEndTimestamp
+}) {
+  const variantId = `coco-risk-${id}`;
+  const frozenAt = Date.now();
+  const ruleHash = hashText(
+    [
+      "Coco risk promotion",
+      label,
+      symbolScope,
+      sessionScope,
+      "Coco exact weekly low stop",
+      "old Sunday level",
+      rule
+    ].join("|")
+  );
+  return {
+    id: `${variantId}-${frozenAt}`,
+    variantId,
+    sourceType: "coco-risk-promotion",
+    promotionCandidateId: id,
+    ruleFamily: "Coco risk promotion",
+    setup: label,
+    symbolScope,
+    sessionScope,
+    targetModel: "old Sunday level",
+    stopModel: "Coco exact weekly low stop",
+    description: rule,
+    frozenAt,
+    discoveryEndTimestamp,
+    sourceValidationTrades,
+    sourceValidationTotalR,
+    sourcePromotionGate,
+    ruleHash
+  };
+}
+function loadFrozenVariants() {
+  if (typeof window === "undefined") return [];
+  const raw = window.localStorage.getItem(STORAGE_KEY);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (item) => item && typeof item === "object" && typeof item.id === "string" && typeof item.variantId === "string" && typeof item.frozenAt === "number"
+    );
+  } catch {
+    return [];
+  }
+}
+function saveFrozenVariants(variants) {
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(variants));
+}
 const RISK_MODELS = [
   {
     id: "engine-selected",
@@ -60490,7 +60591,7 @@ function downloadFile$7(name, content, type) {
   link.click();
   URL.revokeObjectURL(url);
 }
-function h1BySymbol$2(candles) {
+function h1BySymbol$3(candles) {
   const groups = /* @__PURE__ */ new Map();
   for (const candle of candles) {
     if (candle.timeframe !== Timeframe.H1) continue;
@@ -60508,7 +60609,7 @@ function selectedTarget(signal) {
     (candidate) => candidate.model === signal.targetModel && Math.abs(candidate.price - signal.tp1) < 0.01
   );
 }
-function weeklyLowStop(signal) {
+function weeklyLowStop$1(signal) {
   var _a2;
   return (_a2 = signal.stopCandidates) == null ? void 0 : _a2.find(
     (candidate) => candidate.model === "Coco exact weekly low stop"
@@ -60539,7 +60640,7 @@ function targetForModel(signal, model, stopPrice) {
 }
 function simulateRiskTrade(signal, model, h1) {
   var _a2;
-  const stopPrice = model.id === "engine-selected" ? signal.stop : (_a2 = weeklyLowStop(signal)) == null ? void 0 : _a2.price;
+  const stopPrice = model.id === "engine-selected" ? signal.stop : (_a2 = weeklyLowStop$1(signal)) == null ? void 0 : _a2.price;
   if (stopPrice === void 0 || stopPrice >= signal.entry) return void 0;
   const target = targetForModel(signal, model, stopPrice);
   if (!target || target.price <= signal.entry) return void 0;
@@ -60634,30 +60735,40 @@ function promotionCandidatesFor(trades, splitTimestamp) {
       id: "htf-all",
       label: "HTF old-Sunday, all indices",
       rule: "Setup is HTF Bullish Continuation; stop is weekly low; TP is old Sunday.",
+      symbolScope: "All",
+      sessionScope: "All",
       filter: (trade) => trade.signal.setupType === "HTF Bullish Continuation"
     },
     {
       id: "htf-nas-us500",
       label: "HTF old-Sunday, NAS100 + US500",
       rule: "Same HTF old-Sunday model, excluding US30 after subgroup underperformance.",
+      symbolScope: "NAS100, US500",
+      sessionScope: "All",
       filter: (trade) => trade.signal.setupType === "HTF Bullish Continuation" && (trade.signal.symbol === "NAS100" || trade.signal.symbol === "US500")
     },
     {
       id: "htf-us500",
       label: "HTF old-Sunday, US500 only",
       rule: "US500-only version of the HTF old-Sunday candidate.",
+      symbolScope: "US500",
+      sessionScope: "All",
       filter: (trade) => trade.signal.setupType === "HTF Bullish Continuation" && trade.signal.symbol === "US500"
     },
     {
       id: "htf-nas100",
       label: "HTF old-Sunday, NAS100 only",
       rule: "NAS100-only version of the HTF old-Sunday candidate.",
+      symbolScope: "NAS100",
+      sessionScope: "All",
       filter: (trade) => trade.signal.setupType === "HTF Bullish Continuation" && trade.signal.symbol === "NAS100"
     },
     {
       id: "htf-new-york",
       label: "HTF old-Sunday, New York only",
       rule: "HTF old-Sunday signals whose entry candle appears in the UTC New York session bucket.",
+      symbolScope: "All",
+      sessionScope: "New York",
       filter: (trade) => trade.signal.setupType === "HTF Bullish Continuation" && sessionFor$1(trade.signal.timestamp) === "New York"
     }
   ];
@@ -60668,6 +60779,8 @@ function promotionCandidatesFor(trades, splitTimestamp) {
       id: candidate.id,
       label: candidate.label,
       rule: candidate.rule,
+      symbolScope: candidate.symbolScope,
+      sessionScope: candidate.sessionScope,
       ...stats,
       decision: candidateDecision(stats.validation)
     };
@@ -60680,7 +60793,7 @@ function buildRiskRows({
   candles,
   splitTimestamp
 }) {
-  const candlesBySymbol = h1BySymbol$2(candles);
+  const candlesBySymbol = h1BySymbol$3(candles);
   const candidates = signals.filter(
     (signal) => !signal.blockers.some((blocker) => blocker.passed) && (signal.accepted || signal.score >= 5) && signal.entry > 0
   );
@@ -60713,6 +60826,9 @@ function Stat$7({
 }
 function CocoRiskLabPage() {
   const { candles, run } = useStrategyWorkspace();
+  const [frozenVariants, setFrozenVariants] = reactExports.useState(
+    () => loadFrozenVariants()
+  );
   const signals = reactExports.useMemo(
     () => [...run.acceptedSignals, ...run.rejectedSignals],
     [run.acceptedSignals, run.rejectedSignals]
@@ -60783,6 +60899,32 @@ function CocoRiskLabPage() {
     ) : [],
     [best, run.validation.discoveryEndTimestamp]
   );
+  const frozenCandidateIds = reactExports.useMemo(
+    () => new Set(
+      frozenVariants.filter((variant) => variant.sourceType === "coco-risk-promotion").map((variant) => variant.promotionCandidateId)
+    ),
+    [frozenVariants]
+  );
+  function freezePromotionCandidate(candidate) {
+    if (candidate.decision !== "Watch" || frozenCandidateIds.has(candidate.id))
+      return;
+    const next = [
+      ...frozenVariants,
+      freezeCocoPromotionCandidate({
+        id: candidate.id,
+        label: candidate.label,
+        rule: candidate.rule,
+        symbolScope: candidate.symbolScope,
+        sessionScope: candidate.sessionScope,
+        sourceValidationTrades: candidate.validation.trades,
+        sourceValidationTotalR: candidate.validation.totalR,
+        sourcePromotionGate: candidate.decision,
+        discoveryEndTimestamp: run.validation.discoveryEndTimestamp
+      })
+    ];
+    setFrozenVariants(next);
+    saveFrozenVariants(next);
+  }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "coco-risk.page", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
@@ -60837,6 +60979,8 @@ function CocoRiskLabPage() {
                   id: candidate.id,
                   label: candidate.label,
                   rule: candidate.rule,
+                  symbolScope: candidate.symbolScope,
+                  sessionScope: candidate.sessionScope,
                   decision: candidate.decision,
                   all: candidate.all,
                   discovery: candidate.discovery,
@@ -60985,7 +61129,8 @@ function CocoRiskLabPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val win" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val avg" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val DD" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Rule" })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Rule" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Action" })
           ] }) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: promotionCandidates.map((candidate) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
             "tr",
@@ -61001,7 +61146,21 @@ function CocoRiskLabPage() {
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$5(candidate.validation.winRate) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(candidate.validation.avgR) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(candidate.validation.maxDrawdownR) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "max-w-[360px] py-2 text-muted-foreground", children: candidate.rule })
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "max-w-[360px] py-2 text-muted-foreground", children: candidate.rule }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  Button,
+                  {
+                    type: "button",
+                    variant: "outline",
+                    size: "sm",
+                    disabled: candidate.decision !== "Watch" || frozenCandidateIds.has(candidate.id),
+                    onClick: () => freezePromotionCandidate(candidate),
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(Lock, { className: "mr-2 h-3.5 w-3.5" }),
+                      frozenCandidateIds.has(candidate.id) ? "Frozen" : "Freeze"
+                    ]
+                  }
+                ) })
               ]
             },
             candidate.id
@@ -61511,62 +61670,6 @@ function DataUploadPage() {
     ] })
   ] });
 }
-const STORAGE_KEY = "ict-forward-tracker-frozen-v1";
-function hashText(value) {
-  let hash = 0;
-  for (let index2 = 0; index2 < value.length; index2 += 1) {
-    hash = (hash << 5) - hash + value.charCodeAt(index2);
-    hash |= 0;
-  }
-  return Math.abs(hash).toString(36);
-}
-function ruleHashForRow(row) {
-  return hashText(
-    [
-      row.variant.setup,
-      row.variant.ruleFamily,
-      row.variant.symbolScope,
-      row.variant.sessionScope,
-      row.variant.targetModel,
-      row.variant.description
-    ].join("|")
-  );
-}
-function freezeVariant(row, discoveryEndTimestamp) {
-  return {
-    id: `${row.variant.id}-${Date.now()}`,
-    variantId: row.variant.id,
-    ruleFamily: row.variant.ruleFamily,
-    setup: row.variant.setup,
-    symbolScope: row.variant.symbolScope,
-    sessionScope: row.variant.sessionScope,
-    targetModel: row.variant.targetModel,
-    description: row.variant.description,
-    frozenAt: Date.now(),
-    discoveryEndTimestamp,
-    sourceValidationTrades: row.validation.trades,
-    sourceValidationTotalR: row.validation.totalR,
-    sourcePromotionGate: row.promotionGate,
-    ruleHash: ruleHashForRow(row)
-  };
-}
-function loadFrozenVariants() {
-  if (typeof window === "undefined") return [];
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (item) => item && typeof item === "object" && typeof item.id === "string" && typeof item.variantId === "string" && typeof item.frozenAt === "number"
-    );
-  } catch {
-    return [];
-  }
-}
-function saveFrozenVariants(variants) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(variants));
-}
 const SYMBOL_SCOPES = [
   "All",
   "NAS100",
@@ -61734,7 +61837,7 @@ function Stat$6({
     detail && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: detail })
   ] });
 }
-function h1BySymbol$1(candles) {
+function h1BySymbol$2(candles) {
   const groups = /* @__PURE__ */ new Map();
   for (const candle of candles) {
     if (candle.timeframe !== Timeframe.H1) continue;
@@ -61815,7 +61918,7 @@ function buildExperimentRows({
   candles,
   splitTimestamp
 }) {
-  const candlesBySymbol = h1BySymbol$1(candles);
+  const candlesBySymbol = h1BySymbol$2(candles);
   return VARIANTS.map((variant) => {
     const trades = signals.flatMap((signal) => {
       if (signal.blockers.some((blocker) => blocker.passed)) return [];
@@ -63419,6 +63522,80 @@ function forwardTradesFor(frozen, row) {
   if (!row) return [];
   return row.trades.filter((trade) => trade.signal.timestamp > frozen.frozenAt);
 }
+function h1BySymbol$1(candles) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const candle of candles) {
+    if (candle.timeframe !== Timeframe.H1) continue;
+    const group = groups.get(candle.symbol) ?? [];
+    group.push(candle);
+    groups.set(candle.symbol, group);
+  }
+  for (const group of groups.values()) {
+    group.sort((a2, b2) => Number(a2.timestamp) - Number(b2.timestamp));
+  }
+  return groups;
+}
+function weeklyLowStop(signal) {
+  var _a2;
+  return (_a2 = signal.stopCandidates) == null ? void 0 : _a2.find(
+    (candidate) => candidate.model === "Coco exact weekly low stop"
+  );
+}
+function oldSundayTarget(signal, stopPrice) {
+  return (signal.targetCandidates ?? []).map((candidate) => ({
+    ...candidate,
+    rMultiple: (candidate.price - signal.entry) / (signal.entry - stopPrice)
+  })).find(
+    (candidate) => candidate.model === "old Sunday level" && candidate.price > signal.entry && candidate.rMultiple > 0
+  );
+}
+function symbolMatchesFrozen(signal, frozen) {
+  if (frozen.symbolScope === "All") return true;
+  return frozen.symbolScope.split(",").map((symbol) => symbol.trim()).includes(signal.symbol);
+}
+function signalMatchesCocoFrozen(signal, frozen) {
+  if (frozen.sourceType !== "coco-risk-promotion") return false;
+  if (signal.setupType !== "HTF Bullish Continuation") return false;
+  if (signal.blockers.some((blocker) => blocker.passed)) return false;
+  if (!symbolMatchesFrozen(signal, frozen)) return false;
+  if (frozen.sessionScope !== "All" && sessionFor(signal.timestamp) !== frozen.sessionScope)
+    return false;
+  return true;
+}
+function simulateCocoTrade(signal, target, stopPrice, candles) {
+  const future = candles.filter(
+    (candle) => Number(candle.timestamp) > signal.timestamp
+  );
+  const exit = future.find(
+    (candle) => candle.low <= stopPrice || candle.high >= target.price
+  );
+  const ambiguous = !!exit && exit.low <= stopPrice && exit.high >= target.price;
+  const won = !!exit && !ambiguous && exit.high >= target.price;
+  return {
+    signal,
+    target,
+    closed: !!exit,
+    won,
+    rMultiple: exit ? won ? target.rMultiple : -1 : 0
+  };
+}
+function cocoForwardTradesFor({
+  frozen,
+  signals,
+  candles
+}) {
+  const candlesBySymbol = h1BySymbol$1(candles);
+  return signals.flatMap((signal) => {
+    if (signal.timestamp <= frozen.frozenAt) return [];
+    if (!signalMatchesCocoFrozen(signal, frozen)) return [];
+    const stop = weeklyLowStop(signal);
+    if (!stop || stop.price >= signal.entry) return [];
+    const target = oldSundayTarget(signal, stop.price);
+    if (!target) return [];
+    const h1 = candlesBySymbol.get(signal.symbol) ?? [];
+    return [simulateCocoTrade(signal, target, stop.price, h1)];
+  });
+}
 function Stat$2({
   label,
   value,
@@ -63453,7 +63630,7 @@ function ForwardTrackerPage() {
   );
   const tracked = frozenVariants.map((frozen) => {
     const row = rowById.get(frozen.variantId);
-    const forwardTrades = forwardTradesFor(frozen, row);
+    const forwardTrades = frozen.sourceType === "coco-risk-promotion" ? cocoForwardTradesFor({ frozen, signals, candles }) : forwardTradesFor(frozen, row);
     const closed = forwardTrades.filter((trade) => trade.closed);
     const wins = closed.filter((trade) => trade.won).length;
     const losses = closed.length - wins;
@@ -63502,7 +63679,7 @@ function ForwardTrackerPage() {
                 integrity: run.integrity,
                 tracked: tracked.map((item) => ({
                   ...item.frozen,
-                  currentRulePresent: Boolean(item.row),
+                  currentRulePresent: item.frozen.sourceType === "coco-risk-promotion" || Boolean(item.row),
                   forwardTrades: item.forwardTrades.map((trade) => ({
                     timestamp: new Date(trade.signal.timestamp).toISOString(),
                     symbol: trade.signal.symbol,

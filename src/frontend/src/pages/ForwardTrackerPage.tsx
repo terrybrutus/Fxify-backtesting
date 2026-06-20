@@ -7,8 +7,12 @@ import {
 } from "@/lib/forwardTracker";
 import {
   type ExperimentRow,
+  type ExperimentTrade,
   buildExperimentRows,
+  sessionFor,
 } from "@/pages/ExperimentLabPage";
+import type { Candle, SignalAudit, TargetCandidate } from "@/types/strategy";
+import { Timeframe } from "@/types/strategy";
 import { Download, Lock, ShieldAlert, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -37,6 +41,107 @@ function downloadFile(name: string, content: string, type: string) {
 function forwardTradesFor(frozen: FrozenVariant, row?: ExperimentRow) {
   if (!row) return [];
   return row.trades.filter((trade) => trade.signal.timestamp > frozen.frozenAt);
+}
+
+function h1BySymbol(candles: Candle[]) {
+  const groups = new Map<string, Candle[]>();
+  for (const candle of candles) {
+    if (candle.timeframe !== Timeframe.H1) continue;
+    const group = groups.get(candle.symbol) ?? [];
+    group.push(candle);
+    groups.set(candle.symbol, group);
+  }
+  for (const group of groups.values()) {
+    group.sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
+  }
+  return groups;
+}
+
+function weeklyLowStop(signal: SignalAudit) {
+  return signal.stopCandidates?.find(
+    (candidate) => candidate.model === "Coco exact weekly low stop",
+  );
+}
+
+function oldSundayTarget(signal: SignalAudit, stopPrice: number) {
+  return (signal.targetCandidates ?? [])
+    .map((candidate) => ({
+      ...candidate,
+      rMultiple: (candidate.price - signal.entry) / (signal.entry - stopPrice),
+    }))
+    .find(
+      (candidate) =>
+        candidate.model === "old Sunday level" &&
+        candidate.price > signal.entry &&
+        candidate.rMultiple > 0,
+    );
+}
+
+function symbolMatchesFrozen(signal: SignalAudit, frozen: FrozenVariant) {
+  if (frozen.symbolScope === "All") return true;
+  return frozen.symbolScope
+    .split(",")
+    .map((symbol) => symbol.trim())
+    .includes(signal.symbol);
+}
+
+function signalMatchesCocoFrozen(signal: SignalAudit, frozen: FrozenVariant) {
+  if (frozen.sourceType !== "coco-risk-promotion") return false;
+  if (signal.setupType !== "HTF Bullish Continuation") return false;
+  if (signal.blockers.some((blocker) => blocker.passed)) return false;
+  if (!symbolMatchesFrozen(signal, frozen)) return false;
+  if (
+    frozen.sessionScope !== "All" &&
+    sessionFor(signal.timestamp) !== frozen.sessionScope
+  )
+    return false;
+  return true;
+}
+
+function simulateCocoTrade(
+  signal: SignalAudit,
+  target: TargetCandidate,
+  stopPrice: number,
+  candles: Candle[],
+): ExperimentTrade {
+  const future = candles.filter(
+    (candle) => Number(candle.timestamp) > signal.timestamp,
+  );
+  const exit = future.find(
+    (candle) => candle.low <= stopPrice || candle.high >= target.price,
+  );
+  const ambiguous =
+    !!exit && exit.low <= stopPrice && exit.high >= target.price;
+  const won = !!exit && !ambiguous && exit.high >= target.price;
+  return {
+    signal,
+    target,
+    closed: !!exit,
+    won,
+    rMultiple: exit ? (won ? target.rMultiple : -1) : 0,
+  };
+}
+
+function cocoForwardTradesFor({
+  frozen,
+  signals,
+  candles,
+}: {
+  frozen: FrozenVariant;
+  signals: SignalAudit[];
+  candles: Candle[];
+}) {
+  const candlesBySymbol = h1BySymbol(candles);
+  return signals.flatMap((signal) => {
+    if (signal.timestamp <= frozen.frozenAt) return [];
+    if (!signalMatchesCocoFrozen(signal, frozen)) return [];
+    const stop = weeklyLowStop(signal);
+    if (!stop || stop.price >= signal.entry) return [];
+    const target = oldSundayTarget(signal, stop.price);
+    if (!target) return [];
+    const h1 = candlesBySymbol.get(signal.symbol) ?? [];
+    return [simulateCocoTrade(signal, target, stop.price, h1)];
+  });
 }
 
 function Stat({
@@ -83,7 +188,10 @@ export default function ForwardTrackerPage() {
   );
   const tracked = frozenVariants.map((frozen) => {
     const row = rowById.get(frozen.variantId);
-    const forwardTrades = forwardTradesFor(frozen, row);
+    const forwardTrades =
+      frozen.sourceType === "coco-risk-promotion"
+        ? cocoForwardTradesFor({ frozen, signals, candles })
+        : forwardTradesFor(frozen, row);
     const closed = forwardTrades.filter((trade) => trade.closed);
     const wins = closed.filter((trade) => trade.won).length;
     const losses = closed.length - wins;
@@ -139,7 +247,9 @@ export default function ForwardTrackerPage() {
                   integrity: run.integrity,
                   tracked: tracked.map((item) => ({
                     ...item.frozen,
-                    currentRulePresent: Boolean(item.row),
+                    currentRulePresent:
+                      item.frozen.sourceType === "coco-risk-promotion" ||
+                      Boolean(item.row),
                     forwardTrades: item.forwardTrades.map((trade) => ({
                       timestamp: new Date(trade.signal.timestamp).toISOString(),
                       symbol: trade.signal.symbol,

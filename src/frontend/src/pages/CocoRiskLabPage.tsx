@@ -1,9 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { useStrategyWorkspace } from "@/hooks/useStrategyWorkspace";
+import {
+  freezeCocoPromotionCandidate,
+  loadFrozenVariants,
+  saveFrozenVariants,
+} from "@/lib/forwardTracker";
 import type { Candle, SignalAudit, TargetCandidate } from "@/types/strategy";
 import { Timeframe } from "@/types/strategy";
-import { Download, Scale } from "lucide-react";
-import { useMemo } from "react";
+import { Download, Lock, Scale } from "lucide-react";
+import { useMemo, useState } from "react";
 
 type RiskModelId =
   | "engine-selected"
@@ -71,6 +76,8 @@ type PromotionCandidate = {
   id: string;
   label: string;
   rule: string;
+  symbolScope: string;
+  sessionScope: string;
   all: RiskStats;
   discovery: RiskStats;
   validation: RiskStats;
@@ -333,6 +340,8 @@ function promotionCandidatesFor(
       id: "htf-all",
       label: "HTF old-Sunday, all indices",
       rule: "Setup is HTF Bullish Continuation; stop is weekly low; TP is old Sunday.",
+      symbolScope: "All",
+      sessionScope: "All",
       filter: (trade: RiskTrade) =>
         trade.signal.setupType === "HTF Bullish Continuation",
     },
@@ -340,6 +349,8 @@ function promotionCandidatesFor(
       id: "htf-nas-us500",
       label: "HTF old-Sunday, NAS100 + US500",
       rule: "Same HTF old-Sunday model, excluding US30 after subgroup underperformance.",
+      symbolScope: "NAS100, US500",
+      sessionScope: "All",
       filter: (trade: RiskTrade) =>
         trade.signal.setupType === "HTF Bullish Continuation" &&
         (trade.signal.symbol === "NAS100" || trade.signal.symbol === "US500"),
@@ -348,6 +359,8 @@ function promotionCandidatesFor(
       id: "htf-us500",
       label: "HTF old-Sunday, US500 only",
       rule: "US500-only version of the HTF old-Sunday candidate.",
+      symbolScope: "US500",
+      sessionScope: "All",
       filter: (trade: RiskTrade) =>
         trade.signal.setupType === "HTF Bullish Continuation" &&
         trade.signal.symbol === "US500",
@@ -356,6 +369,8 @@ function promotionCandidatesFor(
       id: "htf-nas100",
       label: "HTF old-Sunday, NAS100 only",
       rule: "NAS100-only version of the HTF old-Sunday candidate.",
+      symbolScope: "NAS100",
+      sessionScope: "All",
       filter: (trade: RiskTrade) =>
         trade.signal.setupType === "HTF Bullish Continuation" &&
         trade.signal.symbol === "NAS100",
@@ -364,6 +379,8 @@ function promotionCandidatesFor(
       id: "htf-new-york",
       label: "HTF old-Sunday, New York only",
       rule: "HTF old-Sunday signals whose entry candle appears in the UTC New York session bucket.",
+      symbolScope: "All",
+      sessionScope: "New York",
       filter: (trade: RiskTrade) =>
         trade.signal.setupType === "HTF Bullish Continuation" &&
         sessionFor(trade.signal.timestamp) === "New York",
@@ -378,6 +395,8 @@ function promotionCandidatesFor(
         id: candidate.id,
         label: candidate.label,
         rule: candidate.rule,
+        symbolScope: candidate.symbolScope,
+        sessionScope: candidate.sessionScope,
         ...stats,
         decision: candidateDecision(stats.validation),
       };
@@ -447,6 +466,9 @@ function Stat({
 
 export default function CocoRiskLabPage() {
   const { candles, run } = useStrategyWorkspace();
+  const [frozenVariants, setFrozenVariants] = useState(() =>
+    loadFrozenVariants(),
+  );
   const signals = useMemo(
     () => [...run.acceptedSignals, ...run.rejectedSignals],
     [run.acceptedSignals, run.rejectedSignals],
@@ -519,6 +541,36 @@ export default function CocoRiskLabPage() {
         : [],
     [best, run.validation.discoveryEndTimestamp],
   );
+  const frozenCandidateIds = useMemo(
+    () =>
+      new Set(
+        frozenVariants
+          .filter((variant) => variant.sourceType === "coco-risk-promotion")
+          .map((variant) => variant.promotionCandidateId),
+      ),
+    [frozenVariants],
+  );
+
+  function freezePromotionCandidate(candidate: PromotionCandidate) {
+    if (candidate.decision !== "Watch" || frozenCandidateIds.has(candidate.id))
+      return;
+    const next = [
+      ...frozenVariants,
+      freezeCocoPromotionCandidate({
+        id: candidate.id,
+        label: candidate.label,
+        rule: candidate.rule,
+        symbolScope: candidate.symbolScope,
+        sessionScope: candidate.sessionScope,
+        sourceValidationTrades: candidate.validation.trades,
+        sourceValidationTotalR: candidate.validation.totalR,
+        sourcePromotionGate: candidate.decision,
+        discoveryEndTimestamp: run.validation.discoveryEndTimestamp,
+      }),
+    ];
+    setFrozenVariants(next);
+    saveFrozenVariants(next);
+  }
 
   return (
     <div className="space-y-5 p-4 md:p-6" data-ocid="coco-risk.page">
@@ -584,6 +636,8 @@ export default function CocoRiskLabPage() {
                     id: candidate.id,
                     label: candidate.label,
                     rule: candidate.rule,
+                    symbolScope: candidate.symbolScope,
+                    sessionScope: candidate.sessionScope,
                     decision: candidate.decision,
                     all: candidate.all,
                     discovery: candidate.discovery,
@@ -808,6 +862,7 @@ export default function CocoRiskLabPage() {
                       <th className="py-2 text-right">Val avg</th>
                       <th className="py-2 text-right">Val DD</th>
                       <th className="py-2 text-left">Rule</th>
+                      <th className="py-2 text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -841,6 +896,23 @@ export default function CocoRiskLabPage() {
                         </td>
                         <td className="max-w-[360px] py-2 text-muted-foreground">
                           {candidate.rule}
+                        </td>
+                        <td className="py-2 text-right">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={
+                              candidate.decision !== "Watch" ||
+                              frozenCandidateIds.has(candidate.id)
+                            }
+                            onClick={() => freezePromotionCandidate(candidate)}
+                          >
+                            <Lock className="mr-2 h-3.5 w-3.5" />
+                            {frozenCandidateIds.has(candidate.id)
+                              ? "Frozen"
+                              : "Freeze"}
+                          </Button>
                         </td>
                       </tr>
                     ))}

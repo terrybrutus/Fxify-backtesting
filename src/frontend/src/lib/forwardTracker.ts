@@ -3,11 +3,14 @@ import type { ExperimentRow } from "@/pages/ExperimentLabPage";
 export type FrozenVariant = {
   id: string;
   variantId: string;
+  sourceType?: "experiment" | "coco-risk-promotion";
+  promotionCandidateId?: string;
   ruleFamily: string;
   setup: string;
   symbolScope: string;
   sessionScope: string;
   targetModel: string;
+  stopModel?: string;
   description: string;
   frozenAt: number;
   discoveryEndTimestamp?: number;
@@ -48,6 +51,7 @@ export function freezeVariant(
   return {
     id: `${row.variant.id}-${Date.now()}`,
     variantId: row.variant.id,
+    sourceType: "experiment",
     ruleFamily: row.variant.ruleFamily,
     setup: row.variant.setup,
     symbolScope: row.variant.symbolScope,
@@ -60,6 +64,61 @@ export function freezeVariant(
     sourceValidationTotalR: row.validation.totalR,
     sourcePromotionGate: row.promotionGate,
     ruleHash: ruleHashForRow(row),
+  };
+}
+
+export function freezeCocoPromotionCandidate({
+  id,
+  label,
+  rule,
+  symbolScope,
+  sessionScope,
+  sourceValidationTrades,
+  sourceValidationTotalR,
+  sourcePromotionGate,
+  discoveryEndTimestamp,
+}: {
+  id: string;
+  label: string;
+  rule: string;
+  symbolScope: string;
+  sessionScope: string;
+  sourceValidationTrades: number;
+  sourceValidationTotalR: number;
+  sourcePromotionGate: string;
+  discoveryEndTimestamp?: number;
+}): FrozenVariant {
+  const variantId = `coco-risk-${id}`;
+  const frozenAt = Date.now();
+  const ruleHash = hashText(
+    [
+      "Coco risk promotion",
+      label,
+      symbolScope,
+      sessionScope,
+      "Coco exact weekly low stop",
+      "old Sunday level",
+      rule,
+    ].join("|"),
+  );
+  return {
+    id: `${variantId}-${frozenAt}`,
+    variantId,
+    sourceType: "coco-risk-promotion",
+    promotionCandidateId: id,
+    ruleFamily: "Coco risk promotion",
+    setup: label,
+    symbolScope,
+    sessionScope,
+    targetModel: "old Sunday level",
+    stopModel: "Coco exact weekly low stop",
+    description: rule,
+    frozenAt,
+    discoveryEndTimestamp,
+    sourceValidationTrades,
+    sourceValidationTotalR,
+    sourcePromotionGate,
+    ruleHash,
   };
 }
 
