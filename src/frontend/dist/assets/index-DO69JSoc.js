@@ -60623,6 +60623,58 @@ function breakdownFor(trades, splitTimestamp, labelFor) {
     (a2, b2) => b2.validation.totalR - a2.validation.totalR || b2.validation.trades - a2.validation.trades
   );
 }
+function candidateDecision(stats) {
+  if (stats.trades < 10) return "Too thin";
+  if (stats.totalR <= 0 || stats.avgR <= 0) return "Reject";
+  return "Watch";
+}
+function promotionCandidatesFor(trades, splitTimestamp) {
+  const candidates = [
+    {
+      id: "htf-all",
+      label: "HTF old-Sunday, all indices",
+      rule: "Setup is HTF Bullish Continuation; stop is weekly low; TP is old Sunday.",
+      filter: (trade) => trade.signal.setupType === "HTF Bullish Continuation"
+    },
+    {
+      id: "htf-nas-us500",
+      label: "HTF old-Sunday, NAS100 + US500",
+      rule: "Same HTF old-Sunday model, excluding US30 after subgroup underperformance.",
+      filter: (trade) => trade.signal.setupType === "HTF Bullish Continuation" && (trade.signal.symbol === "NAS100" || trade.signal.symbol === "US500")
+    },
+    {
+      id: "htf-us500",
+      label: "HTF old-Sunday, US500 only",
+      rule: "US500-only version of the HTF old-Sunday candidate.",
+      filter: (trade) => trade.signal.setupType === "HTF Bullish Continuation" && trade.signal.symbol === "US500"
+    },
+    {
+      id: "htf-nas100",
+      label: "HTF old-Sunday, NAS100 only",
+      rule: "NAS100-only version of the HTF old-Sunday candidate.",
+      filter: (trade) => trade.signal.setupType === "HTF Bullish Continuation" && trade.signal.symbol === "NAS100"
+    },
+    {
+      id: "htf-new-york",
+      label: "HTF old-Sunday, New York only",
+      rule: "HTF old-Sunday signals whose entry candle appears in the UTC New York session bucket.",
+      filter: (trade) => trade.signal.setupType === "HTF Bullish Continuation" && sessionFor$1(trade.signal.timestamp) === "New York"
+    }
+  ];
+  return candidates.map((candidate) => {
+    const candidateTrades = trades.filter(candidate.filter);
+    const stats = splitStats(candidateTrades, splitTimestamp);
+    return {
+      id: candidate.id,
+      label: candidate.label,
+      rule: candidate.rule,
+      ...stats,
+      decision: candidateDecision(stats.validation)
+    };
+  }).sort(
+    (a2, b2) => b2.validation.totalR - a2.validation.totalR || b2.validation.trades - a2.validation.trades
+  );
+}
 function buildRiskRows({
   signals,
   candles,
@@ -60724,6 +60776,13 @@ function CocoRiskLabPage() {
   const viableWeekly = weeklyRows.filter(
     (row) => row.validation.trades >= 10 && row.validation.totalR > 0
   );
+  const promotionCandidates = reactExports.useMemo(
+    () => best && best.model.id === "weekly-old-sunday" ? promotionCandidatesFor(
+      best.trades,
+      run.validation.discoveryEndTimestamp
+    ) : [],
+    [best, run.validation.discoveryEndTimestamp]
+  );
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "coco-risk.page", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
@@ -60773,6 +60832,15 @@ function CocoRiskLabPage() {
                     discovery: row.discovery,
                     validation: row.validation
                   }))
+                })),
+                promotionCandidates: promotionCandidates.map((candidate) => ({
+                  id: candidate.id,
+                  label: candidate.label,
+                  rule: candidate.rule,
+                  decision: candidate.decision,
+                  all: candidate.all,
+                  discovery: candidate.discovery,
+                  validation: candidate.validation
                 }))
               },
               null,
@@ -60902,6 +60970,43 @@ function CocoRiskLabPage() {
             )) })
           ] }) })
         ] }, section.title)) })
+      ] }),
+      promotionCandidates.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-primary/30 bg-primary/5 p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Promotion Candidates" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "These are narrower forward-watch candidates derived from the best model. Watch means evidence is worth tracking next; it is not a live-trade approval." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1080px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Candidate" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Decision" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "All" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "All net" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Validation" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val net" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val win" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val avg" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val DD" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Rule" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: promotionCandidates.map((candidate) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "tr",
+            {
+              className: "border-b border-border/40",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: candidate.label }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: candidate.decision }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: candidate.all.trades }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(candidate.all.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: candidate.validation.trades }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(candidate.validation.totalR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$5(candidate.validation.winRate) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(candidate.validation.avgR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(candidate.validation.maxDrawdownR) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "max-w-[360px] py-2 text-muted-foreground", children: candidate.rule })
+              ]
+            },
+            candidate.id
+          )) })
+        ] }) })
       ] }),
       best && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Best Model Sample" }),

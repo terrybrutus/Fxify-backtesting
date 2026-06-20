@@ -67,6 +67,16 @@ type BreakdownRow = {
   validation: RiskStats;
 };
 
+type PromotionCandidate = {
+  id: string;
+  label: string;
+  rule: string;
+  all: RiskStats;
+  discovery: RiskStats;
+  validation: RiskStats;
+  decision: "Watch" | "Too thin" | "Reject";
+};
+
 const RISK_MODELS: RiskModel[] = [
   {
     id: "engine-selected",
@@ -308,6 +318,77 @@ function breakdownFor(
     );
 }
 
+function candidateDecision(stats: RiskStats): PromotionCandidate["decision"] {
+  if (stats.trades < 10) return "Too thin";
+  if (stats.totalR <= 0 || stats.avgR <= 0) return "Reject";
+  return "Watch";
+}
+
+function promotionCandidatesFor(
+  trades: RiskTrade[],
+  splitTimestamp: number | undefined,
+): PromotionCandidate[] {
+  const candidates = [
+    {
+      id: "htf-all",
+      label: "HTF old-Sunday, all indices",
+      rule: "Setup is HTF Bullish Continuation; stop is weekly low; TP is old Sunday.",
+      filter: (trade: RiskTrade) =>
+        trade.signal.setupType === "HTF Bullish Continuation",
+    },
+    {
+      id: "htf-nas-us500",
+      label: "HTF old-Sunday, NAS100 + US500",
+      rule: "Same HTF old-Sunday model, excluding US30 after subgroup underperformance.",
+      filter: (trade: RiskTrade) =>
+        trade.signal.setupType === "HTF Bullish Continuation" &&
+        (trade.signal.symbol === "NAS100" || trade.signal.symbol === "US500"),
+    },
+    {
+      id: "htf-us500",
+      label: "HTF old-Sunday, US500 only",
+      rule: "US500-only version of the HTF old-Sunday candidate.",
+      filter: (trade: RiskTrade) =>
+        trade.signal.setupType === "HTF Bullish Continuation" &&
+        trade.signal.symbol === "US500",
+    },
+    {
+      id: "htf-nas100",
+      label: "HTF old-Sunday, NAS100 only",
+      rule: "NAS100-only version of the HTF old-Sunday candidate.",
+      filter: (trade: RiskTrade) =>
+        trade.signal.setupType === "HTF Bullish Continuation" &&
+        trade.signal.symbol === "NAS100",
+    },
+    {
+      id: "htf-new-york",
+      label: "HTF old-Sunday, New York only",
+      rule: "HTF old-Sunday signals whose entry candle appears in the UTC New York session bucket.",
+      filter: (trade: RiskTrade) =>
+        trade.signal.setupType === "HTF Bullish Continuation" &&
+        sessionFor(trade.signal.timestamp) === "New York",
+    },
+  ];
+
+  return candidates
+    .map((candidate) => {
+      const candidateTrades = trades.filter(candidate.filter);
+      const stats = splitStats(candidateTrades, splitTimestamp);
+      return {
+        id: candidate.id,
+        label: candidate.label,
+        rule: candidate.rule,
+        ...stats,
+        decision: candidateDecision(stats.validation),
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.validation.totalR - a.validation.totalR ||
+        b.validation.trades - a.validation.trades,
+    );
+}
+
 function buildRiskRows({
   signals,
   candles,
@@ -428,6 +509,16 @@ export default function CocoRiskLabPage() {
   const viableWeekly = weeklyRows.filter(
     (row) => row.validation.trades >= 10 && row.validation.totalR > 0,
   );
+  const promotionCandidates = useMemo(
+    () =>
+      best && best.model.id === "weekly-old-sunday"
+        ? promotionCandidatesFor(
+            best.trades,
+            run.validation.discoveryEndTimestamp,
+          )
+        : [],
+    [best, run.validation.discoveryEndTimestamp],
+  );
 
   return (
     <div className="space-y-5 p-4 md:p-6" data-ocid="coco-risk.page">
@@ -488,6 +579,15 @@ export default function CocoRiskLabPage() {
                       discovery: row.discovery,
                       validation: row.validation,
                     })),
+                  })),
+                  promotionCandidates: promotionCandidates.map((candidate) => ({
+                    id: candidate.id,
+                    label: candidate.label,
+                    rule: candidate.rule,
+                    decision: candidate.decision,
+                    all: candidate.all,
+                    discovery: candidate.discovery,
+                    validation: candidate.validation,
                   })),
                 },
                 null,
@@ -680,6 +780,72 @@ export default function CocoRiskLabPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </section>
+          )}
+
+          {promotionCandidates.length > 0 && (
+            <section className="border border-primary/30 bg-primary/5 p-4">
+              <h2 className="font-display text-lg font-bold">
+                Promotion Candidates
+              </h2>
+              <p className="mt-1 max-w-4xl text-sm text-muted-foreground">
+                These are narrower forward-watch candidates derived from the
+                best model. Watch means evidence is worth tracking next; it is
+                not a live-trade approval.
+              </p>
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full min-w-[1080px] font-mono text-xs">
+                  <thead className="border-b border-border text-muted-foreground">
+                    <tr>
+                      <th className="py-2 text-left">Candidate</th>
+                      <th className="py-2 text-left">Decision</th>
+                      <th className="py-2 text-right">All</th>
+                      <th className="py-2 text-right">All net</th>
+                      <th className="py-2 text-right">Validation</th>
+                      <th className="py-2 text-right">Val net</th>
+                      <th className="py-2 text-right">Val win</th>
+                      <th className="py-2 text-right">Val avg</th>
+                      <th className="py-2 text-right">Val DD</th>
+                      <th className="py-2 text-left">Rule</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {promotionCandidates.map((candidate) => (
+                      <tr
+                        key={candidate.id}
+                        className="border-b border-border/40"
+                      >
+                        <td className="py-2">{candidate.label}</td>
+                        <td className="py-2">{candidate.decision}</td>
+                        <td className="py-2 text-right">
+                          {candidate.all.trades}
+                        </td>
+                        <td className="py-2 text-right">
+                          {fmtR(candidate.all.totalR)}
+                        </td>
+                        <td className="py-2 text-right">
+                          {candidate.validation.trades}
+                        </td>
+                        <td className="py-2 text-right">
+                          {fmtR(candidate.validation.totalR)}
+                        </td>
+                        <td className="py-2 text-right">
+                          {pct(candidate.validation.winRate)}
+                        </td>
+                        <td className="py-2 text-right">
+                          {fmtR(candidate.validation.avgR)}
+                        </td>
+                        <td className="py-2 text-right">
+                          {fmtR(candidate.validation.maxDrawdownR)}
+                        </td>
+                        <td className="max-w-[360px] py-2 text-muted-foreground">
+                          {candidate.rule}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </section>
           )}
