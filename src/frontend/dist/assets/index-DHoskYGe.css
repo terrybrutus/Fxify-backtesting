@@ -1091,6 +1091,9 @@ video {
 .max-w-4xl {
   max-width: 56rem;
 }
+.max-w-\[220px\] {
+  max-width: 220px;
+}
 .max-w-\[230px\] {
   max-width: 230px;
 }

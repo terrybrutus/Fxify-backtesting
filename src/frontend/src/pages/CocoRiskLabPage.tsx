@@ -48,10 +48,23 @@ type RiskStats = {
 
 type RiskRow = {
   model: RiskModel;
+  trades: RiskTrade[];
   all: RiskStats;
   discovery: RiskStats;
   validation: RiskStats;
   sample: RiskTrade[];
+};
+
+type BreakdownSection = {
+  title: string;
+  rows: BreakdownRow[];
+};
+
+type BreakdownRow = {
+  label: string;
+  all: RiskStats;
+  discovery: RiskStats;
+  validation: RiskStats;
 };
 
 const RISK_MODELS: RiskModel[] = [
@@ -247,6 +260,54 @@ function statsFor(trades: RiskTrade[]): RiskStats {
   };
 }
 
+function sessionFor(timestamp: number) {
+  const hour = new Date(timestamp).getUTCHours();
+  if (hour >= 0 && hour < 7) return "Asia";
+  if (hour >= 7 && hour < 13) return "London";
+  if (hour >= 13 && hour < 21) return "New York";
+  return "Off session";
+}
+
+function splitStats(trades: RiskTrade[], splitTimestamp?: number) {
+  const discovery =
+    splitTimestamp === undefined
+      ? []
+      : trades.filter((trade) => trade.signal.timestamp <= splitTimestamp);
+  const validation =
+    splitTimestamp === undefined
+      ? []
+      : trades.filter((trade) => trade.signal.timestamp > splitTimestamp);
+  return {
+    all: statsFor(trades),
+    discovery: statsFor(discovery),
+    validation: statsFor(validation),
+  };
+}
+
+function breakdownFor(
+  trades: RiskTrade[],
+  splitTimestamp: number | undefined,
+  labelFor: (trade: RiskTrade) => string,
+): BreakdownRow[] {
+  const groups = new Map<string, RiskTrade[]>();
+  for (const trade of trades) {
+    const label = labelFor(trade);
+    const group = groups.get(label) ?? [];
+    group.push(trade);
+    groups.set(label, group);
+  }
+  return [...groups.entries()]
+    .map(([label, group]) => ({
+      label,
+      ...splitStats(group, splitTimestamp),
+    }))
+    .sort(
+      (a, b) =>
+        b.validation.totalR - a.validation.totalR ||
+        b.validation.trades - a.validation.trades,
+    );
+}
+
 function buildRiskRows({
   signals,
   candles,
@@ -270,19 +331,10 @@ function buildRiskRows({
       const trade = simulateRiskTrade(signal, model, h1);
       return trade ? [trade] : [];
     });
-    const discovery =
-      splitTimestamp === undefined
-        ? []
-        : trades.filter((trade) => trade.signal.timestamp <= splitTimestamp);
-    const validation =
-      splitTimestamp === undefined
-        ? []
-        : trades.filter((trade) => trade.signal.timestamp > splitTimestamp);
     return {
       model,
-      all: statsFor(trades),
-      discovery: statsFor(discovery),
-      validation: statsFor(validation),
+      trades,
+      ...splitStats(trades, splitTimestamp),
       sample: trades.slice(0, 20),
     };
   }).sort(
@@ -328,6 +380,50 @@ export default function CocoRiskLabPage() {
     [signals, candles, run.validation.discoveryEndTimestamp],
   );
   const best = rows[0];
+  const bestBreakdowns: BreakdownSection[] = useMemo(() => {
+    if (!best) return [];
+    const splitTimestamp = run.validation.discoveryEndTimestamp;
+    return [
+      {
+        title: "By Index",
+        rows: breakdownFor(
+          best.trades,
+          splitTimestamp,
+          (trade) => trade.signal.symbol,
+        ),
+      },
+      {
+        title: "By Setup",
+        rows: breakdownFor(
+          best.trades,
+          splitTimestamp,
+          (trade) => trade.signal.setupType,
+        ),
+      },
+      {
+        title: "By Session",
+        rows: breakdownFor(best.trades, splitTimestamp, (trade) =>
+          sessionFor(trade.signal.timestamp),
+        ),
+      },
+      {
+        title: "Accepted vs Rejected",
+        rows: breakdownFor(best.trades, splitTimestamp, (trade) =>
+          trade.signal.accepted
+            ? "Accepted signals"
+            : "High-score rejected candidates",
+        ),
+      },
+      {
+        title: "Index + Setup",
+        rows: breakdownFor(
+          best.trades,
+          splitTimestamp,
+          (trade) => `${trade.signal.symbol} | ${trade.signal.setupType}`,
+        ),
+      },
+    ];
+  }, [best, run.validation.discoveryEndTimestamp]);
   const weeklyRows = rows.filter((row) => row.model.id !== "engine-selected");
   const viableWeekly = weeklyRows.filter(
     (row) => row.validation.trades >= 10 && row.validation.totalR > 0,
@@ -382,6 +478,15 @@ export default function CocoRiskLabPage() {
                             ? "Ambiguous stop-first loss"
                             : "Loss",
                       rMultiple: trade.rMultiple,
+                    })),
+                  })),
+                  bestBreakdowns: bestBreakdowns.map((section) => ({
+                    title: section.title,
+                    rows: section.rows.map((row) => ({
+                      label: row.label,
+                      all: row.all,
+                      discovery: row.discovery,
+                      validation: row.validation,
                     })),
                   })),
                 },
@@ -508,6 +613,76 @@ export default function CocoRiskLabPage() {
               </table>
             </div>
           </section>
+
+          {best && bestBreakdowns.length > 0 && (
+            <section className="border border-border bg-card p-4">
+              <h2 className="font-display text-lg font-bold">
+                Best Model Breakdown
+              </h2>
+              <p className="mt-1 max-w-4xl text-sm text-muted-foreground">
+                This checks whether the current best model is broad or carried
+                by one index, setup, session, or accepted/rejected bucket.
+              </p>
+              <div className="mt-4 grid gap-4 xl:grid-cols-2">
+                {bestBreakdowns.map((section) => (
+                  <div key={section.title} className="border border-border p-3">
+                    <h3 className="font-mono text-xs font-bold uppercase tracking-widest">
+                      {section.title}
+                    </h3>
+                    <div className="mt-3 overflow-x-auto">
+                      <table className="w-full min-w-[720px] font-mono text-xs">
+                        <thead className="border-b border-border text-muted-foreground">
+                          <tr>
+                            <th className="py-2 text-left">Group</th>
+                            <th className="py-2 text-right">All</th>
+                            <th className="py-2 text-right">All net</th>
+                            <th className="py-2 text-right">Val</th>
+                            <th className="py-2 text-right">Val net</th>
+                            <th className="py-2 text-right">Val win</th>
+                            <th className="py-2 text-right">Val avg</th>
+                            <th className="py-2 text-right">Val DD</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {section.rows.slice(0, 8).map((row) => (
+                            <tr
+                              key={`${section.title}-${row.label}`}
+                              className="border-b border-border/40"
+                            >
+                              <td className="max-w-[220px] py-2">
+                                {row.label}
+                              </td>
+                              <td className="py-2 text-right">
+                                {row.all.trades}
+                              </td>
+                              <td className="py-2 text-right">
+                                {fmtR(row.all.totalR)}
+                              </td>
+                              <td className="py-2 text-right">
+                                {row.validation.trades}
+                              </td>
+                              <td className="py-2 text-right">
+                                {fmtR(row.validation.totalR)}
+                              </td>
+                              <td className="py-2 text-right">
+                                {pct(row.validation.winRate)}
+                              </td>
+                              <td className="py-2 text-right">
+                                {fmtR(row.validation.avgR)}
+                              </td>
+                              <td className="py-2 text-right">
+                                {fmtR(row.validation.maxDrawdownR)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {best && (
             <section className="border border-border bg-card p-4">
