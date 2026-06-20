@@ -60592,6 +60592,37 @@ function statsFor$2(trades) {
     maxDrawdownR
   };
 }
+function sessionFor$1(timestamp) {
+  const hour = new Date(timestamp).getUTCHours();
+  if (hour >= 0 && hour < 7) return "Asia";
+  if (hour >= 7 && hour < 13) return "London";
+  if (hour >= 13 && hour < 21) return "New York";
+  return "Off session";
+}
+function splitStats(trades, splitTimestamp) {
+  const discovery = splitTimestamp === void 0 ? [] : trades.filter((trade) => trade.signal.timestamp <= splitTimestamp);
+  const validation = splitTimestamp === void 0 ? [] : trades.filter((trade) => trade.signal.timestamp > splitTimestamp);
+  return {
+    all: statsFor$2(trades),
+    discovery: statsFor$2(discovery),
+    validation: statsFor$2(validation)
+  };
+}
+function breakdownFor(trades, splitTimestamp, labelFor) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const trade of trades) {
+    const label = labelFor(trade);
+    const group = groups.get(label) ?? [];
+    group.push(trade);
+    groups.set(label, group);
+  }
+  return [...groups.entries()].map(([label, group]) => ({
+    label,
+    ...splitStats(group, splitTimestamp)
+  })).sort(
+    (a2, b2) => b2.validation.totalR - a2.validation.totalR || b2.validation.trades - a2.validation.trades
+  );
+}
 function buildRiskRows({
   signals,
   candles,
@@ -60607,13 +60638,10 @@ function buildRiskRows({
       const trade = simulateRiskTrade(signal, model, h1);
       return trade ? [trade] : [];
     });
-    const discovery = splitTimestamp === void 0 ? [] : trades.filter((trade) => trade.signal.timestamp <= splitTimestamp);
-    const validation = splitTimestamp === void 0 ? [] : trades.filter((trade) => trade.signal.timestamp > splitTimestamp);
     return {
       model,
-      all: statsFor$2(trades),
-      discovery: statsFor$2(discovery),
-      validation: statsFor$2(validation),
+      trades,
+      ...splitStats(trades, splitTimestamp),
       sample: trades.slice(0, 20)
     };
   }).sort(
@@ -60646,6 +60674,52 @@ function CocoRiskLabPage() {
     [signals, candles, run.validation.discoveryEndTimestamp]
   );
   const best = rows[0];
+  const bestBreakdowns = reactExports.useMemo(() => {
+    if (!best) return [];
+    const splitTimestamp = run.validation.discoveryEndTimestamp;
+    return [
+      {
+        title: "By Index",
+        rows: breakdownFor(
+          best.trades,
+          splitTimestamp,
+          (trade) => trade.signal.symbol
+        )
+      },
+      {
+        title: "By Setup",
+        rows: breakdownFor(
+          best.trades,
+          splitTimestamp,
+          (trade) => trade.signal.setupType
+        )
+      },
+      {
+        title: "By Session",
+        rows: breakdownFor(
+          best.trades,
+          splitTimestamp,
+          (trade) => sessionFor$1(trade.signal.timestamp)
+        )
+      },
+      {
+        title: "Accepted vs Rejected",
+        rows: breakdownFor(
+          best.trades,
+          splitTimestamp,
+          (trade) => trade.signal.accepted ? "Accepted signals" : "High-score rejected candidates"
+        )
+      },
+      {
+        title: "Index + Setup",
+        rows: breakdownFor(
+          best.trades,
+          splitTimestamp,
+          (trade) => `${trade.signal.symbol} | ${trade.signal.setupType}`
+        )
+      }
+    ];
+  }, [best, run.validation.discoveryEndTimestamp]);
   const weeklyRows = rows.filter((row) => row.model.id !== "engine-selected");
   const viableWeekly = weeklyRows.filter(
     (row) => row.validation.trades >= 10 && row.validation.totalR > 0
@@ -60689,6 +60763,15 @@ function CocoRiskLabPage() {
                     targetR: trade.targetR,
                     outcome: !trade.closed ? "Open" : trade.won ? "Win" : trade.ambiguous ? "Ambiguous stop-first loss" : "Loss",
                     rMultiple: trade.rMultiple
+                  }))
+                })),
+                bestBreakdowns: bestBreakdowns.map((section) => ({
+                  title: section.title,
+                  rows: section.rows.map((row) => ({
+                    label: row.label,
+                    all: row.all,
+                    discovery: row.discovery,
+                    validation: row.validation
                   }))
                 }))
               },
@@ -60783,6 +60866,42 @@ function CocoRiskLabPage() {
             row.model.id
           )) })
         ] }) })
+      ] }),
+      best && bestBreakdowns.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Best Model Breakdown" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "This checks whether the current best model is broad or carried by one index, setup, session, or accepted/rejected bucket." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-4 grid gap-4 xl:grid-cols-2", children: bestBreakdowns.map((section) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border p-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: section.title }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[720px] font-mono text-xs", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Group" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "All" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "All net" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val net" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val win" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val avg" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Val DD" })
+            ] }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: section.rows.slice(0, 8).map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "tr",
+              {
+                className: "border-b border-border/40",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "max-w-[220px] py-2", children: row.label }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.all.trades }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(row.all.totalR) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.validation.trades }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(row.validation.totalR) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$5(row.validation.winRate) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(row.validation.avgR) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtR$7(row.validation.maxDrawdownR) })
+                ]
+              },
+              `${section.title}-${row.label}`
+            )) })
+          ] }) })
+        ] }, section.title)) })
       ] }),
       best && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Best Model Sample" }),
