@@ -12,7 +12,6 @@ import {
   HeartPulse,
   ListChecks,
   Microscope,
-  Network,
   Radar,
   Radio,
   RotateCcw,
@@ -23,26 +22,53 @@ import {
   Waves,
 } from "lucide-react";
 
-const NAV_ITEMS = [
-  { path: "/workflow", label: "Workflow Map", icon: Network },
-  { path: "/data", label: "Data Integrity", icon: Database },
-  { path: "/health", label: "Rule Health", icon: HeartPulse },
-  { path: "/audit", label: "Signal Audit", icon: ListChecks },
-  { path: "/truth-audit", label: "Truth Audit", icon: FileSearch },
-  { path: "/coco-risk", label: "Coco Risk Lab", icon: Scale },
-  { path: "/coco-trade-probe", label: "Coco Trade Probe", icon: ScanSearch },
-  { path: "/brutus-band", label: "Brutus Band Lab", icon: Waves },
-  { path: "/rejected", label: "Rejected Setups", icon: FileWarning },
-  { path: "/discovery", label: "Discovery Lab", icon: FlaskConical },
-  { path: "/experiments", label: "Experiment Lab", icon: Microscope },
-  { path: "/sample-expansion", label: "Sample Expansion", icon: Filter },
-  { path: "/forward", label: "Forward Tracker", icon: ShieldCheck },
-  { path: "/walk-forward", label: "Walk-Forward Lab", icon: GitCompareArrows },
-  { path: "/decisions", label: "Decision Console", icon: Target },
-  { path: "/live-candidates", label: "Live Candidates", icon: Radio },
-  { path: "/replay", label: "Replay Mode", icon: RotateCcw },
-  { path: "/chart", label: "Candle Viewer", icon: Radar },
-  { path: "/results", label: "Results Export", icon: BarChart3 },
+const NAV_GROUPS = [
+  {
+    label: "Start Here",
+    items: [
+      { path: "/data", label: "Data Integrity", icon: Database },
+      { path: "/live-candidates", label: "Live Candidates", icon: Radio },
+      { path: "/decisions", label: "Decision Console", icon: Target },
+    ],
+  },
+  {
+    label: "Trade Probes",
+    items: [
+      {
+        path: "/coco-trade-probe",
+        label: "Coco Trade Probe",
+        icon: ScanSearch,
+      },
+      { path: "/brutus-band", label: "Brutus Band Lab", icon: Waves },
+      { path: "/coco-risk", label: "Coco Risk Lab", icon: Scale },
+    ],
+  },
+  {
+    label: "Evidence Labs",
+    items: [
+      { path: "/truth-audit", label: "Truth Audit", icon: FileSearch },
+      { path: "/discovery", label: "Discovery Lab", icon: FlaskConical },
+      { path: "/experiments", label: "Experiment Lab", icon: Microscope },
+      { path: "/sample-expansion", label: "Sample Expansion", icon: Filter },
+      { path: "/forward", label: "Forward Tracker", icon: ShieldCheck },
+      {
+        path: "/walk-forward",
+        label: "Walk-Forward Lab",
+        icon: GitCompareArrows,
+      },
+    ],
+  },
+  {
+    label: "Audit Tools",
+    items: [
+      { path: "/health", label: "Rule Health", icon: HeartPulse },
+      { path: "/audit", label: "Signal Audit", icon: ListChecks },
+      { path: "/rejected", label: "Rejected Setups", icon: FileWarning },
+      { path: "/replay", label: "Replay Mode", icon: RotateCcw },
+      { path: "/chart", label: "Candle Viewer", icon: Radar },
+      { path: "/results", label: "Results Export", icon: BarChart3 },
+    ],
+  },
 ];
 
 export default function Layout() {
@@ -66,25 +92,32 @@ export default function Layout() {
             </div>
           </div>
         </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-          {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
-            const active = currentPath === path;
-            return (
-              <Link
-                key={path}
-                to={path}
-                className={cn(
-                  "flex items-center gap-3 border-l-2 px-3 py-2.5 font-mono text-xs uppercase tracking-wider transition-colors",
-                  active
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{label}</span>
-              </Link>
-            );
-          })}
+        <nav className="flex-1 space-y-4 overflow-y-auto p-3">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label} className="space-y-1">
+              <p className="px-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70">
+                {group.label}
+              </p>
+              {group.items.map(({ path, label, icon: Icon }) => {
+                const active = currentPath === path;
+                return (
+                  <Link
+                    key={path}
+                    to={path}
+                    className={cn(
+                      "flex items-center gap-3 border-l-2 px-3 py-2.5 font-mono text-xs uppercase tracking-wider transition-colors",
+                      active
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
         <div className="border-t border-border p-4 font-mono text-[10px] leading-relaxed text-muted-foreground">
           The app must fail closed, not fail open. If real data, required
