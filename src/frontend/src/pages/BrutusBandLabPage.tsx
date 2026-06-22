@@ -23,6 +23,7 @@ type BrutusSignal = {
   id: string;
   symbol: string;
   timestamp: number;
+  triggerTimestamp: number;
   direction: Direction;
   timeframe: Timeframe;
   lowerTimeframe: Timeframe;
@@ -34,6 +35,11 @@ type BrutusSignal = {
   low: number;
   upperBand: number;
   lowerBand: number;
+  triggerBand: number;
+  finalBand: number;
+  bandStretchPoints: number;
+  minutesIntoCandle: number;
+  maxAdversePoints: number;
   bandWidthPct: number;
   compression: boolean;
   snapback5m: boolean;
@@ -50,6 +56,8 @@ type VariantStats = {
   avgPoints: number;
   totalPoints: number;
   avgWickPoints: number;
+  avgBandStretchPoints: number;
+  avgMaxAdversePoints: number;
   continuationFailures: number;
   continuationRate: number;
   estimatedDollarPnl: number;
@@ -63,11 +71,11 @@ type VariantRow = {
 };
 
 const BAND_CONFIGS: BandConfig[] = [
-  { length: 8, deviation: 1 },
-  { length: 8, deviation: 1.5 },
-  { length: 10, deviation: 1 },
-  { length: 10, deviation: 1.5 },
-  { length: 14, deviation: 1 },
+  { length: 9, deviation: 2 },
+  { length: 9, deviation: 1.5 },
+  { length: 9, deviation: 2.5 },
+  { length: 7, deviation: 2 },
+  { length: 12, deviation: 2 },
   { length: 14, deviation: 1.5 },
   { length: 20, deviation: 1.5 },
   { length: 20, deviation: 2 },
@@ -136,6 +144,14 @@ function stdev(values: number[]) {
   );
 }
 
+function ema(values: number[], length: number) {
+  const alpha = 2 / (length + 1);
+  return values.reduce((average, value, index) => {
+    if (index === 0) return value;
+    return value * alpha + average * (1 - alpha);
+  }, values[0]);
+}
+
 function median(values: number[]) {
   if (!values.length) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -160,18 +176,51 @@ function groupCandles(candles: Candle[], timeframe: Timeframe) {
 }
 
 function bandAt(candles: Candle[], index: number, config: BandConfig) {
-  if (index < config.length) return undefined;
-  const window = candles.slice(index - config.length, index);
-  const highAvg = mean(window.map((candle) => candle.high));
-  const lowAvg = mean(window.map((candle) => candle.low));
+  if (index + 1 < config.length) return undefined;
+  const history = candles.slice(0, index + 1);
+  const window = history.slice(-config.length);
   const upper =
-    highAvg + stdev(window.map((candle) => candle.high)) * config.deviation;
+    ema(
+      history.map((candle) => candle.high),
+      config.length,
+    ) +
+    stdev(window.map((candle) => candle.high)) * config.deviation;
   const lower =
-    lowAvg - stdev(window.map((candle) => candle.low)) * config.deviation;
+    ema(
+      history.map((candle) => candle.low),
+      config.length,
+    ) -
+    stdev(window.map((candle) => candle.low)) * config.deviation;
   return {
     upper,
     lower,
     widthPct: ((upper - lower) / candles[index].close) * 100,
+  };
+}
+
+function bandForSeries(
+  candles: Pick<Candle, "open" | "high" | "low" | "close">[],
+  config: BandConfig,
+) {
+  if (candles.length < config.length) return undefined;
+  const window = candles.slice(-config.length);
+  const last = candles[candles.length - 1];
+  const upper =
+    ema(
+      candles.map((candle) => candle.high),
+      config.length,
+    ) +
+    stdev(window.map((candle) => candle.high)) * config.deviation;
+  const lower =
+    ema(
+      candles.map((candle) => candle.low),
+      config.length,
+    ) -
+    stdev(window.map((candle) => candle.low)) * config.deviation;
+  return {
+    upper,
+    lower,
+    widthPct: ((upper - lower) / last.close) * 100,
   };
 }
 
@@ -185,31 +234,153 @@ function widthHistory(candles: Candle[], index: number, config: BandConfig) {
   return widths;
 }
 
-function fiveMinuteSnapback({
-  lowerCandles,
-  signal,
-  upperBand,
-  lowerBand,
+function intrabarReplaySignal({
+  symbol,
+  h1,
+  m5,
+  index,
+  config,
 }: {
-  lowerCandles: Candle[];
-  signal: Candle;
-  upperBand: number;
-  lowerBand: number;
-}) {
-  const start = Number(signal.timestamp);
+  symbol: string;
+  h1: Candle[];
+  m5: Candle[];
+  index: number;
+  config: BandConfig;
+}): BrutusSignal[] {
+  const candle = h1[index];
+  const start = Number(candle.timestamp);
   const end = start + HOUR_MS;
-  const insideHour = lowerCandles.filter((candle) => {
-    const timestamp = Number(candle.timestamp);
+  const insideHour = m5.filter((item) => {
+    const timestamp = Number(item.timestamp);
     return timestamp >= start && timestamp < end;
   });
-  return {
-    short: insideHour.some(
-      (candle) => candle.high > upperBand && candle.close < upperBand,
-    ),
-    long: insideHour.some(
-      (candle) => candle.low < lowerBand && candle.close > lowerBand,
-    ),
-  };
+  if (insideHour.length === 0) return [];
+
+  const prior = h1.slice(0, index);
+  const finalBand = bandForSeries([...prior, candle], config);
+  if (!finalBand) return [];
+  const widths = widthHistory(h1, index, config);
+  const compression =
+    widths.length >= 20 && finalBand.widthPct <= median(widths) * 0.8;
+
+  let partialHigh = candle.open;
+  let partialLow = candle.open;
+  let partialClose = candle.open;
+  let previousLower: number | undefined;
+  let previousUpper: number | undefined;
+  let previousLow = candle.open;
+  let previousHigh = candle.open;
+  const found: Partial<Record<Direction, BrutusSignal>> = {};
+
+  for (const lowerCandle of insideHour) {
+    partialHigh = Math.max(partialHigh, lowerCandle.high);
+    partialLow = Math.min(partialLow, lowerCandle.low);
+    partialClose = lowerCandle.close;
+    const partial = {
+      ...candle,
+      high: partialHigh,
+      low: partialLow,
+      close: partialClose,
+    };
+    const liveBand = bandForSeries([...prior, partial], config);
+    if (!liveBand) continue;
+
+    const longByGreenPierce =
+      partial.low <= liveBand.lower && partial.close > partial.open;
+    const longByCross =
+      previousLower !== undefined &&
+      previousLow > previousLower &&
+      partial.low <= liveBand.lower;
+    const shortByRedPierce =
+      partial.high >= liveBand.upper && partial.close < partial.open;
+    const shortByCross =
+      previousUpper !== undefined &&
+      previousHigh < previousUpper &&
+      partial.high >= liveBand.upper;
+    const triggerTimestamp = Number(lowerCandle.timestamp);
+    const minutesIntoCandle = Math.round((triggerTimestamp - start) / 60000);
+
+    if (!found.Long && (longByGreenPierce || longByCross)) {
+      const later = insideHour.filter(
+        (item) => Number(item.timestamp) >= triggerTimestamp,
+      );
+      const maxLowAfterTrigger = Math.min(...later.map((item) => item.low));
+      const outcomePoints = candle.close - liveBand.lower;
+      found.Long = {
+        id: `${symbol}-${start}-${config.length}-${config.deviation}-long-live`,
+        symbol,
+        timestamp: start,
+        triggerTimestamp,
+        direction: "Long",
+        timeframe: Timeframe.H1,
+        lowerTimeframe: Timeframe.M5,
+        length: config.length,
+        deviation: config.deviation,
+        entry: liveBand.lower,
+        close: candle.close,
+        high: candle.high,
+        low: candle.low,
+        upperBand: liveBand.upper,
+        lowerBand: liveBand.lower,
+        triggerBand: liveBand.lower,
+        finalBand: finalBand.lower,
+        bandStretchPoints: Math.abs(finalBand.lower - liveBand.lower),
+        minutesIntoCandle,
+        maxAdversePoints: Math.max(0, liveBand.lower - maxLowAfterTrigger),
+        bandWidthPct: liveBand.widthPct,
+        compression,
+        snapback5m: later.some((item) => item.close > liveBand.lower),
+        outcomePoints,
+        wickPoints: Math.max(0, candle.close - candle.low),
+        continuationFailure: outcomePoints < 0,
+      };
+    }
+
+    if (!found.Short && (shortByRedPierce || shortByCross)) {
+      const later = insideHour.filter(
+        (item) => Number(item.timestamp) >= triggerTimestamp,
+      );
+      const maxHighAfterTrigger = Math.max(...later.map((item) => item.high));
+      const outcomePoints = liveBand.upper - candle.close;
+      found.Short = {
+        id: `${symbol}-${start}-${config.length}-${config.deviation}-short-live`,
+        symbol,
+        timestamp: start,
+        triggerTimestamp,
+        direction: "Short",
+        timeframe: Timeframe.H1,
+        lowerTimeframe: Timeframe.M5,
+        length: config.length,
+        deviation: config.deviation,
+        entry: liveBand.upper,
+        close: candle.close,
+        high: candle.high,
+        low: candle.low,
+        upperBand: liveBand.upper,
+        lowerBand: liveBand.lower,
+        triggerBand: liveBand.upper,
+        finalBand: finalBand.upper,
+        bandStretchPoints: Math.abs(finalBand.upper - liveBand.upper),
+        minutesIntoCandle,
+        maxAdversePoints: Math.max(0, maxHighAfterTrigger - liveBand.upper),
+        bandWidthPct: liveBand.widthPct,
+        compression,
+        snapback5m: later.some((item) => item.close < liveBand.upper),
+        outcomePoints,
+        wickPoints: Math.max(0, candle.high - candle.close),
+        continuationFailure: outcomePoints < 0,
+      };
+    }
+
+    previousLower = liveBand.lower;
+    previousUpper = liveBand.upper;
+    previousLow = partial.low;
+    previousHigh = partial.high;
+  }
+
+  return [found.Long, found.Short].filter((signal): signal is BrutusSignal =>
+    Boolean(signal),
+  );
 }
 
 function buildSignals(candles: Candle[]) {
@@ -220,71 +391,10 @@ function buildSignals(candles: Candle[]) {
   for (const [symbol, h1] of h1BySymbol.entries()) {
     const m5 = m5BySymbol.get(symbol) ?? [];
     for (const config of BAND_CONFIGS) {
-      for (let index = config.length; index < h1.length; index += 1) {
-        const candle = h1[index];
-        const band = bandAt(h1, index, config);
-        if (!band) continue;
-        const widths = widthHistory(h1, index, config);
-        const compression =
-          widths.length >= 20 && band.widthPct <= median(widths) * 0.8;
-        const snapback = fiveMinuteSnapback({
-          lowerCandles: m5,
-          signal: candle,
-          upperBand: band.upper,
-          lowerBand: band.lower,
-        });
-
-        if (candle.high > band.upper) {
-          const outcomePoints = band.upper - candle.close;
-          signals.push({
-            id: `${symbol}-${Number(candle.timestamp)}-${config.length}-${config.deviation}-short`,
-            symbol,
-            timestamp: Number(candle.timestamp),
-            direction: "Short",
-            timeframe: Timeframe.H1,
-            lowerTimeframe: Timeframe.M5,
-            length: config.length,
-            deviation: config.deviation,
-            entry: band.upper,
-            close: candle.close,
-            high: candle.high,
-            low: candle.low,
-            upperBand: band.upper,
-            lowerBand: band.lower,
-            bandWidthPct: band.widthPct,
-            compression,
-            snapback5m: snapback.short,
-            outcomePoints,
-            wickPoints: Math.max(0, candle.high - candle.close),
-            continuationFailure: outcomePoints < 0,
-          });
-        }
-
-        if (candle.low < band.lower) {
-          const outcomePoints = candle.close - band.lower;
-          signals.push({
-            id: `${symbol}-${Number(candle.timestamp)}-${config.length}-${config.deviation}-long`,
-            symbol,
-            timestamp: Number(candle.timestamp),
-            direction: "Long",
-            timeframe: Timeframe.H1,
-            lowerTimeframe: Timeframe.M5,
-            length: config.length,
-            deviation: config.deviation,
-            entry: band.lower,
-            close: candle.close,
-            high: candle.high,
-            low: candle.low,
-            upperBand: band.upper,
-            lowerBand: band.lower,
-            bandWidthPct: band.widthPct,
-            compression,
-            snapback5m: snapback.long,
-            outcomePoints,
-            wickPoints: Math.max(0, candle.close - candle.low),
-            continuationFailure: outcomePoints < 0,
-          });
-        }
+      for (let index = config.length - 1; index < h1.length; index += 1) {
+        signals.push(
+          ...intrabarReplaySignal({ symbol, h1, m5, index, config }),
+        );
       }
     }
   }
@@ -311,6 +421,14 @@ function statsFor(signals: BrutusSignal[]): VariantStats {
     totalPoints,
     avgWickPoints: signals.length
       ? signals.reduce((sum, signal) => sum + signal.wickPoints, 0) /
+        signals.length
+      : 0,
+    avgBandStretchPoints: signals.length
+      ? signals.reduce((sum, signal) => sum + signal.bandStretchPoints, 0) /
+        signals.length
+      : 0,
+    avgMaxAdversePoints: signals.length
+      ? signals.reduce((sum, signal) => sum + signal.maxAdversePoints, 0) /
         signals.length
       : 0,
     continuationFailures,
@@ -379,16 +497,16 @@ export default function BrutusBandLabPage() {
   );
 
   const plainFinding = best
-    ? `${best.variant.label} was the strongest first-pass version on the current data: ${fmtPoints(
+    ? `${best.variant.label} was the strongest 5m replay approximation on the current data: ${fmtPoints(
         best.stats.avgPoints,
       )} average per signal across ${best.stats.signals} signals.`
     : "Load real index candles to test Brutus Band pierces.";
   const technicalFinding =
     best && rawBest
-      ? `Compared with raw band touches using the same ${best.config.length} / ${best.config.deviation} bands, this version changed continuation failures from ${pct(
+      ? `Compared with raw first-alert approximations using the same ${best.config.length} / ${best.config.deviation} bands, this version changed continuation failures from ${pct(
           rawBest.stats.continuationRate,
         )} to ${pct(best.stats.continuationRate)}.`
-      : "The lab uses prior completed candles for band values, then grades what happened after the historical trigger candle.";
+      : "The lab rebuilds each 1H candle from available 5m candles, estimates the first live band pierce, then grades what happened after that trigger.";
 
   return (
     <div className="space-y-5 p-4 md:p-6" data-ocid="brutus-band.page">
@@ -396,9 +514,10 @@ export default function BrutusBandLabPage() {
         <div>
           <h1 className="font-display text-2xl font-bold">Brutus Band Lab</h1>
           <p className="mt-1 max-w-4xl text-sm text-muted-foreground">
-            Historical replay for custom high/low Bollinger pierces on index
-            candles. The first question is simple: did the band touch reject, or
-            did price keep running through it?
+            Historical replay for your PineScript-style high/low EMA Bollinger
+            bands. The lab uses 5m candles to approximate the first live alert
+            inside each 1H candle, then checks whether price snapped back or ran
+            through.
           </p>
         </div>
         <Button
@@ -422,7 +541,15 @@ export default function BrutusBandLabPage() {
                       timestamp: new Date(signal.timestamp).toISOString(),
                       symbol: signal.symbol,
                       direction: signal.direction,
+                      triggerTimestamp: new Date(
+                        signal.triggerTimestamp,
+                      ).toISOString(),
                       entry: signal.entry,
+                      triggerBand: signal.triggerBand,
+                      finalBand: signal.finalBand,
+                      bandStretchPoints: signal.bandStretchPoints,
+                      minutesIntoCandle: signal.minutesIntoCandle,
+                      maxAdversePoints: signal.maxAdversePoints,
                       close: signal.close,
                       outcomePoints: signal.outcomePoints,
                       wickPoints: signal.wickPoints,
@@ -464,7 +591,7 @@ export default function BrutusBandLabPage() {
             <Stat
               label="Best win rate"
               value={best ? pct(best.stats.winRate) : "0.0%"}
-              detail="Exit approximation: trigger candle close"
+              detail="Exit approximation: 1H candle close"
             />
             <Stat
               label="$10/point estimate"
@@ -493,11 +620,19 @@ export default function BrutusBandLabPage() {
               Brutus Band Scoreboard
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              This first pass treats the band as known from prior completed
-              candles and grades the wick capture into the trigger candle close.
+              This pass approximates the live alert by rebuilding each 1H candle
+              from 5m candles and recalculating the moving band at each step.
             </p>
+            <div className="mt-3 border border-amber-500/40 bg-amber-500/5 p-3 text-sm text-muted-foreground">
+              <span className="font-mono font-bold uppercase tracking-widest text-amber-300">
+                Exactness note:
+              </span>{" "}
+              5m replay cannot know the exact tick where TradingView alerted. It
+              approximates the live band every 5 minutes. 1m or tick data would
+              tighten this.
+            </div>
             <div className="mt-3 overflow-x-auto">
-              <table className="w-full min-w-[1120px] font-mono text-xs">
+              <table className="w-full min-w-[1280px] font-mono text-xs">
                 <thead className="border-b border-border text-muted-foreground">
                   <tr>
                     <th className="py-2 text-left">Variant</th>
@@ -509,6 +644,8 @@ export default function BrutusBandLabPage() {
                     <th className="py-2 text-right">Avg</th>
                     <th className="py-2 text-right">Total</th>
                     <th className="py-2 text-right">Avg wick</th>
+                    <th className="py-2 text-right">Band stretch</th>
+                    <th className="py-2 text-right">Went against</th>
                     <th className="py-2 text-right">Ran through</th>
                     <th className="py-2 text-right">$ est.</th>
                   </tr>
@@ -541,6 +678,12 @@ export default function BrutusBandLabPage() {
                         {fmtPoints(row.stats.avgWickPoints)}
                       </td>
                       <td className="py-2 text-right">
+                        {fmtPoints(row.stats.avgBandStretchPoints)}
+                      </td>
+                      <td className="py-2 text-right">
+                        {fmtPoints(row.stats.avgMaxAdversePoints)}
+                      </td>
+                      <td className="py-2 text-right">
                         {pct(row.stats.continuationRate)}
                       </td>
                       <td className="py-2 text-right">
@@ -563,12 +706,15 @@ export default function BrutusBandLabPage() {
                   <thead className="border-b border-border text-muted-foreground">
                     <tr>
                       <th className="py-2 text-left">Time</th>
+                      <th className="py-2 text-left">Alert approx.</th>
                       <th className="py-2 text-left">Index</th>
                       <th className="py-2 text-left">Side</th>
                       <th className="py-2 text-right">Entry</th>
                       <th className="py-2 text-right">Close</th>
                       <th className="py-2 text-right">Outcome</th>
                       <th className="py-2 text-right">Wick</th>
+                      <th className="py-2 text-right">Stretch</th>
+                      <th className="py-2 text-right">Against</th>
                       <th className="py-2 text-left">Filters</th>
                     </tr>
                   </thead>
@@ -577,6 +723,9 @@ export default function BrutusBandLabPage() {
                       <tr key={signal.id} className="border-b border-border/40">
                         <td className="py-2">
                           {new Date(signal.timestamp).toISOString()}
+                        </td>
+                        <td className="py-2">
+                          {new Date(signal.triggerTimestamp).toISOString()}
                         </td>
                         <td className="py-2">{signal.symbol}</td>
                         <td className="py-2">{signal.direction}</td>
@@ -591,6 +740,12 @@ export default function BrutusBandLabPage() {
                         </td>
                         <td className="py-2 text-right">
                           {fmtPoints(signal.wickPoints)}
+                        </td>
+                        <td className="py-2 text-right">
+                          {fmtPoints(signal.bandStretchPoints)}
+                        </td>
+                        <td className="py-2 text-right">
+                          {fmtPoints(signal.maxAdversePoints)}
                         </td>
                         <td className="py-2">
                           {[
