@@ -4,6 +4,7 @@ import BrutusBandLabPage from "@/pages/BrutusBandLabPage";
 import ChartPage from "@/pages/ChartPage";
 import CocoRiskLabPage from "@/pages/CocoRiskLabPage";
 import CocoTradeProbePage from "@/pages/CocoTradeProbePage";
+import DailyTradeDeskPage from "@/pages/DailyTradeDeskPage";
 import DataUploadPage from "@/pages/DataUploadPage";
 import DecisionConsolePage from "@/pages/DecisionConsolePage";
 import DiscoveryLabPage from "@/pages/DiscoveryLabPage";
@@ -39,6 +40,12 @@ const dataRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/data",
   component: DataUploadPage,
+});
+
+const dailyDeskRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/daily-desk",
+  component: DailyTradeDeskPage,
 });
 
 const healthRoute = createRoute({
@@ -146,6 +153,7 @@ const resultsRoute = createRoute({
 const tree = rootRoute.addChildren([
   indexRoute,
   dataRoute,
+  dailyDeskRoute,
   healthRoute,
   auditRoute,
   truthAuditRoute,

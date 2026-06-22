@@ -3,6 +3,7 @@ import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   Activity,
   BarChart3,
+  ClipboardCheck,
   Database,
   FileSearch,
   FileWarning,
@@ -27,6 +28,7 @@ const NAV_GROUPS = [
     label: "Start Here",
     items: [
       { path: "/data", label: "Data Integrity", icon: Database },
+      { path: "/daily-desk", label: "Daily Trade Desk", icon: ClipboardCheck },
       { path: "/live-candidates", label: "Live Candidates", icon: Radio },
       { path: "/decisions", label: "Decision Console", icon: Target },
     ],

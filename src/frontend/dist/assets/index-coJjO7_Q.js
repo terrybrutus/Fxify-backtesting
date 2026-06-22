@@ -35350,7 +35350,7 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$t = [
+const __iconNode$u = [
   [
     "path",
     {
@@ -35359,7 +35359,20 @@ const __iconNode$t = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$t);
+const Activity = createLucideIcon("activity", __iconNode$u);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$t = [
+  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
+  ["path", { d: "M18 17V9", key: "2bz60n" }],
+  ["path", { d: "M13 17V5", key: "1frdt8" }],
+  ["path", { d: "M8 17v-3", key: "17ska0" }]
+];
+const ChartColumn = createLucideIcon("chart-column", __iconNode$t);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35367,12 +35380,10 @@ const Activity = createLucideIcon("activity", __iconNode$t);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$s = [
-  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
-  ["path", { d: "M18 17V9", key: "2bz60n" }],
-  ["path", { d: "M13 17V5", key: "1frdt8" }],
-  ["path", { d: "M8 17v-3", key: "17ska0" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const ChartColumn = createLucideIcon("chart-column", __iconNode$s);
+const CircleCheck = createLucideIcon("circle-check", __iconNode$s);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35381,9 +35392,10 @@ const ChartColumn = createLucideIcon("chart-column", __iconNode$s);
  */
 const __iconNode$r = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
+  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
 ];
-const CircleCheck = createLucideIcon("circle-check", __iconNode$r);
+const CircleX = createLucideIcon("circle-x", __iconNode$r);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35391,11 +35403,17 @@ const CircleCheck = createLucideIcon("circle-check", __iconNode$r);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$q = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
-  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
+  ["rect", { width: "8", height: "4", x: "8", y: "2", rx: "1", ry: "1", key: "tgr4d6" }],
+  [
+    "path",
+    {
+      d: "M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2",
+      key: "116196"
+    }
+  ],
+  ["path", { d: "m9 14 2 2 4-4", key: "df797q" }]
 ];
-const CircleX = createLucideIcon("circle-x", __iconNode$q);
+const ClipboardCheck = createLucideIcon("clipboard-check", __iconNode$q);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35783,6 +35801,7 @@ const NAV_GROUPS = [
     label: "Start Here",
     items: [
       { path: "/data", label: "Data Integrity", icon: Database },
+      { path: "/daily-desk", label: "Daily Trade Desk", icon: ClipboardCheck },
       { path: "/live-candidates", label: "Live Candidates", icon: Radio },
       { path: "/decisions", label: "Decision Console", icon: Target }
     ]
@@ -36112,7 +36131,7 @@ const REQUIRED_COLUMNS = [
   "timeframe",
   "timezone"
 ];
-function ms$1(candle) {
+function ms$2(candle) {
   return Number(candle.timestamp);
 }
 function normalizeTimeframe(value) {
@@ -36190,7 +36209,7 @@ function parseCandleCsv(text, sourceName) {
       source: sourceName
     });
   }
-  candles.sort((a2, b2) => ms$1(a2) - ms$1(b2));
+  candles.sort((a2, b2) => ms$2(a2) - ms$2(b2));
   return { candles, invalidRows, missingColumns };
 }
 function buildIntegrityReport(candles, invalidRows = 0, missingColumns = []) {
@@ -36211,11 +36230,11 @@ function buildIntegrityReport(candles, invalidRows = 0, missingColumns = []) {
       const group = candles.filter(
         (candle) => candle.symbol === symbol && candle.timeframe === timeframe
       );
-      const sorted = group.sort((a2, b2) => ms$1(a2) - ms$1(b2));
+      const sorted = group.sort((a2, b2) => ms$2(a2) - ms$2(b2));
       const interval = timeframeIntervalMs(timeframe);
       if (!interval) continue;
       for (let i = 1; i < sorted.length; i += 1) {
-        const gap = ms$1(sorted[i]) - ms$1(sorted[i - 1]);
+        const gap = ms$2(sorted[i]) - ms$2(sorted[i - 1]);
         if (gap > interval * 1.5)
           missingCandles += Math.round(gap / interval) - 1;
       }
@@ -36242,8 +36261,8 @@ function buildIntegrityReport(candles, invalidRows = 0, missingColumns = []) {
     symbols,
     timeframes,
     candleCount: candles.length,
-    start: candles[0] ? ms$1(candles[0]) : void 0,
-    end: candles.at(-1) ? ms$1(candles.at(-1)) : void 0,
+    start: candles[0] ? ms$2(candles[0]) : void 0,
+    end: candles.at(-1) ? ms$2(candles.at(-1)) : void 0,
     missingCandles,
     duplicateCandles,
     invalidRows,
@@ -36269,7 +36288,7 @@ function timeframeIntervalMs(timeframe) {
   return map2[timeframe] ?? null;
 }
 function byTimeframe(candles, timeframe) {
-  return candles.filter((candle) => candle.timeframe === timeframe).sort((a2, b2) => ms$1(a2) - ms$1(b2));
+  return candles.filter((candle) => candle.timeframe === timeframe).sort((a2, b2) => ms$2(a2) - ms$2(b2));
 }
 function bySymbol(candles, symbol) {
   return candles.filter((candle) => candle.symbol === symbol);
@@ -36280,21 +36299,21 @@ function aggregateCandles(candles, targetTimeframe, sourceTimeframe, expectedCan
   const source = byTimeframe(candles, sourceTimeframe);
   const grouped = /* @__PURE__ */ new Map();
   for (const candle of source) {
-    const bucket = Math.floor(ms$1(candle) / interval) * interval;
+    const bucket = Math.floor(ms$2(candle) / interval) * interval;
     const key = `${candle.symbol}:${bucket}`;
     const bucketCandles = grouped.get(key) ?? [];
     bucketCandles.push(candle);
     grouped.set(key, bucketCandles);
   }
   return [...grouped.entries()].flatMap(([, bucketCandles]) => {
-    const sorted = bucketCandles.sort((a2, b2) => ms$1(a2) - ms$1(b2));
+    const sorted = bucketCandles.sort((a2, b2) => ms$2(a2) - ms$2(b2));
     if (sorted.length < expectedCandlesPerBucket) return [];
     const first = sorted[0];
     const last2 = sorted.at(-1);
     return [
       {
         timestamp: BigInt(
-          Math.floor(ms$1(first) / interval) * interval
+          Math.floor(ms$2(first) / interval) * interval
         ),
         open: first.open,
         high: Math.max(...sorted.map((candle) => candle.high)),
@@ -36307,7 +36326,7 @@ function aggregateCandles(candles, targetTimeframe, sourceTimeframe, expectedCan
         source: `${first.source} derived ${targetTimeframe}`
       }
     ];
-  }).sort((a2, b2) => ms$1(a2) - ms$1(b2));
+  }).sort((a2, b2) => ms$2(a2) - ms$2(b2));
 }
 function enrichWithDerivedTimeframes(candles) {
   const existing = new Set(candles.map((candle) => candle.timeframe));
@@ -36328,7 +36347,7 @@ function enrichWithDerivedTimeframes(candles) {
     }
   }
   return {
-    analysisCandles: [...candles, ...derived].sort((a2, b2) => ms$1(a2) - ms$1(b2)),
+    analysisCandles: [...candles, ...derived].sort((a2, b2) => ms$2(a2) - ms$2(b2)),
     derivedTimeframes
   };
 }
@@ -36339,7 +36358,7 @@ function sma$1(values, period) {
     return slice.reduce((sum, value) => sum + value, 0) / period;
   });
 }
-function ema$1(values, period) {
+function ema$2(values, period) {
   const result = [];
   const k2 = 2 / (period + 1);
   let current;
@@ -36393,8 +36412,8 @@ function rsi(values, period = 14) {
 function movingAveragesAt(candles, index2) {
   const known = candles.slice(0, index2 + 1);
   const closes = known.map((candle) => candle.close);
-  const ema20 = ema$1(closes, 20).at(-1);
-  const ema200 = ema$1(closes, 200).at(-1);
+  const ema20 = ema$2(closes, 20).at(-1);
+  const ema200 = ema$2(closes, 200).at(-1);
   const sma50 = sma$1(closes, 50).at(-1);
   const atr14 = atr(known).at(-1);
   const rsi14 = rsi(closes).at(-1);
@@ -36442,7 +36461,7 @@ function deriveSundayLevels(candles) {
   const levels = [];
   for (let i = 0; i < h1.length; i += 1) {
     const candle = h1[i];
-    const date2 = new Date(ms$1(candle));
+    const date2 = new Date(ms$2(candle));
     if (date2.getUTCDay() !== 0) continue;
     const weekKey2 = Date.UTC(
       date2.getUTCFullYear(),
@@ -36454,7 +36473,7 @@ function deriveSundayLevels(candles) {
     ))
       continue;
     const sundayCandles = h1.filter((item) => {
-      const itemDate = new Date(ms$1(item));
+      const itemDate = new Date(ms$2(item));
       return itemDate.getUTCFullYear() === date2.getUTCFullYear() && itemDate.getUTCMonth() === date2.getUTCMonth() && itemDate.getUTCDate() === date2.getUTCDate();
     });
     const prior = h1.slice(0, i).at(-1);
@@ -36526,7 +36545,7 @@ function sessionRange(candles, dayStart, startHourUtc, endHourUtc, beforeTimesta
   const start = dayStart + startHourUtc * 60 * 60 * 1e3;
   const end = dayStart + endHourUtc * 60 * 60 * 1e3;
   const sessionCandles = candles.filter((item) => {
-    const itemTime = ms$1(item);
+    const itemTime = ms$2(item);
     return itemTime >= start && itemTime < end && itemTime < beforeTimestamp;
   });
   if (sessionCandles.length === 0) return {};
@@ -36536,13 +36555,13 @@ function sessionRange(candles, dayStart, startHourUtc, endHourUtc, beforeTimesta
   };
 }
 function structureSnapshot(candle, h1Candles, dailyCandles, sundayLevels, fvgZones) {
-  const timestamp = ms$1(candle);
+  const timestamp = ms$2(candle);
   const currentDay = dayKey(timestamp);
-  const priorDaily = dailyCandles.filter((item) => ms$1(item) < currentDay);
+  const priorDaily = dailyCandles.filter((item) => ms$2(item) < currentDay);
   const previousDay = priorDaily.at(-1);
   const currentWeek = weekKey(timestamp);
   const weekCandles = h1Candles.filter((item) => {
-    const itemTime = ms$1(item);
+    const itemTime = ms$2(item);
     return itemTime < timestamp && weekKey(itemTime) === currentWeek;
   });
   const oldSundayLevels = sundayLevels.filter(
@@ -36666,7 +36685,7 @@ function stopCandidateEvidence(currentPrice, engineStop, structure) {
   return candidates.filter((candidate) => candidate.risk > 0);
 }
 function latestMovingAveragesBefore(candles, timestamp) {
-  const index2 = candles.findLastIndex((candle) => ms$1(candle) <= timestamp);
+  const index2 = candles.findLastIndex((candle) => ms$2(candle) <= timestamp);
   return index2 >= 0 ? movingAveragesAt(candles, index2) : {};
 }
 function chooseCocoSetupFamily({
@@ -36724,7 +36743,7 @@ function chooseCocoSetupFamily({
 function scoreSignal(candles, index2, sundayLevels, fvgZones, dailyCandles, m15Candles, structure) {
   const candle = candles[index2];
   const ma = movingAveragesAt(candles, index2);
-  const daily = dailyCandles.filter((item) => ms$1(item) <= ms$1(candle));
+  const daily = dailyCandles.filter((item) => ms$2(item) <= ms$2(candle));
   const prevDaily = daily.at(-2);
   const marketState = classifyMarketState(candles, index2);
   const currentPrice = candle.close;
@@ -36733,14 +36752,14 @@ function scoreSignal(candles, index2, sundayLevels, fvgZones, dailyCandles, m15C
     (level) => Math.abs((level.sundayOpen ?? level.price) - currentPrice) <= atrValue * 0.12
   );
   const fvgOverlap = fvgZones.some(
-    (zone) => zone.isBullish && ms$1({ ...candle, timestamp: zone.timestamp }) <= ms$1(candle) && currentPrice >= zone.bottom && currentPrice <= zone.top
+    (zone) => zone.isBullish && ms$2({ ...candle, timestamp: zone.timestamp }) <= ms$2(candle) && currentPrice >= zone.bottom && currentPrice <= zone.top
   );
   const bullishDaily = !!prevDaily && prevDaily.close > prevDaily.open;
   const priceAbove200 = ma.ema200 !== void 0 && currentPrice > ma.ema200;
   const ema200Reaction = ma.ema200 !== void 0 && candle.low <= ma.ema200 + atrValue * 0.25 && candle.close > ma.ema200;
   const maStack = ma.ema20 !== void 0 && ma.sma50 !== void 0 && ma.ema20 > ma.sma50;
-  const m15Ma = latestMovingAveragesBefore(m15Candles, ms$1(candle));
-  const latestM15 = m15Candles.findLast((item) => ms$1(item) <= ms$1(candle));
+  const m15Ma = latestMovingAveragesBefore(m15Candles, ms$2(candle));
+  const latestM15 = m15Candles.findLast((item) => ms$2(item) <= ms$2(candle));
   const m15Hold = !!latestM15 && m15Ma.ema20 !== void 0 && latestM15.low <= m15Ma.ema20 + (m15Ma.atr14 ?? atrValue) * 0.1 && latestM15.close >= m15Ma.ema20;
   const tolerance = (ma.atr14 ?? 0) * 0.1;
   const maHold = ma.ema20 !== void 0 && candle.low <= ma.ema20 + tolerance && candle.close >= ma.ema20;
@@ -36850,9 +36869,9 @@ function scoreSignal(candles, index2, sundayLevels, fvgZones, dailyCandles, m15C
   const score = reasons.filter((reason) => reason.passed).length;
   const accepted = setupFamily.passed && !blockers.some((blocker) => blocker.passed) && rewardR >= 0.8 && stop < currentPrice;
   return {
-    id: `${candle.symbol}-${ms$1(candle)}`,
-    timestamp: ms$1(candle),
-    availableAt: ms$1(candle),
+    id: `${candle.symbol}-${ms$2(candle)}`,
+    timestamp: ms$2(candle),
+    availableAt: ms$2(candle),
     symbol: candle.symbol,
     timeframe: Timeframe.H1,
     setupType: setupFamily.setupType,
@@ -36988,7 +37007,7 @@ function simulateTrades(signals, h1BySymbol2) {
   return signals.map((signal, index2) => {
     var _a2, _b2, _c2, _d2, _e2, _f2, _g2;
     const h1 = h1BySymbol2.get(signal.symbol) ?? [];
-    const future = h1.filter((candle) => ms$1(candle) > signal.timestamp);
+    const future = h1.filter((candle) => ms$2(candle) > signal.timestamp);
     const exit = future.find(
       (candle) => candle.low <= signal.stop || candle.high >= signal.tp1
     );
@@ -36999,7 +37018,7 @@ function simulateTrades(signals, h1BySymbol2) {
     return {
       tradeId: BigInt(index2 + 1),
       entryTimestamp: BigInt(signal.timestamp),
-      exitTimestamp: exit ? BigInt(ms$1(exit)) : void 0,
+      exitTimestamp: exit ? BigInt(ms$2(exit)) : void 0,
       direction: signal.direction,
       entryPrice: signal.entry,
       stopPrice: signal.stop,
@@ -37058,7 +37077,7 @@ function emptyValidationSplit() {
 }
 function buildValidationSplit(trades, candles) {
   if (candles.length === 0) return emptyValidationSplit();
-  const sorted = [...candles].sort((a2, b2) => ms$1(a2) - ms$1(b2));
+  const sorted = [...candles].sort((a2, b2) => ms$2(a2) - ms$2(b2));
   const splitIndex = Math.max(
     0,
     Math.min(
@@ -37066,7 +37085,7 @@ function buildValidationSplit(trades, candles) {
       Math.floor((sorted.length - 1) * VALIDATION_SPLIT_RATIO)
     )
   );
-  const discoveryEndTimestamp = ms$1(sorted[splitIndex]);
+  const discoveryEndTimestamp = ms$2(sorted[splitIndex]);
   const discoveryTrades = trades.filter(
     (trade) => Number(trade.entryTimestamp) <= discoveryEndTimestamp
   );
@@ -37145,7 +37164,7 @@ function runHealthChecks(candles, integrity) {
     },
     {
       name: "EMA calculation",
-      passed: ema$1(fixture, 3).at(-1) !== void 0,
+      passed: ema$2(fixture, 3).at(-1) !== void 0,
       detail: "EMA returns only after enough candles."
     },
     {
@@ -37468,7 +37487,7 @@ function classifyEvidence({
     detail: "Sample exists, but edge or drawdown quality is not yet strong."
   };
 }
-function downloadFile$a(name, content, type) {
+function downloadFile$b(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -37477,7 +37496,7 @@ function downloadFile$a(name, content, type) {
   link.click();
   URL.revokeObjectURL(url);
 }
-function Stat$a({
+function Stat$b({
   label,
   value,
   detail
@@ -37649,7 +37668,7 @@ function BacktestResultsPage() {
             type: "button",
             variant: "outline",
             disabled: !run.integrity.canRunBacktest,
-            onClick: () => downloadFile$a(
+            onClick: () => downloadFile$b(
               "ict-audit-log.json",
               exportJson(run),
               "application/json"
@@ -37665,7 +37684,7 @@ function BacktestResultsPage() {
           {
             type: "button",
             disabled: !run.integrity.canRunBacktest,
-            onClick: () => downloadFile$a(
+            onClick: () => downloadFile$b(
               "ict-signal-log.csv",
               exportCsv(allSignals),
               "text/csv"
@@ -37681,39 +37700,39 @@ function BacktestResultsPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Results are disabled because the integrity gate is closed." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$a,
+          Stat$b,
           {
             label: "Accepted signals",
             value: String(run.acceptedSignals.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$a,
+          Stat$b,
           {
             label: "Rejected candidates",
             value: String(run.rejectedSignals.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$a,
+          Stat$b,
           {
             label: "Win rate",
             value: `${(stats.winRate * 100).toFixed(1)}%`
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$a, { label: "Profit factor", value: stats.profitFactor.toFixed(2) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$a, { label: "Total trades", value: stats.totalTrades.toString() }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$b, { label: "Profit factor", value: stats.profitFactor.toFixed(2) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$b, { label: "Total trades", value: stats.totalTrades.toString() }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$a,
+          Stat$b,
           {
             label: "Evidence status",
             value: overallEvidence.status,
             detail: overallEvidence.detail
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$a, { label: "Avg R", value: `${stats.avgRR.toFixed(2)}R` }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$b, { label: "Avg R", value: `${stats.avgRR.toFixed(2)}R` }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$a,
+          Stat$b,
           {
             label: "Max drawdown",
             value: `${drawdownR(stats.maxDrawdown).toFixed(2)}R`,
@@ -37721,7 +37740,7 @@ function BacktestResultsPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$a,
+          Stat$b,
           {
             label: "Net P/L",
             value: `${(stats.totalPnl / 100).toFixed(2)}R`,
@@ -37907,8 +37926,8 @@ const VARIANTS$1 = [
     requiresSnapback: true
   }
 ];
-const POINT_VALUE = 10;
-const HOUR_MS = 60 * 60 * 1e3;
+const POINT_VALUE$1 = 10;
+const HOUR_MS$1 = 60 * 60 * 1e3;
 const EXECUTION_CONFIGS = [
   { length: 7, deviation: 2 },
   { length: 9, deviation: 2 }
@@ -37916,16 +37935,16 @@ const EXECUTION_CONFIGS = [
 const STOP_TESTS = [null, 25, 50, 75];
 const TARGET_TESTS = [10, 20, 30, 50];
 const TARGET_STOP_TESTS = [25, 50, 75];
-function fmtPoints$1(value) {
+function fmtPoints$2(value) {
   return `${value >= 0 ? "+" : ""}${value.toFixed(1)} pts`;
 }
-function fmtMoney(value) {
+function fmtMoney$1(value) {
   return `${value >= 0 ? "+" : "-"}$${Math.abs(value).toFixed(0)}`;
 }
 function pct$6(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
-function downloadFile$9(name, content, type) {
+function downloadFile$a(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -37934,16 +37953,16 @@ function downloadFile$9(name, content, type) {
   link.click();
   URL.revokeObjectURL(url);
 }
-function mean(values) {
+function mean$1(values) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
-function stdev(values) {
-  const avg = mean(values);
+function stdev$1(values) {
+  const avg = mean$1(values);
   return Math.sqrt(
     values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / values.length
   );
 }
-function ema(values, length) {
+function ema$1(values, length) {
   const alpha3 = 2 / (length + 1);
   return values.reduce((average, value, index2) => {
     if (index2 === 0) return value;
@@ -37973,32 +37992,32 @@ function bandAt(candles, index2, config2) {
   if (index2 + 1 < config2.length) return void 0;
   const history = candles.slice(0, index2 + 1);
   const window2 = history.slice(-config2.length);
-  const upper = ema(
+  const upper = ema$1(
     history.map((candle) => candle.high),
     config2.length
-  ) + stdev(window2.map((candle) => candle.high)) * config2.deviation;
-  const lower = ema(
+  ) + stdev$1(window2.map((candle) => candle.high)) * config2.deviation;
+  const lower = ema$1(
     history.map((candle) => candle.low),
     config2.length
-  ) - stdev(window2.map((candle) => candle.low)) * config2.deviation;
+  ) - stdev$1(window2.map((candle) => candle.low)) * config2.deviation;
   return {
     upper,
     lower,
     widthPct: (upper - lower) / candles[index2].close * 100
   };
 }
-function bandForSeries(candles, config2) {
+function bandForSeries$1(candles, config2) {
   if (candles.length < config2.length) return void 0;
   const window2 = candles.slice(-config2.length);
   const last2 = candles[candles.length - 1];
-  const upper = ema(
+  const upper = ema$1(
     candles.map((candle) => candle.high),
     config2.length
-  ) + stdev(window2.map((candle) => candle.high)) * config2.deviation;
-  const lower = ema(
+  ) + stdev$1(window2.map((candle) => candle.high)) * config2.deviation;
+  const lower = ema$1(
     candles.map((candle) => candle.low),
     config2.length
-  ) - stdev(window2.map((candle) => candle.low)) * config2.deviation;
+  ) - stdev$1(window2.map((candle) => candle.low)) * config2.deviation;
   return {
     upper,
     lower,
@@ -38059,14 +38078,14 @@ function intrabarReplaySignal({
 }) {
   const candle = h1[index2];
   const start = Number(candle.timestamp);
-  const end = start + HOUR_MS;
+  const end = start + HOUR_MS$1;
   const insideHour = m5.filter((item) => {
     const timestamp = Number(item.timestamp);
     return timestamp >= start && timestamp < end;
   });
   if (insideHour.length === 0) return [];
   const prior = h1.slice(0, index2);
-  const finalBand = bandForSeries([...prior, candle], config2);
+  const finalBand = bandForSeries$1([...prior, candle], config2);
   if (!finalBand) return [];
   const widths = widthHistory(h1, index2, config2);
   const compression = widths.length >= 20 && finalBand.widthPct <= median$1(widths) * 0.8;
@@ -38088,7 +38107,7 @@ function intrabarReplaySignal({
       low: partialLow,
       close: partialClose
     };
-    const liveBand = bandForSeries([...prior, partial], config2);
+    const liveBand = bandForSeries$1([...prior, partial], config2);
     if (!liveBand) continue;
     const longByGreenPierce = partial.low <= liveBand.lower && partial.close > partial.open;
     const longByCross = previousLower !== void 0 && previousLow > previousLower && partial.low <= liveBand.lower;
@@ -38247,7 +38266,7 @@ function statsFor$3(signals) {
     avgMaxAdversePoints: signals.length ? signals.reduce((sum, signal) => sum + signal.maxAdversePoints, 0) / signals.length : 0,
     continuationFailures,
     continuationRate: signals.length ? continuationFailures / signals.length : 0,
-    estimatedDollarPnl: totalPoints * POINT_VALUE
+    estimatedDollarPnl: totalPoints * POINT_VALUE$1
   };
 }
 function executionSignal(signal, model) {
@@ -38383,7 +38402,7 @@ function buildBrutusDecisionRows(targetRows) {
     const reasons = [
       `${row.stats.signals} replay signal(s)`,
       `${pct$6(row.stats.winRate)} positive outcomes`,
-      `${fmtPoints$1(row.stats.avgPoints)} average result`,
+      `${fmtPoints$2(row.stats.avgPoints)} average result`,
       `${row.tpHits} target hit(s), ${row.stopHits} stop hit(s), ${row.closeExits} close exit(s)`
     ];
     const blockers = [
@@ -38483,7 +38502,7 @@ function buildRows(signals) {
     (a2, b2) => b2.stats.avgPoints - a2.stats.avgPoints || b2.stats.signals - a2.stats.signals
   );
 }
-function Stat$9({
+function Stat$a({
   label,
   value,
   detail
@@ -38509,7 +38528,7 @@ function BrutusBandLabPage() {
   const rawBest = rows.find(
     (row) => row.variant.id === "raw-pierce" && row.config.length === (best == null ? void 0 : best.config.length) && row.config.deviation === (best == null ? void 0 : best.config.deviation)
   );
-  const plainFinding = best ? `${best.variant.label} was the strongest 5m replay approximation on the current data: ${fmtPoints$1(
+  const plainFinding = best ? `${best.variant.label} was the strongest 5m replay approximation on the current data: ${fmtPoints$2(
     best.stats.avgPoints
   )} average per signal across ${best.stats.signals} signals.` : "Load real index candles to test Brutus Band pierces.";
   const technicalFinding = best && rawBest ? `Compared with raw first-alert approximations using the same ${best.config.length} / ${best.config.deviation} bands, this version changed continuation failures from ${pct$6(
@@ -38549,13 +38568,13 @@ function BrutusBandLabPage() {
           type: "button",
           variant: "outline",
           disabled: !run.integrity.canRunBacktest || isAnalyzing || (analysis == null ? void 0 : analysis.signature) !== dataSignature,
-          onClick: () => downloadFile$9(
+          onClick: () => downloadFile$a(
             "ict-brutus-band-lab.json",
             JSON.stringify(
               {
                 generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
                 integrity: run.integrity,
-                pointValueAssumption: POINT_VALUE,
+                pointValueAssumption: POINT_VALUE$1,
                 findings: { plainFinding, technicalFinding },
                 exportNote: "Times are UTC. First alert values are 5m replay approximations, not tick-level TradingView alert truth. The signalLedger is compact; targetRows contain the audited TP/stop summaries.",
                 signalLedger: signals.map(serializeSignal),
@@ -38601,7 +38620,7 @@ function BrutusBandLabPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Brutus Band Lab is disabled until real 1H and 5m candles are loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$9,
+          Stat$a,
           {
             label: "Band pierces",
             value: analysis ? String(signals.length) : "not run",
@@ -38609,15 +38628,15 @@ function BrutusBandLabPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$9,
+          Stat$a,
           {
             label: "Best avg",
-            value: best ? fmtPoints$1(best.stats.avgPoints) : "0.0 pts",
+            value: best ? fmtPoints$2(best.stats.avgPoints) : "0.0 pts",
             detail: (best == null ? void 0 : best.variant.label) ?? "No result"
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$9,
+          Stat$a,
           {
             label: "Best win rate",
             value: best ? pct$6(best.stats.winRate) : "0.0%",
@@ -38625,10 +38644,10 @@ function BrutusBandLabPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$9,
+          Stat$a,
           {
             label: "$10/point estimate",
-            value: best ? fmtMoney(best.stats.estimatedDollarPnl) : "$0",
+            value: best ? fmtMoney$1(best.stats.estimatedDollarPnl) : "$0",
             detail: "Adjust later for broker contract value"
           }
         )
@@ -38698,13 +38717,13 @@ function BrutusBandLabPage() {
                   row.stats.losses
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$6(row.stats.winRate) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(row.stats.avgPoints) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(row.stats.totalPoints) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(row.stats.avgWickPoints) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(row.stats.avgBandStretchPoints) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(row.stats.avgMaxAdversePoints) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$2(row.stats.avgPoints) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$2(row.stats.totalPoints) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$2(row.stats.avgWickPoints) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$2(row.stats.avgBandStretchPoints) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$2(row.stats.avgMaxAdversePoints) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$6(row.stats.continuationRate) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtMoney(row.stats.estimatedDollarPnl) })
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtMoney$1(row.stats.estimatedDollarPnl) })
               ]
             },
             `${row.variant.id}-${row.config.length}-${row.config.deviation}`
@@ -38731,7 +38750,7 @@ function BrutusBandLabPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.action }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.stats.signals }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$6(row.stats.winRate) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(row.stats.avgPoints) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$2(row.stats.avgPoints) }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.reasons.slice(0, 2).join("; ") }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.blockers.slice(0, 2).join("; ") || "none" })
           ] }, row.label)) })
@@ -38770,11 +38789,11 @@ function BrutusBandLabPage() {
                     row.stats.losses
                   ] }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$6(row.stats.winRate) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(row.stats.avgPoints) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(row.stats.totalPoints) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(row.avgAdversePoints) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$2(row.stats.avgPoints) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$2(row.stats.totalPoints) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$2(row.avgAdversePoints) }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.stoppedSignals }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtMoney(row.stats.estimatedDollarPnl) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtMoney$1(row.stats.estimatedDollarPnl) }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: good ? "Research candidate" : weak ? "Avoid for now" : "Needs more filtering" })
                 ]
               },
@@ -38815,10 +38834,10 @@ function BrutusBandLabPage() {
                   /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.stopHits }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.closeExits }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$6(row.stats.winRate) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(row.stats.avgPoints) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(row.stats.totalPoints) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$2(row.stats.avgPoints) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$2(row.stats.totalPoints) }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.conservativeSameCandle }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtMoney(row.stats.estimatedDollarPnl) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtMoney$1(row.stats.estimatedDollarPnl) }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: good ? "Scalp candidate" : weak ? "Avoid for now" : "Needs tighter filter" })
                 ]
               },
@@ -38850,10 +38869,10 @@ function BrutusBandLabPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: signal.direction }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: signal.entry.toFixed(2) }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: signal.close.toFixed(2) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(signal.outcomePoints) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(signal.wickPoints) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(signal.bandStretchPoints) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(signal.maxAdversePoints) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$2(signal.outcomePoints) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$2(signal.wickPoints) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$2(signal.bandStretchPoints) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$2(signal.maxAdversePoints) }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: [
               signal.compression ? "compression" : "",
               signal.snapback5m ? "5m snapback" : ""
@@ -61673,7 +61692,7 @@ function fmtR$7(value) {
 function pct$5(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
-function downloadFile$8(name, content, type) {
+function downloadFile$9(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -61904,7 +61923,7 @@ function buildRiskRows({
     (a2, b2) => b2.validation.totalR - a2.validation.totalR || b2.validation.trades - a2.validation.trades
   );
 }
-function Stat$8({
+function Stat$9({
   label,
   value,
   detail
@@ -62028,7 +62047,7 @@ function CocoRiskLabPage() {
           type: "button",
           variant: "outline",
           disabled: !run.integrity.canRunBacktest,
-          onClick: () => downloadFile$8(
+          onClick: () => downloadFile$9(
             "ict-coco-risk-lab.json",
             JSON.stringify(
               {
@@ -62093,7 +62112,7 @@ function CocoRiskLabPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Coco Risk Lab is disabled until real 1H and 1D data is loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$8,
+          Stat$9,
           {
             label: "Risk models",
             value: String(rows.length),
@@ -62101,7 +62120,7 @@ function CocoRiskLabPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$8,
+          Stat$9,
           {
             label: "Viable weekly models",
             value: String(viableWeekly.length),
@@ -62109,7 +62128,7 @@ function CocoRiskLabPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$8,
+          Stat$9,
           {
             label: "Best validation",
             value: best ? fmtR$7(best.validation.totalR) : "0.00R",
@@ -62117,7 +62136,7 @@ function CocoRiskLabPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$8,
+          Stat$9,
           {
             label: "Best sample",
             value: best ? String(best.validation.trades) : "0",
@@ -62298,21 +62317,21 @@ function CocoRiskLabPage() {
     ] })
   ] });
 }
-const EASTERN_TZ = "America/New_York";
-function ms(candle) {
+const EASTERN_TZ$1 = "America/New_York";
+function ms$1(candle) {
   return Number(candle.timestamp);
 }
-function fmtPrice$2(value) {
+function fmtPrice$3(value) {
   return value === void 0 ? "n/a" : value.toFixed(2);
 }
-function fmtPoints(value) {
+function fmtPoints$1(value) {
   if (value === void 0) return "n/a";
   return `${value >= 0 ? "+" : ""}${value.toFixed(2)} pts`;
 }
-function fmtEastern$1(value) {
+function fmtEastern$2(value) {
   if (value === void 0) return "n/a";
   return new Intl.DateTimeFormat("en-US", {
-    timeZone: EASTERN_TZ,
+    timeZone: EASTERN_TZ$1,
     month: "2-digit",
     day: "2-digit",
     year: "numeric",
@@ -62324,7 +62343,7 @@ function fmtEastern$1(value) {
 }
 function easternParts(timestamp) {
   const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: EASTERN_TZ,
+    timeZone: EASTERN_TZ$1,
     weekday: "short",
     year: "numeric",
     month: "2-digit",
@@ -62399,13 +62418,13 @@ function aggregateM5(candles, minutes) {
   const interval = minutes * 6e4;
   const grouped = /* @__PURE__ */ new Map();
   for (const candle of candles) {
-    const bucket = Math.floor(ms(candle) / interval) * interval;
+    const bucket = Math.floor(ms$1(candle) / interval) * interval;
     const bucketCandles = grouped.get(bucket) ?? [];
     bucketCandles.push(candle);
     grouped.set(bucket, bucketCandles);
   }
   return [...grouped.entries()].map(([timestamp, bucketCandles]) => {
-    const sorted = bucketCandles.sort((a2, b2) => ms(a2) - ms(b2));
+    const sorted = bucketCandles.sort((a2, b2) => ms$1(a2) - ms$1(b2));
     const first = sorted[0];
     const last2 = sorted.at(-1);
     return {
@@ -62418,10 +62437,10 @@ function aggregateM5(candles, minutes) {
       volume: sorted.reduce((sum, candle) => sum + candle.volume, 0),
       timeframe: `${minutes}m`
     };
-  }).sort((a2, b2) => ms(a2) - ms(b2));
+  }).sort((a2, b2) => ms$1(a2) - ms$1(b2));
 }
 function maProbe(candles, timestamp, timeframe) {
-  const known = candles.filter((candle) => ms(candle) <= timestamp);
+  const known = candles.filter((candle) => ms$1(candle) <= timestamp);
   const closes = known.map((candle) => candle.close);
   const ema20Series = emaSeries(closes, 20);
   const ema20 = ema20Series.at(-1);
@@ -62447,7 +62466,7 @@ function maProbe(candles, timestamp, timeframe) {
 }
 function findCandleAtOrBefore(candles, timestamp) {
   if (timestamp === void 0) return void 0;
-  return candles.filter((candle) => ms(candle) <= timestamp).at(-1);
+  return candles.filter((candle) => ms$1(candle) <= timestamp).at(-1);
 }
 function sessionLowForWeekday({
   candles,
@@ -62456,34 +62475,34 @@ function sessionLowForWeekday({
   referencePrice
 }) {
   const matching = candles.filter((candle) => {
-    const time2 = ms(candle);
+    const time2 = ms$1(candle);
     const parts = easternParts(time2);
     const minutes = parts.hour * 60 + parts.minute;
     return time2 < before && parts.weekday === weekday && minutes >= 9 * 60 + 30 && minutes <= 16 * 60;
   });
-  const latestDate = matching.at(-1) ? easternParts(ms(matching.at(-1))).dateKey : void 0;
+  const latestDate = matching.at(-1) ? easternParts(ms$1(matching.at(-1))).dateKey : void 0;
   const sessionCandles = latestDate ? matching.filter(
-    (candle) => easternParts(ms(candle)).dateKey === latestDate
+    (candle) => easternParts(ms$1(candle)).dateKey === latestDate
   ) : [];
   const lowCandle = sessionCandles.sort((a2, b2) => a2.low - b2.low)[0];
   return {
     label: latestDate ? `${weekday} NY low (${latestDate})` : `${weekday} NY low`,
     low: lowCandle == null ? void 0 : lowCandle.low,
-    lowTime: lowCandle ? ms(lowCandle) : void 0,
+    lowTime: lowCandle ? ms$1(lowCandle) : void 0,
     distance: lowCandle && referencePrice !== void 0 ? referencePrice - lowCandle.low : void 0
   };
 }
 function buildProbe(candles) {
   var _a2;
   const symbol = "US30";
-  const symbolCandles = candles.filter((candle) => candle.symbol === symbol).sort((a2, b2) => ms(a2) - ms(b2));
+  const symbolCandles = candles.filter((candle) => candle.symbol === symbol).sort((a2, b2) => ms$1(a2) - ms$1(b2));
   const h1 = symbolCandles.filter(
     (candle) => candle.timeframe === Timeframe.H1
   );
   const m5 = symbolCandles.filter(
     (candle) => candle.timeframe === Timeframe.M5
   );
-  const latest = h1.at(-1) ? ms(h1.at(-1)) : void 0;
+  const latest = h1.at(-1) ? ms$1(h1.at(-1)) : void 0;
   const entryTimestamp = latest === void 0 ? void 0 : findRecentEasternTime({ latest, weekday: "Sun", hour: 19 });
   const exitTimestamp = entryTimestamp === void 0 ? void 0 : nextEasternTimeAfter({
     start: entryTimestamp,
@@ -62493,7 +62512,7 @@ function buildProbe(candles) {
   const entryCandle = findCandleAtOrBefore(h1, entryTimestamp);
   const exitCandle = findCandleAtOrBefore(h1, exitTimestamp);
   const tradeCandles = entryTimestamp === void 0 || exitTimestamp === void 0 ? [] : h1.filter(
-    (candle) => ms(candle) >= entryTimestamp && ms(candle) <= exitTimestamp
+    (candle) => ms$1(candle) >= entryTimestamp && ms$1(candle) <= exitTimestamp
   );
   const entryPrice = entryCandle == null ? void 0 : entryCandle.close;
   const exitPrice = exitCandle == null ? void 0 : exitCandle.close;
@@ -62564,7 +62583,7 @@ function buildProbe(candles) {
     blockers
   };
 }
-function downloadFile$7(name, content, type) {
+function downloadFile$8(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -62573,7 +62592,7 @@ function downloadFile$7(name, content, type) {
   link.click();
   URL.revokeObjectURL(url);
 }
-function Stat$7({
+function Stat$8({
   label,
   value,
   detail
@@ -62603,7 +62622,7 @@ function CocoTradeProbePage() {
           type: "button",
           variant: "outline",
           disabled: !run.integrity.canRunBacktest,
-          onClick: () => downloadFile$7(
+          onClick: () => downloadFile$8(
             "ict-coco-trade-probe.json",
             JSON.stringify(probe, null, 2),
             "application/json"
@@ -62632,33 +62651,33 @@ function CocoTradeProbePage() {
       ] }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$7,
+          Stat$8,
           {
             label: "Entry checked",
-            value: fmtEastern$1(probe.entryTimestamp),
+            value: fmtEastern$2(probe.entryTimestamp),
             detail: "Default: most recent Sunday 7 PM ET"
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$7,
+          Stat$8,
           {
             label: "Exit checked",
-            value: fmtEastern$1(probe.exitTimestamp),
+            value: fmtEastern$2(probe.exitTimestamp),
             detail: "Default: Monday 8 AM ET"
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$7,
+          Stat$8,
           {
             label: "Short result",
-            value: fmtPoints(probe.points),
-            detail: `Entry ${fmtPrice$2((_a2 = probe.entryCandle) == null ? void 0 : _a2.close)} to exit ${fmtPrice$2(
+            value: fmtPoints$1(probe.points),
+            detail: `Entry ${fmtPrice$3((_a2 = probe.entryCandle) == null ? void 0 : _a2.close)} to exit ${fmtPrice$3(
               (_b2 = probe.exitCandle) == null ? void 0 : _b2.close
             )}`
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$7,
+          Stat$8,
           {
             label: "Bearish MA votes",
             value: `${bearishCount}/${probe.maProbes.length}`,
@@ -62668,34 +62687,34 @@ function CocoTradeProbePage() {
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$7,
+          Stat$8,
           {
             label: "Max favorable",
-            value: fmtPoints(probe.maxFavorable),
+            value: fmtPoints$1(probe.maxFavorable),
             detail: "Best short move during entry-exit window"
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$7,
+          Stat$8,
           {
             label: "Max adverse",
-            value: fmtPoints(probe.maxAdverse),
+            value: fmtPoints$1(probe.maxAdverse),
             detail: "Worst move against short during window"
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$7,
+          Stat$8,
           {
             label: "Sunday open",
-            value: fmtPrice$2(probe.sundayOpen),
-            detail: `Gap ${fmtPoints(probe.gapPoints)}`
+            value: fmtPrice$3(probe.sundayOpen),
+            detail: `Gap ${fmtPoints$1(probe.gapPoints)}`
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$7,
+          Stat$8,
           {
             label: "Latest candle",
-            value: fmtEastern$1(
+            value: fmtEastern$2(
               probe.latestCandle ? Date.parse(probe.latestCandle) : void 0
             ),
             detail: "Imported data freshness"
@@ -62726,8 +62745,8 @@ function CocoTradeProbePage() {
                 className: "border-b border-border/40",
                 children: [
                   /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.timeframe }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPrice$2(row.ema20) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPrice$2(row.sma50) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPrice$3(row.ema20) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPrice$3(row.sma50) }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.relation }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.crossedDownRecently ? "crossed down" : "no fresh cross" })
                 ]
@@ -62747,12 +62766,436 @@ function CocoTradeProbePage() {
             ] }) }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: probe.sessionLows.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.label }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPrice$2(row.low) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(row.distance) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: fmtEastern$1(row.lowTime) })
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPrice$3(row.low) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints$1(row.distance) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: fmtEastern$2(row.lowTime) })
             ] }, row.label)) })
           ] }) })
         ] })
+      ] })
+    ] })
+  ] });
+}
+const EASTERN_TZ = "America/New_York";
+const HOUR_MS = 60 * 60 * 1e3;
+const POINT_VALUE = 10;
+const BRUTUS_MODELS = [
+  { length: 7, deviation: 2, target: 50, stop: 50 },
+  { length: 9, deviation: 2, target: 50, stop: 75 }
+];
+const STRONG_BRUTUS_SYMBOLS = /* @__PURE__ */ new Set(["US30", "NAS100"]);
+function ms(candle) {
+  return Number(candle.timestamp);
+}
+function fmtPrice$2(value) {
+  return value === void 0 ? "n/a" : value.toFixed(2);
+}
+function fmtPoints(value) {
+  if (value === void 0) return "n/a";
+  return `${value >= 0 ? "+" : ""}${value.toFixed(1)} pts`;
+}
+function fmtMoney(value) {
+  if (value === void 0) return "n/a";
+  return `${value >= 0 ? "+" : "-"}$${Math.abs(value).toFixed(0)}`;
+}
+function fmtEastern$1(value) {
+  if (value === void 0) return "n/a";
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: EASTERN_TZ,
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZoneName: "short"
+  }).format(new Date(value));
+}
+function easternDateKey(timestamp) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: EASTERN_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(new Date(timestamp));
+}
+function mean(values) {
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+function stdev(values) {
+  const average = mean(values);
+  return Math.sqrt(
+    values.reduce((sum, value) => sum + (value - average) ** 2, 0) / values.length
+  );
+}
+function ema(values, length) {
+  const alpha3 = 2 / (length + 1);
+  return values.reduce((average, value, index2) => {
+    if (index2 === 0) return value;
+    return value * alpha3 + average * (1 - alpha3);
+  }, values[0]);
+}
+function bandForSeries(candles, length, deviation) {
+  if (candles.length < length) return void 0;
+  const window2 = candles.slice(-length);
+  const last2 = candles[candles.length - 1];
+  const upper = ema(
+    candles.map((candle) => candle.high),
+    length
+  ) + stdev(window2.map((candle) => candle.high)) * deviation;
+  const lower = ema(
+    candles.map((candle) => candle.low),
+    length
+  ) - stdev(window2.map((candle) => candle.low)) * deviation;
+  return {
+    upper,
+    lower,
+    widthPct: (upper - lower) / last2.close * 100
+  };
+}
+function groupBySymbol(candles, timeframe) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const candle of candles) {
+    if (candle.timeframe !== timeframe) continue;
+    const group = groups.get(candle.symbol) ?? [];
+    group.push(candle);
+    groups.set(candle.symbol, group);
+  }
+  for (const group of groups.values()) {
+    group.sort((a2, b2) => ms(a2) - ms(b2));
+  }
+  return groups;
+}
+function scoreBrutusSignal(signal) {
+  const blockers = [];
+  if (!STRONG_BRUTUS_SYMBOLS.has(signal.symbol)) {
+    blockers.push("US500 has been weaker in the Brutus evidence.");
+  }
+  if (!signal.snapback5m) {
+    blockers.push("No 5m snapback inside the band yet.");
+  }
+  if (signal.maxAdverse > signal.stop) {
+    blockers.push("Price already moved beyond the tested stop distance.");
+  }
+  if (signal.bandStretch > signal.target) {
+    blockers.push("Band stretched more than the target size.");
+  }
+  if (blockers.length === 0) {
+    return {
+      status: "Paper candidate",
+      action: "Paper trade only",
+      plainWhy: "This matches the stronger Brutus evidence: US30/NAS100, 7/2 or 9/2 band pierce, 5m snapback, and adverse move stayed inside the tested stop.",
+      blockers
+    };
+  }
+  if (blockers.length <= 2 && signal.snapback5m) {
+    return {
+      status: "Watch only",
+      action: "Track, do not enter yet",
+      plainWhy: "Something about the setup is close, but not clean enough for even paper-entry confidence.",
+      blockers
+    };
+  }
+  return {
+    status: "Avoid",
+    action: "Do not trade",
+    plainWhy: "This setup does not match the strongest Brutus evidence well enough.",
+    blockers
+  };
+}
+function scanHour({
+  symbol,
+  h1,
+  m5,
+  index: index2,
+  length,
+  deviation,
+  target,
+  stop
+}) {
+  const candle = h1[index2];
+  const start = ms(candle);
+  const end = start + HOUR_MS;
+  const lowerCandles = m5.filter((item) => {
+    const timestamp = ms(item);
+    return timestamp >= start && timestamp < end;
+  });
+  if (lowerCandles.length === 0) return [];
+  const prior = h1.slice(0, index2);
+  let partialHigh = candle.open;
+  let partialLow = candle.open;
+  let partialClose = candle.open;
+  let previousLower;
+  let previousUpper;
+  let previousLow = candle.open;
+  let previousHigh = candle.open;
+  const found = {};
+  for (const lowerCandle of lowerCandles) {
+    partialHigh = Math.max(partialHigh, lowerCandle.high);
+    partialLow = Math.min(partialLow, lowerCandle.low);
+    partialClose = lowerCandle.close;
+    const liveBand = bandForSeries(
+      [
+        ...prior,
+        {
+          ...candle,
+          high: partialHigh,
+          low: partialLow,
+          close: partialClose
+        }
+      ],
+      length,
+      deviation
+    );
+    const finalBand = bandForSeries([...prior, candle], length, deviation);
+    if (!liveBand || !finalBand) continue;
+    const longByPierce = partialLow <= liveBand.lower && partialClose > candle.open;
+    const longByCross = previousLower !== void 0 && previousLow > previousLower && partialLow <= liveBand.lower;
+    const shortByPierce = partialHigh >= liveBand.upper && partialClose < candle.open;
+    const shortByCross = previousUpper !== void 0 && previousHigh < previousUpper && partialHigh >= liveBand.upper;
+    const triggerTimestamp = ms(lowerCandle);
+    const later = lowerCandles.filter((item) => ms(item) >= triggerTimestamp);
+    if (!found.Long && (longByPierce || longByCross)) {
+      const snapback = later.find((item) => item.close > liveBand.lower);
+      const minLow = Math.min(...later.map((item) => item.low));
+      const baseSignal = {
+        id: `${symbol}-${start}-${length}-${deviation}-long`,
+        symbol,
+        direction: "Long",
+        timestamp: start,
+        triggerTimestamp,
+        length,
+        deviation,
+        entry: liveBand.lower,
+        oneHourClose: candle.close,
+        target,
+        stop,
+        outcomeToClose: candle.close - liveBand.lower,
+        maxAdverse: Math.max(0, liveBand.lower - minLow),
+        wickPoints: Math.max(0, candle.close - candle.low),
+        bandStretch: Math.abs(finalBand.lower - liveBand.lower),
+        snapback5m: Boolean(snapback)
+      };
+      found.Long = { ...baseSignal, ...scoreBrutusSignal(baseSignal) };
+    }
+    if (!found.Short && (shortByPierce || shortByCross)) {
+      const snapback = later.find((item) => item.close < liveBand.upper);
+      const maxHigh = Math.max(...later.map((item) => item.high));
+      const baseSignal = {
+        id: `${symbol}-${start}-${length}-${deviation}-short`,
+        symbol,
+        direction: "Short",
+        timestamp: start,
+        triggerTimestamp,
+        length,
+        deviation,
+        entry: liveBand.upper,
+        oneHourClose: candle.close,
+        target,
+        stop,
+        outcomeToClose: liveBand.upper - candle.close,
+        maxAdverse: Math.max(0, maxHigh - liveBand.upper),
+        wickPoints: Math.max(0, candle.high - candle.close),
+        bandStretch: Math.abs(finalBand.upper - liveBand.upper),
+        snapback5m: Boolean(snapback)
+      };
+      found.Short = { ...baseSignal, ...scoreBrutusSignal(baseSignal) };
+    }
+    previousLower = liveBand.lower;
+    previousUpper = liveBand.upper;
+    previousLow = partialLow;
+    previousHigh = partialHigh;
+  }
+  return [found.Long, found.Short].filter(
+    (item) => Boolean(item)
+  );
+}
+function buildDesk(candles) {
+  const h1BySymbol2 = groupBySymbol(candles, Timeframe.H1);
+  const m5BySymbol = groupBySymbol(candles, Timeframe.M5);
+  const latest = Math.max(
+    ...[...h1BySymbol2.values()].flatMap(
+      (group) => group.at(-1) ? [ms(group.at(-1))] : []
+    )
+  );
+  const latestDateKey = Number.isFinite(latest) ? easternDateKey(latest) : void 0;
+  const startWindow = latest - 30 * HOUR_MS;
+  const signals = [];
+  for (const [symbol, h1] of h1BySymbol2.entries()) {
+    const m5 = m5BySymbol.get(symbol) ?? [];
+    for (const model of BRUTUS_MODELS) {
+      for (let index2 = model.length - 1; index2 < h1.length; index2 += 1) {
+        const candleTime = ms(h1[index2]);
+        if (candleTime < startWindow) continue;
+        signals.push(
+          ...scanHour({
+            symbol,
+            h1,
+            m5,
+            index: index2,
+            ...model
+          })
+        );
+      }
+    }
+  }
+  signals.sort((a2, b2) => b2.triggerTimestamp - a2.triggerTimestamp);
+  const candidates = signals.filter(
+    (signal) => signal.status === "Paper candidate"
+  );
+  const watch = signals.filter((signal) => signal.status === "Watch only");
+  const avoid = signals.filter((signal) => signal.status === "Avoid");
+  const plainAnswer = candidates.length > 0 ? "There are Brutus paper candidates in the newest imported session. This is still paper-only until broker timing and 1m/tick precision are confirmed." : watch.length > 0 ? "There are Brutus-like setups, but none are clean enough to paper enter by the current filters." : "No clean Brutus setup is visible in the newest imported session.";
+  return {
+    generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    latestCandle: Number.isFinite(latest) ? new Date(latest).toISOString() : void 0,
+    latestEasternDate: latestDateKey,
+    plainAnswer,
+    candidates,
+    watch,
+    avoid,
+    signals
+  };
+}
+function downloadFile$7(name, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+function Stat$7({
+  label,
+  value,
+  detail
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: label }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: value }),
+    detail && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: detail })
+  ] });
+}
+function DailyTradeDeskPage() {
+  const { candles, run } = useStrategyWorkspace();
+  const desk = reactExports.useMemo(() => buildDesk(candles), [candles]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "daily-trade-desk.page", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-display text-2xl font-bold", children: "Daily Trade Desk" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "Start here after loading fresh candles. This page turns the newest imported session into plain trade/no-trade notes." })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Button,
+        {
+          type: "button",
+          variant: "outline",
+          disabled: !run.integrity.canRunBacktest,
+          onClick: () => downloadFile$7(
+            "ict-daily-trade-desk.json",
+            JSON.stringify(desk, null, 2),
+            "application/json"
+          ),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "mr-2 h-4 w-4" }),
+            "Export Desk"
+          ]
+        }
+      )
+    ] }),
+    !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Daily Trade Desk is disabled until real 1H and 5m candles are loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-primary/30 bg-primary/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Target, { className: "mt-0.5 h-4 w-4 text-primary" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Today's Plain Answer" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-foreground", children: desk.plainAnswer })
+        ] })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$7,
+          {
+            label: "Latest candle",
+            value: fmtEastern$1(
+              desk.latestCandle ? Date.parse(desk.latestCandle) : void 0
+            ),
+            detail: "Imported data freshness"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$7,
+          {
+            label: "Paper candidates",
+            value: String(desk.candidates.length),
+            detail: "Brutus only, not live orders"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$7,
+          {
+            label: "Watch only",
+            value: String(desk.watch.length),
+            detail: "Close but blocked"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$7,
+          {
+            label: "Avoid",
+            value: String(desk.avoid.length),
+            detail: "Rejected by current filters"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-destructive/40 bg-destructive/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ShieldAlert, { className: "mt-0.5 h-4 w-4 text-destructive" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "Live Trading Guard" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "Paper candidate means “worth tracking now,” not “place a funded trade.” The Brutus evidence is still based on 5m replay approximations, so 1m/tick confirmation and broker-feed comparison remain required before real execution." })
+        ] })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Waves, { className: "h-4 w-4 text-primary" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Newest Brutus Setups" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1180px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Alert time" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Index" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Side" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Model" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Status" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Entry" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Close read" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Against" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Target" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Stop" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Why / blockers" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: desk.signals.slice(0, 32).map((signal) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: fmtEastern$1(signal.triggerTimestamp) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: signal.symbol }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: signal.direction }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2", children: [
+              signal.length,
+              "/",
+              signal.deviation,
+              " TP ",
+              signal.target,
+              " / stop ",
+              signal.stop
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: signal.status }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPrice$2(signal.entry) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(signal.outcomeToClose) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(signal.maxAdverse) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtMoney(signal.target * POINT_VALUE) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtMoney(-signal.stop * POINT_VALUE) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "max-w-[360px] py-2 text-muted-foreground", children: signal.blockers.length ? signal.blockers.join("; ") : signal.plainWhy })
+          ] }, signal.id)) })
+        ] }) })
       ] })
     ] })
   ] });
@@ -66804,6 +67247,11 @@ const dataRoute = createRoute({
   path: "/data",
   component: DataUploadPage
 });
+const dailyDeskRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/daily-desk",
+  component: DailyTradeDeskPage
+});
 const healthRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/health",
@@ -66892,6 +67340,7 @@ const resultsRoute = createRoute({
 const tree = rootRoute.addChildren([
   indexRoute,
   dataRoute,
+  dailyDeskRoute,
   healthRoute,
   auditRoute,
   truthAuditRoute,
