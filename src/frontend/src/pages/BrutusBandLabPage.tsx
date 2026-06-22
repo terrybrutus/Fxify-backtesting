@@ -67,6 +67,7 @@ type VariantRow = {
   config: BandConfig;
   variant: BrutusVariant;
   stats: VariantStats;
+  signals: BrutusSignal[];
   sample: BrutusSignal[];
 };
 
@@ -439,6 +440,59 @@ function statsFor(signals: BrutusSignal[]): VariantStats {
   };
 }
 
+function serializeSignal(signal: BrutusSignal) {
+  return {
+    id: signal.id,
+    timestamp: new Date(signal.timestamp).toISOString(),
+    symbol: signal.symbol,
+    direction: signal.direction,
+    timeframe: signal.timeframe,
+    lowerTimeframe: signal.lowerTimeframe,
+    triggerTimestamp: new Date(signal.triggerTimestamp).toISOString(),
+    triggerHourUtc: new Date(signal.triggerTimestamp).getUTCHours(),
+    minutesIntoCandle: signal.minutesIntoCandle,
+    length: signal.length,
+    deviation: signal.deviation,
+    entry: signal.entry,
+    triggerBand: signal.triggerBand,
+    finalBand: signal.finalBand,
+    bandStretchPoints: signal.bandStretchPoints,
+    maxAdversePoints: signal.maxAdversePoints,
+    close: signal.close,
+    high: signal.high,
+    low: signal.low,
+    upperBand: signal.upperBand,
+    lowerBand: signal.lowerBand,
+    bandWidthPct: signal.bandWidthPct,
+    outcomePoints: signal.outcomePoints,
+    wickPoints: signal.wickPoints,
+    compression: signal.compression,
+    snapback5m: signal.snapback5m,
+    continuationFailure: signal.continuationFailure,
+  };
+}
+
+function groupedStats(
+  signals: BrutusSignal[],
+  groupBy: (signal: BrutusSignal) => string,
+) {
+  const groups = new Map<string, BrutusSignal[]>();
+  for (const signal of signals) {
+    const key = groupBy(signal);
+    groups.set(key, [...(groups.get(key) ?? []), signal]);
+  }
+  return [...groups.entries()]
+    .map(([key, group]) => ({
+      key,
+      stats: statsFor(group),
+    }))
+    .sort(
+      (a, b) =>
+        b.stats.avgPoints - a.stats.avgPoints ||
+        b.stats.signals - a.stats.signals,
+    );
+}
+
 function buildRows(signals: BrutusSignal[]): VariantRow[] {
   return BAND_CONFIGS.flatMap((config) =>
     VARIANTS.map((variant) => {
@@ -453,6 +507,7 @@ function buildRows(signals: BrutusSignal[]): VariantRow[] {
         config,
         variant,
         stats: statsFor(matching),
+        signals: matching,
         sample: matching.slice(0, 20),
       };
     }),
@@ -533,30 +588,43 @@ export default function BrutusBandLabPage() {
                   integrity: run.integrity,
                   pointValueAssumption: POINT_VALUE,
                   findings: { plainFinding, technicalFinding },
+                  exportNote:
+                    "Rows include every matching signal, not just UI samples. Times are UTC. First alert values are 5m replay approximations, not tick-level TradingView alert truth.",
                   rows: rows.map((row) => ({
                     variant: row.variant,
                     config: row.config,
                     stats: row.stats,
-                    sample: row.sample.map((signal) => ({
-                      timestamp: new Date(signal.timestamp).toISOString(),
-                      symbol: signal.symbol,
-                      direction: signal.direction,
-                      triggerTimestamp: new Date(
-                        signal.triggerTimestamp,
-                      ).toISOString(),
-                      entry: signal.entry,
-                      triggerBand: signal.triggerBand,
-                      finalBand: signal.finalBand,
-                      bandStretchPoints: signal.bandStretchPoints,
-                      minutesIntoCandle: signal.minutesIntoCandle,
-                      maxAdversePoints: signal.maxAdversePoints,
-                      close: signal.close,
-                      outcomePoints: signal.outcomePoints,
-                      wickPoints: signal.wickPoints,
-                      compression: signal.compression,
-                      snapback5m: signal.snapback5m,
-                      continuationFailure: signal.continuationFailure,
-                    })),
+                    breakdowns: {
+                      bySymbol: groupedStats(
+                        row.signals,
+                        (signal) => signal.symbol,
+                      ),
+                      byDirection: groupedStats(
+                        row.signals,
+                        (signal) => signal.direction,
+                      ),
+                      bySymbolDirection: groupedStats(
+                        row.signals,
+                        (signal) => `${signal.symbol} ${signal.direction}`,
+                      ),
+                      byTriggerHourUtc: groupedStats(row.signals, (signal) =>
+                        String(new Date(signal.triggerTimestamp).getUTCHours()),
+                      ),
+                      byEntryWindow: groupedStats(row.signals, (signal) => {
+                        if (signal.minutesIntoCandle < 15) return "00-14m";
+                        if (signal.minutesIntoCandle < 30) return "15-29m";
+                        if (signal.minutesIntoCandle < 45) return "30-44m";
+                        return "45-59m";
+                      }),
+                      byAdverseBucket: groupedStats(row.signals, (signal) => {
+                        if (signal.maxAdversePoints < 10) return "<10 pts";
+                        if (signal.maxAdversePoints < 25) return "10-24 pts";
+                        if (signal.maxAdversePoints < 50) return "25-49 pts";
+                        return "50+ pts";
+                      }),
+                    },
+                    sample: row.sample.map(serializeSignal),
+                    allSignals: row.signals.map(serializeSignal),
                   })),
                 },
                 null,
