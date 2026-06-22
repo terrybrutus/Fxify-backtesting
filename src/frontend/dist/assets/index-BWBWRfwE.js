@@ -37855,6 +37855,8 @@ const EXECUTION_CONFIGS = [
   { length: 9, deviation: 2 }
 ];
 const STOP_TESTS = [null, 25, 50, 75];
+const TARGET_TESTS = [10, 20, 30, 50];
+const TARGET_STOP_TESTS = [25, 50, 75];
 function fmtPoints(value) {
   return `${value >= 0 ? "+" : ""}${value.toFixed(1)} pts`;
 }
@@ -37953,6 +37955,42 @@ function widthHistory(candles, index2, config2) {
   }
   return widths;
 }
+function simulateTargetResults({
+  direction,
+  entry,
+  close,
+  later
+}) {
+  return TARGET_TESTS.flatMap(
+    (takeProfitPoints) => TARGET_STOP_TESTS.map((stopPoints) => {
+      const takeProfit = direction === "Long" ? entry + takeProfitPoints : entry - takeProfitPoints;
+      const stop = direction === "Long" ? entry - stopPoints : entry + stopPoints;
+      for (const candle of later) {
+        const hitStop = direction === "Long" ? candle.low <= stop : candle.high >= stop;
+        const hitTarget = direction === "Long" ? candle.high >= takeProfit : candle.low <= takeProfit;
+        if (hitStop || hitTarget) {
+          const conservativeStop = hitStop && hitTarget;
+          return {
+            takeProfitPoints,
+            stopPoints,
+            outcome: conservativeStop || hitStop ? "STOP" : "TP",
+            outcomePoints: conservativeStop || hitStop ? -stopPoints : takeProfitPoints,
+            exitTimestamp: Number(candle.timestamp),
+            conservativeSameCandle: conservativeStop
+          };
+        }
+      }
+      return {
+        takeProfitPoints,
+        stopPoints,
+        outcome: "CLOSE",
+        outcomePoints: direction === "Long" ? close - entry : entry - close,
+        exitTimestamp: later.length ? Number(later[later.length - 1].timestamp) : Date.now(),
+        conservativeSameCandle: false
+      };
+    })
+  );
+}
 function intrabarReplaySignal({
   symbol,
   h1,
@@ -38010,6 +38048,12 @@ function intrabarReplaySignal({
       const minLowAfterSnapback = afterSnapback.length ? Math.min(...afterSnapback.map((item) => item.low)) : void 0;
       const maxLowAfterTrigger = Math.min(...later.map((item) => item.low));
       const outcomePoints = candle.close - liveBand.lower;
+      const targetResults = simulateTargetResults({
+        direction: "Long",
+        entry: liveBand.lower,
+        close: candle.close,
+        later
+      });
       found.Long = {
         id: `${symbol}-${start}-${config2.length}-${config2.deviation}-long-live`,
         symbol,
@@ -38041,7 +38085,8 @@ function intrabarReplaySignal({
         snapback5m: Boolean(snapbackCandle),
         outcomePoints,
         wickPoints: Math.max(0, candle.close - candle.low),
-        continuationFailure: outcomePoints < 0
+        continuationFailure: outcomePoints < 0,
+        targetResults
       };
     }
     if (!found.Short && (shortByRedPierce || shortByCross)) {
@@ -38055,6 +38100,12 @@ function intrabarReplaySignal({
       const maxHighAfterSnapback = afterSnapback.length ? Math.max(...afterSnapback.map((item) => item.high)) : void 0;
       const maxHighAfterTrigger = Math.max(...later.map((item) => item.high));
       const outcomePoints = liveBand.upper - candle.close;
+      const targetResults = simulateTargetResults({
+        direction: "Short",
+        entry: liveBand.upper,
+        close: candle.close,
+        later
+      });
       found.Short = {
         id: `${symbol}-${start}-${config2.length}-${config2.deviation}-short-live`,
         symbol,
@@ -38086,7 +38137,8 @@ function intrabarReplaySignal({
         snapback5m: Boolean(snapbackCandle),
         outcomePoints,
         wickPoints: Math.max(0, candle.high - candle.close),
-        continuationFailure: outcomePoints < 0
+        continuationFailure: outcomePoints < 0,
+        targetResults
       };
     }
     previousLower = liveBand.lower;
@@ -38213,6 +38265,55 @@ function buildExecutionRows(signals) {
     (a2, b2) => b2.stats.avgPoints - a2.stats.avgPoints || b2.stats.signals - a2.stats.signals
   );
 }
+function buildTargetRows(signals) {
+  const models = EXECUTION_CONFIGS.flatMap(
+    (config2) => TARGET_TESTS.flatMap(
+      (takeProfitPoints) => TARGET_STOP_TESTS.map((stopPoints) => ({
+        label: `${config2.length}/${config2.deviation} TP ${takeProfitPoints} / stop ${stopPoints}`,
+        config: config2,
+        takeProfitPoints,
+        stopPoints
+      }))
+    )
+  );
+  return models.map((model) => {
+    const targetSignals = signals.filter(
+      (signal) => signal.length === model.config.length && signal.deviation === model.config.deviation
+    ).map((signal) => {
+      const target = signal.targetResults.find(
+        (result) => result.takeProfitPoints === model.takeProfitPoints && result.stopPoints === model.stopPoints
+      );
+      if (!target) return void 0;
+      return {
+        ...signal,
+        outcomePoints: target.outcomePoints,
+        continuationFailure: target.outcome !== "TP"
+      };
+    }).filter((signal) => Boolean(signal));
+    const matchingTargets = signals.filter(
+      (signal) => signal.length === model.config.length && signal.deviation === model.config.deviation
+    ).flatMap(
+      (signal) => signal.targetResults.filter(
+        (result) => result.takeProfitPoints === model.takeProfitPoints && result.stopPoints === model.stopPoints
+      )
+    );
+    return {
+      model,
+      stats: statsFor$3(targetSignals),
+      tpHits: matchingTargets.filter((result) => result.outcome === "TP").length,
+      stopHits: matchingTargets.filter((result) => result.outcome === "STOP").length,
+      closeExits: matchingTargets.filter(
+        (result) => result.outcome === "CLOSE"
+      ).length,
+      conservativeSameCandle: matchingTargets.filter(
+        (result) => result.conservativeSameCandle
+      ).length,
+      breakdowns: executionBreakdowns(targetSignals)
+    };
+  }).sort(
+    (a2, b2) => b2.stats.avgPoints - a2.stats.avgPoints || b2.stats.signals - a2.stats.signals
+  );
+}
 function serializeSignal(signal) {
   return {
     id: signal.id,
@@ -38236,6 +38337,10 @@ function serializeSignal(signal) {
     minutesToSnapback: signal.minutesToSnapback ?? null,
     maxAdverseAfterSnapbackPoints: signal.maxAdverseAfterSnapbackPoints ?? null,
     snapbackOutcomePoints: signal.snapbackOutcomePoints ?? null,
+    targetResults: signal.targetResults.map((result) => ({
+      ...result,
+      exitTimestamp: new Date(result.exitTimestamp).toISOString()
+    })),
     close: signal.close,
     high: signal.high,
     low: signal.low,
@@ -38309,6 +38414,7 @@ function BrutusBandLabPage() {
   const signals = (analysis == null ? void 0 : analysis.signals) ?? [];
   const rows = (analysis == null ? void 0 : analysis.rows) ?? [];
   const executionRows = (analysis == null ? void 0 : analysis.executionRows) ?? [];
+  const targetRows = (analysis == null ? void 0 : analysis.targetRows) ?? [];
   const usableRows = rows.filter((row) => row.stats.signals >= 20);
   const best = usableRows[0] ?? rows[0];
   const rawBest = rows.find(
@@ -38334,7 +38440,8 @@ function BrutusBandLabPage() {
         signature: dataSignature,
         signals: nextSignals,
         rows: buildRows(nextSignals),
-        executionRows: buildExecutionRows(nextSignals)
+        executionRows: buildExecutionRows(nextSignals),
+        targetRows: buildTargetRows(nextSignals)
       });
       setIsAnalyzing(false);
     }, 0);
@@ -38367,6 +38474,15 @@ function BrutusBandLabPage() {
                   eligibleSignals: row.eligibleSignals,
                   stoppedSignals: row.stoppedSignals,
                   avgAdversePoints: row.avgAdversePoints,
+                  breakdowns: row.breakdowns
+                })),
+                targetRows: targetRows.map((row) => ({
+                  model: row.model,
+                  stats: row.stats,
+                  tpHits: row.tpHits,
+                  stopHits: row.stopHits,
+                  closeExits: row.closeExits,
+                  conservativeSameCandle: row.conservativeSameCandle,
                   breakdowns: row.breakdowns
                 })),
                 rows: rows.map((row) => ({
@@ -38545,6 +38661,50 @@ function BrutusBandLabPage() {
                 ]
               },
               `${row.model.label}`
+            );
+          }) })
+        ] }) })
+      ] }),
+      analysis && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Brutus Target Lab" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-sm text-muted-foreground", children: "This tests the wick-scalp idea directly: enter at the approximate pierce, then use 5m candles to see whether a fixed target or stop is hit first. If target and stop both appear inside the same 5m candle, the app counts it as a stop." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1180px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Target model" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Signals" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "TP" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Stop" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Close" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Win" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Avg" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Total" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Same 5m" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "$ est." }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Plain read" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: targetRows.slice(0, 18).map((row) => {
+            const enough = row.stats.signals >= 30;
+            const good = enough && row.stats.avgPoints > 5 && row.stats.winRate >= 0.58;
+            const weak = row.stats.avgPoints <= 0 || row.stats.winRate < 0.45;
+            return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "tr",
+              {
+                className: "border-b border-border/40",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.model.label }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.stats.signals }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.tpHits }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.stopHits }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.closeExits }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$6(row.stats.winRate) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(row.stats.avgPoints) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(row.stats.totalPoints) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.conservativeSameCandle }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtMoney(row.stats.estimatedDollarPnl) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: good ? "Scalp candidate" : weak ? "Avoid for now" : "Needs tighter filter" })
+                ]
+              },
+              row.model.label
             );
           }) })
         ] }) })
