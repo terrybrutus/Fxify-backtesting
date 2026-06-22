@@ -38337,10 +38337,6 @@ function serializeSignal(signal) {
     minutesToSnapback: signal.minutesToSnapback ?? null,
     maxAdverseAfterSnapbackPoints: signal.maxAdverseAfterSnapbackPoints ?? null,
     snapbackOutcomePoints: signal.snapbackOutcomePoints ?? null,
-    targetResults: signal.targetResults.map((result) => ({
-      ...result,
-      exitTimestamp: new Date(result.exitTimestamp).toISOString()
-    })),
     close: signal.close,
     high: signal.high,
     low: signal.low,
@@ -38466,7 +38462,7 @@ function BrutusBandLabPage() {
                 integrity: run.integrity,
                 pointValueAssumption: POINT_VALUE,
                 findings: { plainFinding, technicalFinding },
-                exportNote: "Times are UTC. First alert values are 5m replay approximations, not tick-level TradingView alert truth. The signalLedger contains each full signal once; rows reference those records by signalIds.",
+                exportNote: "Times are UTC. First alert values are 5m replay approximations, not tick-level TradingView alert truth. The signalLedger is compact; targetRows contain the audited TP/stop summaries.",
                 signalLedger: signals.map(serializeSignal),
                 executionRows: executionRows.map((row) => ({
                   model: row.model,
