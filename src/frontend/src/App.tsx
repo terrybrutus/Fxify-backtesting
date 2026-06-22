@@ -3,6 +3,7 @@ import BacktestResultsPage from "@/pages/BacktestResultsPage";
 import BrutusBandLabPage from "@/pages/BrutusBandLabPage";
 import ChartPage from "@/pages/ChartPage";
 import CocoRiskLabPage from "@/pages/CocoRiskLabPage";
+import CocoTradeProbePage from "@/pages/CocoTradeProbePage";
 import DataUploadPage from "@/pages/DataUploadPage";
 import DecisionConsolePage from "@/pages/DecisionConsolePage";
 import DiscoveryLabPage from "@/pages/DiscoveryLabPage";
@@ -69,6 +70,12 @@ const cocoRiskRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/coco-risk",
   component: CocoRiskLabPage,
+});
+
+const cocoTradeProbeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/coco-trade-probe",
+  component: CocoTradeProbePage,
 });
 
 const brutusBandRoute = createRoute({
@@ -151,6 +158,7 @@ const tree = rootRoute.addChildren([
   auditRoute,
   truthAuditRoute,
   cocoRiskRoute,
+  cocoTradeProbeRoute,
   brutusBandRoute,
   rejectedRoute,
   discoveryRoute,
