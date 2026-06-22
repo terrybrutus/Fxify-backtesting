@@ -1058,6 +1058,9 @@ video {
 .min-w-\[1220px\] {
   min-width: 1220px;
 }
+.min-w-\[1280px\] {
+  min-width: 1280px;
+}
 .min-w-\[12rem\] {
   min-width: 12rem;
 }
@@ -1419,6 +1422,9 @@ video {
 .border-dashed {
   border-style: dashed;
 }
+.border-amber-500\/40 {
+  border-color: rgb(245 158 11 / 0.4);
+}
 .border-border {
   border-color: oklch(var(--border));
 }
@@ -1453,6 +1459,9 @@ video {
 .bg-accent {
   --tw-bg-opacity: 1;
   background-color: oklch(var(--accent) / var(--tw-bg-opacity, 1));
+}
+.bg-amber-500\/5 {
+  background-color: rgb(245 158 11 / 0.05);
 }
 .bg-background {
   background-color: oklch(var(--background));
@@ -1768,6 +1777,10 @@ video {
 }
 .text-accent-foreground {
   color: oklch(var(--accent-foreground));
+}
+.text-amber-300 {
+  --tw-text-opacity: 1;
+  color: rgb(252 211 77 / var(--tw-text-opacity, 1));
 }
 .text-card-foreground {
   color: oklch(var(--card-foreground));

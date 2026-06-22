@@ -36272,7 +36272,7 @@ function sma(values, period) {
     return slice.reduce((sum, value) => sum + value, 0) / period;
   });
 }
-function ema(values, period) {
+function ema$1(values, period) {
   const result = [];
   const k2 = 2 / (period + 1);
   let current;
@@ -36326,8 +36326,8 @@ function rsi(values, period = 14) {
 function movingAveragesAt(candles, index2) {
   const known = candles.slice(0, index2 + 1);
   const closes = known.map((candle) => candle.close);
-  const ema20 = ema(closes, 20).at(-1);
-  const ema200 = ema(closes, 200).at(-1);
+  const ema20 = ema$1(closes, 20).at(-1);
+  const ema200 = ema$1(closes, 200).at(-1);
   const sma50 = sma(closes, 50).at(-1);
   const atr14 = atr(known).at(-1);
   const rsi14 = rsi(closes).at(-1);
@@ -37078,7 +37078,7 @@ function runHealthChecks(candles, integrity) {
     },
     {
       name: "EMA calculation",
-      passed: ema(fixture, 3).at(-1) !== void 0,
+      passed: ema$1(fixture, 3).at(-1) !== void 0,
       detail: "EMA returns only after enough candles."
     },
     {
@@ -37805,11 +37805,11 @@ function BacktestResultsPage() {
   ] });
 }
 const BAND_CONFIGS = [
-  { length: 8, deviation: 1 },
-  { length: 8, deviation: 1.5 },
-  { length: 10, deviation: 1 },
-  { length: 10, deviation: 1.5 },
-  { length: 14, deviation: 1 },
+  { length: 9, deviation: 2 },
+  { length: 9, deviation: 1.5 },
+  { length: 9, deviation: 2.5 },
+  { length: 7, deviation: 2 },
+  { length: 12, deviation: 2 },
   { length: 14, deviation: 1.5 },
   { length: 20, deviation: 1.5 },
   { length: 20, deviation: 2 }
@@ -37869,6 +37869,13 @@ function stdev(values) {
     values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / values.length
   );
 }
+function ema(values, length) {
+  const alpha3 = 2 / (length + 1);
+  return values.reduce((average, value, index2) => {
+    if (index2 === 0) return value;
+    return value * alpha3 + average * (1 - alpha3);
+  }, values[0]);
+}
 function median$1(values) {
   if (!values.length) return 0;
   const sorted = [...values].sort((a2, b2) => a2 - b2);
@@ -37889,16 +37896,39 @@ function groupCandles(candles, timeframe) {
   return groups;
 }
 function bandAt(candles, index2, config2) {
-  if (index2 < config2.length) return void 0;
-  const window2 = candles.slice(index2 - config2.length, index2);
-  const highAvg = mean(window2.map((candle) => candle.high));
-  const lowAvg = mean(window2.map((candle) => candle.low));
-  const upper = highAvg + stdev(window2.map((candle) => candle.high)) * config2.deviation;
-  const lower = lowAvg - stdev(window2.map((candle) => candle.low)) * config2.deviation;
+  if (index2 + 1 < config2.length) return void 0;
+  const history = candles.slice(0, index2 + 1);
+  const window2 = history.slice(-config2.length);
+  const upper = ema(
+    history.map((candle) => candle.high),
+    config2.length
+  ) + stdev(window2.map((candle) => candle.high)) * config2.deviation;
+  const lower = ema(
+    history.map((candle) => candle.low),
+    config2.length
+  ) - stdev(window2.map((candle) => candle.low)) * config2.deviation;
   return {
     upper,
     lower,
     widthPct: (upper - lower) / candles[index2].close * 100
+  };
+}
+function bandForSeries(candles, config2) {
+  if (candles.length < config2.length) return void 0;
+  const window2 = candles.slice(-config2.length);
+  const last2 = candles[candles.length - 1];
+  const upper = ema(
+    candles.map((candle) => candle.high),
+    config2.length
+  ) + stdev(window2.map((candle) => candle.high)) * config2.deviation;
+  const lower = ema(
+    candles.map((candle) => candle.low),
+    config2.length
+  ) - stdev(window2.map((candle) => candle.low)) * config2.deviation;
+  return {
+    upper,
+    lower,
+    widthPct: (upper - lower) / last2.close * 100
   };
 }
 function widthHistory(candles, index2, config2) {
@@ -37910,26 +37940,130 @@ function widthHistory(candles, index2, config2) {
   }
   return widths;
 }
-function fiveMinuteSnapback({
-  lowerCandles,
-  signal,
-  upperBand,
-  lowerBand
+function intrabarReplaySignal({
+  symbol,
+  h1,
+  m5,
+  index: index2,
+  config: config2
 }) {
-  const start = Number(signal.timestamp);
+  const candle = h1[index2];
+  const start = Number(candle.timestamp);
   const end = start + HOUR_MS;
-  const insideHour = lowerCandles.filter((candle) => {
-    const timestamp = Number(candle.timestamp);
+  const insideHour = m5.filter((item) => {
+    const timestamp = Number(item.timestamp);
     return timestamp >= start && timestamp < end;
   });
-  return {
-    short: insideHour.some(
-      (candle) => candle.high > upperBand && candle.close < upperBand
-    ),
-    long: insideHour.some(
-      (candle) => candle.low < lowerBand && candle.close > lowerBand
-    )
-  };
+  if (insideHour.length === 0) return [];
+  const prior = h1.slice(0, index2);
+  const finalBand = bandForSeries([...prior, candle], config2);
+  if (!finalBand) return [];
+  const widths = widthHistory(h1, index2, config2);
+  const compression = widths.length >= 20 && finalBand.widthPct <= median$1(widths) * 0.8;
+  let partialHigh = candle.open;
+  let partialLow = candle.open;
+  let partialClose = candle.open;
+  let previousLower;
+  let previousUpper;
+  let previousLow = candle.open;
+  let previousHigh = candle.open;
+  const found = {};
+  for (const lowerCandle of insideHour) {
+    partialHigh = Math.max(partialHigh, lowerCandle.high);
+    partialLow = Math.min(partialLow, lowerCandle.low);
+    partialClose = lowerCandle.close;
+    const partial = {
+      ...candle,
+      high: partialHigh,
+      low: partialLow,
+      close: partialClose
+    };
+    const liveBand = bandForSeries([...prior, partial], config2);
+    if (!liveBand) continue;
+    const longByGreenPierce = partial.low <= liveBand.lower && partial.close > partial.open;
+    const longByCross = previousLower !== void 0 && previousLow > previousLower && partial.low <= liveBand.lower;
+    const shortByRedPierce = partial.high >= liveBand.upper && partial.close < partial.open;
+    const shortByCross = previousUpper !== void 0 && previousHigh < previousUpper && partial.high >= liveBand.upper;
+    const triggerTimestamp = Number(lowerCandle.timestamp);
+    const minutesIntoCandle = Math.round((triggerTimestamp - start) / 6e4);
+    if (!found.Long && (longByGreenPierce || longByCross)) {
+      const later = insideHour.filter(
+        (item) => Number(item.timestamp) >= triggerTimestamp
+      );
+      const maxLowAfterTrigger = Math.min(...later.map((item) => item.low));
+      const outcomePoints = candle.close - liveBand.lower;
+      found.Long = {
+        id: `${symbol}-${start}-${config2.length}-${config2.deviation}-long-live`,
+        symbol,
+        timestamp: start,
+        triggerTimestamp,
+        direction: "Long",
+        timeframe: Timeframe.H1,
+        lowerTimeframe: Timeframe.M5,
+        length: config2.length,
+        deviation: config2.deviation,
+        entry: liveBand.lower,
+        close: candle.close,
+        high: candle.high,
+        low: candle.low,
+        upperBand: liveBand.upper,
+        lowerBand: liveBand.lower,
+        triggerBand: liveBand.lower,
+        finalBand: finalBand.lower,
+        bandStretchPoints: Math.abs(finalBand.lower - liveBand.lower),
+        minutesIntoCandle,
+        maxAdversePoints: Math.max(0, liveBand.lower - maxLowAfterTrigger),
+        bandWidthPct: liveBand.widthPct,
+        compression,
+        snapback5m: later.some((item) => item.close > liveBand.lower),
+        outcomePoints,
+        wickPoints: Math.max(0, candle.close - candle.low),
+        continuationFailure: outcomePoints < 0
+      };
+    }
+    if (!found.Short && (shortByRedPierce || shortByCross)) {
+      const later = insideHour.filter(
+        (item) => Number(item.timestamp) >= triggerTimestamp
+      );
+      const maxHighAfterTrigger = Math.max(...later.map((item) => item.high));
+      const outcomePoints = liveBand.upper - candle.close;
+      found.Short = {
+        id: `${symbol}-${start}-${config2.length}-${config2.deviation}-short-live`,
+        symbol,
+        timestamp: start,
+        triggerTimestamp,
+        direction: "Short",
+        timeframe: Timeframe.H1,
+        lowerTimeframe: Timeframe.M5,
+        length: config2.length,
+        deviation: config2.deviation,
+        entry: liveBand.upper,
+        close: candle.close,
+        high: candle.high,
+        low: candle.low,
+        upperBand: liveBand.upper,
+        lowerBand: liveBand.lower,
+        triggerBand: liveBand.upper,
+        finalBand: finalBand.upper,
+        bandStretchPoints: Math.abs(finalBand.upper - liveBand.upper),
+        minutesIntoCandle,
+        maxAdversePoints: Math.max(0, maxHighAfterTrigger - liveBand.upper),
+        bandWidthPct: liveBand.widthPct,
+        compression,
+        snapback5m: later.some((item) => item.close < liveBand.upper),
+        outcomePoints,
+        wickPoints: Math.max(0, candle.high - candle.close),
+        continuationFailure: outcomePoints < 0
+      };
+    }
+    previousLower = liveBand.lower;
+    previousUpper = liveBand.upper;
+    previousLow = partial.low;
+    previousHigh = partial.high;
+  }
+  return [found.Long, found.Short].filter(
+    (signal) => Boolean(signal)
+  );
 }
 function buildSignals(candles) {
   const h1BySymbol2 = groupCandles(candles, Timeframe.H1);
@@ -37938,68 +38072,10 @@ function buildSignals(candles) {
   for (const [symbol, h1] of h1BySymbol2.entries()) {
     const m5 = m5BySymbol.get(symbol) ?? [];
     for (const config2 of BAND_CONFIGS) {
-      for (let index2 = config2.length; index2 < h1.length; index2 += 1) {
-        const candle = h1[index2];
-        const band2 = bandAt(h1, index2, config2);
-        if (!band2) continue;
-        const widths = widthHistory(h1, index2, config2);
-        const compression = widths.length >= 20 && band2.widthPct <= median$1(widths) * 0.8;
-        const snapback = fiveMinuteSnapback({
-          lowerCandles: m5,
-          signal: candle,
-          upperBand: band2.upper,
-          lowerBand: band2.lower
-        });
-        if (candle.high > band2.upper) {
-          const outcomePoints = band2.upper - candle.close;
-          signals.push({
-            id: `${symbol}-${Number(candle.timestamp)}-${config2.length}-${config2.deviation}-short`,
-            symbol,
-            timestamp: Number(candle.timestamp),
-            direction: "Short",
-            timeframe: Timeframe.H1,
-            lowerTimeframe: Timeframe.M5,
-            length: config2.length,
-            deviation: config2.deviation,
-            entry: band2.upper,
-            close: candle.close,
-            high: candle.high,
-            low: candle.low,
-            upperBand: band2.upper,
-            lowerBand: band2.lower,
-            bandWidthPct: band2.widthPct,
-            compression,
-            snapback5m: snapback.short,
-            outcomePoints,
-            wickPoints: Math.max(0, candle.high - candle.close),
-            continuationFailure: outcomePoints < 0
-          });
-        }
-        if (candle.low < band2.lower) {
-          const outcomePoints = candle.close - band2.lower;
-          signals.push({
-            id: `${symbol}-${Number(candle.timestamp)}-${config2.length}-${config2.deviation}-long`,
-            symbol,
-            timestamp: Number(candle.timestamp),
-            direction: "Long",
-            timeframe: Timeframe.H1,
-            lowerTimeframe: Timeframe.M5,
-            length: config2.length,
-            deviation: config2.deviation,
-            entry: band2.lower,
-            close: candle.close,
-            high: candle.high,
-            low: candle.low,
-            upperBand: band2.upper,
-            lowerBand: band2.lower,
-            bandWidthPct: band2.widthPct,
-            compression,
-            snapback5m: snapback.long,
-            outcomePoints,
-            wickPoints: Math.max(0, candle.close - candle.low),
-            continuationFailure: outcomePoints < 0
-          });
-        }
+      for (let index2 = config2.length - 1; index2 < h1.length; index2 += 1) {
+        signals.push(
+          ...intrabarReplaySignal({ symbol, h1, m5, index: index2, config: config2 })
+        );
       }
     }
   }
@@ -38023,6 +38099,8 @@ function statsFor$3(signals) {
     avgPoints: signals.length ? totalPoints / signals.length : 0,
     totalPoints,
     avgWickPoints: signals.length ? signals.reduce((sum, signal) => sum + signal.wickPoints, 0) / signals.length : 0,
+    avgBandStretchPoints: signals.length ? signals.reduce((sum, signal) => sum + signal.bandStretchPoints, 0) / signals.length : 0,
+    avgMaxAdversePoints: signals.length ? signals.reduce((sum, signal) => sum + signal.maxAdversePoints, 0) / signals.length : 0,
     continuationFailures,
     continuationRate: signals.length ? continuationFailures / signals.length : 0,
     estimatedDollarPnl: totalPoints * POINT_VALUE
@@ -38069,17 +38147,17 @@ function BrutusBandLabPage() {
   const rawBest = rows.find(
     (row) => row.variant.id === "raw-pierce" && row.config.length === (best == null ? void 0 : best.config.length) && row.config.deviation === (best == null ? void 0 : best.config.deviation)
   );
-  const plainFinding = best ? `${best.variant.label} was the strongest first-pass version on the current data: ${fmtPoints(
+  const plainFinding = best ? `${best.variant.label} was the strongest 5m replay approximation on the current data: ${fmtPoints(
     best.stats.avgPoints
   )} average per signal across ${best.stats.signals} signals.` : "Load real index candles to test Brutus Band pierces.";
-  const technicalFinding = best && rawBest ? `Compared with raw band touches using the same ${best.config.length} / ${best.config.deviation} bands, this version changed continuation failures from ${pct$6(
+  const technicalFinding = best && rawBest ? `Compared with raw first-alert approximations using the same ${best.config.length} / ${best.config.deviation} bands, this version changed continuation failures from ${pct$6(
     rawBest.stats.continuationRate
-  )} to ${pct$6(best.stats.continuationRate)}.` : "The lab uses prior completed candles for band values, then grades what happened after the historical trigger candle.";
+  )} to ${pct$6(best.stats.continuationRate)}.` : "The lab rebuilds each 1H candle from available 5m candles, estimates the first live band pierce, then grades what happened after that trigger.";
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "brutus-band.page", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-display text-2xl font-bold", children: "Brutus Band Lab" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "Historical replay for custom high/low Bollinger pierces on index candles. The first question is simple: did the band touch reject, or did price keep running through it?" })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "Historical replay for your PineScript-style high/low EMA Bollinger bands. The lab uses 5m candles to approximate the first live alert inside each 1H candle, then checks whether price snapped back or ran through." })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs(
         Button,
@@ -38103,7 +38181,15 @@ function BrutusBandLabPage() {
                     timestamp: new Date(signal.timestamp).toISOString(),
                     symbol: signal.symbol,
                     direction: signal.direction,
+                    triggerTimestamp: new Date(
+                      signal.triggerTimestamp
+                    ).toISOString(),
                     entry: signal.entry,
+                    triggerBand: signal.triggerBand,
+                    finalBand: signal.finalBand,
+                    bandStretchPoints: signal.bandStretchPoints,
+                    minutesIntoCandle: signal.minutesIntoCandle,
+                    maxAdversePoints: signal.maxAdversePoints,
                     close: signal.close,
                     outcomePoints: signal.outcomePoints,
                     wickPoints: signal.wickPoints,
@@ -38148,7 +38234,7 @@ function BrutusBandLabPage() {
           {
             label: "Best win rate",
             value: best ? pct$6(best.stats.winRate) : "0.0%",
-            detail: "Exit approximation: trigger candle close"
+            detail: "Exit approximation: 1H candle close"
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -38170,8 +38256,13 @@ function BrutusBandLabPage() {
       ] }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Brutus Band Scoreboard" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-sm text-muted-foreground", children: "This first pass treats the band as known from prior completed candles and grades the wick capture into the trigger candle close." }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1120px] font-mono text-xs", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-sm text-muted-foreground", children: "This pass approximates the live alert by rebuilding each 1H candle from 5m candles and recalculating the moving band at each step." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 border border-amber-500/40 bg-amber-500/5 p-3 text-sm text-muted-foreground", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono font-bold uppercase tracking-widest text-amber-300", children: "Exactness note:" }),
+          " ",
+          "5m replay cannot know the exact tick where TradingView alerted. It approximates the live band every 5 minutes. 1m or tick data would tighten this."
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1280px] font-mono text-xs", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Variant" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Length" }),
@@ -38182,6 +38273,8 @@ function BrutusBandLabPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Avg" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Total" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Avg wick" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Band stretch" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Went against" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Ran through" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "$ est." })
           ] }) }),
@@ -38203,6 +38296,8 @@ function BrutusBandLabPage() {
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(row.stats.avgPoints) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(row.stats.totalPoints) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(row.stats.avgWickPoints) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(row.stats.avgBandStretchPoints) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(row.stats.avgMaxAdversePoints) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$6(row.stats.continuationRate) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtMoney(row.stats.estimatedDollarPnl) })
               ]
@@ -38216,22 +38311,28 @@ function BrutusBandLabPage() {
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[980px] font-mono text-xs", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Time" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Alert approx." }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Index" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Side" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Entry" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Close" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Outcome" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Wick" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Stretch" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Against" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Filters" })
           ] }) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: best.sample.slice(0, 12).map((signal) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: new Date(signal.timestamp).toISOString() }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: new Date(signal.triggerTimestamp).toISOString() }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: signal.symbol }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: signal.direction }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: signal.entry.toFixed(2) }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: signal.close.toFixed(2) }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(signal.outcomePoints) }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(signal.wickPoints) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(signal.bandStretchPoints) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(signal.maxAdversePoints) }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: [
               signal.compression ? "compression" : "",
               signal.snapback5m ? "5m snapback" : ""
