@@ -16,6 +16,7 @@ import SampleExpansionPage from "@/pages/SampleExpansionPage";
 import SetupDetectorPage from "@/pages/SetupDetectorPage";
 import TruthAuditPage from "@/pages/TruthAuditPage";
 import WalkForwardPage from "@/pages/WalkForwardPage";
+import WorkflowMapPage from "@/pages/WorkflowMapPage";
 import {
   RouterProvider,
   createRootRoute,
@@ -38,6 +39,12 @@ const dataRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/data",
   component: DataUploadPage,
+});
+
+const workflowRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/workflow",
+  component: WorkflowMapPage,
 });
 
 const healthRoute = createRoute({
@@ -138,6 +145,7 @@ const resultsRoute = createRoute({
 
 const tree = rootRoute.addChildren([
   indexRoute,
+  workflowRoute,
   dataRoute,
   healthRoute,
   auditRoute,

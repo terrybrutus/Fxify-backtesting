@@ -12,6 +12,7 @@ import {
   HeartPulse,
   ListChecks,
   Microscope,
+  Network,
   Radar,
   Radio,
   RotateCcw,
@@ -22,6 +23,7 @@ import {
 } from "lucide-react";
 
 const NAV_ITEMS = [
+  { path: "/workflow", label: "Workflow Map", icon: Network },
   { path: "/data", label: "Data Integrity", icon: Database },
   { path: "/health", label: "Rule Health", icon: HeartPulse },
   { path: "/audit", label: "Signal Audit", icon: ListChecks },

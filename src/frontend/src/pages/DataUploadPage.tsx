@@ -18,11 +18,24 @@ import { toast } from "sonner";
 
 const YAHOO_PROXY_DATA_PATH = "/data/yahoo_futures_proxy_latest.csv";
 const YAHOO_PROXY_DATA_NAME = "yahoo_futures_proxy_latest.csv";
+const EASTERN_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/New_York",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZoneName: "short",
+});
 
 function fmtDate(value?: number) {
   return value
     ? new Date(value).toISOString().slice(0, 16).replace("T", " ")
     : "n/a";
+}
+
+function fmtEastern(value?: number) {
+  return value ? EASTERN_FORMATTER.format(new Date(value)) : "n/a";
 }
 
 function Metric({ label, value }: { label: string; value: string | number }) {
@@ -114,6 +127,10 @@ export default function DataUploadPage() {
 
   const { integrity } = run;
   const displayFileName = fileName || storedFileName;
+  const dataLagHours = integrity.end
+    ? (Date.now() - integrity.end) / (60 * 60 * 1000)
+    : undefined;
+  const isStaleForLive = dataLagHours === undefined || dataLagHours > 24;
 
   return (
     <div className="space-y-6 p-4 md:p-6" data-ocid="data.page">
@@ -196,9 +213,37 @@ export default function DataUploadPage() {
         <Metric label="Timezone" value={integrity.timezone} />
         <Metric label="Start" value={fmtDate(integrity.start)} />
         <Metric label="End" value={fmtDate(integrity.end)} />
+        <Metric label="Start Eastern" value={fmtEastern(integrity.start)} />
+        <Metric label="End Eastern" value={fmtEastern(integrity.end)} />
+        <Metric
+          label="Live lag"
+          value={
+            dataLagHours === undefined
+              ? "unknown"
+              : `${dataLagHours.toFixed(1)} hours`
+          }
+        />
         <Metric label="Missing candles" value={integrity.missingCandles} />
         <Metric label="Duplicate candles" value={integrity.duplicateCandles} />
       </div>
+
+      {integrity.canRunBacktest && isStaleForLive && (
+        <div className="border border-destructive/40 bg-destructive/5 p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 text-destructive" />
+            <div>
+              <p className="font-mono text-sm font-bold uppercase tracking-wider">
+                Data is stale for live decisions
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                The latest imported candle is {fmtEastern(integrity.end)}. If a
+                trade happened after that, this app cannot see or judge it until
+                newer candles are loaded.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div
         className={`border p-4 ${
