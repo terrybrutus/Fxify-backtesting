@@ -67,7 +67,15 @@ type VariantRow = {
   config: BandConfig;
   variant: BrutusVariant;
   stats: VariantStats;
-  signals: BrutusSignal[];
+  signalIds: string[];
+  breakdowns: {
+    bySymbol: ReturnType<typeof groupedStats>;
+    byDirection: ReturnType<typeof groupedStats>;
+    bySymbolDirection: ReturnType<typeof groupedStats>;
+    byTriggerHourUtc: ReturnType<typeof groupedStats>;
+    byEntryWindow: ReturnType<typeof groupedStats>;
+    byAdverseBucket: ReturnType<typeof groupedStats>;
+  };
   sample: BrutusSignal[];
 };
 
@@ -479,7 +487,12 @@ function groupedStats(
   const groups = new Map<string, BrutusSignal[]>();
   for (const signal of signals) {
     const key = groupBy(signal);
-    groups.set(key, [...(groups.get(key) ?? []), signal]);
+    const group = groups.get(key);
+    if (group) {
+      group.push(signal);
+    } else {
+      groups.set(key, [signal]);
+    }
   }
   return [...groups.entries()]
     .map(([key, group]) => ({
@@ -507,7 +520,30 @@ function buildRows(signals: BrutusSignal[]): VariantRow[] {
         config,
         variant,
         stats: statsFor(matching),
-        signals: matching,
+        signalIds: matching.map((signal) => signal.id),
+        breakdowns: {
+          bySymbol: groupedStats(matching, (signal) => signal.symbol),
+          byDirection: groupedStats(matching, (signal) => signal.direction),
+          bySymbolDirection: groupedStats(
+            matching,
+            (signal) => `${signal.symbol} ${signal.direction}`,
+          ),
+          byTriggerHourUtc: groupedStats(matching, (signal) =>
+            String(new Date(signal.triggerTimestamp).getUTCHours()),
+          ),
+          byEntryWindow: groupedStats(matching, (signal) => {
+            if (signal.minutesIntoCandle < 15) return "00-14m";
+            if (signal.minutesIntoCandle < 30) return "15-29m";
+            if (signal.minutesIntoCandle < 45) return "30-44m";
+            return "45-59m";
+          }),
+          byAdverseBucket: groupedStats(matching, (signal) => {
+            if (signal.maxAdversePoints < 10) return "<10 pts";
+            if (signal.maxAdversePoints < 25) return "10-24 pts";
+            if (signal.maxAdversePoints < 50) return "25-49 pts";
+            return "50+ pts";
+          }),
+        },
         sample: matching.slice(0, 20),
       };
     }),
@@ -589,42 +625,15 @@ export default function BrutusBandLabPage() {
                   pointValueAssumption: POINT_VALUE,
                   findings: { plainFinding, technicalFinding },
                   exportNote:
-                    "Rows include every matching signal, not just UI samples. Times are UTC. First alert values are 5m replay approximations, not tick-level TradingView alert truth.",
+                    "Times are UTC. First alert values are 5m replay approximations, not tick-level TradingView alert truth. The signalLedger contains each full signal once; rows reference those records by signalIds.",
+                  signalLedger: signals.map(serializeSignal),
                   rows: rows.map((row) => ({
                     variant: row.variant,
                     config: row.config,
                     stats: row.stats,
-                    breakdowns: {
-                      bySymbol: groupedStats(
-                        row.signals,
-                        (signal) => signal.symbol,
-                      ),
-                      byDirection: groupedStats(
-                        row.signals,
-                        (signal) => signal.direction,
-                      ),
-                      bySymbolDirection: groupedStats(
-                        row.signals,
-                        (signal) => `${signal.symbol} ${signal.direction}`,
-                      ),
-                      byTriggerHourUtc: groupedStats(row.signals, (signal) =>
-                        String(new Date(signal.triggerTimestamp).getUTCHours()),
-                      ),
-                      byEntryWindow: groupedStats(row.signals, (signal) => {
-                        if (signal.minutesIntoCandle < 15) return "00-14m";
-                        if (signal.minutesIntoCandle < 30) return "15-29m";
-                        if (signal.minutesIntoCandle < 45) return "30-44m";
-                        return "45-59m";
-                      }),
-                      byAdverseBucket: groupedStats(row.signals, (signal) => {
-                        if (signal.maxAdversePoints < 10) return "<10 pts";
-                        if (signal.maxAdversePoints < 25) return "10-24 pts";
-                        if (signal.maxAdversePoints < 50) return "25-49 pts";
-                        return "50+ pts";
-                      }),
-                    },
+                    signalIds: row.signalIds,
+                    breakdowns: row.breakdowns,
                     sample: row.sample.map(serializeSignal),
-                    allSignals: row.signals.map(serializeSignal),
                   })),
                 },
                 null,
