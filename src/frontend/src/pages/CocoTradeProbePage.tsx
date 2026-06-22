@@ -41,6 +41,7 @@ type CocoTradeProbe = {
   maProbes: MaProbe[];
   sessionLows: SessionLow[];
   plainAnswer: string;
+  mismatchWarning?: string;
   blockers: string[];
 };
 
@@ -383,6 +384,10 @@ function buildProbe(candles: Candle[]): CocoTradeProbe {
         : points !== undefined && points > 0
           ? "The described US30 short is visible and profitable by the Monday morning exit, but the MA-cross evidence is not strong enough yet to call this a locked rule."
           : "The described US30 short is visible, but this replay does not show a clean profitable short from the default entry and exit timestamps.";
+  const mismatchWarning =
+    blockers.length === 0 && points !== undefined && points < 0
+      ? "This conflicts with the reported profitable short. The most likely causes are different broker prices, a different exact entry/exit than the hourly close, or a missing intrabar trigger rule. Treat this as a mismatch to investigate, not as proof Coco was wrong."
+      : undefined;
   return {
     generatedAt: new Date().toISOString(),
     latestCandle: latest ? new Date(latest).toISOString() : undefined,
@@ -404,6 +409,7 @@ function buildProbe(candles: Candle[]): CocoTradeProbe {
     maProbes,
     sessionLows,
     plainAnswer,
+    mismatchWarning,
     blockers,
   };
 }
@@ -492,6 +498,22 @@ export default function CocoTradeProbePage() {
               </div>
             </div>
           </section>
+
+          {probe.mismatchWarning && (
+            <section className="border border-destructive/40 bg-destructive/5 p-4">
+              <div className="flex items-start gap-3">
+                <ShieldAlert className="mt-0.5 h-4 w-4 text-destructive" />
+                <div>
+                  <p className="font-mono text-xs font-bold uppercase tracking-widest">
+                    Broker / Timing Mismatch
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {probe.mismatchWarning}
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
 
           <div className="grid gap-3 md:grid-cols-4">
             <Stat

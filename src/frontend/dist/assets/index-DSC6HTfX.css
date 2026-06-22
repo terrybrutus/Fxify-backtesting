@@ -1313,6 +1313,11 @@ video {
   margin-top: calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));
   margin-bottom: calc(0.75rem * var(--tw-space-y-reverse));
 }
+.space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(1rem * var(--tw-space-y-reverse));
+}
 .space-y-5 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-y-reverse: 0;
   margin-top: calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));
@@ -1804,6 +1809,9 @@ video {
 .text-muted-foreground {
   --tw-text-opacity: 1;
   color: oklch(var(--muted-foreground) / var(--tw-text-opacity, 1));
+}
+.text-muted-foreground\/70 {
+  color: oklch(var(--muted-foreground) / 0.7);
 }
 .text-popover-foreground {
   color: oklch(var(--popover-foreground));
