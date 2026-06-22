@@ -1,5 +1,6 @@
 import Layout from "@/components/Layout";
 import BacktestResultsPage from "@/pages/BacktestResultsPage";
+import BrutusBandLabPage from "@/pages/BrutusBandLabPage";
 import ChartPage from "@/pages/ChartPage";
 import CocoRiskLabPage from "@/pages/CocoRiskLabPage";
 import DataUploadPage from "@/pages/DataUploadPage";
@@ -61,6 +62,12 @@ const cocoRiskRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/coco-risk",
   component: CocoRiskLabPage,
+});
+
+const brutusBandRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/brutus-band",
+  component: BrutusBandLabPage,
 });
 
 const rejectedRoute = createRoute({
@@ -136,6 +143,7 @@ const tree = rootRoute.addChildren([
   auditRoute,
   truthAuditRoute,
   cocoRiskRoute,
+  brutusBandRoute,
   rejectedRoute,
   discoveryRoute,
   experimentRoute,
