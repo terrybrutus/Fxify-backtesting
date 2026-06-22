@@ -35350,7 +35350,7 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$p = [
+const __iconNode$q = [
   [
     "path",
     {
@@ -35359,7 +35359,20 @@ const __iconNode$p = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$p);
+const Activity = createLucideIcon("activity", __iconNode$q);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$p = [
+  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
+  ["path", { d: "M18 17V9", key: "2bz60n" }],
+  ["path", { d: "M13 17V5", key: "1frdt8" }],
+  ["path", { d: "M8 17v-3", key: "17ska0" }]
+];
+const ChartColumn = createLucideIcon("chart-column", __iconNode$p);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35367,12 +35380,10 @@ const Activity = createLucideIcon("activity", __iconNode$p);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$o = [
-  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
-  ["path", { d: "M18 17V9", key: "2bz60n" }],
-  ["path", { d: "M13 17V5", key: "1frdt8" }],
-  ["path", { d: "M8 17v-3", key: "17ska0" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const ChartColumn = createLucideIcon("chart-column", __iconNode$o);
+const CircleCheck = createLucideIcon("circle-check", __iconNode$o);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35381,9 +35392,10 @@ const ChartColumn = createLucideIcon("chart-column", __iconNode$o);
  */
 const __iconNode$n = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
+  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
 ];
-const CircleCheck = createLucideIcon("circle-check", __iconNode$n);
+const CircleX = createLucideIcon("circle-x", __iconNode$n);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35391,11 +35403,11 @@ const CircleCheck = createLucideIcon("circle-check", __iconNode$n);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$m = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
-  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
+  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
+  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
+  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
 ];
-const CircleX = createLucideIcon("circle-x", __iconNode$m);
+const Database = createLucideIcon("database", __iconNode$m);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35403,11 +35415,11 @@ const CircleX = createLucideIcon("circle-x", __iconNode$m);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$l = [
-  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
-  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
-  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
+  ["path", { d: "M12 15V3", key: "m9g1x1" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
+  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
 ];
-const Database = createLucideIcon("database", __iconNode$l);
+const Download = createLucideIcon("download", __iconNode$l);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35415,18 +35427,6 @@ const Database = createLucideIcon("database", __iconNode$l);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$k = [
-  ["path", { d: "M12 15V3", key: "m9g1x1" }],
-  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
-  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
-];
-const Download = createLucideIcon("download", __iconNode$k);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$j = [
   ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
   [
     "path",
@@ -35435,7 +35435,20 @@ const __iconNode$j = [
   ["path", { d: "m9 18-1.5-1.5", key: "1j6qii" }],
   ["circle", { cx: "5", cy: "14", r: "3", key: "ufru5t" }]
 ];
-const FileSearch = createLucideIcon("file-search", __iconNode$j);
+const FileSearch = createLucideIcon("file-search", __iconNode$k);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$j = [
+  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
+  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
+  ["path", { d: "M12 12v6", key: "3ahymv" }],
+  ["path", { d: "m15 15-3-3-3 3", key: "15xj92" }]
+];
+const FileUp = createLucideIcon("file-up", __iconNode$j);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35444,11 +35457,10 @@ const FileSearch = createLucideIcon("file-search", __iconNode$j);
  */
 const __iconNode$i = [
   ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
-  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
-  ["path", { d: "M12 12v6", key: "3ahymv" }],
-  ["path", { d: "m15 15-3-3-3 3", key: "15xj92" }]
+  ["path", { d: "M12 9v4", key: "juzpu7" }],
+  ["path", { d: "M12 17h.01", key: "p32p05" }]
 ];
-const FileUp = createLucideIcon("file-up", __iconNode$i);
+const FileWarning = createLucideIcon("file-warning", __iconNode$i);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35456,18 +35468,6 @@ const FileUp = createLucideIcon("file-up", __iconNode$i);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$h = [
-  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
-  ["path", { d: "M12 9v4", key: "juzpu7" }],
-  ["path", { d: "M12 17h.01", key: "p32p05" }]
-];
-const FileWarning = createLucideIcon("file-warning", __iconNode$h);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$g = [
   [
     "path",
     {
@@ -35478,14 +35478,14 @@ const __iconNode$g = [
   ["path", { d: "M6.453 15h11.094", key: "3shlmq" }],
   ["path", { d: "M8.5 2h7", key: "csnxdl" }]
 ];
-const FlaskConical = createLucideIcon("flask-conical", __iconNode$g);
+const FlaskConical = createLucideIcon("flask-conical", __iconNode$h);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$f = [
+const __iconNode$g = [
   [
     "path",
     {
@@ -35494,14 +35494,14 @@ const __iconNode$f = [
     }
   ]
 ];
-const Funnel = createLucideIcon("funnel", __iconNode$f);
+const Funnel = createLucideIcon("funnel", __iconNode$g);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$e = [
+const __iconNode$f = [
   ["circle", { cx: "5", cy: "6", r: "3", key: "1qnov2" }],
   ["path", { d: "M12 6h5a2 2 0 0 1 2 2v7", key: "1yj91y" }],
   ["path", { d: "m15 9-3-3 3-3", key: "1lwv8l" }],
@@ -35509,14 +35509,14 @@ const __iconNode$e = [
   ["path", { d: "M12 18H7a2 2 0 0 1-2-2V9", key: "16sdep" }],
   ["path", { d: "m9 15 3 3-3 3", key: "1m3kbl" }]
 ];
-const GitCompareArrows = createLucideIcon("git-compare-arrows", __iconNode$e);
+const GitCompareArrows = createLucideIcon("git-compare-arrows", __iconNode$f);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$d = [
+const __iconNode$e = [
   [
     "path",
     {
@@ -35526,7 +35526,21 @@ const __iconNode$d = [
   ],
   ["path", { d: "M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27", key: "1uw2ng" }]
 ];
-const HeartPulse = createLucideIcon("heart-pulse", __iconNode$d);
+const HeartPulse = createLucideIcon("heart-pulse", __iconNode$e);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$d = [
+  ["path", { d: "m3 17 2 2 4-4", key: "1jhpwq" }],
+  ["path", { d: "m3 7 2 2 4-4", key: "1obspn" }],
+  ["path", { d: "M13 6h8", key: "15sg57" }],
+  ["path", { d: "M13 12h8", key: "h98zly" }],
+  ["path", { d: "M13 18h8", key: "oe0vm4" }]
+];
+const ListChecks = createLucideIcon("list-checks", __iconNode$d);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35534,13 +35548,10 @@ const HeartPulse = createLucideIcon("heart-pulse", __iconNode$d);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$c = [
-  ["path", { d: "m3 17 2 2 4-4", key: "1jhpwq" }],
-  ["path", { d: "m3 7 2 2 4-4", key: "1obspn" }],
-  ["path", { d: "M13 6h8", key: "15sg57" }],
-  ["path", { d: "M13 12h8", key: "h98zly" }],
-  ["path", { d: "M13 18h8", key: "oe0vm4" }]
+  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
+  ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
 ];
-const ListChecks = createLucideIcon("list-checks", __iconNode$c);
+const Lock = createLucideIcon("lock", __iconNode$c);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35548,17 +35559,6 @@ const ListChecks = createLucideIcon("list-checks", __iconNode$c);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$b = [
-  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
-  ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
-];
-const Lock = createLucideIcon("lock", __iconNode$b);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$a = [
   ["path", { d: "M6 18h8", key: "1borvv" }],
   ["path", { d: "M3 22h18", key: "8prr45" }],
   ["path", { d: "M14 22a7 7 0 1 0 0-14h-1", key: "1jwaiy" }],
@@ -35566,14 +35566,14 @@ const __iconNode$a = [
   ["path", { d: "M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z", key: "1bmzmy" }],
   ["path", { d: "M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3", key: "1drr47" }]
 ];
-const Microscope = createLucideIcon("microscope", __iconNode$a);
+const Microscope = createLucideIcon("microscope", __iconNode$b);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$9 = [
+const __iconNode$a = [
   ["path", { d: "M19.07 4.93A10 10 0 0 0 6.99 3.34", key: "z3du51" }],
   ["path", { d: "M4 6h.01", key: "oypzma" }],
   ["path", { d: "M2.29 9.62A10 10 0 1 0 21.31 8.35", key: "qzzz0" }],
@@ -35583,7 +35583,21 @@ const __iconNode$9 = [
   ["circle", { cx: "12", cy: "12", r: "2", key: "1c9p78" }],
   ["path", { d: "m13.41 10.59 5.66-5.66", key: "mhq4k0" }]
 ];
-const Radar = createLucideIcon("radar", __iconNode$9);
+const Radar = createLucideIcon("radar", __iconNode$a);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$9 = [
+  ["path", { d: "M4.9 19.1C1 15.2 1 8.8 4.9 4.9", key: "1vaf9d" }],
+  ["path", { d: "M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5", key: "u1ii0m" }],
+  ["circle", { cx: "12", cy: "12", r: "2", key: "1c9p78" }],
+  ["path", { d: "M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5", key: "1j5fej" }],
+  ["path", { d: "M19.1 4.9C23 8.8 23 15.1 19.1 19", key: "10b0cb" }]
+];
+const Radio = createLucideIcon("radio", __iconNode$9);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35591,13 +35605,10 @@ const Radar = createLucideIcon("radar", __iconNode$9);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$8 = [
-  ["path", { d: "M4.9 19.1C1 15.2 1 8.8 4.9 4.9", key: "1vaf9d" }],
-  ["path", { d: "M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5", key: "u1ii0m" }],
-  ["circle", { cx: "12", cy: "12", r: "2", key: "1c9p78" }],
-  ["path", { d: "M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5", key: "1j5fej" }],
-  ["path", { d: "M19.1 4.9C23 8.8 23 15.1 19.1 19", key: "10b0cb" }]
+  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
+  ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
 ];
-const Radio = createLucideIcon("radio", __iconNode$8);
+const RotateCcw = createLucideIcon("rotate-ccw", __iconNode$8);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35605,10 +35616,13 @@ const Radio = createLucideIcon("radio", __iconNode$8);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$7 = [
-  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
-  ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
+  ["path", { d: "m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z", key: "7g6ntu" }],
+  ["path", { d: "m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z", key: "ijws7r" }],
+  ["path", { d: "M7 21h10", key: "1b0cd5" }],
+  ["path", { d: "M12 3v18", key: "108xh3" }],
+  ["path", { d: "M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2", key: "3gwbw2" }]
 ];
-const RotateCcw = createLucideIcon("rotate-ccw", __iconNode$7);
+const Scale = createLucideIcon("scale", __iconNode$7);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35616,13 +35630,17 @@ const RotateCcw = createLucideIcon("rotate-ccw", __iconNode$7);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$6 = [
-  ["path", { d: "m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z", key: "7g6ntu" }],
-  ["path", { d: "m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z", key: "ijws7r" }],
-  ["path", { d: "M7 21h10", key: "1b0cd5" }],
-  ["path", { d: "M12 3v18", key: "108xh3" }],
-  ["path", { d: "M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2", key: "3gwbw2" }]
+  [
+    "path",
+    {
+      d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z",
+      key: "oel41y"
+    }
+  ],
+  ["path", { d: "M12 8v4", key: "1got3b" }],
+  ["path", { d: "M12 16h.01", key: "1drbdi" }]
 ];
-const Scale = createLucideIcon("scale", __iconNode$6);
+const ShieldAlert = createLucideIcon("shield-alert", __iconNode$6);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35637,10 +35655,9 @@ const __iconNode$5 = [
       key: "oel41y"
     }
   ],
-  ["path", { d: "M12 8v4", key: "1got3b" }],
-  ["path", { d: "M12 16h.01", key: "1drbdi" }]
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const ShieldAlert = createLucideIcon("shield-alert", __iconNode$5);
+const ShieldCheck = createLucideIcon("shield-check", __iconNode$5);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35648,16 +35665,11 @@ const ShieldAlert = createLucideIcon("shield-alert", __iconNode$5);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$4 = [
-  [
-    "path",
-    {
-      d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z",
-      key: "oel41y"
-    }
-  ],
-  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["circle", { cx: "12", cy: "12", r: "6", key: "1vlfrh" }],
+  ["circle", { cx: "12", cy: "12", r: "2", key: "1c9p78" }]
 ];
-const ShieldCheck = createLucideIcon("shield-check", __iconNode$4);
+const Target = createLucideIcon("target", __iconNode$4);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35665,11 +35677,13 @@ const ShieldCheck = createLucideIcon("shield-check", __iconNode$4);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$3 = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["circle", { cx: "12", cy: "12", r: "6", key: "1vlfrh" }],
-  ["circle", { cx: "12", cy: "12", r: "2", key: "1c9p78" }]
+  ["path", { d: "M3 6h18", key: "d0wm0j" }],
+  ["path", { d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", key: "4alrt4" }],
+  ["path", { d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2", key: "v07s0e" }],
+  ["line", { x1: "10", x2: "10", y1: "11", y2: "17", key: "1uufr5" }],
+  ["line", { x1: "14", x2: "14", y1: "11", y2: "17", key: "xtxkd" }]
 ];
-const Target = createLucideIcon("target", __iconNode$3);
+const Trash2 = createLucideIcon("trash-2", __iconNode$3);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35677,13 +35691,10 @@ const Target = createLucideIcon("target", __iconNode$3);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$2 = [
-  ["path", { d: "M3 6h18", key: "d0wm0j" }],
-  ["path", { d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", key: "4alrt4" }],
-  ["path", { d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2", key: "v07s0e" }],
-  ["line", { x1: "10", x2: "10", y1: "11", y2: "17", key: "1uufr5" }],
-  ["line", { x1: "14", x2: "14", y1: "11", y2: "17", key: "xtxkd" }]
+  ["path", { d: "M16 7h6v6", key: "box55l" }],
+  ["path", { d: "m22 7-8.5 8.5-5-5L2 17", key: "1t1m79" }]
 ];
-const Trash2 = createLucideIcon("trash-2", __iconNode$2);
+const TrendingUp = createLucideIcon("trending-up", __iconNode$2);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35691,17 +35702,6 @@ const Trash2 = createLucideIcon("trash-2", __iconNode$2);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$1 = [
-  ["path", { d: "M16 7h6v6", key: "box55l" }],
-  ["path", { d: "m22 7-8.5 8.5-5-5L2 17", key: "1t1m79" }]
-];
-const TrendingUp = createLucideIcon("trending-up", __iconNode$1);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode = [
   [
     "path",
     {
@@ -35712,13 +35712,44 @@ const __iconNode = [
   ["path", { d: "M12 9v4", key: "juzpu7" }],
   ["path", { d: "M12 17h.01", key: "p32p05" }]
 ];
-const TriangleAlert = createLucideIcon("triangle-alert", __iconNode);
+const TriangleAlert = createLucideIcon("triangle-alert", __iconNode$1);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode = [
+  [
+    "path",
+    {
+      d: "M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1",
+      key: "knzxuh"
+    }
+  ],
+  [
+    "path",
+    {
+      d: "M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1",
+      key: "2jd2cc"
+    }
+  ],
+  [
+    "path",
+    {
+      d: "M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1",
+      key: "rd2r6e"
+    }
+  ]
+];
+const Waves = createLucideIcon("waves", __iconNode);
 const NAV_ITEMS = [
   { path: "/data", label: "Data Integrity", icon: Database },
   { path: "/health", label: "Rule Health", icon: HeartPulse },
   { path: "/audit", label: "Signal Audit", icon: ListChecks },
   { path: "/truth-audit", label: "Truth Audit", icon: FileSearch },
   { path: "/coco-risk", label: "Coco Risk Lab", icon: Scale },
+  { path: "/brutus-band", label: "Brutus Band Lab", icon: Waves },
   { path: "/rejected", label: "Rejected Setups", icon: FileWarning },
   { path: "/discovery", label: "Discovery Lab", icon: FlaskConical },
   { path: "/experiments", label: "Experiment Lab", icon: Microscope },
@@ -37370,7 +37401,7 @@ function classifyEvidence({
     detail: "Sample exists, but edge or drawdown quality is not yet strong."
   };
 }
-function downloadFile$8(name, content, type) {
+function downloadFile$9(name, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -37379,7 +37410,7 @@ function downloadFile$8(name, content, type) {
   link.click();
   URL.revokeObjectURL(url);
 }
-function Stat$8({
+function Stat$9({
   label,
   value,
   detail
@@ -37551,7 +37582,7 @@ function BacktestResultsPage() {
             type: "button",
             variant: "outline",
             disabled: !run.integrity.canRunBacktest,
-            onClick: () => downloadFile$8(
+            onClick: () => downloadFile$9(
               "ict-audit-log.json",
               exportJson(run),
               "application/json"
@@ -37567,7 +37598,7 @@ function BacktestResultsPage() {
           {
             type: "button",
             disabled: !run.integrity.canRunBacktest,
-            onClick: () => downloadFile$8(
+            onClick: () => downloadFile$9(
               "ict-signal-log.csv",
               exportCsv(allSignals),
               "text/csv"
@@ -37583,39 +37614,39 @@ function BacktestResultsPage() {
     !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Results are disabled because the integrity gate is closed." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$8,
+          Stat$9,
           {
             label: "Accepted signals",
             value: String(run.acceptedSignals.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$8,
+          Stat$9,
           {
             label: "Rejected candidates",
             value: String(run.rejectedSignals.length)
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$8,
+          Stat$9,
           {
             label: "Win rate",
             value: `${(stats.winRate * 100).toFixed(1)}%`
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$8, { label: "Profit factor", value: stats.profitFactor.toFixed(2) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$8, { label: "Total trades", value: stats.totalTrades.toString() }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$9, { label: "Profit factor", value: stats.profitFactor.toFixed(2) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$9, { label: "Total trades", value: stats.totalTrades.toString() }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$8,
+          Stat$9,
           {
             label: "Evidence status",
             value: overallEvidence.status,
             detail: overallEvidence.detail
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$8, { label: "Avg R", value: `${stats.avgRR.toFixed(2)}R` }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Stat$9, { label: "Avg R", value: `${stats.avgRR.toFixed(2)}R` }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$8,
+          Stat$9,
           {
             label: "Max drawdown",
             value: `${drawdownR(stats.maxDrawdown).toFixed(2)}R`,
@@ -37623,7 +37654,7 @@ function BacktestResultsPage() {
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Stat$8,
+          Stat$9,
           {
             label: "Net P/L",
             value: `${(stats.totalPnl / 100).toFixed(2)}R`,
@@ -37770,6 +37801,444 @@ function BacktestResultsPage() {
           );
         }) })
       ] }) })
+    ] })
+  ] });
+}
+const BAND_CONFIGS = [
+  { length: 8, deviation: 1 },
+  { length: 8, deviation: 1.5 },
+  { length: 10, deviation: 1 },
+  { length: 10, deviation: 1.5 },
+  { length: 14, deviation: 1 },
+  { length: 14, deviation: 1.5 },
+  { length: 20, deviation: 1.5 },
+  { length: 20, deviation: 2 }
+];
+const VARIANTS$1 = [
+  {
+    id: "raw-pierce",
+    label: "Raw band pierce",
+    requiresCompression: false,
+    requiresSnapback: false
+  },
+  {
+    id: "compression",
+    label: "Only after compression",
+    requiresCompression: true,
+    requiresSnapback: false
+  },
+  {
+    id: "snapback-5m",
+    label: "Only with 5m snapback",
+    requiresCompression: false,
+    requiresSnapback: true
+  },
+  {
+    id: "compression-snapback-5m",
+    label: "Compression + 5m snapback",
+    requiresCompression: true,
+    requiresSnapback: true
+  }
+];
+const POINT_VALUE = 10;
+const HOUR_MS = 60 * 60 * 1e3;
+function fmtPoints(value) {
+  return `${value >= 0 ? "+" : ""}${value.toFixed(1)} pts`;
+}
+function fmtMoney(value) {
+  return `${value >= 0 ? "+" : "-"}$${Math.abs(value).toFixed(0)}`;
+}
+function pct$6(value) {
+  return `${(value * 100).toFixed(1)}%`;
+}
+function downloadFile$8(name, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+function mean(values) {
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+function stdev(values) {
+  const avg = mean(values);
+  return Math.sqrt(
+    values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / values.length
+  );
+}
+function median$1(values) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a2, b2) => a2 - b2);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+function groupCandles(candles, timeframe) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const candle of candles) {
+    if (candle.timeframe !== timeframe) continue;
+    const group = groups.get(candle.symbol) ?? [];
+    group.push(candle);
+    groups.set(candle.symbol, group);
+  }
+  for (const group of groups.values()) {
+    group.sort((a2, b2) => Number(a2.timestamp) - Number(b2.timestamp));
+  }
+  return groups;
+}
+function bandAt(candles, index2, config2) {
+  if (index2 < config2.length) return void 0;
+  const window2 = candles.slice(index2 - config2.length, index2);
+  const highAvg = mean(window2.map((candle) => candle.high));
+  const lowAvg = mean(window2.map((candle) => candle.low));
+  const upper = highAvg + stdev(window2.map((candle) => candle.high)) * config2.deviation;
+  const lower = lowAvg - stdev(window2.map((candle) => candle.low)) * config2.deviation;
+  return {
+    upper,
+    lower,
+    widthPct: (upper - lower) / candles[index2].close * 100
+  };
+}
+function widthHistory(candles, index2, config2) {
+  const widths = [];
+  const start = Math.max(config2.length, index2 - 100);
+  for (let i = start; i < index2; i += 1) {
+    const band2 = bandAt(candles, i, config2);
+    if (band2) widths.push(band2.widthPct);
+  }
+  return widths;
+}
+function fiveMinuteSnapback({
+  lowerCandles,
+  signal,
+  upperBand,
+  lowerBand
+}) {
+  const start = Number(signal.timestamp);
+  const end = start + HOUR_MS;
+  const insideHour = lowerCandles.filter((candle) => {
+    const timestamp = Number(candle.timestamp);
+    return timestamp >= start && timestamp < end;
+  });
+  return {
+    short: insideHour.some(
+      (candle) => candle.high > upperBand && candle.close < upperBand
+    ),
+    long: insideHour.some(
+      (candle) => candle.low < lowerBand && candle.close > lowerBand
+    )
+  };
+}
+function buildSignals(candles) {
+  const h1BySymbol2 = groupCandles(candles, Timeframe.H1);
+  const m5BySymbol = groupCandles(candles, Timeframe.M5);
+  const signals = [];
+  for (const [symbol, h1] of h1BySymbol2.entries()) {
+    const m5 = m5BySymbol.get(symbol) ?? [];
+    for (const config2 of BAND_CONFIGS) {
+      for (let index2 = config2.length; index2 < h1.length; index2 += 1) {
+        const candle = h1[index2];
+        const band2 = bandAt(h1, index2, config2);
+        if (!band2) continue;
+        const widths = widthHistory(h1, index2, config2);
+        const compression = widths.length >= 20 && band2.widthPct <= median$1(widths) * 0.8;
+        const snapback = fiveMinuteSnapback({
+          lowerCandles: m5,
+          signal: candle,
+          upperBand: band2.upper,
+          lowerBand: band2.lower
+        });
+        if (candle.high > band2.upper) {
+          const outcomePoints = band2.upper - candle.close;
+          signals.push({
+            id: `${symbol}-${Number(candle.timestamp)}-${config2.length}-${config2.deviation}-short`,
+            symbol,
+            timestamp: Number(candle.timestamp),
+            direction: "Short",
+            timeframe: Timeframe.H1,
+            lowerTimeframe: Timeframe.M5,
+            length: config2.length,
+            deviation: config2.deviation,
+            entry: band2.upper,
+            close: candle.close,
+            high: candle.high,
+            low: candle.low,
+            upperBand: band2.upper,
+            lowerBand: band2.lower,
+            bandWidthPct: band2.widthPct,
+            compression,
+            snapback5m: snapback.short,
+            outcomePoints,
+            wickPoints: Math.max(0, candle.high - candle.close),
+            continuationFailure: outcomePoints < 0
+          });
+        }
+        if (candle.low < band2.lower) {
+          const outcomePoints = candle.close - band2.lower;
+          signals.push({
+            id: `${symbol}-${Number(candle.timestamp)}-${config2.length}-${config2.deviation}-long`,
+            symbol,
+            timestamp: Number(candle.timestamp),
+            direction: "Long",
+            timeframe: Timeframe.H1,
+            lowerTimeframe: Timeframe.M5,
+            length: config2.length,
+            deviation: config2.deviation,
+            entry: band2.lower,
+            close: candle.close,
+            high: candle.high,
+            low: candle.low,
+            upperBand: band2.upper,
+            lowerBand: band2.lower,
+            bandWidthPct: band2.widthPct,
+            compression,
+            snapback5m: snapback.long,
+            outcomePoints,
+            wickPoints: Math.max(0, candle.close - candle.low),
+            continuationFailure: outcomePoints < 0
+          });
+        }
+      }
+    }
+  }
+  return signals;
+}
+function statsFor$3(signals) {
+  const wins = signals.filter((signal) => signal.outcomePoints > 0);
+  const losses = signals.filter((signal) => signal.outcomePoints <= 0);
+  const totalPoints = signals.reduce(
+    (sum, signal) => sum + signal.outcomePoints,
+    0
+  );
+  const continuationFailures = signals.filter(
+    (signal) => signal.continuationFailure
+  ).length;
+  return {
+    signals: signals.length,
+    wins: wins.length,
+    losses: losses.length,
+    winRate: signals.length ? wins.length / signals.length : 0,
+    avgPoints: signals.length ? totalPoints / signals.length : 0,
+    totalPoints,
+    avgWickPoints: signals.length ? signals.reduce((sum, signal) => sum + signal.wickPoints, 0) / signals.length : 0,
+    continuationFailures,
+    continuationRate: signals.length ? continuationFailures / signals.length : 0,
+    estimatedDollarPnl: totalPoints * POINT_VALUE
+  };
+}
+function buildRows(signals) {
+  return BAND_CONFIGS.flatMap(
+    (config2) => VARIANTS$1.map((variant) => {
+      const matching = signals.filter((signal) => {
+        if (signal.length !== config2.length) return false;
+        if (signal.deviation !== config2.deviation) return false;
+        if (variant.requiresCompression && !signal.compression) return false;
+        if (variant.requiresSnapback && !signal.snapback5m) return false;
+        return true;
+      });
+      return {
+        config: config2,
+        variant,
+        stats: statsFor$3(matching),
+        sample: matching.slice(0, 20)
+      };
+    })
+  ).sort(
+    (a2, b2) => b2.stats.avgPoints - a2.stats.avgPoints || b2.stats.signals - a2.stats.signals
+  );
+}
+function Stat$8({
+  label,
+  value,
+  detail
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: label }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-mono text-xl font-bold", children: value }),
+    detail && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: detail })
+  ] });
+}
+function BrutusBandLabPage() {
+  const { candles, run } = useStrategyWorkspace();
+  const signals = reactExports.useMemo(() => buildSignals(candles), [candles]);
+  const rows = reactExports.useMemo(() => buildRows(signals), [signals]);
+  const usableRows = rows.filter((row) => row.stats.signals >= 20);
+  const best = usableRows[0] ?? rows[0];
+  const rawBest = rows.find(
+    (row) => row.variant.id === "raw-pierce" && row.config.length === (best == null ? void 0 : best.config.length) && row.config.deviation === (best == null ? void 0 : best.config.deviation)
+  );
+  const plainFinding = best ? `${best.variant.label} was the strongest first-pass version on the current data: ${fmtPoints(
+    best.stats.avgPoints
+  )} average per signal across ${best.stats.signals} signals.` : "Load real index candles to test Brutus Band pierces.";
+  const technicalFinding = best && rawBest ? `Compared with raw band touches using the same ${best.config.length} / ${best.config.deviation} bands, this version changed continuation failures from ${pct$6(
+    rawBest.stats.continuationRate
+  )} to ${pct$6(best.stats.continuationRate)}.` : "The lab uses prior completed candles for band values, then grades what happened after the historical trigger candle.";
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "brutus-band.page", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-display text-2xl font-bold", children: "Brutus Band Lab" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "Historical replay for custom high/low Bollinger pierces on index candles. The first question is simple: did the band touch reject, or did price keep running through it?" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Button,
+        {
+          type: "button",
+          variant: "outline",
+          disabled: !run.integrity.canRunBacktest,
+          onClick: () => downloadFile$8(
+            "ict-brutus-band-lab.json",
+            JSON.stringify(
+              {
+                generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+                integrity: run.integrity,
+                pointValueAssumption: POINT_VALUE,
+                findings: { plainFinding, technicalFinding },
+                rows: rows.map((row) => ({
+                  variant: row.variant,
+                  config: row.config,
+                  stats: row.stats,
+                  sample: row.sample.map((signal) => ({
+                    timestamp: new Date(signal.timestamp).toISOString(),
+                    symbol: signal.symbol,
+                    direction: signal.direction,
+                    entry: signal.entry,
+                    close: signal.close,
+                    outcomePoints: signal.outcomePoints,
+                    wickPoints: signal.wickPoints,
+                    compression: signal.compression,
+                    snapback5m: signal.snapback5m,
+                    continuationFailure: signal.continuationFailure
+                  }))
+                }))
+              },
+              null,
+              2
+            ),
+            "application/json"
+          ),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "mr-2 h-4 w-4" }),
+            "Export Brutus Lab"
+          ]
+        }
+      )
+    ] }),
+    !run.integrity.canRunBacktest ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-6 text-sm text-muted-foreground", children: "Brutus Band Lab is disabled until real 1H and 5m candles are loaded." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$8,
+          {
+            label: "Band pierces",
+            value: String(signals.length),
+            detail: "All tested configs combined"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$8,
+          {
+            label: "Best avg",
+            value: best ? fmtPoints(best.stats.avgPoints) : "0.0 pts",
+            detail: (best == null ? void 0 : best.variant.label) ?? "No result"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$8,
+          {
+            label: "Best win rate",
+            value: best ? pct$6(best.stats.winRate) : "0.0%",
+            detail: "Exit approximation: trigger candle close"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Stat$8,
+          {
+            label: "$10/point estimate",
+            value: best ? fmtMoney(best.stats.estimatedDollarPnl) : "$0",
+            detail: "Adjust later for broker contract value"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-primary/30 bg-primary/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Waves, { className: "mt-0.5 h-4 w-4 text-primary" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "What it means" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-foreground", children: plainFinding }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-sm text-muted-foreground", children: technicalFinding })
+        ] })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Brutus Band Scoreboard" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-sm text-muted-foreground", children: "This first pass treats the band as known from prior completed candles and grades the wick capture into the trigger candle close." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1120px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Variant" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Length" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Dev" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Signals" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "W/L" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Win" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Avg" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Total" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Avg wick" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Ran through" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "$ est." })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: rows.slice(0, 24).map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "tr",
+            {
+              className: "border-b border-border/40",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.variant.label }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.config.length }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.config.deviation.toFixed(1) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.stats.signals }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2 text-right", children: [
+                  row.stats.wins,
+                  "/",
+                  row.stats.losses
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$6(row.stats.winRate) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(row.stats.avgPoints) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(row.stats.totalPoints) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(row.stats.avgWickPoints) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$6(row.stats.continuationRate) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtMoney(row.stats.estimatedDollarPnl) })
+              ]
+            },
+            `${row.variant.id}-${row.config.length}-${row.config.deviation}`
+          )) })
+        ] }) })
+      ] }),
+      best && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Sample Triggers" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[980px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Time" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Index" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Side" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Entry" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Close" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Outcome" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Wick" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Filters" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: best.sample.slice(0, 12).map((signal) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: new Date(signal.timestamp).toISOString() }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: signal.symbol }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: signal.direction }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: signal.entry.toFixed(2) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: signal.close.toFixed(2) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(signal.outcomePoints) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(signal.wickPoints) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: [
+              signal.compression ? "compression" : "",
+              signal.snapback5m ? "5m snapback" : ""
+            ].filter(Boolean).join(", ") || "raw touch" })
+          ] }, signal.id)) })
+        ] }) })
+      ] })
     ] })
   ] });
 }
@@ -65240,6 +65709,11 @@ const cocoRiskRoute = createRoute({
   path: "/coco-risk",
   component: CocoRiskLabPage
 });
+const brutusBandRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/brutus-band",
+  component: BrutusBandLabPage
+});
 const rejectedRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/rejected",
@@ -65302,6 +65776,7 @@ const tree = rootRoute.addChildren([
   auditRoute,
   truthAuditRoute,
   cocoRiskRoute,
+  brutusBandRoute,
   rejectedRoute,
   discoveryRoute,
   experimentRoute,

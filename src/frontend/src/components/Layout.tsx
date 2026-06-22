@@ -18,6 +18,7 @@ import {
   Scale,
   ShieldCheck,
   Target,
+  Waves,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { path: "/audit", label: "Signal Audit", icon: ListChecks },
   { path: "/truth-audit", label: "Truth Audit", icon: FileSearch },
   { path: "/coco-risk", label: "Coco Risk Lab", icon: Scale },
+  { path: "/brutus-band", label: "Brutus Band Lab", icon: Waves },
   { path: "/rejected", label: "Rejected Setups", icon: FileWarning },
   { path: "/discovery", label: "Discovery Lab", icon: FlaskConical },
   { path: "/experiments", label: "Experiment Lab", icon: Microscope },
