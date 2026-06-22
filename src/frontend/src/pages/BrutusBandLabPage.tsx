@@ -131,6 +131,16 @@ type TargetRow = {
   breakdowns: VariantRow["breakdowns"];
 };
 
+type BrutusDecisionRow = {
+  label: string;
+  status: "Research candidate" | "Watch only" | "Avoid" | "Needs 1m data";
+  action: string;
+  model: TargetModel;
+  stats: VariantStats;
+  reasons: string[];
+  blockers: string[];
+};
+
 const BAND_CONFIGS: BandConfig[] = [
   { length: 9, deviation: 2 },
   { length: 9, deviation: 1.5 },
@@ -799,6 +809,72 @@ function buildTargetRows(signals: BrutusSignal[]): TargetRow[] {
     );
 }
 
+function buildBrutusDecisionRows(targetRows: TargetRow[]): BrutusDecisionRow[] {
+  return targetRows
+    .map((row) => {
+      const highAmbiguity =
+        row.conservativeSameCandle / Math.max(1, row.stats.signals) > 0.08;
+      const strong =
+        row.stats.signals >= 100 &&
+        row.stats.avgPoints >= 12 &&
+        row.stats.winRate >= 0.7 &&
+        row.stopHits <= row.tpHits * 0.2 &&
+        !highAmbiguity;
+      const watch =
+        row.stats.signals >= 80 &&
+        row.stats.avgPoints > 5 &&
+        row.stats.winRate >= 0.58;
+      const needs1m = row.model.takeProfitPoints <= 10 || highAmbiguity;
+      const status: BrutusDecisionRow["status"] = strong
+        ? "Research candidate"
+        : needs1m
+          ? "Needs 1m data"
+          : watch
+            ? "Watch only"
+            : "Avoid";
+      const reasons = [
+        `${row.stats.signals} replay signal(s)`,
+        `${pct(row.stats.winRate)} positive outcomes`,
+        `${fmtPoints(row.stats.avgPoints)} average result`,
+        `${row.tpHits} target hit(s), ${row.stopHits} stop hit(s), ${row.closeExits} close exit(s)`,
+      ];
+      const blockers = [
+        row.stats.signals < 100
+          ? "Sample below 100 signals for this target model."
+          : undefined,
+        row.model.takeProfitPoints <= 10
+          ? "Very small target needs 1m or tick data before trust."
+          : undefined,
+        highAmbiguity ? "Too many same-5m target/stop ambiguities." : undefined,
+        row.stats.avgPoints <= 5 ? "Average result is too thin." : undefined,
+        row.stopHits > row.tpHits * 0.2
+          ? "Stop hits are too frequent."
+          : undefined,
+      ].filter(Boolean) as string[];
+      return {
+        label: row.model.label,
+        status,
+        action:
+          status === "Research candidate"
+            ? "Paper trade only with fresh data"
+            : status === "Watch only"
+              ? "Keep researching"
+              : status === "Needs 1m data"
+                ? "Retest with 1m candles"
+                : "Avoid",
+        model: row.model,
+        stats: row.stats,
+        reasons,
+        blockers,
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.stats.avgPoints - a.stats.avgPoints ||
+        b.stats.signals - a.stats.signals,
+    );
+}
+
 function serializeSignal(signal: BrutusSignal) {
   return {
     id: signal.id,
@@ -919,12 +995,14 @@ export default function BrutusBandLabPage() {
     rows: VariantRow[];
     executionRows: ExecutionRow[];
     targetRows: TargetRow[];
+    decisionRows: BrutusDecisionRow[];
   } | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const signals = analysis?.signals ?? [];
   const rows = analysis?.rows ?? [];
   const executionRows = analysis?.executionRows ?? [];
   const targetRows = analysis?.targetRows ?? [];
+  const decisionRows = analysis?.decisionRows ?? [];
   const usableRows = rows.filter((row) => row.stats.signals >= 20);
   const best = usableRows[0] ?? rows[0];
   const rawBest = rows.find(
@@ -957,12 +1035,14 @@ export default function BrutusBandLabPage() {
     setIsAnalyzing(true);
     window.setTimeout(() => {
       const nextSignals = buildSignals(candles);
+      const nextTargetRows = buildTargetRows(nextSignals);
       setAnalysis({
         signature: dataSignature,
         signals: nextSignals,
         rows: buildRows(nextSignals),
         executionRows: buildExecutionRows(nextSignals),
-        targetRows: buildTargetRows(nextSignals),
+        targetRows: nextTargetRows,
+        decisionRows: buildBrutusDecisionRows(nextTargetRows),
       });
       setIsAnalyzing(false);
     }, 0);
@@ -1017,6 +1097,7 @@ export default function BrutusBandLabPage() {
                     conservativeSameCandle: row.conservativeSameCandle,
                     breakdowns: row.breakdowns,
                   })),
+                  brutusDecisions: decisionRows,
                   rows: rows.map((row) => ({
                     variant: row.variant,
                     config: row.config,
@@ -1188,6 +1269,57 @@ export default function BrutusBandLabPage() {
                         </td>
                         <td className="py-2 text-right">
                           {fmtMoney(row.stats.estimatedDollarPnl)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {analysis && (
+            <section className="border border-primary/30 bg-primary/5 p-4">
+              <h2 className="font-display text-lg font-bold">
+                Brutus Decision Console
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                This is the plain-English bridge from research to action. A
+                research candidate is still not a live-trade command; it means
+                the model is strong enough to paper trade with fresh candles.
+              </p>
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full min-w-[1100px] font-mono text-xs">
+                  <thead className="border-b border-border text-muted-foreground">
+                    <tr>
+                      <th className="py-2 text-left">Model</th>
+                      <th className="py-2 text-left">Status</th>
+                      <th className="py-2 text-left">Action</th>
+                      <th className="py-2 text-right">Signals</th>
+                      <th className="py-2 text-right">Win</th>
+                      <th className="py-2 text-right">Avg</th>
+                      <th className="py-2 text-left">Why</th>
+                      <th className="py-2 text-left">Blockers</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {decisionRows.slice(0, 10).map((row) => (
+                      <tr key={row.label} className="border-b border-border/40">
+                        <td className="py-2">{row.label}</td>
+                        <td className="py-2">{row.status}</td>
+                        <td className="py-2">{row.action}</td>
+                        <td className="py-2 text-right">{row.stats.signals}</td>
+                        <td className="py-2 text-right">
+                          {pct(row.stats.winRate)}
+                        </td>
+                        <td className="py-2 text-right">
+                          {fmtPoints(row.stats.avgPoints)}
+                        </td>
+                        <td className="py-2">
+                          {row.reasons.slice(0, 2).join("; ")}
+                        </td>
+                        <td className="py-2">
+                          {row.blockers.slice(0, 2).join("; ") || "none"}
                         </td>
                       </tr>
                     ))}

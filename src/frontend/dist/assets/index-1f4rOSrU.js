@@ -35350,7 +35350,7 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$r = [
+const __iconNode$t = [
   [
     "path",
     {
@@ -35359,7 +35359,31 @@ const __iconNode$r = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$r);
+const Activity = createLucideIcon("activity", __iconNode$t);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$s = [
+  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
+  ["path", { d: "M18 17V9", key: "2bz60n" }],
+  ["path", { d: "M13 17V5", key: "1frdt8" }],
+  ["path", { d: "M8 17v-3", key: "17ska0" }]
+];
+const ChartColumn = createLucideIcon("chart-column", __iconNode$s);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$r = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+];
+const CircleCheck = createLucideIcon("circle-check", __iconNode$r);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35367,12 +35391,11 @@ const Activity = createLucideIcon("activity", __iconNode$r);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$q = [
-  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
-  ["path", { d: "M18 17V9", key: "2bz60n" }],
-  ["path", { d: "M13 17V5", key: "1frdt8" }],
-  ["path", { d: "M8 17v-3", key: "17ska0" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
+  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
 ];
-const ChartColumn = createLucideIcon("chart-column", __iconNode$q);
+const CircleX = createLucideIcon("circle-x", __iconNode$q);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35381,9 +35404,9 @@ const ChartColumn = createLucideIcon("chart-column", __iconNode$q);
  */
 const __iconNode$p = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+  ["polyline", { points: "12 6 12 12 16 14", key: "68esgv" }]
 ];
-const CircleCheck = createLucideIcon("circle-check", __iconNode$p);
+const Clock = createLucideIcon("clock", __iconNode$p);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35391,11 +35414,11 @@ const CircleCheck = createLucideIcon("circle-check", __iconNode$p);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$o = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
-  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
+  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
+  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
+  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
 ];
-const CircleX = createLucideIcon("circle-x", __iconNode$o);
+const Database = createLucideIcon("database", __iconNode$o);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35403,11 +35426,11 @@ const CircleX = createLucideIcon("circle-x", __iconNode$o);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$n = [
-  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
-  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
-  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
+  ["path", { d: "M12 15V3", key: "m9g1x1" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
+  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
 ];
-const Database = createLucideIcon("database", __iconNode$n);
+const Download = createLucideIcon("download", __iconNode$n);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35415,18 +35438,6 @@ const Database = createLucideIcon("database", __iconNode$n);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$m = [
-  ["path", { d: "M12 15V3", key: "m9g1x1" }],
-  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
-  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
-];
-const Download = createLucideIcon("download", __iconNode$m);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$l = [
   ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
   [
     "path",
@@ -35435,7 +35446,20 @@ const __iconNode$l = [
   ["path", { d: "m9 18-1.5-1.5", key: "1j6qii" }],
   ["circle", { cx: "5", cy: "14", r: "3", key: "ufru5t" }]
 ];
-const FileSearch = createLucideIcon("file-search", __iconNode$l);
+const FileSearch = createLucideIcon("file-search", __iconNode$m);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$l = [
+  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
+  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
+  ["path", { d: "M12 12v6", key: "3ahymv" }],
+  ["path", { d: "m15 15-3-3-3 3", key: "15xj92" }]
+];
+const FileUp = createLucideIcon("file-up", __iconNode$l);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35444,11 +35468,10 @@ const FileSearch = createLucideIcon("file-search", __iconNode$l);
  */
 const __iconNode$k = [
   ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
-  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
-  ["path", { d: "M12 12v6", key: "3ahymv" }],
-  ["path", { d: "m15 15-3-3-3 3", key: "15xj92" }]
+  ["path", { d: "M12 9v4", key: "juzpu7" }],
+  ["path", { d: "M12 17h.01", key: "p32p05" }]
 ];
-const FileUp = createLucideIcon("file-up", __iconNode$k);
+const FileWarning = createLucideIcon("file-warning", __iconNode$k);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35456,18 +35479,6 @@ const FileUp = createLucideIcon("file-up", __iconNode$k);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$j = [
-  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
-  ["path", { d: "M12 9v4", key: "juzpu7" }],
-  ["path", { d: "M12 17h.01", key: "p32p05" }]
-];
-const FileWarning = createLucideIcon("file-warning", __iconNode$j);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$i = [
   [
     "path",
     {
@@ -35478,14 +35489,14 @@ const __iconNode$i = [
   ["path", { d: "M6.453 15h11.094", key: "3shlmq" }],
   ["path", { d: "M8.5 2h7", key: "csnxdl" }]
 ];
-const FlaskConical = createLucideIcon("flask-conical", __iconNode$i);
+const FlaskConical = createLucideIcon("flask-conical", __iconNode$j);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$h = [
+const __iconNode$i = [
   [
     "path",
     {
@@ -35494,14 +35505,14 @@ const __iconNode$h = [
     }
   ]
 ];
-const Funnel = createLucideIcon("funnel", __iconNode$h);
+const Funnel = createLucideIcon("funnel", __iconNode$i);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$g = [
+const __iconNode$h = [
   ["circle", { cx: "5", cy: "6", r: "3", key: "1qnov2" }],
   ["path", { d: "M12 6h5a2 2 0 0 1 2 2v7", key: "1yj91y" }],
   ["path", { d: "m15 9-3-3 3-3", key: "1lwv8l" }],
@@ -35509,14 +35520,14 @@ const __iconNode$g = [
   ["path", { d: "M12 18H7a2 2 0 0 1-2-2V9", key: "16sdep" }],
   ["path", { d: "m9 15 3 3-3 3", key: "1m3kbl" }]
 ];
-const GitCompareArrows = createLucideIcon("git-compare-arrows", __iconNode$g);
+const GitCompareArrows = createLucideIcon("git-compare-arrows", __iconNode$h);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$f = [
+const __iconNode$g = [
   [
     "path",
     {
@@ -35526,7 +35537,21 @@ const __iconNode$f = [
   ],
   ["path", { d: "M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27", key: "1uw2ng" }]
 ];
-const HeartPulse = createLucideIcon("heart-pulse", __iconNode$f);
+const HeartPulse = createLucideIcon("heart-pulse", __iconNode$g);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$f = [
+  ["path", { d: "m3 17 2 2 4-4", key: "1jhpwq" }],
+  ["path", { d: "m3 7 2 2 4-4", key: "1obspn" }],
+  ["path", { d: "M13 6h8", key: "15sg57" }],
+  ["path", { d: "M13 12h8", key: "h98zly" }],
+  ["path", { d: "M13 18h8", key: "oe0vm4" }]
+];
+const ListChecks = createLucideIcon("list-checks", __iconNode$f);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35534,13 +35559,10 @@ const HeartPulse = createLucideIcon("heart-pulse", __iconNode$f);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$e = [
-  ["path", { d: "m3 17 2 2 4-4", key: "1jhpwq" }],
-  ["path", { d: "m3 7 2 2 4-4", key: "1obspn" }],
-  ["path", { d: "M13 6h8", key: "15sg57" }],
-  ["path", { d: "M13 12h8", key: "h98zly" }],
-  ["path", { d: "M13 18h8", key: "oe0vm4" }]
+  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
+  ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
 ];
-const ListChecks = createLucideIcon("list-checks", __iconNode$e);
+const Lock = createLucideIcon("lock", __iconNode$e);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35548,17 +35570,6 @@ const ListChecks = createLucideIcon("list-checks", __iconNode$e);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$d = [
-  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
-  ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
-];
-const Lock = createLucideIcon("lock", __iconNode$d);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$c = [
   ["path", { d: "M6 18h8", key: "1borvv" }],
   ["path", { d: "M3 22h18", key: "8prr45" }],
   ["path", { d: "M14 22a7 7 0 1 0 0-14h-1", key: "1jwaiy" }],
@@ -35566,7 +35577,21 @@ const __iconNode$c = [
   ["path", { d: "M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z", key: "1bmzmy" }],
   ["path", { d: "M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3", key: "1drr47" }]
 ];
-const Microscope = createLucideIcon("microscope", __iconNode$c);
+const Microscope = createLucideIcon("microscope", __iconNode$d);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$c = [
+  ["rect", { x: "16", y: "16", width: "6", height: "6", rx: "1", key: "4q2zg0" }],
+  ["rect", { x: "2", y: "16", width: "6", height: "6", rx: "1", key: "8cvhb9" }],
+  ["rect", { x: "9", y: "2", width: "6", height: "6", rx: "1", key: "1egb70" }],
+  ["path", { d: "M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3", key: "1jsf9p" }],
+  ["path", { d: "M12 12V8", key: "2874zd" }]
+];
+const Network = createLucideIcon("network", __iconNode$c);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35752,6 +35777,7 @@ const __iconNode = [
 ];
 const Waves = createLucideIcon("waves", __iconNode);
 const NAV_ITEMS = [
+  { path: "/workflow", label: "Workflow Map", icon: Network },
   { path: "/data", label: "Data Integrity", icon: Database },
   { path: "/health", label: "Rule Health", icon: HeartPulse },
   { path: "/audit", label: "Signal Audit", icon: ListChecks },
@@ -38314,6 +38340,39 @@ function buildTargetRows(signals) {
     (a2, b2) => b2.stats.avgPoints - a2.stats.avgPoints || b2.stats.signals - a2.stats.signals
   );
 }
+function buildBrutusDecisionRows(targetRows) {
+  return targetRows.map((row) => {
+    const highAmbiguity = row.conservativeSameCandle / Math.max(1, row.stats.signals) > 0.08;
+    const strong = row.stats.signals >= 100 && row.stats.avgPoints >= 12 && row.stats.winRate >= 0.7 && row.stopHits <= row.tpHits * 0.2 && !highAmbiguity;
+    const watch = row.stats.signals >= 80 && row.stats.avgPoints > 5 && row.stats.winRate >= 0.58;
+    const needs1m = row.model.takeProfitPoints <= 10 || highAmbiguity;
+    const status = strong ? "Research candidate" : needs1m ? "Needs 1m data" : watch ? "Watch only" : "Avoid";
+    const reasons = [
+      `${row.stats.signals} replay signal(s)`,
+      `${pct$6(row.stats.winRate)} positive outcomes`,
+      `${fmtPoints(row.stats.avgPoints)} average result`,
+      `${row.tpHits} target hit(s), ${row.stopHits} stop hit(s), ${row.closeExits} close exit(s)`
+    ];
+    const blockers = [
+      row.stats.signals < 100 ? "Sample below 100 signals for this target model." : void 0,
+      row.model.takeProfitPoints <= 10 ? "Very small target needs 1m or tick data before trust." : void 0,
+      highAmbiguity ? "Too many same-5m target/stop ambiguities." : void 0,
+      row.stats.avgPoints <= 5 ? "Average result is too thin." : void 0,
+      row.stopHits > row.tpHits * 0.2 ? "Stop hits are too frequent." : void 0
+    ].filter(Boolean);
+    return {
+      label: row.model.label,
+      status,
+      action: status === "Research candidate" ? "Paper trade only with fresh data" : status === "Watch only" ? "Keep researching" : status === "Needs 1m data" ? "Retest with 1m candles" : "Avoid",
+      model: row.model,
+      stats: row.stats,
+      reasons,
+      blockers
+    };
+  }).sort(
+    (a2, b2) => b2.stats.avgPoints - a2.stats.avgPoints || b2.stats.signals - a2.stats.signals
+  );
+}
 function serializeSignal(signal) {
   return {
     id: signal.id,
@@ -38411,6 +38470,7 @@ function BrutusBandLabPage() {
   const rows = (analysis == null ? void 0 : analysis.rows) ?? [];
   const executionRows = (analysis == null ? void 0 : analysis.executionRows) ?? [];
   const targetRows = (analysis == null ? void 0 : analysis.targetRows) ?? [];
+  const decisionRows = (analysis == null ? void 0 : analysis.decisionRows) ?? [];
   const usableRows = rows.filter((row) => row.stats.signals >= 20);
   const best = usableRows[0] ?? rows[0];
   const rawBest = rows.find(
@@ -38432,12 +38492,14 @@ function BrutusBandLabPage() {
     setIsAnalyzing(true);
     window.setTimeout(() => {
       const nextSignals = buildSignals(candles);
+      const nextTargetRows = buildTargetRows(nextSignals);
       setAnalysis({
         signature: dataSignature,
         signals: nextSignals,
         rows: buildRows(nextSignals),
         executionRows: buildExecutionRows(nextSignals),
-        targetRows: buildTargetRows(nextSignals)
+        targetRows: nextTargetRows,
+        decisionRows: buildBrutusDecisionRows(nextTargetRows)
       });
       setIsAnalyzing(false);
     }, 0);
@@ -38481,6 +38543,7 @@ function BrutusBandLabPage() {
                   conservativeSameCandle: row.conservativeSameCandle,
                   breakdowns: row.breakdowns
                 })),
+                brutusDecisions: decisionRows,
                 rows: rows.map((row) => ({
                   variant: row.variant,
                   config: row.config,
@@ -38613,6 +38676,32 @@ function BrutusBandLabPage() {
             },
             `${row.variant.id}-${row.config.length}-${row.config.deviation}`
           )) })
+        ] }) })
+      ] }),
+      analysis && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-primary/30 bg-primary/5 p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Brutus Decision Console" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-sm text-muted-foreground", children: "This is the plain-English bridge from research to action. A research candidate is still not a live-trade command; it means the model is strong enough to paper trade with fresh candles." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1100px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Model" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Status" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Action" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Signals" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Win" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Avg" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Why" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Blockers" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: decisionRows.slice(0, 10).map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/40", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.label }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.status }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.action }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.stats.signals }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$6(row.stats.winRate) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(row.stats.avgPoints) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.reasons.slice(0, 2).join("; ") }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.blockers.slice(0, 2).join("; ") || "none" })
+          ] }, row.label)) })
         ] }) })
       ] }),
       analysis && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-primary/30 bg-card p-4", children: [
@@ -62454,8 +62543,20 @@ reactExports.forwardRef(function(e3, t2) {
 });
 const YAHOO_PROXY_DATA_PATH = "/data/yahoo_futures_proxy_latest.csv";
 const YAHOO_PROXY_DATA_NAME = "yahoo_futures_proxy_latest.csv";
+const EASTERN_FORMATTER$1 = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/New_York",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZoneName: "short"
+});
 function fmtDate$2(value) {
   return value ? new Date(value).toISOString().slice(0, 16).replace("T", " ") : "n/a";
+}
+function fmtEastern$1(value) {
+  return value ? EASTERN_FORMATTER$1.format(new Date(value)) : "n/a";
 }
 function Metric({ label, value }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
@@ -62530,6 +62631,8 @@ function DataUploadPage() {
   }
   const { integrity } = run;
   const displayFileName = fileName || storedFileName;
+  const dataLagHours = integrity.end ? (Date.now() - integrity.end) / (60 * 60 * 1e3) : void 0;
+  const isStaleForLive = dataLagHours === void 0 || dataLagHours > 24;
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-6 p-4 md:p-6", "data-ocid": "data.page", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-display text-2xl font-bold tracking-tight", children: "Data Integrity" }),
@@ -62615,9 +62718,29 @@ function DataUploadPage() {
       /* @__PURE__ */ jsxRuntimeExports.jsx(Metric, { label: "Timezone", value: integrity.timezone }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Metric, { label: "Start", value: fmtDate$2(integrity.start) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Metric, { label: "End", value: fmtDate$2(integrity.end) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Metric, { label: "Start Eastern", value: fmtEastern$1(integrity.start) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Metric, { label: "End Eastern", value: fmtEastern$1(integrity.end) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Metric,
+        {
+          label: "Live lag",
+          value: dataLagHours === void 0 ? "unknown" : `${dataLagHours.toFixed(1)} hours`
+        }
+      ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Metric, { label: "Missing candles", value: integrity.missingCandles }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Metric, { label: "Duplicate candles", value: integrity.duplicateCandles })
     ] }),
+    integrity.canRunBacktest && isStaleForLive && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-destructive/40 bg-destructive/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(TriangleAlert, { className: "mt-0.5 h-5 w-5 text-destructive" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-sm font-bold uppercase tracking-wider", children: "Data is stale for live decisions" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-2 text-sm text-muted-foreground", children: [
+          "The latest imported candle is ",
+          fmtEastern$1(integrity.end),
+          ". If a trade happened after that, this app cannot see or judge it until newer candles are loaded."
+        ] })
+      ] })
+    ] }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       "div",
       {
@@ -66176,6 +66299,111 @@ function TruthAuditPage() {
     ] })
   ] });
 }
+const EASTERN_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/New_York",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZoneName: "short"
+});
+function fmtEastern(value) {
+  return value ? EASTERN_FORMATTER.format(new Date(value)) : "n/a";
+}
+function hoursBehind(value) {
+  if (!value) return void 0;
+  return (Date.now() - value) / (60 * 60 * 1e3);
+}
+function WorkflowCard({
+  title,
+  state,
+  body,
+  icon: Icon2
+}) {
+  const border = state === "connected" ? "border-chart-1/40 bg-chart-1/5" : state === "research" ? "border-primary/30 bg-primary/5" : state === "stale" ? "border-destructive/40 bg-destructive/5" : "border-border bg-card";
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `border p-4 ${border}`, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Icon2, { className: "mt-0.5 h-4 w-4 text-primary" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: title }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: body })
+    ] })
+  ] }) });
+}
+function WorkflowMapPage() {
+  const { run, fileName } = useStrategyWorkspace();
+  const lag = hoursBehind(run.integrity.end);
+  const stale = lag === void 0 || lag > 24;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "workflow-map.page", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-display text-2xl font-bold", children: "Workflow Map" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "This page explains which left-panel items are connected to the current imported data and which pages are research/history views. Use it as the control tower before making decisions." })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "section",
+      {
+        className: `border p-4 ${stale ? "border-destructive/40 bg-destructive/5" : "border-chart-1/40 bg-chart-1/5"}`,
+        children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+          stale ? /* @__PURE__ */ jsxRuntimeExports.jsx(TriangleAlert, { className: "mt-0.5 h-5 w-5 text-destructive" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "mt-0.5 h-5 w-5 text-chart-1" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-sm font-bold uppercase tracking-wider", children: stale ? "Data is stale for live decisions" : "Data is fresh enough to inspect" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-2 text-sm text-muted-foreground", children: [
+              "Source: ",
+              fileName || run.integrity.source || "none",
+              ". Latest candle: ",
+              fmtEastern(run.integrity.end),
+              ".",
+              " ",
+              lag !== void 0 ? `That is about ${lag.toFixed(1)} hours behind this computer.` : "No imported candle end time is available."
+            ] })
+          ] })
+        ] })
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 md:grid-cols-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        WorkflowCard,
+        {
+          title: "Data Integrity",
+          state: "connected",
+          icon: Database,
+          body: "The shared source of truth. If the latest candle is stale, every signal page is stale too."
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        WorkflowCard,
+        {
+          title: "Brutus Band Lab",
+          state: "research",
+          icon: FlaskConical,
+          body: "Connected to imported 1H/5m candles. This is currently the most actionable Brutus research path, but it is still replay logic, not a live broker feed."
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        WorkflowCard,
+        {
+          title: "Live Candidates",
+          state: "connected",
+          icon: Radio,
+          body: "Connected to the existing ICT/Coco engine. It can only replay candidates inside the imported candle range."
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        WorkflowCard,
+        {
+          title: "Forward Tracker",
+          state: "reference",
+          icon: Clock,
+          body: "Tracks frozen rules against newer imported candles. It does not fetch candles by itself."
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4 text-sm text-muted-foreground", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest text-foreground", children: "Current answer" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2", children: "The app is useful for research and replay now. It is not ready to call live trades unless the imported dataset includes the current session and the candidate rule appears in a decision page as a research candidate with fresh data." })
+    ] })
+  ] });
+}
 const rootRoute = createRootRoute({ component: Layout });
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -66188,6 +66416,11 @@ const dataRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/data",
   component: DataUploadPage
+});
+const workflowRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/workflow",
+  component: WorkflowMapPage
 });
 const healthRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -66271,6 +66504,7 @@ const resultsRoute = createRoute({
 });
 const tree = rootRoute.addChildren([
   indexRoute,
+  workflowRoute,
   dataRoute,
   healthRoute,
   auditRoute,
