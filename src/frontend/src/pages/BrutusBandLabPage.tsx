@@ -40,6 +40,11 @@ type BrutusSignal = {
   bandStretchPoints: number;
   minutesIntoCandle: number;
   maxAdversePoints: number;
+  snapbackTimestamp?: number;
+  snapbackEntry?: number;
+  minutesToSnapback?: number;
+  maxAdverseAfterSnapbackPoints?: number;
+  snapbackOutcomePoints?: number;
   bandWidthPct: number;
   compression: boolean;
   snapback5m: boolean;
@@ -77,6 +82,24 @@ type VariantRow = {
     byAdverseBucket: ReturnType<typeof groupedStats>;
   };
   sample: BrutusSignal[];
+};
+
+type ExecutionEntryMode = "Immediate pierce" | "5m snapback confirm";
+
+type ExecutionModel = {
+  label: string;
+  config: BandConfig;
+  entryMode: ExecutionEntryMode;
+  stopPoints: number | null;
+};
+
+type ExecutionRow = {
+  model: ExecutionModel;
+  stats: VariantStats;
+  eligibleSignals: number;
+  stoppedSignals: number;
+  avgAdversePoints: number;
+  breakdowns: VariantRow["breakdowns"];
 };
 
 const BAND_CONFIGS: BandConfig[] = [
@@ -119,6 +142,11 @@ const VARIANTS: BrutusVariant[] = [
 
 const POINT_VALUE = 10;
 const HOUR_MS = 60 * 60 * 1000;
+const EXECUTION_CONFIGS: BandConfig[] = [
+  { length: 7, deviation: 2 },
+  { length: 9, deviation: 2 },
+];
+const STOP_TESTS = [null, 25, 50, 75];
 
 function fmtPoints(value: number) {
   return `${value >= 0 ? "+" : ""}${value.toFixed(1)} pts`;
@@ -313,6 +341,17 @@ function intrabarReplaySignal({
       const later = insideHour.filter(
         (item) => Number(item.timestamp) >= triggerTimestamp,
       );
+      const snapbackCandle = later.find((item) => item.close > liveBand.lower);
+      const snapbackTimestamp = snapbackCandle
+        ? Number(snapbackCandle.timestamp)
+        : undefined;
+      const afterSnapback = snapbackTimestamp
+        ? later.filter((item) => Number(item.timestamp) >= snapbackTimestamp)
+        : [];
+      const snapbackEntry = snapbackCandle?.close;
+      const minLowAfterSnapback = afterSnapback.length
+        ? Math.min(...afterSnapback.map((item) => item.low))
+        : undefined;
       const maxLowAfterTrigger = Math.min(...later.map((item) => item.low));
       const outcomePoints = candle.close - liveBand.lower;
       found.Long = {
@@ -336,9 +375,22 @@ function intrabarReplaySignal({
         bandStretchPoints: Math.abs(finalBand.lower - liveBand.lower),
         minutesIntoCandle,
         maxAdversePoints: Math.max(0, liveBand.lower - maxLowAfterTrigger),
+        snapbackTimestamp,
+        snapbackEntry,
+        minutesToSnapback: snapbackTimestamp
+          ? Math.round((snapbackTimestamp - triggerTimestamp) / 60000)
+          : undefined,
+        maxAdverseAfterSnapbackPoints:
+          snapbackEntry !== undefined && minLowAfterSnapback !== undefined
+            ? Math.max(0, snapbackEntry - minLowAfterSnapback)
+            : undefined,
+        snapbackOutcomePoints:
+          snapbackEntry !== undefined
+            ? candle.close - snapbackEntry
+            : undefined,
         bandWidthPct: liveBand.widthPct,
         compression,
-        snapback5m: later.some((item) => item.close > liveBand.lower),
+        snapback5m: Boolean(snapbackCandle),
         outcomePoints,
         wickPoints: Math.max(0, candle.close - candle.low),
         continuationFailure: outcomePoints < 0,
@@ -349,6 +401,17 @@ function intrabarReplaySignal({
       const later = insideHour.filter(
         (item) => Number(item.timestamp) >= triggerTimestamp,
       );
+      const snapbackCandle = later.find((item) => item.close < liveBand.upper);
+      const snapbackTimestamp = snapbackCandle
+        ? Number(snapbackCandle.timestamp)
+        : undefined;
+      const afterSnapback = snapbackTimestamp
+        ? later.filter((item) => Number(item.timestamp) >= snapbackTimestamp)
+        : [];
+      const snapbackEntry = snapbackCandle?.close;
+      const maxHighAfterSnapback = afterSnapback.length
+        ? Math.max(...afterSnapback.map((item) => item.high))
+        : undefined;
       const maxHighAfterTrigger = Math.max(...later.map((item) => item.high));
       const outcomePoints = liveBand.upper - candle.close;
       found.Short = {
@@ -372,9 +435,22 @@ function intrabarReplaySignal({
         bandStretchPoints: Math.abs(finalBand.upper - liveBand.upper),
         minutesIntoCandle,
         maxAdversePoints: Math.max(0, maxHighAfterTrigger - liveBand.upper),
+        snapbackTimestamp,
+        snapbackEntry,
+        minutesToSnapback: snapbackTimestamp
+          ? Math.round((snapbackTimestamp - triggerTimestamp) / 60000)
+          : undefined,
+        maxAdverseAfterSnapbackPoints:
+          snapbackEntry !== undefined && maxHighAfterSnapback !== undefined
+            ? Math.max(0, maxHighAfterSnapback - snapbackEntry)
+            : undefined,
+        snapbackOutcomePoints:
+          snapbackEntry !== undefined
+            ? snapbackEntry - candle.close
+            : undefined,
         bandWidthPct: liveBand.widthPct,
         compression,
-        snapback5m: later.some((item) => item.close < liveBand.upper),
+        snapback5m: Boolean(snapbackCandle),
         outcomePoints,
         wickPoints: Math.max(0, candle.high - candle.close),
         continuationFailure: outcomePoints < 0,
@@ -448,6 +524,109 @@ function statsFor(signals: BrutusSignal[]): VariantStats {
   };
 }
 
+function executionSignal(
+  signal: BrutusSignal,
+  model: ExecutionModel,
+): BrutusSignal | undefined {
+  if (
+    signal.length !== model.config.length ||
+    signal.deviation !== model.config.deviation
+  ) {
+    return undefined;
+  }
+
+  const isSnapback = model.entryMode === "5m snapback confirm";
+  const outcomePoints = isSnapback
+    ? signal.snapbackOutcomePoints
+    : signal.outcomePoints;
+  const adversePoints = isSnapback
+    ? signal.maxAdverseAfterSnapbackPoints
+    : signal.maxAdversePoints;
+  if (outcomePoints === undefined || adversePoints === undefined) {
+    return undefined;
+  }
+
+  const stopPoints = model.stopPoints;
+  const stopped = stopPoints !== null && adversePoints > stopPoints;
+  return {
+    ...signal,
+    entry: isSnapback ? (signal.snapbackEntry ?? signal.entry) : signal.entry,
+    outcomePoints: stopped && stopPoints !== null ? -stopPoints : outcomePoints,
+    maxAdversePoints: adversePoints,
+    continuationFailure: stopped || outcomePoints <= 0,
+  };
+}
+
+function executionBreakdowns(signals: BrutusSignal[]) {
+  return {
+    bySymbol: groupedStats(signals, (signal) => signal.symbol),
+    byDirection: groupedStats(signals, (signal) => signal.direction),
+    bySymbolDirection: groupedStats(
+      signals,
+      (signal) => `${signal.symbol} ${signal.direction}`,
+    ),
+    byTriggerHourUtc: groupedStats(signals, (signal) =>
+      String(new Date(signal.triggerTimestamp).getUTCHours()),
+    ),
+    byEntryWindow: groupedStats(signals, (signal) => {
+      if (signal.minutesIntoCandle < 15) return "00-14m";
+      if (signal.minutesIntoCandle < 30) return "15-29m";
+      if (signal.minutesIntoCandle < 45) return "30-44m";
+      return "45-59m";
+    }),
+    byAdverseBucket: groupedStats(signals, (signal) => {
+      if (signal.maxAdversePoints < 10) return "<10 pts";
+      if (signal.maxAdversePoints < 25) return "10-24 pts";
+      if (signal.maxAdversePoints < 50) return "25-49 pts";
+      return "50+ pts";
+    }),
+  };
+}
+
+function buildExecutionRows(signals: BrutusSignal[]): ExecutionRow[] {
+  const models = EXECUTION_CONFIGS.flatMap((config) =>
+    (["Immediate pierce", "5m snapback confirm"] as const).flatMap(
+      (entryMode) =>
+        STOP_TESTS.map((stopPoints) => ({
+          label: `${config.length}/${config.deviation} ${entryMode}${
+            stopPoints ? `, ${stopPoints} pt stop` : ", no stop"
+          }`,
+          config,
+          entryMode,
+          stopPoints,
+        })),
+    ),
+  );
+
+  return models
+    .map((model) => {
+      const executed = signals
+        .map((signal) => executionSignal(signal, model))
+        .filter((signal): signal is BrutusSignal => Boolean(signal));
+      const stoppedSignals = executed.filter(
+        (signal) =>
+          model.stopPoints !== null &&
+          signal.outcomePoints === -model.stopPoints,
+      ).length;
+      return {
+        model,
+        stats: statsFor(executed),
+        eligibleSignals: executed.length,
+        stoppedSignals,
+        avgAdversePoints: executed.length
+          ? executed.reduce((sum, signal) => sum + signal.maxAdversePoints, 0) /
+            executed.length
+          : 0,
+        breakdowns: executionBreakdowns(executed),
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.stats.avgPoints - a.stats.avgPoints ||
+        b.stats.signals - a.stats.signals,
+    );
+}
+
 function serializeSignal(signal: BrutusSignal) {
   return {
     id: signal.id,
@@ -466,6 +645,13 @@ function serializeSignal(signal: BrutusSignal) {
     finalBand: signal.finalBand,
     bandStretchPoints: signal.bandStretchPoints,
     maxAdversePoints: signal.maxAdversePoints,
+    snapbackTimestamp: signal.snapbackTimestamp
+      ? new Date(signal.snapbackTimestamp).toISOString()
+      : null,
+    snapbackEntry: signal.snapbackEntry ?? null,
+    minutesToSnapback: signal.minutesToSnapback ?? null,
+    maxAdverseAfterSnapbackPoints: signal.maxAdverseAfterSnapbackPoints ?? null,
+    snapbackOutcomePoints: signal.snapbackOutcomePoints ?? null,
     close: signal.close,
     high: signal.high,
     low: signal.low,
@@ -521,29 +707,7 @@ function buildRows(signals: BrutusSignal[]): VariantRow[] {
         variant,
         stats: statsFor(matching),
         signalIds: matching.map((signal) => signal.id),
-        breakdowns: {
-          bySymbol: groupedStats(matching, (signal) => signal.symbol),
-          byDirection: groupedStats(matching, (signal) => signal.direction),
-          bySymbolDirection: groupedStats(
-            matching,
-            (signal) => `${signal.symbol} ${signal.direction}`,
-          ),
-          byTriggerHourUtc: groupedStats(matching, (signal) =>
-            String(new Date(signal.triggerTimestamp).getUTCHours()),
-          ),
-          byEntryWindow: groupedStats(matching, (signal) => {
-            if (signal.minutesIntoCandle < 15) return "00-14m";
-            if (signal.minutesIntoCandle < 30) return "15-29m";
-            if (signal.minutesIntoCandle < 45) return "30-44m";
-            return "45-59m";
-          }),
-          byAdverseBucket: groupedStats(matching, (signal) => {
-            if (signal.maxAdversePoints < 10) return "<10 pts";
-            if (signal.maxAdversePoints < 25) return "10-24 pts";
-            if (signal.maxAdversePoints < 50) return "25-49 pts";
-            return "50+ pts";
-          }),
-        },
+        breakdowns: executionBreakdowns(matching),
         sample: matching.slice(0, 20),
       };
     }),
@@ -581,10 +745,12 @@ export default function BrutusBandLabPage() {
     signature: string;
     signals: BrutusSignal[];
     rows: VariantRow[];
+    executionRows: ExecutionRow[];
   } | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const signals = analysis?.signals ?? [];
   const rows = analysis?.rows ?? [];
+  const executionRows = analysis?.executionRows ?? [];
   const usableRows = rows.filter((row) => row.stats.signals >= 20);
   const best = usableRows[0] ?? rows[0];
   const rawBest = rows.find(
@@ -621,6 +787,7 @@ export default function BrutusBandLabPage() {
         signature: dataSignature,
         signals: nextSignals,
         rows: buildRows(nextSignals),
+        executionRows: buildExecutionRows(nextSignals),
       });
       setIsAnalyzing(false);
     }, 0);
@@ -658,6 +825,14 @@ export default function BrutusBandLabPage() {
                   exportNote:
                     "Times are UTC. First alert values are 5m replay approximations, not tick-level TradingView alert truth. The signalLedger contains each full signal once; rows reference those records by signalIds.",
                   signalLedger: signals.map(serializeSignal),
+                  executionRows: executionRows.map((row) => ({
+                    model: row.model,
+                    stats: row.stats,
+                    eligibleSignals: row.eligibleSignals,
+                    stoppedSignals: row.stoppedSignals,
+                    avgAdversePoints: row.avgAdversePoints,
+                    breakdowns: row.breakdowns,
+                  })),
                   rows: rows.map((row) => ({
                     variant: row.variant,
                     config: row.config,
@@ -832,6 +1007,88 @@ export default function BrutusBandLabPage() {
                         </td>
                       </tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {analysis && (
+            <section className="border border-primary/30 bg-card p-4">
+              <h2 className="font-display text-lg font-bold">
+                Brutus Execution Lab
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                This compares whether the edge comes from entering immediately
+                at the approximate band pierce or waiting for a 5m candle to
+                snap back inside the band. Outcomes are still measured to the 1H
+                close, with optional fixed adverse stops.
+              </p>
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full min-w-[1180px] font-mono text-xs">
+                  <thead className="border-b border-border text-muted-foreground">
+                    <tr>
+                      <th className="py-2 text-left">Execution model</th>
+                      <th className="py-2 text-right">Signals</th>
+                      <th className="py-2 text-right">W/L</th>
+                      <th className="py-2 text-right">Win</th>
+                      <th className="py-2 text-right">Avg</th>
+                      <th className="py-2 text-right">Total</th>
+                      <th className="py-2 text-right">Avg against</th>
+                      <th className="py-2 text-right">Stopped</th>
+                      <th className="py-2 text-right">$ est.</th>
+                      <th className="py-2 text-left">Plain read</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {executionRows.slice(0, 16).map((row) => {
+                      const enough = row.stats.signals >= 30;
+                      const good =
+                        enough &&
+                        row.stats.avgPoints > 10 &&
+                        row.stats.winRate >= 0.6;
+                      const weak =
+                        row.stats.avgPoints <= 0 || row.stats.winRate < 0.5;
+                      return (
+                        <tr
+                          key={`${row.model.label}`}
+                          className="border-b border-border/40"
+                        >
+                          <td className="py-2">{row.model.label}</td>
+                          <td className="py-2 text-right">
+                            {row.stats.signals}
+                          </td>
+                          <td className="py-2 text-right">
+                            {row.stats.wins}/{row.stats.losses}
+                          </td>
+                          <td className="py-2 text-right">
+                            {pct(row.stats.winRate)}
+                          </td>
+                          <td className="py-2 text-right">
+                            {fmtPoints(row.stats.avgPoints)}
+                          </td>
+                          <td className="py-2 text-right">
+                            {fmtPoints(row.stats.totalPoints)}
+                          </td>
+                          <td className="py-2 text-right">
+                            {fmtPoints(row.avgAdversePoints)}
+                          </td>
+                          <td className="py-2 text-right">
+                            {row.stoppedSignals}
+                          </td>
+                          <td className="py-2 text-right">
+                            {fmtMoney(row.stats.estimatedDollarPnl)}
+                          </td>
+                          <td className="py-2">
+                            {good
+                              ? "Research candidate"
+                              : weak
+                                ? "Avoid for now"
+                                : "Needs more filtering"}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

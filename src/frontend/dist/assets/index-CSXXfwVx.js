@@ -37850,6 +37850,11 @@ const VARIANTS$1 = [
 ];
 const POINT_VALUE = 10;
 const HOUR_MS = 60 * 60 * 1e3;
+const EXECUTION_CONFIGS = [
+  { length: 7, deviation: 2 },
+  { length: 9, deviation: 2 }
+];
+const STOP_TESTS = [null, 25, 50, 75];
 function fmtPoints(value) {
   return `${value >= 0 ? "+" : ""}${value.toFixed(1)} pts`;
 }
@@ -37998,6 +38003,11 @@ function intrabarReplaySignal({
       const later = insideHour.filter(
         (item) => Number(item.timestamp) >= triggerTimestamp
       );
+      const snapbackCandle = later.find((item) => item.close > liveBand.lower);
+      const snapbackTimestamp = snapbackCandle ? Number(snapbackCandle.timestamp) : void 0;
+      const afterSnapback = snapbackTimestamp ? later.filter((item) => Number(item.timestamp) >= snapbackTimestamp) : [];
+      const snapbackEntry = snapbackCandle == null ? void 0 : snapbackCandle.close;
+      const minLowAfterSnapback = afterSnapback.length ? Math.min(...afterSnapback.map((item) => item.low)) : void 0;
       const maxLowAfterTrigger = Math.min(...later.map((item) => item.low));
       const outcomePoints = candle.close - liveBand.lower;
       found.Long = {
@@ -38021,9 +38031,14 @@ function intrabarReplaySignal({
         bandStretchPoints: Math.abs(finalBand.lower - liveBand.lower),
         minutesIntoCandle,
         maxAdversePoints: Math.max(0, liveBand.lower - maxLowAfterTrigger),
+        snapbackTimestamp,
+        snapbackEntry,
+        minutesToSnapback: snapbackTimestamp ? Math.round((snapbackTimestamp - triggerTimestamp) / 6e4) : void 0,
+        maxAdverseAfterSnapbackPoints: snapbackEntry !== void 0 && minLowAfterSnapback !== void 0 ? Math.max(0, snapbackEntry - minLowAfterSnapback) : void 0,
+        snapbackOutcomePoints: snapbackEntry !== void 0 ? candle.close - snapbackEntry : void 0,
         bandWidthPct: liveBand.widthPct,
         compression,
-        snapback5m: later.some((item) => item.close > liveBand.lower),
+        snapback5m: Boolean(snapbackCandle),
         outcomePoints,
         wickPoints: Math.max(0, candle.close - candle.low),
         continuationFailure: outcomePoints < 0
@@ -38033,6 +38048,11 @@ function intrabarReplaySignal({
       const later = insideHour.filter(
         (item) => Number(item.timestamp) >= triggerTimestamp
       );
+      const snapbackCandle = later.find((item) => item.close < liveBand.upper);
+      const snapbackTimestamp = snapbackCandle ? Number(snapbackCandle.timestamp) : void 0;
+      const afterSnapback = snapbackTimestamp ? later.filter((item) => Number(item.timestamp) >= snapbackTimestamp) : [];
+      const snapbackEntry = snapbackCandle == null ? void 0 : snapbackCandle.close;
+      const maxHighAfterSnapback = afterSnapback.length ? Math.max(...afterSnapback.map((item) => item.high)) : void 0;
       const maxHighAfterTrigger = Math.max(...later.map((item) => item.high));
       const outcomePoints = liveBand.upper - candle.close;
       found.Short = {
@@ -38056,9 +38076,14 @@ function intrabarReplaySignal({
         bandStretchPoints: Math.abs(finalBand.upper - liveBand.upper),
         minutesIntoCandle,
         maxAdversePoints: Math.max(0, maxHighAfterTrigger - liveBand.upper),
+        snapbackTimestamp,
+        snapbackEntry,
+        minutesToSnapback: snapbackTimestamp ? Math.round((snapbackTimestamp - triggerTimestamp) / 6e4) : void 0,
+        maxAdverseAfterSnapbackPoints: snapbackEntry !== void 0 && maxHighAfterSnapback !== void 0 ? Math.max(0, maxHighAfterSnapback - snapbackEntry) : void 0,
+        snapbackOutcomePoints: snapbackEntry !== void 0 ? snapbackEntry - candle.close : void 0,
         bandWidthPct: liveBand.widthPct,
         compression,
-        snapback5m: later.some((item) => item.close < liveBand.upper),
+        snapback5m: Boolean(snapbackCandle),
         outcomePoints,
         wickPoints: Math.max(0, candle.high - candle.close),
         continuationFailure: outcomePoints < 0
@@ -38114,6 +38139,80 @@ function statsFor$3(signals) {
     estimatedDollarPnl: totalPoints * POINT_VALUE
   };
 }
+function executionSignal(signal, model) {
+  if (signal.length !== model.config.length || signal.deviation !== model.config.deviation) {
+    return void 0;
+  }
+  const isSnapback = model.entryMode === "5m snapback confirm";
+  const outcomePoints = isSnapback ? signal.snapbackOutcomePoints : signal.outcomePoints;
+  const adversePoints = isSnapback ? signal.maxAdverseAfterSnapbackPoints : signal.maxAdversePoints;
+  if (outcomePoints === void 0 || adversePoints === void 0) {
+    return void 0;
+  }
+  const stopPoints = model.stopPoints;
+  const stopped = stopPoints !== null && adversePoints > stopPoints;
+  return {
+    ...signal,
+    entry: isSnapback ? signal.snapbackEntry ?? signal.entry : signal.entry,
+    outcomePoints: stopped && stopPoints !== null ? -stopPoints : outcomePoints,
+    maxAdversePoints: adversePoints,
+    continuationFailure: stopped || outcomePoints <= 0
+  };
+}
+function executionBreakdowns(signals) {
+  return {
+    bySymbol: groupedStats(signals, (signal) => signal.symbol),
+    byDirection: groupedStats(signals, (signal) => signal.direction),
+    bySymbolDirection: groupedStats(
+      signals,
+      (signal) => `${signal.symbol} ${signal.direction}`
+    ),
+    byTriggerHourUtc: groupedStats(
+      signals,
+      (signal) => String(new Date(signal.triggerTimestamp).getUTCHours())
+    ),
+    byEntryWindow: groupedStats(signals, (signal) => {
+      if (signal.minutesIntoCandle < 15) return "00-14m";
+      if (signal.minutesIntoCandle < 30) return "15-29m";
+      if (signal.minutesIntoCandle < 45) return "30-44m";
+      return "45-59m";
+    }),
+    byAdverseBucket: groupedStats(signals, (signal) => {
+      if (signal.maxAdversePoints < 10) return "<10 pts";
+      if (signal.maxAdversePoints < 25) return "10-24 pts";
+      if (signal.maxAdversePoints < 50) return "25-49 pts";
+      return "50+ pts";
+    })
+  };
+}
+function buildExecutionRows(signals) {
+  const models = EXECUTION_CONFIGS.flatMap(
+    (config2) => ["Immediate pierce", "5m snapback confirm"].flatMap(
+      (entryMode) => STOP_TESTS.map((stopPoints) => ({
+        label: `${config2.length}/${config2.deviation} ${entryMode}${stopPoints ? `, ${stopPoints} pt stop` : ", no stop"}`,
+        config: config2,
+        entryMode,
+        stopPoints
+      }))
+    )
+  );
+  return models.map((model) => {
+    const executed = signals.map((signal) => executionSignal(signal, model)).filter((signal) => Boolean(signal));
+    const stoppedSignals = executed.filter(
+      (signal) => model.stopPoints !== null && signal.outcomePoints === -model.stopPoints
+    ).length;
+    return {
+      model,
+      stats: statsFor$3(executed),
+      eligibleSignals: executed.length,
+      stoppedSignals,
+      avgAdversePoints: executed.length ? executed.reduce((sum, signal) => sum + signal.maxAdversePoints, 0) / executed.length : 0,
+      breakdowns: executionBreakdowns(executed)
+    };
+  }).sort(
+    (a2, b2) => b2.stats.avgPoints - a2.stats.avgPoints || b2.stats.signals - a2.stats.signals
+  );
+}
 function serializeSignal(signal) {
   return {
     id: signal.id,
@@ -38132,6 +38231,11 @@ function serializeSignal(signal) {
     finalBand: signal.finalBand,
     bandStretchPoints: signal.bandStretchPoints,
     maxAdversePoints: signal.maxAdversePoints,
+    snapbackTimestamp: signal.snapbackTimestamp ? new Date(signal.snapbackTimestamp).toISOString() : null,
+    snapbackEntry: signal.snapbackEntry ?? null,
+    minutesToSnapback: signal.minutesToSnapback ?? null,
+    maxAdverseAfterSnapbackPoints: signal.maxAdverseAfterSnapbackPoints ?? null,
+    snapbackOutcomePoints: signal.snapbackOutcomePoints ?? null,
     close: signal.close,
     high: signal.high,
     low: signal.low,
@@ -38178,30 +38282,7 @@ function buildRows(signals) {
         variant,
         stats: statsFor$3(matching),
         signalIds: matching.map((signal) => signal.id),
-        breakdowns: {
-          bySymbol: groupedStats(matching, (signal) => signal.symbol),
-          byDirection: groupedStats(matching, (signal) => signal.direction),
-          bySymbolDirection: groupedStats(
-            matching,
-            (signal) => `${signal.symbol} ${signal.direction}`
-          ),
-          byTriggerHourUtc: groupedStats(
-            matching,
-            (signal) => String(new Date(signal.triggerTimestamp).getUTCHours())
-          ),
-          byEntryWindow: groupedStats(matching, (signal) => {
-            if (signal.minutesIntoCandle < 15) return "00-14m";
-            if (signal.minutesIntoCandle < 30) return "15-29m";
-            if (signal.minutesIntoCandle < 45) return "30-44m";
-            return "45-59m";
-          }),
-          byAdverseBucket: groupedStats(matching, (signal) => {
-            if (signal.maxAdversePoints < 10) return "<10 pts";
-            if (signal.maxAdversePoints < 25) return "10-24 pts";
-            if (signal.maxAdversePoints < 50) return "25-49 pts";
-            return "50+ pts";
-          })
-        },
+        breakdowns: executionBreakdowns(matching),
         sample: matching.slice(0, 20)
       };
     })
@@ -38227,6 +38308,7 @@ function BrutusBandLabPage() {
   const [isAnalyzing, setIsAnalyzing] = reactExports.useState(false);
   const signals = (analysis == null ? void 0 : analysis.signals) ?? [];
   const rows = (analysis == null ? void 0 : analysis.rows) ?? [];
+  const executionRows = (analysis == null ? void 0 : analysis.executionRows) ?? [];
   const usableRows = rows.filter((row) => row.stats.signals >= 20);
   const best = usableRows[0] ?? rows[0];
   const rawBest = rows.find(
@@ -38251,7 +38333,8 @@ function BrutusBandLabPage() {
       setAnalysis({
         signature: dataSignature,
         signals: nextSignals,
-        rows: buildRows(nextSignals)
+        rows: buildRows(nextSignals),
+        executionRows: buildExecutionRows(nextSignals)
       });
       setIsAnalyzing(false);
     }, 0);
@@ -38278,6 +38361,14 @@ function BrutusBandLabPage() {
                 findings: { plainFinding, technicalFinding },
                 exportNote: "Times are UTC. First alert values are 5m replay approximations, not tick-level TradingView alert truth. The signalLedger contains each full signal once; rows reference those records by signalIds.",
                 signalLedger: signals.map(serializeSignal),
+                executionRows: executionRows.map((row) => ({
+                  model: row.model,
+                  stats: row.stats,
+                  eligibleSignals: row.eligibleSignals,
+                  stoppedSignals: row.stoppedSignals,
+                  avgAdversePoints: row.avgAdversePoints,
+                  breakdowns: row.breakdowns
+                })),
                 rows: rows.map((row) => ({
                   variant: row.variant,
                   config: row.config,
@@ -38410,6 +38501,52 @@ function BrutusBandLabPage() {
             },
             `${row.variant.id}-${row.config.length}-${row.config.deviation}`
           )) })
+        ] }) })
+      ] }),
+      analysis && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-primary/30 bg-card p-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Brutus Execution Lab" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-sm text-muted-foreground", children: "This compares whether the edge comes from entering immediately at the approximate band pierce or waiting for a 5m candle to snap back inside the band. Outcomes are still measured to the 1H close, with optional fixed adverse stops." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1180px] font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "border-b border-border text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Execution model" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Signals" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "W/L" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Win" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Avg" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Total" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Avg against" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "Stopped" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-right", children: "$ est." }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "py-2 text-left", children: "Plain read" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: executionRows.slice(0, 16).map((row) => {
+            const enough = row.stats.signals >= 30;
+            const good = enough && row.stats.avgPoints > 10 && row.stats.winRate >= 0.6;
+            const weak = row.stats.avgPoints <= 0 || row.stats.winRate < 0.5;
+            return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "tr",
+              {
+                className: "border-b border-border/40",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: row.model.label }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.stats.signals }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "py-2 text-right", children: [
+                    row.stats.wins,
+                    "/",
+                    row.stats.losses
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: pct$6(row.stats.winRate) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(row.stats.avgPoints) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(row.stats.totalPoints) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtPoints(row.avgAdversePoints) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: row.stoppedSignals }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 text-right", children: fmtMoney(row.stats.estimatedDollarPnl) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2", children: good ? "Research candidate" : weak ? "Avoid for now" : "Needs more filtering" })
+                ]
+              },
+              `${row.model.label}`
+            );
+          }) })
         ] }) })
       ] }),
       best && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
