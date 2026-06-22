@@ -35350,7 +35350,7 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$q = [
+const __iconNode$r = [
   [
     "path",
     {
@@ -35359,7 +35359,20 @@ const __iconNode$q = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$q);
+const Activity = createLucideIcon("activity", __iconNode$r);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$q = [
+  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
+  ["path", { d: "M18 17V9", key: "2bz60n" }],
+  ["path", { d: "M13 17V5", key: "1frdt8" }],
+  ["path", { d: "M8 17v-3", key: "17ska0" }]
+];
+const ChartColumn = createLucideIcon("chart-column", __iconNode$q);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35367,12 +35380,10 @@ const Activity = createLucideIcon("activity", __iconNode$q);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$p = [
-  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
-  ["path", { d: "M18 17V9", key: "2bz60n" }],
-  ["path", { d: "M13 17V5", key: "1frdt8" }],
-  ["path", { d: "M8 17v-3", key: "17ska0" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const ChartColumn = createLucideIcon("chart-column", __iconNode$p);
+const CircleCheck = createLucideIcon("circle-check", __iconNode$p);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35381,9 +35392,10 @@ const ChartColumn = createLucideIcon("chart-column", __iconNode$p);
  */
 const __iconNode$o = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
+  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
 ];
-const CircleCheck = createLucideIcon("circle-check", __iconNode$o);
+const CircleX = createLucideIcon("circle-x", __iconNode$o);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35391,11 +35403,11 @@ const CircleCheck = createLucideIcon("circle-check", __iconNode$o);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$n = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m15 9-6 6", key: "1uzhvr" }],
-  ["path", { d: "m9 9 6 6", key: "z0biqf" }]
+  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
+  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
+  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
 ];
-const CircleX = createLucideIcon("circle-x", __iconNode$n);
+const Database = createLucideIcon("database", __iconNode$n);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35403,11 +35415,11 @@ const CircleX = createLucideIcon("circle-x", __iconNode$n);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$m = [
-  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
-  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
-  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
+  ["path", { d: "M12 15V3", key: "m9g1x1" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
+  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
 ];
-const Database = createLucideIcon("database", __iconNode$m);
+const Download = createLucideIcon("download", __iconNode$m);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35415,18 +35427,6 @@ const Database = createLucideIcon("database", __iconNode$m);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$l = [
-  ["path", { d: "M12 15V3", key: "m9g1x1" }],
-  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
-  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
-];
-const Download = createLucideIcon("download", __iconNode$l);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$k = [
   ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
   [
     "path",
@@ -35435,7 +35435,20 @@ const __iconNode$k = [
   ["path", { d: "m9 18-1.5-1.5", key: "1j6qii" }],
   ["circle", { cx: "5", cy: "14", r: "3", key: "ufru5t" }]
 ];
-const FileSearch = createLucideIcon("file-search", __iconNode$k);
+const FileSearch = createLucideIcon("file-search", __iconNode$l);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$k = [
+  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
+  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
+  ["path", { d: "M12 12v6", key: "3ahymv" }],
+  ["path", { d: "m15 15-3-3-3 3", key: "15xj92" }]
+];
+const FileUp = createLucideIcon("file-up", __iconNode$k);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35444,11 +35457,10 @@ const FileSearch = createLucideIcon("file-search", __iconNode$k);
  */
 const __iconNode$j = [
   ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
-  ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
-  ["path", { d: "M12 12v6", key: "3ahymv" }],
-  ["path", { d: "m15 15-3-3-3 3", key: "15xj92" }]
+  ["path", { d: "M12 9v4", key: "juzpu7" }],
+  ["path", { d: "M12 17h.01", key: "p32p05" }]
 ];
-const FileUp = createLucideIcon("file-up", __iconNode$j);
+const FileWarning = createLucideIcon("file-warning", __iconNode$j);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35456,18 +35468,6 @@ const FileUp = createLucideIcon("file-up", __iconNode$j);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$i = [
-  ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
-  ["path", { d: "M12 9v4", key: "juzpu7" }],
-  ["path", { d: "M12 17h.01", key: "p32p05" }]
-];
-const FileWarning = createLucideIcon("file-warning", __iconNode$i);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$h = [
   [
     "path",
     {
@@ -35478,14 +35478,14 @@ const __iconNode$h = [
   ["path", { d: "M6.453 15h11.094", key: "3shlmq" }],
   ["path", { d: "M8.5 2h7", key: "csnxdl" }]
 ];
-const FlaskConical = createLucideIcon("flask-conical", __iconNode$h);
+const FlaskConical = createLucideIcon("flask-conical", __iconNode$i);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$g = [
+const __iconNode$h = [
   [
     "path",
     {
@@ -35494,14 +35494,14 @@ const __iconNode$g = [
     }
   ]
 ];
-const Funnel = createLucideIcon("funnel", __iconNode$g);
+const Funnel = createLucideIcon("funnel", __iconNode$h);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$f = [
+const __iconNode$g = [
   ["circle", { cx: "5", cy: "6", r: "3", key: "1qnov2" }],
   ["path", { d: "M12 6h5a2 2 0 0 1 2 2v7", key: "1yj91y" }],
   ["path", { d: "m15 9-3-3 3-3", key: "1lwv8l" }],
@@ -35509,14 +35509,14 @@ const __iconNode$f = [
   ["path", { d: "M12 18H7a2 2 0 0 1-2-2V9", key: "16sdep" }],
   ["path", { d: "m9 15 3 3-3 3", key: "1m3kbl" }]
 ];
-const GitCompareArrows = createLucideIcon("git-compare-arrows", __iconNode$f);
+const GitCompareArrows = createLucideIcon("git-compare-arrows", __iconNode$g);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$e = [
+const __iconNode$f = [
   [
     "path",
     {
@@ -35526,7 +35526,21 @@ const __iconNode$e = [
   ],
   ["path", { d: "M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27", key: "1uw2ng" }]
 ];
-const HeartPulse = createLucideIcon("heart-pulse", __iconNode$e);
+const HeartPulse = createLucideIcon("heart-pulse", __iconNode$f);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$e = [
+  ["path", { d: "m3 17 2 2 4-4", key: "1jhpwq" }],
+  ["path", { d: "m3 7 2 2 4-4", key: "1obspn" }],
+  ["path", { d: "M13 6h8", key: "15sg57" }],
+  ["path", { d: "M13 12h8", key: "h98zly" }],
+  ["path", { d: "M13 18h8", key: "oe0vm4" }]
+];
+const ListChecks = createLucideIcon("list-checks", __iconNode$e);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35534,13 +35548,10 @@ const HeartPulse = createLucideIcon("heart-pulse", __iconNode$e);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$d = [
-  ["path", { d: "m3 17 2 2 4-4", key: "1jhpwq" }],
-  ["path", { d: "m3 7 2 2 4-4", key: "1obspn" }],
-  ["path", { d: "M13 6h8", key: "15sg57" }],
-  ["path", { d: "M13 12h8", key: "h98zly" }],
-  ["path", { d: "M13 18h8", key: "oe0vm4" }]
+  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
+  ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
 ];
-const ListChecks = createLucideIcon("list-checks", __iconNode$d);
+const Lock = createLucideIcon("lock", __iconNode$d);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35548,17 +35559,6 @@ const ListChecks = createLucideIcon("list-checks", __iconNode$d);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$c = [
-  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
-  ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
-];
-const Lock = createLucideIcon("lock", __iconNode$c);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$b = [
   ["path", { d: "M6 18h8", key: "1borvv" }],
   ["path", { d: "M3 22h18", key: "8prr45" }],
   ["path", { d: "M14 22a7 7 0 1 0 0-14h-1", key: "1jwaiy" }],
@@ -35566,7 +35566,15 @@ const __iconNode$b = [
   ["path", { d: "M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z", key: "1bmzmy" }],
   ["path", { d: "M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3", key: "1drr47" }]
 ];
-const Microscope = createLucideIcon("microscope", __iconNode$b);
+const Microscope = createLucideIcon("microscope", __iconNode$c);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$b = [["polygon", { points: "6 3 20 12 6 21 6 3", key: "1oa8hb" }]];
+const Play = createLucideIcon("play", __iconNode$b);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -38214,8 +38222,11 @@ function Stat$8({
 }
 function BrutusBandLabPage() {
   const { candles, run } = useStrategyWorkspace();
-  const signals = reactExports.useMemo(() => buildSignals(candles), [candles]);
-  const rows = reactExports.useMemo(() => buildRows(signals), [signals]);
+  const dataSignature = `${run.integrity.source}:${run.integrity.candleCount}:${run.integrity.end}`;
+  const [analysis, setAnalysis] = reactExports.useState(null);
+  const [isAnalyzing, setIsAnalyzing] = reactExports.useState(false);
+  const signals = (analysis == null ? void 0 : analysis.signals) ?? [];
+  const rows = (analysis == null ? void 0 : analysis.rows) ?? [];
   const usableRows = rows.filter((row) => row.stats.signals >= 20);
   const best = usableRows[0] ?? rows[0];
   const rawBest = rows.find(
@@ -38227,6 +38238,24 @@ function BrutusBandLabPage() {
   const technicalFinding = best && rawBest ? `Compared with raw first-alert approximations using the same ${best.config.length} / ${best.config.deviation} bands, this version changed continuation failures from ${pct$6(
     rawBest.stats.continuationRate
   )} to ${pct$6(best.stats.continuationRate)}.` : "The lab rebuilds each 1H candle from available 5m candles, estimates the first live band pierce, then grades what happened after that trigger.";
+  reactExports.useEffect(() => {
+    setAnalysis(
+      (current) => (current == null ? void 0 : current.signature) === dataSignature ? current : null
+    );
+    setIsAnalyzing(false);
+  }, [dataSignature]);
+  const runAnalysis = () => {
+    setIsAnalyzing(true);
+    window.setTimeout(() => {
+      const nextSignals = buildSignals(candles);
+      setAnalysis({
+        signature: dataSignature,
+        signals: nextSignals,
+        rows: buildRows(nextSignals)
+      });
+      setIsAnalyzing(false);
+    }, 0);
+  };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-5 p-4 md:p-6", "data-ocid": "brutus-band.page", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-start md:justify-between", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
@@ -38238,7 +38267,7 @@ function BrutusBandLabPage() {
         {
           type: "button",
           variant: "outline",
-          disabled: !run.integrity.canRunBacktest,
+          disabled: !run.integrity.canRunBacktest || isAnalyzing || (analysis == null ? void 0 : analysis.signature) !== dataSignature,
           onClick: () => downloadFile$8(
             "ict-brutus-band-lab.json",
             JSON.stringify(
@@ -38276,7 +38305,7 @@ function BrutusBandLabPage() {
           Stat$8,
           {
             label: "Band pierces",
-            value: String(signals.length),
+            value: analysis ? String(signals.length) : "not run",
             detail: "All tested configs combined"
           }
         ),
@@ -38305,15 +38334,33 @@ function BrutusBandLabPage() {
           }
         )
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-primary/30 bg-primary/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-border bg-card p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3 md:flex-row md:items-center md:justify-between", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Replay Control" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-3xl text-sm text-muted-foreground", children: "This screen now opens first, then runs the heavy 5m replay only when requested. That keeps the tab from freezing just because you clicked into Brutus Band Lab." })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Button,
+          {
+            type: "button",
+            onClick: runAnalysis,
+            disabled: !run.integrity.canRunBacktest || isAnalyzing,
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Play, { className: "mr-2 h-4 w-4" }),
+              isAnalyzing ? "Running Replay..." : "Run Brutus Replay"
+            ]
+          }
+        )
+      ] }) }),
+      analysis ? /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-primary/30 bg-primary/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(Waves, { className: "mt-0.5 h-4 w-4 text-primary" }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs font-bold uppercase tracking-widest", children: "What it means" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-foreground", children: plainFinding }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-sm text-muted-foreground", children: technicalFinding })
         ] })
-      ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
+      ] }) }) : /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-primary/30 bg-primary/5 p-4 text-sm text-muted-foreground", children: "Press Run Brutus Replay to calculate the scoreboard and enable the export. No strategy result is generated until the real imported candles are analyzed." }),
+      analysis && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-lg font-bold", children: "Brutus Band Scoreboard" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-sm text-muted-foreground", children: "This pass approximates the live alert by rebuilding each 1H candle from 5m candles and recalculating the moving band at each step." }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 border border-amber-500/40 bg-amber-500/5 p-3 text-sm text-muted-foreground", children: [

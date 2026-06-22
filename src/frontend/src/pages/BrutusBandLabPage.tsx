@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { useStrategyWorkspace } from "@/hooks/useStrategyWorkspace";
 import type { Candle } from "@/types/strategy";
 import { Timeframe } from "@/types/strategy";
-import { Download, Waves } from "lucide-react";
-import { useMemo } from "react";
+import { Download, Play, Waves } from "lucide-react";
+import { useEffect, useState } from "react";
 
 type Direction = "Long" | "Short";
 
@@ -576,8 +576,15 @@ function Stat({
 
 export default function BrutusBandLabPage() {
   const { candles, run } = useStrategyWorkspace();
-  const signals = useMemo(() => buildSignals(candles), [candles]);
-  const rows = useMemo(() => buildRows(signals), [signals]);
+  const dataSignature = `${run.integrity.source}:${run.integrity.candleCount}:${run.integrity.end}`;
+  const [analysis, setAnalysis] = useState<{
+    signature: string;
+    signals: BrutusSignal[];
+    rows: VariantRow[];
+  } | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const signals = analysis?.signals ?? [];
+  const rows = analysis?.rows ?? [];
   const usableRows = rows.filter((row) => row.stats.signals >= 20);
   const best = usableRows[0] ?? rows[0];
   const rawBest = rows.find(
@@ -599,6 +606,26 @@ export default function BrutusBandLabPage() {
         )} to ${pct(best.stats.continuationRate)}.`
       : "The lab rebuilds each 1H candle from available 5m candles, estimates the first live band pierce, then grades what happened after that trigger.";
 
+  useEffect(() => {
+    setAnalysis((current) =>
+      current?.signature === dataSignature ? current : null,
+    );
+    setIsAnalyzing(false);
+  }, [dataSignature]);
+
+  const runAnalysis = () => {
+    setIsAnalyzing(true);
+    window.setTimeout(() => {
+      const nextSignals = buildSignals(candles);
+      setAnalysis({
+        signature: dataSignature,
+        signals: nextSignals,
+        rows: buildRows(nextSignals),
+      });
+      setIsAnalyzing(false);
+    }, 0);
+  };
+
   return (
     <div className="space-y-5 p-4 md:p-6" data-ocid="brutus-band.page">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -614,7 +641,11 @@ export default function BrutusBandLabPage() {
         <Button
           type="button"
           variant="outline"
-          disabled={!run.integrity.canRunBacktest}
+          disabled={
+            !run.integrity.canRunBacktest ||
+            isAnalyzing ||
+            analysis?.signature !== dataSignature
+          }
           onClick={() =>
             downloadFile(
               "ict-brutus-band-lab.json",
@@ -657,7 +688,7 @@ export default function BrutusBandLabPage() {
           <div className="grid gap-3 md:grid-cols-4">
             <Stat
               label="Band pierces"
-              value={String(signals.length)}
+              value={analysis ? String(signals.length) : "not run"}
               detail="All tested configs combined"
             />
             <Stat
@@ -677,101 +708,135 @@ export default function BrutusBandLabPage() {
             />
           </div>
 
-          <section className="border border-primary/30 bg-primary/5 p-4">
-            <div className="flex items-start gap-3">
-              <Waves className="mt-0.5 h-4 w-4 text-primary" />
+          <section className="border border-border bg-card p-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="font-mono text-xs font-bold uppercase tracking-widest">
-                  What it means
-                </p>
-                <p className="mt-2 text-sm text-foreground">{plainFinding}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {technicalFinding}
+                <h2 className="font-display text-lg font-bold">
+                  Replay Control
+                </h2>
+                <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+                  This screen now opens first, then runs the heavy 5m replay
+                  only when requested. That keeps the tab from freezing just
+                  because you clicked into Brutus Band Lab.
                 </p>
               </div>
+              <Button
+                type="button"
+                onClick={runAnalysis}
+                disabled={!run.integrity.canRunBacktest || isAnalyzing}
+              >
+                <Play className="mr-2 h-4 w-4" />
+                {isAnalyzing ? "Running Replay..." : "Run Brutus Replay"}
+              </Button>
             </div>
           </section>
 
-          <section className="border border-border bg-card p-4">
-            <h2 className="font-display text-lg font-bold">
-              Brutus Band Scoreboard
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              This pass approximates the live alert by rebuilding each 1H candle
-              from 5m candles and recalculating the moving band at each step.
-            </p>
-            <div className="mt-3 border border-amber-500/40 bg-amber-500/5 p-3 text-sm text-muted-foreground">
-              <span className="font-mono font-bold uppercase tracking-widest text-amber-300">
-                Exactness note:
-              </span>{" "}
-              5m replay cannot know the exact tick where TradingView alerted. It
-              approximates the live band every 5 minutes. 1m or tick data would
-              tighten this.
-            </div>
-            <div className="mt-3 overflow-x-auto">
-              <table className="w-full min-w-[1280px] font-mono text-xs">
-                <thead className="border-b border-border text-muted-foreground">
-                  <tr>
-                    <th className="py-2 text-left">Variant</th>
-                    <th className="py-2 text-right">Length</th>
-                    <th className="py-2 text-right">Dev</th>
-                    <th className="py-2 text-right">Signals</th>
-                    <th className="py-2 text-right">W/L</th>
-                    <th className="py-2 text-right">Win</th>
-                    <th className="py-2 text-right">Avg</th>
-                    <th className="py-2 text-right">Total</th>
-                    <th className="py-2 text-right">Avg wick</th>
-                    <th className="py-2 text-right">Band stretch</th>
-                    <th className="py-2 text-right">Went against</th>
-                    <th className="py-2 text-right">Ran through</th>
-                    <th className="py-2 text-right">$ est.</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.slice(0, 24).map((row) => (
-                    <tr
-                      key={`${row.variant.id}-${row.config.length}-${row.config.deviation}`}
-                      className="border-b border-border/40"
-                    >
-                      <td className="py-2">{row.variant.label}</td>
-                      <td className="py-2 text-right">{row.config.length}</td>
-                      <td className="py-2 text-right">
-                        {row.config.deviation.toFixed(1)}
-                      </td>
-                      <td className="py-2 text-right">{row.stats.signals}</td>
-                      <td className="py-2 text-right">
-                        {row.stats.wins}/{row.stats.losses}
-                      </td>
-                      <td className="py-2 text-right">
-                        {pct(row.stats.winRate)}
-                      </td>
-                      <td className="py-2 text-right">
-                        {fmtPoints(row.stats.avgPoints)}
-                      </td>
-                      <td className="py-2 text-right">
-                        {fmtPoints(row.stats.totalPoints)}
-                      </td>
-                      <td className="py-2 text-right">
-                        {fmtPoints(row.stats.avgWickPoints)}
-                      </td>
-                      <td className="py-2 text-right">
-                        {fmtPoints(row.stats.avgBandStretchPoints)}
-                      </td>
-                      <td className="py-2 text-right">
-                        {fmtPoints(row.stats.avgMaxAdversePoints)}
-                      </td>
-                      <td className="py-2 text-right">
-                        {pct(row.stats.continuationRate)}
-                      </td>
-                      <td className="py-2 text-right">
-                        {fmtMoney(row.stats.estimatedDollarPnl)}
-                      </td>
+          {analysis ? (
+            <section className="border border-primary/30 bg-primary/5 p-4">
+              <div className="flex items-start gap-3">
+                <Waves className="mt-0.5 h-4 w-4 text-primary" />
+                <div>
+                  <p className="font-mono text-xs font-bold uppercase tracking-widest">
+                    What it means
+                  </p>
+                  <p className="mt-2 text-sm text-foreground">{plainFinding}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {technicalFinding}
+                  </p>
+                </div>
+              </div>
+            </section>
+          ) : (
+            <section className="border border-primary/30 bg-primary/5 p-4 text-sm text-muted-foreground">
+              Press Run Brutus Replay to calculate the scoreboard and enable the
+              export. No strategy result is generated until the real imported
+              candles are analyzed.
+            </section>
+          )}
+
+          {analysis && (
+            <section className="border border-border bg-card p-4">
+              <h2 className="font-display text-lg font-bold">
+                Brutus Band Scoreboard
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                This pass approximates the live alert by rebuilding each 1H
+                candle from 5m candles and recalculating the moving band at each
+                step.
+              </p>
+              <div className="mt-3 border border-amber-500/40 bg-amber-500/5 p-3 text-sm text-muted-foreground">
+                <span className="font-mono font-bold uppercase tracking-widest text-amber-300">
+                  Exactness note:
+                </span>{" "}
+                5m replay cannot know the exact tick where TradingView alerted.
+                It approximates the live band every 5 minutes. 1m or tick data
+                would tighten this.
+              </div>
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full min-w-[1280px] font-mono text-xs">
+                  <thead className="border-b border-border text-muted-foreground">
+                    <tr>
+                      <th className="py-2 text-left">Variant</th>
+                      <th className="py-2 text-right">Length</th>
+                      <th className="py-2 text-right">Dev</th>
+                      <th className="py-2 text-right">Signals</th>
+                      <th className="py-2 text-right">W/L</th>
+                      <th className="py-2 text-right">Win</th>
+                      <th className="py-2 text-right">Avg</th>
+                      <th className="py-2 text-right">Total</th>
+                      <th className="py-2 text-right">Avg wick</th>
+                      <th className="py-2 text-right">Band stretch</th>
+                      <th className="py-2 text-right">Went against</th>
+                      <th className="py-2 text-right">Ran through</th>
+                      <th className="py-2 text-right">$ est.</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
+                  </thead>
+                  <tbody>
+                    {rows.slice(0, 24).map((row) => (
+                      <tr
+                        key={`${row.variant.id}-${row.config.length}-${row.config.deviation}`}
+                        className="border-b border-border/40"
+                      >
+                        <td className="py-2">{row.variant.label}</td>
+                        <td className="py-2 text-right">{row.config.length}</td>
+                        <td className="py-2 text-right">
+                          {row.config.deviation.toFixed(1)}
+                        </td>
+                        <td className="py-2 text-right">{row.stats.signals}</td>
+                        <td className="py-2 text-right">
+                          {row.stats.wins}/{row.stats.losses}
+                        </td>
+                        <td className="py-2 text-right">
+                          {pct(row.stats.winRate)}
+                        </td>
+                        <td className="py-2 text-right">
+                          {fmtPoints(row.stats.avgPoints)}
+                        </td>
+                        <td className="py-2 text-right">
+                          {fmtPoints(row.stats.totalPoints)}
+                        </td>
+                        <td className="py-2 text-right">
+                          {fmtPoints(row.stats.avgWickPoints)}
+                        </td>
+                        <td className="py-2 text-right">
+                          {fmtPoints(row.stats.avgBandStretchPoints)}
+                        </td>
+                        <td className="py-2 text-right">
+                          {fmtPoints(row.stats.avgMaxAdversePoints)}
+                        </td>
+                        <td className="py-2 text-right">
+                          {pct(row.stats.continuationRate)}
+                        </td>
+                        <td className="py-2 text-right">
+                          {fmtMoney(row.stats.estimatedDollarPnl)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
 
           {best && (
             <section className="border border-border bg-card p-4">
