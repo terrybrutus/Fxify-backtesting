@@ -27,6 +27,19 @@ type MatchStatus = "matched" | "nearby" | "no-match" | "no-data";
 
 const EXAMPLE_PAYLOAD = `{"strategy":"brutus_band","symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","direction":"long","time":1782084600000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"length":9,"stdDev":2}`;
 
+const ALCHEMY_INDEX_SYMBOLS = [
+  { broker: "USTEC.R", market: "Nasdaq 100", appSymbol: "NAS100" },
+  { broker: "DJ30.R", market: "US Top 30", appSymbol: "US30" },
+  { broker: "US500.R", market: "S&P 500", appSymbol: "US500" },
+  { broker: "JPN225.R", market: "Japan 225", appSymbol: "JPN225" },
+  { broker: "AUS200.R", market: "S&P ASX", appSymbol: "AUS200" },
+  { broker: "DE30.R", market: "DAX", appSymbol: "DE30" },
+  { broker: "RUS2000.R", market: "Russell 2000", appSymbol: "RUS2000" },
+  { broker: "UK100.R", market: "UK 100", appSymbol: "UK100" },
+  { broker: "CHN50U.R", market: "China50", appSymbol: "CHN50" },
+  { broker: "ES35.R", market: "IBEX 35", appSymbol: "ES35" },
+];
+
 function loadAlerts(): TvAlert[] {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -102,6 +115,10 @@ function parsePayloadText(text: string) {
 
 function mapBrokerSymbol(symbol?: string) {
   const upper = symbol?.toUpperCase() ?? "";
+  const exactMatch = ALCHEMY_INDEX_SYMBOLS.find((item) =>
+    upper.includes(item.broker),
+  );
+  if (exactMatch) return exactMatch.appSymbol;
   if (
     upper.includes("DJ30") ||
     upper.includes("US30") ||
@@ -320,6 +337,35 @@ export default function TradingViewCapturePage() {
               flow and mention the broker name “Alchemy markets.” That is the
               source to test first, not public Yahoo symbols.
             </p>
+          </div>
+          <div className="border border-border bg-card p-4">
+            <h2 className="font-display text-sm font-bold">
+              Known Alchemy Index Symbols
+            </h2>
+            <div className="mt-3 max-h-64 overflow-y-auto">
+              <table className="w-full border-collapse font-mono text-[11px]">
+                <thead className="text-left text-muted-foreground">
+                  <tr className="border-b border-border">
+                    <th className="py-1 pr-2">Broker</th>
+                    <th className="py-1 pr-2">Market</th>
+                    <th className="py-1">App map</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ALCHEMY_INDEX_SYMBOLS.map((item) => (
+                    <tr className="border-b border-border/60" key={item.broker}>
+                      <td className="py-1 pr-2 text-foreground">
+                        {item.broker}
+                      </td>
+                      <td className="py-1 pr-2 text-muted-foreground">
+                        {item.market}
+                      </td>
+                      <td className="py-1 text-primary">{item.appSymbol}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
           <div className="border border-border bg-card p-4">
             <h2 className="font-display text-sm font-bold">Match Status</h2>
