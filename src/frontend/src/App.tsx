@@ -1,6 +1,7 @@
 import Layout from "@/components/Layout";
 import BacktestResultsPage from "@/pages/BacktestResultsPage";
 import BrutusBandLabPage from "@/pages/BrutusBandLabPage";
+import BrutusResearchPage from "@/pages/BrutusResearchPage";
 import ChartPage from "@/pages/ChartPage";
 import CocoRiskLabPage from "@/pages/CocoRiskLabPage";
 import CocoTradeProbePage from "@/pages/CocoTradeProbePage";
@@ -85,6 +86,12 @@ const brutusBandRoute = createRoute({
   component: BrutusBandLabPage,
 });
 
+const brutusResearchRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/brutus-research",
+  component: BrutusResearchPage,
+});
+
 const tradingViewCaptureRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/tradingview-capture",
@@ -167,6 +174,7 @@ const tree = rootRoute.addChildren([
   cocoRiskRoute,
   cocoTradeProbeRoute,
   brutusBandRoute,
+  brutusResearchRoute,
   tradingViewCaptureRoute,
   rejectedRoute,
   discoveryRoute,
