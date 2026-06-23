@@ -7,6 +7,7 @@ type TvAlert = {
   id: string;
   importedAt: number;
   strategy?: string;
+  alertMode?: string;
   brokerSymbol?: string;
   mappedSymbol?: string;
   timeframe?: string;
@@ -24,6 +25,12 @@ type TvAlert = {
 };
 
 type MatchStatus = "matched" | "nearby" | "no-match" | "no-data";
+
+type ImportResult = {
+  added: number;
+  duplicates: number;
+  total: number;
+};
 
 const EXAMPLE_PAYLOAD = `{"strategy":"brutus_band","symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","direction":"long","time":1782084600000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"length":9,"stdDev":2}`;
 
@@ -114,9 +121,12 @@ function normalizePayload(raw: unknown): TvAlert {
     id: crypto.randomUUID(),
     importedAt: Date.now(),
     strategy: asString(item.strategy),
+    alertMode: asString(item.alertMode),
     brokerSymbol,
     mappedSymbol: mapBrokerSymbol(brokerSymbol),
-    timeframe: asString(item.timeframe) ?? asString(item.interval),
+    timeframe: normalizeTimeframe(
+      asString(item.timeframe) ?? asString(item.interval),
+    ),
     direction: asString(item.direction) ?? asString(item.side),
     time: timestamp,
     open: asNumber(item.open),
@@ -128,6 +138,56 @@ function normalizePayload(raw: unknown): TvAlert {
     length: asNumber(item.length),
     stdDev: asNumber(item.stdDev) ?? asNumber(item.mult),
     raw: unwrapped,
+  };
+}
+
+function normalizeTimeframe(timeframe?: string) {
+  const raw = timeframe?.trim();
+  if (!raw) return undefined;
+  const lower = raw.toLowerCase();
+  if (lower === "15") return "15m";
+  if (lower === "60") return "1H";
+  if (lower.endsWith("m")) return lower;
+  if (lower.endsWith("h")) return lower.toUpperCase();
+  if (lower === "1d" || lower === "d") return "1D";
+  return raw;
+}
+
+function alertIdentity(alert: TvAlert) {
+  return [
+    alert.strategy ?? "",
+    alert.alertMode ?? "",
+    alert.brokerSymbol ?? "",
+    alert.timeframe ?? "",
+    alert.direction ?? "",
+    alert.time ?? "",
+    alert.open ?? "",
+    alert.high ?? "",
+    alert.low ?? "",
+    alert.close ?? "",
+  ].join("|");
+}
+
+function mergeAlerts(incoming: TvAlert[], current: TvAlert[]) {
+  const seen = new Set(current.map(alertIdentity));
+  const uniqueIncoming: TvAlert[] = [];
+  let duplicates = 0;
+  for (const alert of incoming) {
+    const identity = alertIdentity(alert);
+    if (seen.has(identity)) {
+      duplicates += 1;
+      continue;
+    }
+    seen.add(identity);
+    uniqueIncoming.push(alert);
+  }
+  return {
+    alerts: [...uniqueIncoming, ...current].slice(0, 500),
+    result: {
+      added: uniqueIncoming.length,
+      duplicates,
+      total: current.length + uniqueIncoming.length,
+    },
   };
 }
 
@@ -282,6 +342,7 @@ export default function TradingViewCapturePage() {
   const [payloadText, setPayloadText] = useState(EXAMPLE_PAYLOAD);
   const [alerts, setAlerts] = useState<TvAlert[]>(() => loadAlerts());
   const [error, setError] = useState("");
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
   const candleIndex = useMemo(() => {
     const map = new Map<string, { timestamp: number; close: number }[]>();
@@ -300,7 +361,7 @@ export default function TradingViewCapturePage() {
   const rows = useMemo(
     () =>
       alerts.map((alert) => {
-        const timeframe = alert.timeframe === "60" ? "1H" : alert.timeframe;
+        const timeframe = normalizeTimeframe(alert.timeframe);
         const key = `${alert.mappedSymbol ?? ""}|${timeframe ?? ""}`;
         const list = candleIndex.get(key);
         if (!list?.length || !alert.time) {
@@ -331,11 +392,13 @@ export default function TradingViewCapturePage() {
   function addPayloads(text: string) {
     try {
       const parsed = parsePayloadText(text);
-      const next = [...parsed, ...alerts].slice(0, 500);
-      setAlerts(next);
-      saveAlerts(next);
+      const merged = mergeAlerts(parsed, alerts);
+      setAlerts(merged.alerts);
+      saveAlerts(merged.alerts);
+      setImportResult(merged.result);
       setError("");
     } catch (err) {
+      setImportResult(null);
       setError(
         err instanceof Error ? err.message : "Could not parse alert JSON.",
       );
@@ -356,7 +419,7 @@ export default function TradingViewCapturePage() {
         </p>
       </div>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <section className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="border border-border bg-card p-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-display text-base font-bold">
@@ -376,6 +439,21 @@ export default function TradingViewCapturePage() {
             onChange={(event) => setPayloadText(event.target.value)}
           />
           {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+          {importResult && !error && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Added{" "}
+              <span className="font-mono text-primary">
+                {importResult.added}
+              </span>{" "}
+              alert(s), skipped{" "}
+              <span className="font-mono text-amber-300">
+                {importResult.duplicates}
+              </span>{" "}
+              duplicate(s). Stored total:{" "}
+              <span className="font-mono text-foreground">{alerts.length}</span>
+              .
+            </p>
+          )}
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               className="border border-primary bg-primary px-4 py-2 font-mono text-xs text-primary-foreground"
@@ -415,6 +493,7 @@ export default function TradingViewCapturePage() {
               onClick={() => {
                 setAlerts([]);
                 saveAlerts([]);
+                setImportResult(null);
               }}
               type="button"
             >
