@@ -45,6 +45,11 @@ const NAV_GROUPS = [
       { path: "/brutus-band", label: "Brutus Band Lab", icon: Waves },
       { path: "/brutus-research", label: "Brutus Research", icon: Microscope },
       {
+        path: "/brutus-execution",
+        label: "Brutus Execution",
+        icon: ShieldCheck,
+      },
+      {
         path: "/tradingview-capture",
         label: "TV Alert Capture",
         icon: Webhook,
