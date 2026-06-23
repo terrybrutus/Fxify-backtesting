@@ -141,6 +141,8 @@ export default function DataUploadPage() {
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
           Import real OHLCV CSV data first. The engine refuses to generate
           signals until required fields and minimum timeframes are present.
+          Yahoo proxy data is now manual backup only; Brutus Research should use
+          TradingView Alchemy CSV exports.
         </p>
       </div>
 
@@ -162,7 +164,7 @@ export default function DataUploadPage() {
               onClick={handleLoadYahooProxyData}
             >
               <Download className="mr-2 h-4 w-4" />
-              {isLoadingProxyData ? "Loading..." : "Load Yahoo Proxy Data"}
+              {isLoadingProxyData ? "Loading..." : "Load Yahoo Proxy Backup"}
             </Button>
             <Button type="button" onClick={() => fileRef.current?.click()}>
               <FileUp className="mr-2 h-4 w-4" />

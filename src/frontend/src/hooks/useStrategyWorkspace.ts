@@ -7,6 +7,10 @@ const DB_NAME = "ict-ma-strategy-workspace";
 const DB_VERSION = 1;
 const STORE_NAME = "workspace";
 const WORKSPACE_KEY = "active";
+const BUNDLED_PROXY_FILE_NAMES = new Set([
+  "yahoo_futures_proxy_latest.csv",
+  "yahoo_futures_proxy_master.csv",
+]);
 
 type StoredWorkspace = {
   candles: Array<Omit<Candle, "timestamp"> & { timestamp?: string }>;
@@ -70,6 +74,12 @@ function normalizeWorkspace(value: unknown): StoredWorkspace {
     importedAt: parsed.importedAt,
     fileName: parsed.fileName,
   };
+}
+
+function isBundledProxyWorkspace(workspace: StoredWorkspace | null) {
+  return Boolean(
+    workspace?.fileName && BUNDLED_PROXY_FILE_NAMES.has(workspace.fileName),
+  );
 }
 
 function openWorkspaceDb(): Promise<IDBDatabase> {
@@ -155,6 +165,13 @@ async function loadWorkspace() {
   try {
     const indexedWorkspace = await readFromIndexedDb();
     if (indexedWorkspace) {
+      if (isBundledProxyWorkspace(indexedWorkspace)) {
+        currentWorkspace = emptyWorkspace;
+        currentCandles = [];
+        await clearIndexedDb();
+        emitChange();
+        return;
+      }
       currentWorkspace = normalizeWorkspace(indexedWorkspace);
       currentCandles = reviveCandles(currentWorkspace);
       emitChange();
@@ -163,6 +180,13 @@ async function loadWorkspace() {
 
     const legacyWorkspace = readLegacyLocalStorage();
     if (legacyWorkspace && legacyWorkspace.candles.length > 0) {
+      if (isBundledProxyWorkspace(legacyWorkspace)) {
+        window.localStorage.removeItem(LEGACY_STORAGE_KEY);
+        currentWorkspace = emptyWorkspace;
+        currentCandles = [];
+        emitChange();
+        return;
+      }
       currentWorkspace = legacyWorkspace;
       currentCandles = reviveCandles(currentWorkspace);
       await writeToIndexedDb(legacyWorkspace);
