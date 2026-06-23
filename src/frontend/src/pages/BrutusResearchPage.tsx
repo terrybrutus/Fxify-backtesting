@@ -31,6 +31,10 @@ type BrutusSignal = {
   next2: Outcome;
   next4: Outcome;
   next8: Outcome;
+  bandNext1: Outcome;
+  bandNext2: Outcome;
+  bandNext4: Outcome;
+  bandNext8: Outcome;
   session: string;
   bandWidthPct: number;
   outsidePct: number;
@@ -53,6 +57,25 @@ type GroupRow = {
   avgClose4: number;
   avgMfe4: number;
   avgMae4: number;
+};
+
+type ModelRow = {
+  label: string;
+  signals: number;
+  winRate: number;
+  avgPoints: number;
+  avgPct: number;
+  avgBest: number;
+  avgWorst: number;
+  plainRead: string;
+};
+
+type AvoidRow = {
+  label: string;
+  signals: number;
+  avgClose4: number;
+  avgMae4: number;
+  reason: string;
 };
 
 const STORAGE_KEY = "ict.brutus.tv.csv.v1";
@@ -279,6 +302,10 @@ function buildSignals(allBars: BrutusBar[]) {
           next2: outcomeFor(bars, index, direction, 2, entryClose),
           next4: outcomeFor(bars, index, direction, 4, entryClose),
           next8: outcomeFor(bars, index, direction, 8, entryClose),
+          bandNext1: outcomeFor(bars, index, direction, 1, entryBand),
+          bandNext2: outcomeFor(bars, index, direction, 2, entryBand),
+          bandNext4: outcomeFor(bars, index, direction, 4, entryBand),
+          bandNext8: outcomeFor(bars, index, direction, 8, entryBand),
           session: sessionFor(bar.timestamp),
           bandWidthPct: (bar.upper - bar.lower) / bar.close,
           outsidePct:
@@ -325,6 +352,112 @@ function groupRows(
   return [...groups.entries()]
     .map(([label, group]) => rowFor(label, group))
     .sort((a, b) => b.signals - a.signals);
+}
+
+function modelRow(
+  label: string,
+  signals: BrutusSignal[],
+  outcomeForSignal: (signal: BrutusSignal) => Outcome,
+): ModelRow {
+  const usable = signals.filter((signal) => outcomeForSignal(signal).available);
+  const outcomes = usable.map(outcomeForSignal);
+  const avgPoints = mean(outcomes.map((outcome) => outcome.closePoints));
+  const avgBest = mean(outcomes.map((outcome) => outcome.maxFavorable));
+  const avgWorst = mean(outcomes.map((outcome) => outcome.maxAdverse));
+  const avgPct = mean(
+    usable.map(
+      (signal, index) => outcomes[index].closePoints / signal.entryClose,
+    ),
+  );
+  const winRate =
+    outcomes.length === 0
+      ? 0
+      : outcomes.filter((outcome) => outcome.closePoints > 0).length /
+        outcomes.length;
+  const plainRead =
+    avgPoints > 0 && avgWorst > -Math.abs(avgBest)
+      ? "Promising, but still needs stop testing."
+      : avgPoints > 0
+        ? "Positive average, but pullback risk is large."
+        : "Weak as a default rule.";
+  return {
+    label,
+    signals: usable.length,
+    winRate,
+    avgPoints,
+    avgPct,
+    avgBest,
+    avgWorst,
+    plainRead,
+  };
+}
+
+function buildModelRows(signals: BrutusSignal[]) {
+  return [
+    modelRow(
+      "Close entry, exit after 1 candle",
+      signals,
+      (signal) => signal.next1,
+    ),
+    modelRow(
+      "Close entry, exit after 2 candles",
+      signals,
+      (signal) => signal.next2,
+    ),
+    modelRow(
+      "Close entry, exit after 4 candles",
+      signals,
+      (signal) => signal.next4,
+    ),
+    modelRow(
+      "Band touch entry, exit after 1 candle",
+      signals,
+      (signal) => signal.bandNext1,
+    ),
+    modelRow(
+      "Band touch entry, exit after 2 candles",
+      signals,
+      (signal) => signal.bandNext2,
+    ),
+    modelRow(
+      "Band touch entry, exit after 4 candles",
+      signals,
+      (signal) => signal.bandNext4,
+    ),
+    modelRow(
+      "Scalp target: best move inside next candle",
+      signals,
+      (signal) => ({
+        ...signal.next1,
+        closePoints: signal.next1.maxFavorable,
+      }),
+    ),
+    modelRow(
+      "Ride test: close after 8 candles",
+      signals,
+      (signal) => signal.next8,
+    ),
+  ];
+}
+
+function buildAvoidRows(rows: GroupRow[]) {
+  return rows
+    .filter((row) => row.signals >= 80 && row.avgClose4 < 0)
+    .map((row): AvoidRow => {
+      const adversePressure =
+        Math.abs(row.avgMae4) > Math.max(Math.abs(row.avgMfe4) * 0.9, 1);
+      return {
+        label: row.label,
+        signals: row.signals,
+        avgClose4: row.avgClose4,
+        avgMae4: row.avgMae4,
+        reason: adversePressure
+          ? "Average 4-candle result is negative and downside pressure is heavy."
+          : "Average 4-candle result is negative; only scalp or avoid until proven otherwise.",
+      };
+    })
+    .sort((a, b) => a.avgClose4 - b.avgClose4)
+    .slice(0, 10);
 }
 
 function exportJson(filename: string, payload: unknown) {
@@ -461,6 +594,82 @@ function GroupTable({ rows }: { rows: GroupRow[] }) {
   );
 }
 
+function ModelTable({ rows }: { rows: ModelRow[] }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[820px] border-collapse font-mono text-xs">
+        <thead className="text-left text-muted-foreground">
+          <tr className="border-b border-border">
+            <th className="px-2 py-2">Model</th>
+            <th className="px-2 py-2 text-right">Signals</th>
+            <th className="px-2 py-2 text-right">Win</th>
+            <th className="px-2 py-2 text-right">Avg pts</th>
+            <th className="px-2 py-2 text-right">Avg %</th>
+            <th className="px-2 py-2 text-right">Best</th>
+            <th className="px-2 py-2 text-right">Worst</th>
+            <th className="px-2 py-2">Plain read</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr className="border-b border-border/70" key={row.label}>
+              <td className="px-2 py-2 text-foreground">{row.label}</td>
+              <td className="px-2 py-2 text-right">{row.signals}</td>
+              <td className="px-2 py-2 text-right">{pct(row.winRate)}</td>
+              <td className="px-2 py-2 text-right">
+                {fmtPoints(row.avgPoints)}
+              </td>
+              <td className="px-2 py-2 text-right">{pct(row.avgPct)}</td>
+              <td className="px-2 py-2 text-right text-lime-300">
+                {fmtPoints(row.avgBest)}
+              </td>
+              <td className="px-2 py-2 text-right text-destructive">
+                {fmtPoints(row.avgWorst)}
+              </td>
+              <td className="px-2 py-2 text-muted-foreground">
+                {row.plainRead}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function AvoidTable({ rows }: { rows: AvoidRow[] }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[760px] border-collapse font-mono text-xs">
+        <thead className="text-left text-muted-foreground">
+          <tr className="border-b border-border">
+            <th className="px-2 py-2">Avoid candidate</th>
+            <th className="px-2 py-2 text-right">Signals</th>
+            <th className="px-2 py-2 text-right">4 close</th>
+            <th className="px-2 py-2 text-right">4 worst</th>
+            <th className="px-2 py-2">Why</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr className="border-b border-border/70" key={row.label}>
+              <td className="px-2 py-2 text-foreground">{row.label}</td>
+              <td className="px-2 py-2 text-right">{row.signals}</td>
+              <td className="px-2 py-2 text-right text-destructive">
+                {fmtPoints(row.avgClose4)}
+              </td>
+              <td className="px-2 py-2 text-right text-destructive">
+                {fmtPoints(row.avgMae4)}
+              </td>
+              <td className="px-2 py-2 text-muted-foreground">{row.reason}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function BrutusResearchPage() {
   const [bars, setBars] = useState<BrutusBar[]>([]);
   const [fileNotes, setFileNotes] = useState<string[]>([]);
@@ -503,6 +712,11 @@ export default function BrutusResearchPage() {
         .filter((row) => row.signals >= 20)
         .sort((a, b) => b.avgClose1 - a.avgClose1)
         .slice(0, 8),
+    [byAsset, bySession, byShape],
+  );
+  const modelRows = useMemo(() => buildModelRows(signals), [signals]);
+  const avoidRows = useMemo(
+    () => buildAvoidRows([...byAsset, ...bySession, ...byShape]),
     [byAsset, bySession, byShape],
   );
   const newestSignals = signals.slice(-80).reverse();
@@ -564,6 +778,8 @@ export default function BrutusResearchPage() {
                   signals: signals.length,
                 },
                 bestRows,
+                modelRows,
+                avoidRows,
                 byAsset,
                 bySession,
                 byShape,
@@ -655,6 +871,35 @@ export default function BrutusResearchPage() {
             </p>
             <div className="mt-3">
               <GroupTable rows={bestRows} />
+            </div>
+          </section>
+
+          <section className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+            <div className="border border-border bg-card p-4">
+              <h2 className="font-display text-base font-bold">
+                Entry / Exit Model Comparison
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                This compares close-entry, band-touch entry, quick scalp, and
+                basic ride tests. It is still before spread/slippage and exact
+                live first-touch timing.
+              </p>
+              <div className="mt-3">
+                <ModelTable rows={modelRows} />
+              </div>
+            </div>
+            <div className="border border-destructive/50 bg-card p-4">
+              <h2 className="font-display text-base font-bold">
+                Avoid Candidates
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                These groups are not proven dead, but they currently punish
+                holding. They should be scalp-only or blocked until a better
+                filter exists.
+              </p>
+              <div className="mt-3 max-h-[420px] overflow-y-auto">
+                <AvoidTable rows={avoidRows} />
+              </div>
             </div>
           </section>
 
