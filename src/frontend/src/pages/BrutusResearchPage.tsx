@@ -37,7 +37,13 @@ type BrutusSignal = {
   bandNext8: Outcome;
   session: string;
   bandWidthPct: number;
+  bandExpansionPct: number;
   outsidePct: number;
+  pierceDepth: number;
+  pierceDepthRatio: number;
+  rejectionPoints: number;
+  rejectionRatio: number;
+  repeatedPierces5: number;
   candleShape: string;
 };
 
@@ -76,6 +82,19 @@ type AvoidRow = {
   avgClose4: number;
   avgMae4: number;
   reason: string;
+};
+
+type AnatomyRow = {
+  label: string;
+  signals: number;
+  avgPierceDepth: number;
+  avgPierceRatio: number;
+  avgRejectionRatio: number;
+  avgBandExpansion: number;
+  avgRepeatedPierces: number;
+  avgClose1: number;
+  avgClose4: number;
+  plainRead: string;
 };
 
 const STORAGE_KEY = "ict.brutus.tv.csv.v1";
@@ -239,6 +258,41 @@ function candleShape(bar: BrutusBar, direction: Direction) {
   return "balanced";
 }
 
+function bandWidth(bar: BrutusBar) {
+  return Math.max(bar.upper - bar.lower, 0.0001);
+}
+
+function pierceDepthFor(bar: BrutusBar, direction: Direction) {
+  return Math.max(
+    direction === "long" ? bar.lower - bar.low : bar.high - bar.upper,
+    0,
+  );
+}
+
+function rejectionPointsFor(bar: BrutusBar, direction: Direction) {
+  return Math.max(
+    direction === "long" ? bar.close - bar.low : bar.high - bar.close,
+    0,
+  );
+}
+
+function bandExpansionFor(bars: BrutusBar[], index: number) {
+  const currentWidth = bandWidth(bars[index]);
+  const priorWidth = index > 0 ? bandWidth(bars[index - 1]) : currentWidth;
+  return (currentWidth - priorWidth) / priorWidth;
+}
+
+function repeatedPiercesFor(
+  bars: BrutusBar[],
+  index: number,
+  direction: Direction,
+) {
+  const lookback = bars.slice(Math.max(0, index - 5), index);
+  return lookback.filter((bar) =>
+    direction === "long" ? bar.low < bar.lower : bar.high > bar.upper,
+  ).length;
+}
+
 function outcomeFor(
   bars: BrutusBar[],
   index: number,
@@ -288,6 +342,12 @@ function buildSignals(allBars: BrutusBar[]) {
       for (const direction of directions) {
         const entryBand = direction === "long" ? bar.lower : bar.upper;
         const entryClose = bar.close;
+        const currentBandWidth = bandWidth(bar);
+        const pierceDepth = pierceDepthFor(bar, direction);
+        const rejectionPoints = rejectionPointsFor(bar, direction);
+        const pierceDepthRatio = pierceDepth / currentBandWidth;
+        const rejectionRatio =
+          pierceDepth > 0 ? rejectionPoints / pierceDepth : 0;
         signals.push({
           id: `${bar.symbol}-${bar.timeframe}-${bar.timestamp}-${direction}`,
           symbol: bar.symbol,
@@ -307,11 +367,17 @@ function buildSignals(allBars: BrutusBar[]) {
           bandNext4: outcomeFor(bars, index, direction, 4, entryBand),
           bandNext8: outcomeFor(bars, index, direction, 8, entryBand),
           session: sessionFor(bar.timestamp),
-          bandWidthPct: (bar.upper - bar.lower) / bar.close,
+          bandWidthPct: currentBandWidth / bar.close,
+          bandExpansionPct: bandExpansionFor(bars, index),
           outsidePct:
             direction === "long"
               ? (bar.lower - bar.low) / bar.close
               : (bar.high - bar.upper) / bar.close,
+          pierceDepth,
+          pierceDepthRatio,
+          rejectionPoints,
+          rejectionRatio,
+          repeatedPierces5: repeatedPiercesFor(bars, index, direction),
           candleShape: candleShape(bar, direction),
         });
       }
@@ -351,6 +417,85 @@ function groupRows(
   }
   return [...groups.entries()]
     .map(([label, group]) => rowFor(label, group))
+    .sort((a, b) => b.signals - a.signals);
+}
+
+function anatomyBucket(signal: BrutusSignal) {
+  if (signal.pierceDepth <= 0) return "touch only";
+  if (signal.pierceDepthRatio < 0.02) return "tiny pierce";
+  if (signal.pierceDepthRatio < 0.08) return "clean pierce";
+  return "deep pierce";
+}
+
+function rejectionBucket(signal: BrutusSignal) {
+  if (signal.rejectionRatio >= 2) return "strong rejection";
+  if (signal.rejectionRatio >= 1) return "full rejection";
+  if (signal.rejectionRatio >= 0.4) return "partial rejection";
+  return "weak/no rejection";
+}
+
+function expansionBucket(signal: BrutusSignal) {
+  if (signal.bandExpansionPct > 0.12) return "band expanding fast";
+  if (signal.bandExpansionPct > 0.03) return "band expanding";
+  if (signal.bandExpansionPct < -0.03) return "band compressing";
+  return "band stable";
+}
+
+function repeatBucket(signal: BrutusSignal) {
+  if (signal.repeatedPierces5 >= 3) return "3+ recent same-side pierces";
+  if (signal.repeatedPierces5 >= 1) return "1-2 recent same-side pierces";
+  return "first recent pierce";
+}
+
+function anatomyRow(label: string, signals: BrutusSignal[]): AnatomyRow {
+  const usable1 = signals.filter((signal) => signal.next1.available);
+  const usable4 = signals.filter((signal) => signal.next4.available);
+  const avgPierceDepth = mean(signals.map((signal) => signal.pierceDepth));
+  const avgPierceRatio = mean(signals.map((signal) => signal.pierceDepthRatio));
+  const avgRejectionRatio = mean(
+    signals.map((signal) => signal.rejectionRatio),
+  );
+  const avgBandExpansion = mean(
+    signals.map((signal) => signal.bandExpansionPct),
+  );
+  const avgRepeatedPierces = mean(
+    signals.map((signal) => signal.repeatedPierces5),
+  );
+  const avgClose1 = mean(usable1.map((signal) => signal.next1.closePoints));
+  const avgClose4 = mean(usable4.map((signal) => signal.next4.closePoints));
+  const plainRead =
+    avgClose1 > 0 && avgRejectionRatio >= 1
+      ? "Useful snapback profile."
+      : avgClose4 < 0 && avgBandExpansion > 0.03
+        ? "Expansion risk. Avoid holding."
+        : avgClose1 > 0
+          ? "Scalp candidate, not a hold rule."
+          : "Weak evidence.";
+  return {
+    label,
+    signals: signals.length,
+    avgPierceDepth,
+    avgPierceRatio,
+    avgRejectionRatio,
+    avgBandExpansion,
+    avgRepeatedPierces,
+    avgClose1,
+    avgClose4,
+    plainRead,
+  };
+}
+
+function anatomyRows(
+  signals: BrutusSignal[],
+  labelFor: (signal: BrutusSignal) => string,
+) {
+  const groups = new Map<string, BrutusSignal[]>();
+  for (const signal of signals) {
+    const label = labelFor(signal);
+    groups.set(label, [...(groups.get(label) ?? []), signal]);
+  }
+  return [...groups.entries()]
+    .map(([label, group]) => anatomyRow(label, group))
     .sort((a, b) => b.signals - a.signals);
 }
 
@@ -670,6 +815,61 @@ function AvoidTable({ rows }: { rows: AvoidRow[] }) {
   );
 }
 
+function AnatomyTable({ rows }: { rows: AnatomyRow[] }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[900px] border-collapse font-mono text-xs">
+        <thead className="text-left text-muted-foreground">
+          <tr className="border-b border-border">
+            <th className="px-2 py-2">Anatomy group</th>
+            <th className="px-2 py-2 text-right">Signals</th>
+            <th className="px-2 py-2 text-right">Pierce</th>
+            <th className="px-2 py-2 text-right">Pierce/band</th>
+            <th className="px-2 py-2 text-right">Rejection</th>
+            <th className="px-2 py-2 text-right">Band exp</th>
+            <th className="px-2 py-2 text-right">Repeat</th>
+            <th className="px-2 py-2 text-right">1 close</th>
+            <th className="px-2 py-2 text-right">4 close</th>
+            <th className="px-2 py-2">Plain read</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr className="border-b border-border/70" key={row.label}>
+              <td className="px-2 py-2 text-foreground">{row.label}</td>
+              <td className="px-2 py-2 text-right">{row.signals}</td>
+              <td className="px-2 py-2 text-right">
+                {fmtPoints(row.avgPierceDepth)}
+              </td>
+              <td className="px-2 py-2 text-right">
+                {pct(row.avgPierceRatio)}
+              </td>
+              <td className="px-2 py-2 text-right">
+                {row.avgRejectionRatio.toFixed(2)}x
+              </td>
+              <td className="px-2 py-2 text-right">
+                {pct(row.avgBandExpansion)}
+              </td>
+              <td className="px-2 py-2 text-right">
+                {row.avgRepeatedPierces.toFixed(1)}
+              </td>
+              <td className="px-2 py-2 text-right">
+                {fmtPoints(row.avgClose1)}
+              </td>
+              <td className="px-2 py-2 text-right">
+                {fmtPoints(row.avgClose4)}
+              </td>
+              <td className="px-2 py-2 text-muted-foreground">
+                {row.plainRead}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function BrutusResearchPage() {
   const [bars, setBars] = useState<BrutusBar[]>([]);
   const [fileNotes, setFileNotes] = useState<string[]>([]);
@@ -718,6 +918,42 @@ export default function BrutusResearchPage() {
   const avoidRows = useMemo(
     () => buildAvoidRows([...byAsset, ...bySession, ...byShape]),
     [byAsset, bySession, byShape],
+  );
+  const byPierceDepth = useMemo(
+    () =>
+      anatomyRows(
+        signals,
+        (signal) =>
+          `${anatomyBucket(signal)} | ${signal.timeframe} | ${signal.direction}`,
+      ),
+    [signals],
+  );
+  const byRejection = useMemo(
+    () =>
+      anatomyRows(
+        signals,
+        (signal) =>
+          `${rejectionBucket(signal)} | ${signal.timeframe} | ${signal.direction}`,
+      ),
+    [signals],
+  );
+  const byBandExpansion = useMemo(
+    () =>
+      anatomyRows(
+        signals,
+        (signal) =>
+          `${expansionBucket(signal)} | ${signal.timeframe} | ${signal.direction}`,
+      ),
+    [signals],
+  );
+  const byRepeatPierce = useMemo(
+    () =>
+      anatomyRows(
+        signals,
+        (signal) =>
+          `${repeatBucket(signal)} | ${signal.timeframe} | ${signal.direction}`,
+      ),
+    [signals],
   );
   const newestSignals = signals.slice(-80).reverse();
 
@@ -780,6 +1016,12 @@ export default function BrutusResearchPage() {
                 bestRows,
                 modelRows,
                 avoidRows,
+                pierceAnatomy: {
+                  byPierceDepth,
+                  byRejection,
+                  byBandExpansion,
+                  byRepeatPierce,
+                },
                 byAsset,
                 bySession,
                 byShape,
@@ -905,6 +1147,59 @@ export default function BrutusResearchPage() {
 
           <section className="grid gap-4 xl:grid-cols-2">
             <div className="border border-border bg-card p-4">
+              <h2 className="font-display text-base font-bold">Pierce Depth</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Touches, tiny pierces, clean pierces, and deep pierces are
+                measured against the current band width, not treated as the same
+                setup.
+              </p>
+              <div className="mt-3 max-h-[420px] overflow-y-auto">
+                <AnatomyTable rows={byPierceDepth} />
+              </div>
+            </div>
+            <div className="border border-border bg-card p-4">
+              <h2 className="font-display text-base font-bold">
+                Rejection Quality
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                This looks for the difference between a clean snapback and a
+                weak touch that keeps pushing against the trade.
+              </p>
+              <div className="mt-3 max-h-[420px] overflow-y-auto">
+                <AnatomyTable rows={byRejection} />
+              </div>
+            </div>
+          </section>
+
+          <section className="grid gap-4 xl:grid-cols-2">
+            <div className="border border-border bg-card p-4">
+              <h2 className="font-display text-base font-bold">
+                Band Expansion Risk
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Fast widening can mean the band is being pulled with price. That
+                is where reversals can become continuation traps.
+              </p>
+              <div className="mt-3 max-h-[420px] overflow-y-auto">
+                <AnatomyTable rows={byBandExpansion} />
+              </div>
+            </div>
+            <div className="border border-border bg-card p-4">
+              <h2 className="font-display text-base font-bold">
+                Repeated Pierce Pressure
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                This checks whether the same side has been hit repeatedly in the
+                last five bars, which can warn that strength is building.
+              </p>
+              <div className="mt-3 max-h-[420px] overflow-y-auto">
+                <AnatomyTable rows={byRepeatPierce} />
+              </div>
+            </div>
+          </section>
+
+          <section className="grid gap-4 xl:grid-cols-2">
+            <div className="border border-border bg-card p-4">
               <h2 className="font-display text-base font-bold">
                 Asset / Timeframe / Side
               </h2>
@@ -962,6 +1257,48 @@ export default function BrutusResearchPage() {
               {selectedSignal ? (
                 <div className="mt-3 space-y-3">
                   <MiniChart bars={bars} signal={selectedSignal} />
+                  <div className="grid gap-3 md:grid-cols-5">
+                    <div className="border border-border bg-background p-3">
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                        Pierce depth
+                      </p>
+                      <p className="mt-2 font-display text-lg font-bold">
+                        {fmtPoints(selectedSignal.pierceDepth)}
+                      </p>
+                    </div>
+                    <div className="border border-border bg-background p-3">
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                        Pierce / band
+                      </p>
+                      <p className="mt-2 font-display text-lg font-bold">
+                        {pct(selectedSignal.pierceDepthRatio)}
+                      </p>
+                    </div>
+                    <div className="border border-border bg-background p-3">
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                        Rejection
+                      </p>
+                      <p className="mt-2 font-display text-lg font-bold">
+                        {selectedSignal.rejectionRatio.toFixed(2)}x
+                      </p>
+                    </div>
+                    <div className="border border-border bg-background p-3">
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                        Band expansion
+                      </p>
+                      <p className="mt-2 font-display text-lg font-bold">
+                        {pct(selectedSignal.bandExpansionPct)}
+                      </p>
+                    </div>
+                    <div className="border border-border bg-background p-3">
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                        Recent pierces
+                      </p>
+                      <p className="mt-2 font-display text-lg font-bold">
+                        {selectedSignal.repeatedPierces5}
+                      </p>
+                    </div>
+                  </div>
                   <div className="grid gap-3 md:grid-cols-4">
                     {HORIZONS.map((horizon) => {
                       const outcome = selectedSignal[
