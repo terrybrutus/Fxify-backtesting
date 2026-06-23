@@ -9,7 +9,14 @@ type StopPolicy =
   | "atr-50"
   | "atr-100"
   | "signal-extreme";
-type ExitReason = "target" | "stop" | "timeout" | "no-data";
+type ExitReason =
+  | "target"
+  | "stop"
+  | "timeout"
+  | "signal-target"
+  | "signal-stop"
+  | "no-data";
+type Realism = "realistic" | "optimistic" | "late";
 
 type BrutusBar = {
   symbol: string;
@@ -62,9 +69,15 @@ type TradeResult = {
   stop: number;
   target: number;
   riskPoints: number;
+  signalAdversePoints: number;
+  signalFavorablePoints: number;
+  touchToClosePoints: number;
+  signalStopHit: boolean;
+  signalTargetHit: boolean;
   exitPoints: number;
   r: number;
   reason: ExitReason;
+  realism: Realism;
   barsHeld: number;
 };
 
@@ -78,6 +91,10 @@ type PlanRow = {
   profitFactor: number;
   maxDrawdownR: number;
   avgPoints: number;
+  signalStopRate: number;
+  signalTargetRate: number;
+  avgTouchToClose: number;
+  optimisticRate: number;
   targetRate: number;
   stopRate: number;
   timeoutRate: number;
@@ -330,6 +347,41 @@ function riskPoints(signal: Signal, entry: number, policy: StopPolicy) {
   );
 }
 
+function signalCandleStress(
+  signal: Signal,
+  entry: number,
+  stop: number,
+  target: number,
+) {
+  const signalAdversePoints =
+    signal.direction === "long"
+      ? Math.max(entry - signal.bar.low, 0)
+      : Math.max(signal.bar.high - entry, 0);
+  const signalFavorablePoints =
+    signal.direction === "long"
+      ? Math.max(signal.bar.high - entry, 0)
+      : Math.max(entry - signal.bar.low, 0);
+  const touchToClosePoints =
+    signal.direction === "long"
+      ? signal.bar.close - entry
+      : entry - signal.bar.close;
+  const signalStopHit =
+    signal.direction === "long"
+      ? signal.bar.low <= stop
+      : signal.bar.high >= stop;
+  const signalTargetHit =
+    signal.direction === "long"
+      ? signal.bar.high >= target
+      : signal.bar.low <= target;
+  return {
+    signalAdversePoints,
+    signalFavorablePoints,
+    touchToClosePoints,
+    signalStopHit,
+    signalTargetHit,
+  };
+}
+
 function simulateTrade(
   signal: Signal,
   plan: ExecutionPlan,
@@ -343,6 +395,50 @@ function simulateTrade(
     signal.direction === "long"
       ? entry + risk * plan.targetR
       : entry - risk * plan.targetR;
+  const stress = signalCandleStress(signal, entry, stop, target);
+
+  if (plan.entry === "band-touch" && stress.signalStopHit) {
+    return {
+      planId: plan.id,
+      signalId: signal.id,
+      symbol: signal.symbol,
+      timeframe: signal.timeframe,
+      timestamp: signal.timestamp,
+      direction: signal.direction,
+      entry,
+      stop,
+      target,
+      riskPoints: risk,
+      ...stress,
+      exitPoints: -risk,
+      r: -1,
+      reason: "signal-stop",
+      realism: "realistic",
+      barsHeld: 0,
+    };
+  }
+
+  if (plan.entry === "band-touch" && stress.signalTargetHit) {
+    return {
+      planId: plan.id,
+      signalId: signal.id,
+      symbol: signal.symbol,
+      timeframe: signal.timeframe,
+      timestamp: signal.timestamp,
+      direction: signal.direction,
+      entry,
+      stop,
+      target,
+      riskPoints: risk,
+      ...stress,
+      exitPoints: risk * plan.targetR,
+      r: plan.targetR,
+      reason: "signal-target",
+      realism: "optimistic",
+      barsHeld: 0,
+    };
+  }
+
   const future = bars.slice(signal.index + 1, signal.index + 1 + plan.maxHold);
 
   if (future.length === 0) {
@@ -357,9 +453,11 @@ function simulateTrade(
       stop,
       target,
       riskPoints: risk,
+      ...stress,
       exitPoints: 0,
       r: 0,
       reason: "no-data",
+      realism: plan.entry === "close" ? "late" : "realistic",
       barsHeld: 0,
     };
   }
@@ -382,9 +480,11 @@ function simulateTrade(
         stop,
         target,
         riskPoints: risk,
+        ...stress,
         exitPoints: -risk,
         r: -1,
         reason: "stop",
+        realism: plan.entry === "close" ? "late" : "realistic",
         barsHeld: index + 1,
       };
     }
@@ -400,9 +500,11 @@ function simulateTrade(
         stop,
         target,
         riskPoints: risk,
+        ...stress,
         exitPoints: risk * plan.targetR,
         r: plan.targetR,
         reason: "target",
+        realism: plan.entry === "close" ? "late" : "realistic",
         barsHeld: index + 1,
       };
     }
@@ -422,9 +524,11 @@ function simulateTrade(
     stop,
     target,
     riskPoints: risk,
+    ...stress,
     exitPoints,
     r: exitPoints / risk,
     reason: "timeout",
+    realism: plan.entry === "close" ? "late" : "realistic",
     barsHeld: future.length,
   };
 }
@@ -463,26 +567,51 @@ function summarizePlan(plan: ExecutionPlan, results: TradeResult[]): PlanRow {
   const stopRate =
     usable.length === 0
       ? 0
-      : usable.filter((result) => result.reason === "stop").length /
-        usable.length;
+      : usable.filter(
+          (result) =>
+            result.reason === "stop" || result.reason === "signal-stop",
+        ).length / usable.length;
   const targetRate =
     usable.length === 0
       ? 0
-      : usable.filter((result) => result.reason === "target").length /
-        usable.length;
+      : usable.filter(
+          (result) =>
+            result.reason === "target" || result.reason === "signal-target",
+        ).length / usable.length;
   const timeoutRate =
     usable.length === 0
       ? 0
       : usable.filter((result) => result.reason === "timeout").length /
         usable.length;
+  const signalStopRate =
+    usable.length === 0
+      ? 0
+      : usable.filter((result) => result.signalStopHit).length / usable.length;
+  const signalTargetRate =
+    usable.length === 0
+      ? 0
+      : usable.filter((result) => result.signalTargetHit).length /
+        usable.length;
+  const optimisticRate =
+    usable.length === 0
+      ? 0
+      : usable.filter((result) => result.realism === "optimistic").length /
+        usable.length;
+  const avgTouchToClose = mean(
+    usable.map((result) => result.touchToClosePoints),
+  );
   const plainRead =
     usable.length < 50
       ? "Too few trades to trust."
-      : avgR > 0.15 && grossWin > grossLoss
-        ? "Candidate rule. Review examples."
-        : avgR > 0
-          ? "Small edge, needs tighter filter."
-          : "Do not trade as-is.";
+      : optimisticRate > 0.35
+        ? "Too optimistic; needs tick/lower-TF proof."
+        : signalStopRate > 0.45
+          ? "Too many touch entries fail immediately."
+          : avgR > 0.15 && grossWin > grossLoss
+            ? "Candidate rule. Review examples."
+            : avgR > 0
+              ? "Small edge, needs tighter filter."
+              : "Do not trade as-is.";
   return {
     id: plan.id,
     label: plan.label,
@@ -493,6 +622,10 @@ function summarizePlan(plan: ExecutionPlan, results: TradeResult[]): PlanRow {
     profitFactor: grossLoss === 0 ? grossWin : grossWin / grossLoss,
     maxDrawdownR: maxDrawdown(usable.map((result) => result.r)),
     avgPoints: mean(usable.map((result) => result.exitPoints)),
+    signalStopRate,
+    signalTargetRate,
+    avgTouchToClose,
+    optimisticRate,
     targetRate,
     stopRate,
     timeoutRate,
@@ -572,6 +705,9 @@ function PlanTable({ rows }: { rows: PlanRow[] }) {
             <th className="px-2 py-2 text-right">PF</th>
             <th className="px-2 py-2 text-right">DD R</th>
             <th className="px-2 py-2 text-right">Avg pts</th>
+            <th className="px-2 py-2 text-right">Touch-close</th>
+            <th className="px-2 py-2 text-right">Sig stop</th>
+            <th className="px-2 py-2 text-right">Optimism</th>
             <th className="px-2 py-2 text-right">Target</th>
             <th className="px-2 py-2 text-right">Stop</th>
             <th className="px-2 py-2">Read</th>
@@ -592,6 +728,15 @@ function PlanTable({ rows }: { rows: PlanRow[] }) {
                 {fmt(row.maxDrawdownR)}
               </td>
               <td className="px-2 py-2 text-right">{fmt(row.avgPoints)}</td>
+              <td className="px-2 py-2 text-right">
+                {fmt(row.avgTouchToClose)}
+              </td>
+              <td className="px-2 py-2 text-right">
+                {pct(row.signalStopRate)}
+              </td>
+              <td className="px-2 py-2 text-right">
+                {pct(row.optimisticRate)}
+              </td>
               <td className="px-2 py-2 text-right">{pct(row.targetRate)}</td>
               <td className="px-2 py-2 text-right">{pct(row.stopRate)}</td>
               <td className="px-2 py-2 text-muted-foreground">
@@ -617,8 +762,11 @@ function TradeTable({ rows }: { rows: TradeResult[] }) {
             <th className="px-2 py-2 text-right">Entry</th>
             <th className="px-2 py-2 text-right">Stop</th>
             <th className="px-2 py-2 text-right">Target</th>
+            <th className="px-2 py-2 text-right">Touch-close</th>
+            <th className="px-2 py-2 text-right">Sig adverse</th>
             <th className="px-2 py-2 text-right">R</th>
             <th className="px-2 py-2">Exit</th>
+            <th className="px-2 py-2">Realism</th>
           </tr>
         </thead>
         <tbody>
@@ -634,8 +782,15 @@ function TradeTable({ rows }: { rows: TradeResult[] }) {
               <td className="px-2 py-2 text-right">{row.entry.toFixed(2)}</td>
               <td className="px-2 py-2 text-right">{row.stop.toFixed(2)}</td>
               <td className="px-2 py-2 text-right">{row.target.toFixed(2)}</td>
+              <td className="px-2 py-2 text-right">
+                {fmt(row.touchToClosePoints)}
+              </td>
+              <td className="px-2 py-2 text-right">
+                {fmt(row.signalAdversePoints)}
+              </td>
               <td className="px-2 py-2 text-right">{fmt(row.r)}</td>
               <td className="px-2 py-2">{row.reason}</td>
+              <td className="px-2 py-2">{row.realism}</td>
             </tr>
           ))}
         </tbody>
@@ -680,6 +835,22 @@ export default function BrutusExecutionPage() {
     .filter((row) => row.trades >= 150 && row.profitFactor > 1)
     .sort((a, b) => b.totalR - a.totalR)
     .slice(0, 25);
+  const realismRows = evaluated
+    .map((item) => item.row)
+    .filter(
+      (row) =>
+        row.trades >= 150 &&
+        row.avgR > 0 &&
+        row.optimisticRate <= 0.2 &&
+        row.signalStopRate <= 0.35,
+    )
+    .sort((a, b) => b.avgR - a.avgR)
+    .slice(0, 25);
+  const optimismRows = evaluated
+    .map((item) => item.row)
+    .filter((row) => row.trades >= 50 && row.optimisticRate > 0.35)
+    .sort((a, b) => b.avgR - a.avgR)
+    .slice(0, 15);
   const trapRows = evaluated
     .map((item) => item.row)
     .filter((row) => row.trades >= 50)
@@ -749,6 +920,8 @@ export default function BrutusExecutionPage() {
                 },
                 candidateRows,
                 saferRows,
+                realismRows,
+                optimismRows,
                 trapRows,
                 selectedPlan: selected?.row,
                 selectedTrades,
@@ -855,6 +1028,21 @@ export default function BrutusExecutionPage() {
                 <PlanTable rows={saferRows} />
               </div>
             </div>
+            <div className="border border-primary/50 bg-card p-4">
+              <h2 className="font-display text-base font-bold">
+                Realism Survivors
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                These still have positive R after requiring low same-candle
+                optimism and manageable immediate stop pressure.
+              </p>
+              <div className="mt-3 max-h-[420px] overflow-y-auto">
+                <PlanTable rows={realismRows} />
+              </div>
+            </div>
+          </section>
+
+          <section className="grid gap-4 xl:grid-cols-2">
             <div className="border border-destructive/50 bg-card p-4">
               <h2 className="font-display text-base font-bold">
                 Execution Traps
@@ -864,6 +1052,18 @@ export default function BrutusExecutionPage() {
               </p>
               <div className="mt-3 max-h-[420px] overflow-y-auto">
                 <PlanTable rows={trapRows} />
+              </div>
+            </div>
+            <div className="border border-amber-500/50 bg-card p-4">
+              <h2 className="font-display text-base font-bold">
+                Too-Optimistic Plans
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                These can look profitable, but too much of the result depends on
+                signal-candle target assumptions.
+              </p>
+              <div className="mt-3 max-h-[420px] overflow-y-auto">
+                <PlanTable rows={optimismRows} />
               </div>
             </div>
           </section>
