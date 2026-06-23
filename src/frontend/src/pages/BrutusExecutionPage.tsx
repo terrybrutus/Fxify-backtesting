@@ -395,7 +395,16 @@ function simulateTrade(
     signal.direction === "long"
       ? entry + risk * plan.targetR
       : entry - risk * plan.targetR;
-  const stress = signalCandleStress(signal, entry, stop, target);
+  const stress =
+    plan.entry === "band-touch"
+      ? signalCandleStress(signal, entry, stop, target)
+      : {
+          signalAdversePoints: 0,
+          signalFavorablePoints: 0,
+          touchToClosePoints: 0,
+          signalStopHit: false,
+          signalTargetHit: false,
+        };
 
   if (plan.entry === "band-touch" && stress.signalStopHit) {
     return {
@@ -605,7 +614,7 @@ function summarizePlan(plan: ExecutionPlan, results: TradeResult[]): PlanRow {
       ? "Too few trades to trust."
       : optimisticRate > 0.35
         ? "Too optimistic; needs tick/lower-TF proof."
-        : signalStopRate > 0.45
+        : plan.entry === "band-touch" && signalStopRate > 0.45
           ? "Too many touch entries fail immediately."
           : avgR > 0.15 && grossWin > grossLoss
             ? "Candidate rule. Review examples."
