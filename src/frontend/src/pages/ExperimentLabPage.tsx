@@ -21,7 +21,7 @@ export type ExperimentVariant = {
   ruleFamily: string;
   setup: string;
   targetModel: string;
-  symbolScope: "All" | "NAS100" | "US30" | "US500";
+  symbolScope: "All" | "NAS100" | "US30" | "US500" | "JPN225";
   sessionScope: "All" | "Asia" | "London" | "New York" | "Off session";
   description: string;
   predicate: (signal: SignalAudit) => boolean;
@@ -102,6 +102,7 @@ const SYMBOL_SCOPES: ExperimentVariant["symbolScope"][] = [
   "NAS100",
   "US30",
   "US500",
+  "JPN225",
 ];
 
 const SESSION_SCOPES: ExperimentVariant["sessionScope"][] = [

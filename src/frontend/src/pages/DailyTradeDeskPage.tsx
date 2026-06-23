@@ -13,6 +13,7 @@ const BRUTUS_MODELS = [
   { length: 9, deviation: 2, target: 50, stop: 75 },
 ];
 const STRONG_BRUTUS_SYMBOLS = new Set(["US30", "NAS100"]);
+const STRONG_BRUTUS_LABEL = "US30/NAS100";
 
 type Direction = "Long" | "Short";
 
@@ -146,7 +147,9 @@ function scoreBrutusSignal(
 ): Pick<BrutusDeskSignal, "status" | "action" | "plainWhy" | "blockers"> {
   const blockers: string[] = [];
   if (!STRONG_BRUTUS_SYMBOLS.has(signal.symbol)) {
-    blockers.push("US500 has been weaker in the Brutus evidence.");
+    blockers.push(
+      `${signal.symbol} is not in the current strongest Brutus evidence set (${STRONG_BRUTUS_LABEL}). Treat it as discovery-only until it proves itself.`,
+    );
   }
   if (!signal.snapback5m) {
     blockers.push("No 5m snapback inside the band yet.");
@@ -162,8 +165,7 @@ function scoreBrutusSignal(
     return {
       status: "Paper candidate",
       action: "Paper trade only",
-      plainWhy:
-        "This matches the stronger Brutus evidence: US30/NAS100, 7/2 or 9/2 band pierce, 5m snapback, and adverse move stayed inside the tested stop.",
+      plainWhy: `This matches the stronger Brutus evidence: ${STRONG_BRUTUS_LABEL}, 7/2 or 9/2 band pierce, 5m snapback, and adverse move stayed inside the tested stop.`,
       blockers,
     };
   }

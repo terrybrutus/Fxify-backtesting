@@ -25,7 +25,7 @@ type TvAlert = {
 
 type MatchStatus = "matched" | "nearby" | "no-match" | "no-data";
 
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_band","symbol":"ALCHEMYMARKETS:DJ30","timeframe":"60","direction":"long","time":1782084600000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"length":9,"stdDev":2}`;
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_band","symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","direction":"long","time":1782084600000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"length":9,"stdDev":2}`;
 
 function loadAlerts(): TvAlert[] {
   try {
@@ -122,6 +122,15 @@ function mapBrokerSymbol(symbol?: string) {
     upper.includes("SP500")
   ) {
     return "US500";
+  }
+  if (
+    upper.includes("JPN225") ||
+    upper.includes("JP225") ||
+    upper.includes("JPN") ||
+    upper.includes("NIKKEI") ||
+    upper.includes("NI225")
+  ) {
+    return "JPN225";
   }
   return undefined;
 }
