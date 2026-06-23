@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Target,
   Waves,
+  Webhook,
 } from "lucide-react";
 
 const NAV_GROUPS = [
@@ -42,6 +43,11 @@ const NAV_GROUPS = [
         icon: ScanSearch,
       },
       { path: "/brutus-band", label: "Brutus Band Lab", icon: Waves },
+      {
+        path: "/tradingview-capture",
+        label: "TV Alert Capture",
+        icon: Webhook,
+      },
       { path: "/coco-risk", label: "Coco Risk Lab", icon: Scale },
     ],
   },

@@ -16,6 +16,7 @@ import ReplayPage from "@/pages/ReplayPage";
 import RuleEngineHealthPage from "@/pages/RuleEngineHealthPage";
 import SampleExpansionPage from "@/pages/SampleExpansionPage";
 import SetupDetectorPage from "@/pages/SetupDetectorPage";
+import TradingViewCapturePage from "@/pages/TradingViewCapturePage";
 import TruthAuditPage from "@/pages/TruthAuditPage";
 import WalkForwardPage from "@/pages/WalkForwardPage";
 import {
@@ -82,6 +83,12 @@ const brutusBandRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/brutus-band",
   component: BrutusBandLabPage,
+});
+
+const tradingViewCaptureRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/tradingview-capture",
+  component: TradingViewCapturePage,
 });
 
 const rejectedRoute = createRoute({
@@ -160,6 +167,7 @@ const tree = rootRoute.addChildren([
   cocoRiskRoute,
   cocoTradeProbeRoute,
   brutusBandRoute,
+  tradingViewCaptureRoute,
   rejectedRoute,
   discoveryRoute,
   experimentRoute,
