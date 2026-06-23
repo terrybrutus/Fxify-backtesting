@@ -191,57 +191,70 @@ function mergeAlerts(incoming: TvAlert[], current: TvAlert[]) {
   };
 }
 
-function parseMaybeCsvCell(value: string): unknown {
-  const trimmed = value.trim();
-  const unquoted =
-    trimmed.startsWith('"') && trimmed.endsWith('"')
-      ? trimmed.slice(1, -1).replaceAll('""', '"')
-      : trimmed;
-  return JSON.parse(unquoted);
-}
-
-function splitCsvLine(line: string) {
-  const cells: string[] = [];
+function parseCsvRecords(text: string) {
+  const records: string[][] = [];
+  let row: string[] = [];
   let current = "";
   let inQuotes = false;
-  for (let index = 0; index < line.length; index += 1) {
-    const char = line[index];
-    const next = line[index + 1];
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    const next = text[index + 1];
     if (char === '"' && inQuotes && next === '"') {
-      current += '""';
+      current += '"';
       index += 1;
       continue;
     }
     if (char === '"') {
       inQuotes = !inQuotes;
-      current += char;
       continue;
     }
     if (char === "," && !inQuotes) {
-      cells.push(current);
+      row.push(current);
+      current = "";
+      continue;
+    }
+    if ((char === "\n" || char === "\r") && !inQuotes) {
+      if (char === "\r" && next === "\n") index += 1;
+      row.push(current);
+      if (row.some((cell) => cell.trim() !== "")) records.push(row);
+      row = [];
       current = "";
       continue;
     }
     current += char;
   }
-  cells.push(current);
-  return cells;
+  row.push(current);
+  if (row.some((cell) => cell.trim() !== "")) records.push(row);
+  return records;
 }
 
 function parseCsvText(
   text: string,
   normalizeMany: (value: unknown) => TvAlert[],
 ) {
-  return text
-    .split(/\r?\n/)
-    .flatMap((line) => splitCsvLine(line))
-    .flatMap((cell) => {
+  const records = parseCsvRecords(text);
+  const [header, ...rows] = records;
+  if (!header) return [];
+  const descriptionIndex = header.findIndex(
+    (cell) => cell.trim().toLowerCase() === "description",
+  );
+  const candidateCells =
+    descriptionIndex >= 0
+      ? rows.map((row) => row[descriptionIndex] ?? "")
+      : records.flat();
+  return candidateCells.flatMap((cell) => {
+    const trimmed = cell.trim();
+    if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) return [];
+    try {
+      return normalizeMany(JSON.parse(trimmed));
+    } catch {
       try {
-        return normalizeMany(parseMaybeCsvCell(cell));
+        return normalizeMany(JSON.parse(trimmed.replaceAll('""', '"')));
       } catch {
         return [];
       }
-    });
+    }
+  });
 }
 
 function parsePayloadText(text: string) {
@@ -406,7 +419,7 @@ export default function TradingViewCapturePage() {
   }
 
   return (
-    <div className="space-y-5 p-6" data-ocid="tradingview.capture.page">
+    <div className="space-y-3 p-6" data-ocid="tradingview.capture.page">
       <div>
         <h1 className="font-display text-2xl font-bold">
           TradingView Alert Capture
@@ -419,7 +432,7 @@ export default function TradingViewCapturePage() {
         </p>
       </div>
 
-      <section className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <section className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="border border-border bg-card p-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-display text-base font-bold">
@@ -434,7 +447,7 @@ export default function TradingViewCapturePage() {
             </button>
           </div>
           <textarea
-            className="mt-3 min-h-44 w-full border border-border bg-background p-3 font-mono text-xs text-foreground"
+            className="mt-3 min-h-32 w-full border border-border bg-background p-3 font-mono text-xs text-foreground"
             value={payloadText}
             onChange={(event) => setPayloadText(event.target.value)}
           />
@@ -463,7 +476,7 @@ export default function TradingViewCapturePage() {
               Import pasted alert
             </button>
             <label className="cursor-pointer border border-border bg-background px-4 py-2 font-mono text-xs hover:border-primary">
-              Upload JSON log
+              Upload CSV/JSON log
               <input
                 accept=".csv,.json,.jsonl,.txt"
                 className="hidden"
