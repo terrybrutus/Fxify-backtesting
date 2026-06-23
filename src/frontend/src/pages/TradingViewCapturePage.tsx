@@ -43,7 +43,11 @@ const ALCHEMY_INDEX_SYMBOLS = [
 function loadAlerts(): TvAlert[] {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as TvAlert[]) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? parsed.map((alert) => normalizePayload(alert.raw ?? alert))
+      : [];
   } catch {
     return [];
   }
@@ -66,9 +70,40 @@ function asString(value: unknown) {
   return typeof value === "string" ? value : undefined;
 }
 
+function unwrapWebhookPayload(raw: unknown): unknown {
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (!trimmed) return raw;
+    try {
+      return unwrapWebhookPayload(JSON.parse(trimmed));
+    } catch {
+      return raw;
+    }
+  }
+  if (!raw || typeof raw !== "object") return raw;
+  const item = raw as Record<string, unknown>;
+  const nested =
+    item.content ??
+    item.body ??
+    item.requestBody ??
+    item.payload ??
+    item.data ??
+    item.rawBody;
+  if (nested !== undefined) {
+    return unwrapWebhookPayload(nested);
+  }
+  if (item.request && typeof item.request === "object") {
+    return unwrapWebhookPayload(item.request);
+  }
+  return raw;
+}
+
 function normalizePayload(raw: unknown): TvAlert {
+  const unwrapped = unwrapWebhookPayload(raw);
   const item =
-    raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+    unwrapped && typeof unwrapped === "object"
+      ? (unwrapped as Record<string, unknown>)
+      : {};
   const timestamp =
     asNumber(item.time) ??
     asNumber(item.timestamp) ??
@@ -92,24 +127,92 @@ function normalizePayload(raw: unknown): TvAlert {
     lower: asNumber(item.lower),
     length: asNumber(item.length),
     stdDev: asNumber(item.stdDev) ?? asNumber(item.mult),
-    raw,
+    raw: unwrapped,
   };
+}
+
+function parseMaybeCsvCell(value: string): unknown {
+  const trimmed = value.trim();
+  const unquoted =
+    trimmed.startsWith('"') && trimmed.endsWith('"')
+      ? trimmed.slice(1, -1).replaceAll('""', '"')
+      : trimmed;
+  return JSON.parse(unquoted);
+}
+
+function splitCsvLine(line: string) {
+  const cells: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    const next = line[index + 1];
+    if (char === '"' && inQuotes && next === '"') {
+      current += '""';
+      index += 1;
+      continue;
+    }
+    if (char === '"') {
+      inQuotes = !inQuotes;
+      current += char;
+      continue;
+    }
+    if (char === "," && !inQuotes) {
+      cells.push(current);
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+  cells.push(current);
+  return cells;
+}
+
+function parseCsvText(
+  text: string,
+  normalizeMany: (value: unknown) => TvAlert[],
+) {
+  return text
+    .split(/\r?\n/)
+    .flatMap((line) => splitCsvLine(line))
+    .flatMap((cell) => {
+      try {
+        return normalizeMany(parseMaybeCsvCell(cell));
+      } catch {
+        return [];
+      }
+    });
 }
 
 function parsePayloadText(text: string) {
   const trimmed = text.trim();
   if (!trimmed) return [];
+  const normalizeMany = (value: unknown): TvAlert[] => {
+    const unwrapped = unwrapWebhookPayload(value);
+    if (Array.isArray(unwrapped)) return unwrapped.flatMap(normalizeMany);
+    return [normalizePayload(unwrapped)];
+  };
   try {
     const parsed = JSON.parse(trimmed);
-    return Array.isArray(parsed)
-      ? parsed.map(normalizePayload)
-      : [normalizePayload(parsed)];
+    return normalizeMany(parsed);
   } catch {
-    return trimmed
+    const parsedLines = trimmed
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean)
-      .map((line) => normalizePayload(JSON.parse(line)));
+      .flatMap((line) => {
+        try {
+          return normalizeMany(JSON.parse(line));
+        } catch {
+          return [];
+        }
+      });
+    if (parsedLines.length > 0) return parsedLines;
+    const parsedCsv = parseCsvText(trimmed, normalizeMany);
+    if (parsedCsv.length > 0) return parsedCsv;
+    throw new Error(
+      "No TradingView alert JSON found. Paste the request body JSON, a JSON export, or a Webhook.site CSV export.",
+    );
   }
 }
 
@@ -153,10 +256,13 @@ function mapBrokerSymbol(symbol?: string) {
 }
 
 function formatTime(timestamp?: number) {
-  if (!timestamp) return "n/a";
+  if (!timestamp || !Number.isFinite(timestamp)) return "n/a";
   return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "short",
-    timeStyle: "short",
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
     timeZoneName: "short",
   }).format(new Date(timestamp));
 }
@@ -245,7 +351,8 @@ export default function TradingViewCapturePage() {
         <p className="mt-1 max-w-4xl text-sm text-muted-foreground">
           Use this as the truth intake for exact FXIFY/Alchemy Markets
           TradingView alert events. Paste one JSON alert, a JSON array, or
-          newline-delimited JSON exports.
+          newline-delimited JSON. Webhook.site request objects with nested
+          bodies are accepted too.
         </p>
       </div>
 
@@ -280,7 +387,7 @@ export default function TradingViewCapturePage() {
             <label className="cursor-pointer border border-border bg-background px-4 py-2 font-mono text-xs hover:border-primary">
               Upload JSON log
               <input
-                accept=".json,.jsonl,.txt"
+                accept=".csv,.json,.jsonl,.txt"
                 className="hidden"
                 onChange={async (event) => {
                   const file = event.target.files?.[0];
@@ -323,9 +430,9 @@ export default function TradingViewCapturePage() {
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Start with TradingView using a temporary Webhook.site URL. Create
-              the Brutus alert, set the webhook URL there, then copy the
-              received request body into this page. Later we replace
-              Webhook.site with our own hosted endpoint.
+              the Brutus alert, set the webhook URL there, then copy either the
+              received request body or a JSON export into this page. Later we
+              replace Webhook.site with our own hosted endpoint.
             </p>
           </div>
           <div className="border border-border bg-card p-4">
