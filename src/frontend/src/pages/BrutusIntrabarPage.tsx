@@ -2,8 +2,8 @@ import { Download, Trash2, Upload, ZoomIn } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type Direction = "long" | "short";
-type TargetTf = "15m" | "1H";
-type SourceTf = "1m" | "15m" | "1H";
+type TargetTf = "3m" | "5m" | "15m" | "30m" | "45m" | "1H";
+type SourceTf = "1m" | TargetTf;
 type Outcome = "target" | "stop" | "timeout" | "no-data";
 type MomentumStretch = "upper" | "lower" | "none" | "unknown";
 type MomentumSlope = "rising" | "falling" | "flat" | "unknown";
@@ -149,10 +149,15 @@ const SYMBOL_MAP: Record<string, string> = {
   "USTEC.R": "USTEC.R",
   "US500.R": "US500.R",
   "JPN225.R": "JPN225.R",
+  "RUS2000.R": "RUS2000.R",
 };
 
 const TARGETS: { label: TargetTf; ms: number }[] = [
+  { label: "3m", ms: 3 * 60 * 1000 },
+  { label: "5m", ms: 5 * 60 * 1000 },
   { label: "15m", ms: 15 * 60 * 1000 },
+  { label: "30m", ms: 30 * 60 * 1000 },
+  { label: "45m", ms: 45 * 60 * 1000 },
   { label: "1H", ms: 60 * 60 * 1000 },
 ];
 
@@ -203,24 +208,43 @@ const EXECUTION_RULES: ExecutionRule[] = [
       "Tests the current clue that earliest touches may be continuation traps.",
   },
   {
-    id: "london-ny-15m",
-    label: "15m London/NY only",
+    id: "london-ny-intraday",
+    label: "London/NY intraday only",
     entryModel: "touch",
     targetR: 1.5,
     maxHoldMinutes: 15,
     filter: (touch) =>
-      touch.timeframe === "15m" &&
-      (touch.session === "London" || touch.session === "NY open"),
+      touch.session === "London" || touch.session === "NY open",
     plainIntent:
       "Focuses on the sessions that showed better snapback in the intrabar sample.",
   },
   {
-    id: "dj30-15m",
-    label: "DJ30 15m only",
+    id: "fast-timeframes",
+    label: "Fast timeframes only",
     entryModel: "touch",
     targetR: 1.5,
     maxHoldMinutes: 15,
-    filter: (touch) => touch.symbol === "DJ30.R" && touch.timeframe === "15m",
+    filter: (touch) => ["3m", "5m"].includes(touch.timeframe),
+    plainIntent:
+      "Tests whether faster Brutus touches create more frequent scalpable setups.",
+  },
+  {
+    id: "mid-timeframes",
+    label: "15m/30m/45m only",
+    entryModel: "touch",
+    targetR: 1.5,
+    maxHoldMinutes: 15,
+    filter: (touch) => ["15m", "30m", "45m"].includes(touch.timeframe),
+    plainIntent:
+      "Tests the middle intraday timeframes before assuming 15m is best.",
+  },
+  {
+    id: "dj30-intraday",
+    label: "DJ30 intraday only",
+    entryModel: "touch",
+    targetR: 1.5,
+    maxHoldMinutes: 15,
+    filter: (touch) => touch.symbol === "DJ30.R",
     plainIntent:
       "Tests the strongest current single-asset bucket instead of mixing all indices.",
   },
@@ -341,10 +365,23 @@ function inferSymbol(fileName: string) {
 
 function inferTimeframe(fileName: string): SourceTf {
   const normalized = fileName.toUpperCase().replace(/\s+/g, " ");
-  if (/[, _-]60(?:\s*\(\d+\))?\.CSV$/.test(normalized)) return "1H";
-  if (/[, _-]15(?:\s*\(\d+\))?\.CSV$/.test(normalized)) return "15m";
-  if (/[, _-]1(?:\s*\(\d+\))?\.CSV$/.test(normalized)) return "1m";
+  const match = normalized.match(
+    /(?:,|_|-|\s)(60|45|30|15|5|3|1)(?:\s*\(\d+\))?_?\.CSV$/,
+  );
+  const value = match?.[1];
+  if (value === "60") return "1H";
+  if (value === "45") return "45m";
+  if (value === "30") return "30m";
+  if (value === "15") return "15m";
+  if (value === "5") return "5m";
+  if (value === "3") return "3m";
+  if (value === "1") return "1m";
   return "1m";
+}
+
+function timeframeMinutes(timeframe: SourceTf | TargetTf) {
+  if (timeframe === "1H") return 60;
+  return Number(timeframe.replace("m", ""));
 }
 
 function barKey(bar: SourceBar) {
@@ -376,7 +413,11 @@ function loadStoredBars() {
         (bar): bar is SourceBar =>
           typeof bar?.symbol === "string" &&
           (bar.timeframe === "1m" ||
+            bar.timeframe === "3m" ||
+            bar.timeframe === "5m" ||
             bar.timeframe === "15m" ||
+            bar.timeframe === "30m" ||
+            bar.timeframe === "45m" ||
             bar.timeframe === "1H") &&
           Number.isFinite(bar.timestamp) &&
           Number.isFinite(bar.open) &&
@@ -559,6 +600,17 @@ function pct(value: number) {
 
 function fmt(value: number) {
   return `${value >= 0 ? "+" : ""}${value.toFixed(2)}`;
+}
+
+function timingBucket(
+  touch: Pick<IntrabarTouch, "timeframe" | "minuteOffset">,
+) {
+  const minutes = timeframeMinutes(touch.timeframe);
+  const progress = touch.minuteOffset / Math.max(minutes, 1);
+  if (touch.minuteOffset <= 1) return `${touch.timeframe} | first 0-1m`;
+  if (progress < 0.33) return `${touch.timeframe} | early`;
+  if (progress < 0.67) return `${touch.timeframe} | middle`;
+  return `${touch.timeframe} | late`;
 }
 
 function simulateR(
@@ -974,6 +1026,22 @@ function buildCoverage(bars: SourceBar[]): DatasetCoverage[] {
     );
 }
 
+function timeframeCounts(bars: SourceBar[]) {
+  const counts: Record<SourceTf, number> = {
+    "1m": 0,
+    "3m": 0,
+    "5m": 0,
+    "15m": 0,
+    "30m": 0,
+    "45m": 0,
+    "1H": 0,
+  };
+  for (const bar of bars) {
+    counts[bar.timeframe] += 1;
+  }
+  return counts;
+}
+
 function exportJson(filename: string, payload: unknown) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: "application/json",
@@ -1002,10 +1070,10 @@ function Table({
             <tr>
               <th className="px-2 py-2">Bucket</th>
               <th className="px-2 py-2 text-right">Touches</th>
-              <th className="px-2 py-2 text-right">15m Target</th>
-              <th className="px-2 py-2 text-right">15m Stop</th>
-              <th className="px-2 py-2 text-right">Avg 15m R</th>
-              <th className="px-2 py-2 text-right">Avg 60m R</th>
+              <th className="px-2 py-2 text-right">15-min Target</th>
+              <th className="px-2 py-2 text-right">15-min Stop</th>
+              <th className="px-2 py-2 text-right">Avg 15-min R</th>
+              <th className="px-2 py-2 text-right">Avg 60-min R</th>
               <th className="px-2 py-2">Read</th>
             </tr>
           </thead>
@@ -1173,12 +1241,7 @@ export default function BrutusIntrabarPage() {
     [touches],
   );
   const byTiming = useMemo(
-    () =>
-      groupRows(touches, (touch) => {
-        if (touch.minuteOffset <= 2) return `${touch.timeframe} | first 0-2m`;
-        if (touch.minuteOffset <= 7) return `${touch.timeframe} | middle`;
-        return `${touch.timeframe} | late`;
-      }),
+    () => groupRows(touches, (touch) => timingBucket(touch)),
     [touches],
   );
   const byDepth = useMemo(
@@ -1245,10 +1308,12 @@ export default function BrutusIntrabarPage() {
             Brutus Intrabar Lab
           </h1>
           <p className="mt-1 max-w-5xl text-sm text-muted-foreground">
-            Import Alchemy TradingView CSVs for 1m, 15m, and 1H together. The
-            page keeps prior imports, removes overlapping duplicates, uses 1m
-            bars for intrabar reconstruction, and exports one combined research
-            packet.
+            Import Alchemy TradingView CSVs for 1m, 3m, 5m, 15m, 30m, 45m, and
+            1H together. The page keeps prior imports, removes overlapping
+            duplicates, uses 1m bars for intrabar reconstruction, and exports
+            one combined research packet. The 1m files are the source for
+            reconstruction; 3m and higher are tested as Brutus target
+            timeframes.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -1280,10 +1345,7 @@ export default function BrutusIntrabarPage() {
                 totals: {
                   importedBars: bars.length,
                   minuteBars: minuteBars.length,
-                  fifteenMinuteBars: bars.filter(
-                    (bar) => bar.timeframe === "15m",
-                  ).length,
-                  hourBars: bars.filter((bar) => bar.timeframe === "1H").length,
+                  byTimeframe: timeframeCounts(bars),
                   intrabarTouches: touches.length,
                 },
                 coverage,
@@ -1371,9 +1433,9 @@ export default function BrutusIntrabarPage() {
             </h2>
             <p className="mt-2 max-w-5xl text-sm text-muted-foreground">
               This checks whether the touch happened early, middle, or late
-              inside the 15m/1H candle, and whether the next minutes snapped
-              back or kept pushing. The 15m and 1H uploads are kept with the
-              export for cross-checking, while the 1m bars are what make the
+              inside each intraday candle, and whether the next minutes snapped
+              back or kept pushing. The higher timeframe uploads are kept with
+              the export for cross-checking, while the 1m bars are what make the
               intrabar reconstruction possible.
             </p>
           </div>
@@ -1401,7 +1463,8 @@ export default function BrutusIntrabarPage() {
               {coverage.length === 0 ? (
                 <tr>
                   <td className="px-2 py-5 text-muted-foreground" colSpan={5}>
-                    Import the 1m, 15m, and 1H TradingView CSV exports here.
+                    Import the 1m, 3m, 5m, 15m, 30m, 45m, and 1H TradingView CSV
+                    exports here.
                   </td>
                 </tr>
               ) : (
@@ -1473,8 +1536,8 @@ export default function BrutusIntrabarPage() {
                 <th className="px-2 py-2 text-right">Offset</th>
                 <th className="px-2 py-2 text-right">Depth</th>
                 <th className="px-2 py-2">Momentum</th>
-                <th className="px-2 py-2 text-right">15m R</th>
-                <th className="px-2 py-2 text-right">60m R</th>
+                <th className="px-2 py-2 text-right">15-min R</th>
+                <th className="px-2 py-2 text-right">60-min R</th>
                 <th className="px-2 py-2">Plain read</th>
               </tr>
             </thead>

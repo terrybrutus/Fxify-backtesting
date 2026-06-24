@@ -19,7 +19,7 @@ type MomentumContext = {
 type IntrabarTouch = {
   id: string;
   symbol: string;
-  timeframe: "15m" | "1H";
+  timeframe: string;
   direction: Direction;
   bucketStart: number;
   touchTime: number;
@@ -46,6 +46,7 @@ type IntrabarReport = {
     minuteBars?: number;
     fifteenMinuteBars?: number;
     hourBars?: number;
+    byTimeframe?: Record<string, number>;
     intrabarTouches?: number;
   };
   bySymbol?: Array<{ label: string; touches: number; avgR15: number }>;
@@ -144,6 +145,28 @@ function targetText(direction: Direction) {
     : "Take profit if price snaps downward.";
 }
 
+function timeframeMinutes(timeframe: string) {
+  if (timeframe === "1H") return 60;
+  const parsed = Number(timeframe.replace("m", ""));
+  return Number.isFinite(parsed) ? parsed : 15;
+}
+
+function timeframeFamily(timeframe: string) {
+  const minutes = timeframeMinutes(timeframe);
+  if (minutes <= 5) return "fast";
+  if (minutes <= 45) return "mid";
+  return "slow";
+}
+
+function timingLabelFor(touch: IntrabarTouch) {
+  const minutes = timeframeMinutes(touch.timeframe);
+  const progress = touch.minuteOffset / Math.max(minutes, 1);
+  if (touch.minuteOffset <= 1) return `${touch.timeframe} | first 0-1m`;
+  if (progress < 0.33) return `${touch.timeframe} | early`;
+  if (progress < 0.67) return `${touch.timeframe} | middle`;
+  return `${touch.timeframe} | late`;
+}
+
 function getBucketAverage(
   rows: Array<{ label: string; avgR15: number }> | undefined,
   label: string,
@@ -170,21 +193,20 @@ function scoreTouch(
     report.bySession,
     `${touch.session} | ${touch.timeframe}`,
   );
-  const timingLabel =
-    touch.minuteOffset <= 2
-      ? `${touch.timeframe} | first 0-2m`
-      : touch.minuteOffset <= 7
-        ? `${touch.timeframe} | middle`
-        : `${touch.timeframe} | late`;
+  const timingLabel = timingLabelFor(touch);
   const timingAvg = getBucketAverage(report.byTiming, timingLabel);
+  const family = timeframeFamily(touch.timeframe);
 
   let confidence = 35;
 
-  if (touch.timeframe === "15m") {
+  if (family === "mid") {
     confidence += 10;
-    evidence.push("15m signal");
+    evidence.push("Mid-timeframe signal");
+  } else if (family === "fast") {
+    confidence += 4;
+    evidence.push("Fast scalp timeframe");
   } else {
-    blockers.push("1H signals are not the main tested setup yet.");
+    blockers.push("1H signal needs extra proof.");
   }
 
   if (touch.session === "London" || touch.session === "NY open") {
@@ -194,10 +216,10 @@ function scoreTouch(
     blockers.push("Outside London/NY timing.");
   }
 
-  if (touch.minuteOffset <= 2) {
+  if (timingLabel.includes("first 0-1m")) {
     confidence -= 25;
-    blockers.push("Too early in the 15m candle.");
-  } else if (touch.minuteOffset <= 7) {
+    blockers.push("Too early in the candle.");
+  } else if (timingLabel.includes("middle")) {
     confidence += 12;
     evidence.push("Middle of candle");
   } else {
@@ -519,7 +541,7 @@ export default function BrutusTradeDeskPage() {
                 generatedAt: new Date().toISOString(),
                 rule: {
                   plain:
-                    "15m Brutus first. Prefer London/NY. Avoid first 0-2m touches. Treat JPN225 longs cautiously. Enter only after snapback starts.",
+                    "Compare all intraday Brutus timeframes. Prefer London/NY. Avoid first-minute touches. Treat JPN225 longs cautiously. Enter only after snapback starts.",
                   pointValue: POINT_VALUE,
                 },
                 sourceTotals: report?.totals,
@@ -621,9 +643,9 @@ export default function BrutusTradeDeskPage() {
                   Current Draft Rule
                 </h2>
                 <p className="mt-2 text-sm text-foreground">
-                  Prefer 15m London/NY touches. Avoid first 0-2m touches. DJ30
-                  is strongest. Be careful with JPN225 longs. Enter only after
-                  price starts snapping back.
+                  Compare 3m, 5m, 15m, 30m, 45m, and 1H Brutus touches. Prefer
+                  London/NY. Avoid first-minute touches. Be careful with JPN225
+                  longs. Enter only after price starts snapping back.
                 </p>
               </div>
             </div>

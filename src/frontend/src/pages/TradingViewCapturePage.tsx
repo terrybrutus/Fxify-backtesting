@@ -337,6 +337,13 @@ function mapBrokerSymbol(symbol?: string) {
   ) {
     return "JPN225";
   }
+  if (
+    upper.includes("RUS2000") ||
+    upper.includes("RUSSELL") ||
+    upper.includes("RTY")
+  ) {
+    return "RUS2000";
+  }
   return undefined;
 }
 
