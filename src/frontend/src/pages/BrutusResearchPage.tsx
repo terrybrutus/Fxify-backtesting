@@ -2,6 +2,21 @@ import { Download, Upload, Waves } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type Direction = "long" | "short";
+type MomentumStretch = "upper" | "lower" | "none" | "unknown";
+type MomentumSlope = "rising" | "falling" | "flat" | "unknown";
+
+type MomentumContext = {
+  rsi?: number;
+  rsiMa?: number;
+  rsiUpper?: number;
+  rsiLower?: number;
+  rsiDelta?: number;
+  rsiSlope?: MomentumSlope;
+  rsiStretch: MomentumStretch;
+  rsiPosition: "above-ma" | "below-ma" | "unknown";
+  alignedWithTouch: boolean;
+  plainRead: string;
+};
 
 type BrutusBar = {
   symbol: string;
@@ -15,6 +30,10 @@ type BrutusBar = {
   lower: number;
   longSignal: boolean;
   shortSignal: boolean;
+  rsi?: number;
+  rsiMa?: number;
+  rsiUpper?: number;
+  rsiLower?: number;
 };
 
 type BrutusSignal = {
@@ -45,6 +64,7 @@ type BrutusSignal = {
   rejectionRatio: number;
   repeatedPierces5: number;
   candleShape: string;
+  momentum: MomentumContext;
 };
 
 type Outcome = {
@@ -149,6 +169,70 @@ function asNumber(value: string | undefined) {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+function optionalNumber(value: string | undefined) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function momentumFor(
+  bar: Pick<BrutusBar, "rsi" | "rsiMa" | "rsiUpper" | "rsiLower">,
+  direction: Direction,
+  previous?: Pick<BrutusBar, "rsi">,
+): MomentumContext {
+  const hasBands =
+    bar.rsi != null &&
+    bar.rsiMa != null &&
+    bar.rsiUpper != null &&
+    bar.rsiLower != null;
+  if (!hasBands) {
+    return {
+      rsiStretch: "unknown",
+      rsiPosition: "unknown",
+      alignedWithTouch: false,
+      plainRead: "RSI context not exported.",
+    };
+  }
+
+  const rsi = bar.rsi as number;
+  const rsiMa = bar.rsiMa as number;
+  const rsiUpper = bar.rsiUpper as number;
+  const rsiLower = bar.rsiLower as number;
+  const rsiDelta = rsi - rsiMa;
+  const rsiStretch =
+    rsi >= rsiUpper ? "upper" : rsi <= rsiLower ? "lower" : "none";
+  const rsiPosition = rsiDelta >= 0 ? "above-ma" : "below-ma";
+  const slopeDelta = previous?.rsi == null ? undefined : rsi - previous.rsi;
+  const rsiSlope =
+    slopeDelta == null
+      ? "unknown"
+      : Math.abs(slopeDelta) < 0.01
+        ? "flat"
+        : slopeDelta > 0
+          ? "rising"
+          : "falling";
+  const alignedWithTouch =
+    (direction === "long" && rsiStretch === "lower") ||
+    (direction === "short" && rsiStretch === "upper");
+  const plainRead = alignedWithTouch
+    ? "RSI is stretched with the Brutus touch."
+    : rsiStretch === "none"
+      ? "RSI is not stretched."
+      : "RSI stretch is against this touch.";
+
+  return {
+    rsi,
+    rsiMa,
+    rsiUpper,
+    rsiLower,
+    rsiDelta,
+    rsiSlope,
+    rsiStretch,
+    rsiPosition,
+    alignedWithTouch,
+    plainRead,
+  };
+}
+
 function inferMeta(fileName: string) {
   const upper = fileName.toUpperCase();
   const symbol =
@@ -175,6 +259,14 @@ function parseTradingViewCsv(text: string, fileName: string) {
     const close = asNumber(row[index.get("close") ?? -1]);
     const upper = asNumber(row[index.get("upper") ?? -1]);
     const lower = asNumber(row[index.get("lower") ?? -1]);
+    const rsi = optionalNumber(row[index.get("rsi") ?? -1]);
+    const rsiMa = optionalNumber(row[index.get("rsi-based ma") ?? -1]);
+    const rsiUpper = optionalNumber(
+      row[index.get("upper bollinger band") ?? -1],
+    );
+    const rsiLower = optionalNumber(
+      row[index.get("lower bollinger band") ?? -1],
+    );
     if (
       timestamp == null ||
       open == null ||
@@ -199,6 +291,10 @@ function parseTradingViewCsv(text: string, fileName: string) {
         lower,
         longSignal: row[index.get("long signal") ?? -1] === "1",
         shortSignal: row[index.get("short signal") ?? -1] === "1",
+        rsi,
+        rsiMa,
+        rsiUpper,
+        rsiLower,
       },
     ];
   });
@@ -348,6 +444,7 @@ function buildSignals(allBars: BrutusBar[]) {
         const pierceDepthRatio = pierceDepth / currentBandWidth;
         const rejectionRatio =
           pierceDepth > 0 ? rejectionPoints / pierceDepth : 0;
+        const momentum = momentumFor(bar, direction, bars[index - 1]);
         signals.push({
           id: `${bar.symbol}-${bar.timeframe}-${bar.timestamp}-${direction}`,
           symbol: bar.symbol,
@@ -379,6 +476,7 @@ function buildSignals(allBars: BrutusBar[]) {
           rejectionRatio,
           repeatedPierces5: repeatedPiercesFor(bars, index, direction),
           candleShape: candleShape(bar, direction),
+          momentum,
         });
       }
     });
@@ -445,6 +543,16 @@ function repeatBucket(signal: BrutusSignal) {
   if (signal.repeatedPierces5 >= 3) return "3+ recent same-side pierces";
   if (signal.repeatedPierces5 >= 1) return "1-2 recent same-side pierces";
   return "first recent pierce";
+}
+
+function momentumBucket(signal: BrutusSignal) {
+  if (signal.momentum.rsiStretch === "unknown")
+    return `RSI not exported | ${signal.timeframe} | ${signal.direction}`;
+  if (signal.momentum.alignedWithTouch)
+    return `RSI stretch with touch | ${signal.timeframe} | ${signal.direction}`;
+  if (signal.momentum.rsiStretch === "none")
+    return `RSI not stretched | ${signal.timeframe} | ${signal.direction}`;
+  return `RSI stretch against touch | ${signal.timeframe} | ${signal.direction}`;
 }
 
 function anatomyRow(label: string, signals: BrutusSignal[]): AnatomyRow {
@@ -955,6 +1063,10 @@ export default function BrutusResearchPage() {
       ),
     [signals],
   );
+  const byMomentum = useMemo(
+    () => groupRows(signals, (signal) => momentumBucket(signal)),
+    [signals],
+  );
   const newestSignals = signals.slice(-80).reverse();
 
   async function importFiles(files: FileList | null) {
@@ -1021,6 +1133,10 @@ export default function BrutusResearchPage() {
                   byRejection,
                   byBandExpansion,
                   byRepeatPierce,
+                },
+                momentumContext: {
+                  rule: "RSI is a research label only. It does not create Brutus signals or force entries.",
+                  byMomentum,
                 },
                 byAsset,
                 bySession,
@@ -1198,6 +1314,19 @@ export default function BrutusResearchPage() {
             </div>
           </section>
 
+          <section className="border border-border bg-card p-4">
+            <h2 className="font-display text-base font-bold">
+              Momentum Context
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              RSI is only a research label here. It does not create Brutus
+              signals or force entries.
+            </p>
+            <div className="mt-3 max-h-[420px] overflow-y-auto">
+              <GroupTable rows={byMomentum} />
+            </div>
+          </section>
+
           <section className="grid gap-4 xl:grid-cols-2">
             <div className="border border-border bg-card p-4">
               <h2 className="font-display text-base font-bold">
@@ -1245,6 +1374,9 @@ export default function BrutusResearchPage() {
                       {signal.direction.toUpperCase()} | 1-bar{" "}
                       {fmtPoints(signal.next1.closePoints)} | 4-bar best{" "}
                       {fmtPoints(signal.next4.maxFavorable)}
+                    </span>
+                    <span className="mt-1 block text-muted-foreground">
+                      {signal.momentum.plainRead}
                     </span>
                   </button>
                 ))}
@@ -1296,6 +1428,20 @@ export default function BrutusResearchPage() {
                       </p>
                       <p className="mt-2 font-display text-lg font-bold">
                         {selectedSignal.repeatedPierces5}
+                      </p>
+                    </div>
+                    <div className="border border-border bg-background p-3 md:col-span-5">
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                        RSI context
+                      </p>
+                      <p className="mt-2 text-sm text-foreground">
+                        {selectedSignal.momentum.plainRead}
+                      </p>
+                      <p className="mt-1 font-mono text-xs text-muted-foreground">
+                        RSI {selectedSignal.momentum.rsi?.toFixed(1) ?? "n/a"} |
+                        MA {selectedSignal.momentum.rsiMa?.toFixed(1) ?? "n/a"}{" "}
+                        | stretch {selectedSignal.momentum.rsiStretch} |{" "}
+                        {selectedSignal.momentum.rsiSlope}
                       </p>
                     </div>
                   </div>
