@@ -23,9 +23,9 @@ const remotePort = Number(getArg("--port") ?? 9333);
 const setupOnly = process.argv.includes("--setup");
 const keepOpen = process.argv.includes("--keep-open") || setupOnly;
 const manualStart = process.argv.includes("--manual-start");
-const chartLoadMs = Number(getArg("--chart-load-ms") ?? 10_000);
+const chartLoadMs = Number(getArg("--chart-load-ms") ?? 7_000);
 const downloadWaitMs = Number(getArg("--download-wait-ms") ?? 20_000);
-const pauseMs = Number(getArg("--pause-ms") ?? 8_000);
+const pauseMs = Number(getArg("--pause-ms") ?? 4_000);
 const windowWidth = Number(getArg("--window-width") ?? 2560);
 const windowHeight = Number(getArg("--window-height") ?? 1440);
 const zoomOutSteps = Number(getArg("--zoom-out-steps") ?? 18);
@@ -215,6 +215,27 @@ function exportClickScript() {
         click(node.closest?.('button, [role="button"], [data-role="button"], [aria-label], [data-name]') ?? node);
         return true;
       };
+      const visibleTextNodes = () => Array.from(document.querySelectorAll('*')).filter((node) => {
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      });
+      const clickLayoutDropdownByVisibleName = () => {
+        const layoutName = visibleTextNodes()
+          .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node).trim() }))
+          .filter((item) =>
+            item.rect.top < 85 &&
+            item.rect.left > window.innerWidth * 0.55 &&
+            item.text &&
+            item.text.length <= 24 &&
+            !item.text.includes("trade") &&
+            !item.text.includes("publish")
+          )
+          .find((item) => /(^|\s)(dca|layout|view)(\s|$)/i.test(item.text));
+        if (!layoutName) return false;
+        const x = Math.min(layoutName.rect.right + 12, window.innerWidth - 12);
+        const y = layoutName.rect.top + layoutName.rect.height / 2;
+        return clickAt(x, y) || click(layoutName.node);
+      };
 
       let menu = findByNeedles(["manage layouts", "manage layout", "chart layouts", "chart layout"]);
       if (!menu) {
@@ -230,22 +251,24 @@ function exportClickScript() {
       }
       if (menu) {
         click(menu);
+      } else if (clickLayoutDropdownByVisibleName()) {
+        // Opened the chart-layout dropdown beside the visible layout name.
       } else {
-        const clickedTopRight = clickAt(window.innerWidth - 145, 24) || clickAt(window.innerWidth - 190, 24);
+        const clickedTopRight =
+          clickAt(window.innerWidth - 280, 28) ||
+          clickAt(window.innerWidth - 240, 28) ||
+          clickAt(window.innerWidth - 320, 28) ||
+          clickAt(window.innerWidth - 190, 28);
         if (!clickedTopRight) return { ok: false, error: "Could not find Manage layouts button." };
       }
-      await sleep(900);
+      await sleep(500);
 
-      const visibleTextNodes = () => Array.from(document.querySelectorAll('*')).filter((node) => {
-        const rect = node.getBoundingClientRect();
-        return rect.width > 0 && rect.height > 0;
-      });
       let exportItem = visibleTextNodes().find((node) => textOf(node).includes("download chart data"));
       if (!exportItem) exportItem = visibleTextNodes().find((node) => textOf(node).includes("export chart data"));
       if (!exportItem) exportItem = visibleTextNodes().find((node) => textOf(node).includes("export data"));
       if (!exportItem) return { ok: false, error: "Could not find Download chart data menu item." };
       click(exportItem);
-      await sleep(1200);
+      await sleep(600);
 
       const finalButton = findByNeedles(["export", "download", "save"]);
       if (finalButton) click(finalButton);
