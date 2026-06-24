@@ -110,3 +110,4 @@ corepack pnpm export:tradingview -- --manual-start --chart-load-ms=15000 --downl
 
 - If the script cannot find the export menu, do one manual export in the Chrome window first, then run it again. TradingView sometimes hides menu items until the layout/session is fully initialized.
 - If the manifest says `export-ui-not-found`, stop the batch with `Ctrl+C`. That means the script clicked the wrong menu or TradingView changed the menu labels.
+- If the **Download chart data** modal opens but no CSV appears, the runner is failing to click the final black **Download** button in that modal.
