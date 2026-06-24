@@ -24,12 +24,12 @@ Then close the window or leave it open.
 ## Run The Batch
 
 ```powershell
-corepack pnpm export:tradingview -- --manual-start
+corepack pnpm export:tradingview -- --manual-start --use-chart-ui
 ```
 
-Manual-start mode opens the chart first and waits. Use that pause to confirm the chart is zoomed out, then press Enter in the terminal to begin the batch.
+Manual-start mode waits before the batch starts. Use that pause to open the chart, pick the starting symbol, and zoom out. `--use-chart-ui` then clicks TradingView's visible timeframe buttons and right-side watchlist symbols instead of reloading the page by URL.
 
-After each symbol/timeframe loads, the runner also sends mouse-wheel zoom-out events over the chart before downloading. This matters because TradingView may reset the visible range when the URL changes.
+This is the preferred mode because it should preserve the zoomed-out chart state better than URL navigation.
 
 The runner attempts these symbols:
 
@@ -68,7 +68,7 @@ corepack pnpm export:tradingview -- --manual-start --pause-ms=15000 --chart-load
 For a normal run that is quicker but still paced, use:
 
 ```powershell
-corepack pnpm export:tradingview -- --manual-start --pause-ms=5000 --zoom-out-steps=30
+corepack pnpm export:tradingview -- --manual-start --use-chart-ui --pause-ms=5000 --zoom-out-steps=0
 ```
 
 If the exported CSVs still do not include enough history, increase the chart zoom-out pass:
@@ -100,7 +100,8 @@ Plain version:
 
 - TradingView UI changes can break this because the script clicks the same export controls a person clicks.
 - The runner targets the chart-layout dropdown beside the visible layout name, such as `DCA`, then clicks **Download chart data...**.
-- The script opens Chrome large/maximized, but TradingView's actual visible candle range is still controlled by the chart. Use manual-start mode and zoom out before pressing Enter. The runner then performs another automatic zoom-out pass after each chart loads.
+- The preferred `--use-chart-ui` mode clicks visible TradingView buttons, so it should preserve your manually zoomed-out chart better.
+- Without `--use-chart-ui`, the script changes the chart by URL and then performs an automatic zoom-out pass after each chart loads.
 - If a chart loads slowly, retry with more waiting time:
 
 ```powershell
