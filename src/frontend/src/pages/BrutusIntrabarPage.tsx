@@ -4,6 +4,11 @@ import { useMemo, useState } from "react";
 type Direction = "long" | "short";
 type TargetTf = "15m" | "1H";
 type Outcome = "target" | "stop" | "timeout" | "no-data";
+type EntryModel =
+  | "touch"
+  | "next-minute"
+  | "rejection-minute"
+  | "close-back-through-band";
 
 type MinuteBar = {
   symbol: string;
@@ -45,6 +50,11 @@ type IntrabarTouch = {
   plainRead: string;
 };
 
+type TouchContext = IntrabarTouch & {
+  sourceIndex: number;
+  bars: MinuteBar[];
+};
+
 type SummaryRow = {
   label: string;
   touches: number;
@@ -54,6 +64,48 @@ type SummaryRow = {
   avgR60: number;
   avgTouchDepth: number;
   avgImmediateRejection: number;
+  plainRead: string;
+};
+
+type ExecutionRule = {
+  id: string;
+  label: string;
+  entryModel: EntryModel;
+  targetR: number;
+  maxHoldMinutes: number;
+  filter: (touch: TouchContext) => boolean;
+  plainIntent: string;
+};
+
+type RuleResult = {
+  ruleId: string;
+  touchId: string;
+  symbol: string;
+  timeframe: TargetTf;
+  direction: Direction;
+  timestamp: number;
+  session: string;
+  entry: number;
+  stop: number;
+  target: number;
+  risk: number;
+  r: number;
+  outcome: Outcome;
+  minutesHeld: number;
+};
+
+type RuleRow = {
+  id: string;
+  label: string;
+  trades: number;
+  targetRate: number;
+  stopRate: number;
+  avgR: number;
+  totalR: number;
+  profitFactor: number;
+  maxDrawdownR: number;
+  avgMinutesHeld: number;
+  confidence: string;
   plainRead: string;
 };
 
@@ -72,6 +124,82 @@ const TARGETS: { label: TargetTf; ms: number }[] = [
 const LENGTH = 9;
 const MULT = 2;
 const MAX_EVENTS = 500;
+
+const EXECUTION_RULES: ExecutionRule[] = [
+  {
+    id: "touch-all",
+    label: "Enter on first 1m touch",
+    entryModel: "touch",
+    targetR: 1.5,
+    maxHoldMinutes: 15,
+    filter: () => true,
+    plainIntent:
+      "Tests the raw idea: touch the developing band and enter immediately.",
+  },
+  {
+    id: "next-minute",
+    label: "Wait one minute",
+    entryModel: "next-minute",
+    targetR: 1.5,
+    maxHoldMinutes: 15,
+    filter: () => true,
+    plainIntent:
+      "Checks whether letting the first touch breathe reduces bad early entries.",
+  },
+  {
+    id: "rejection-minute",
+    label: "Wait for 1m rejection",
+    entryModel: "rejection-minute",
+    targetR: 1.5,
+    maxHoldMinutes: 15,
+    filter: () => true,
+    plainIntent:
+      "Requires the touch minute or next minutes to actually snap away from the band.",
+  },
+  {
+    id: "skip-early",
+    label: "Skip first 0-2m touches",
+    entryModel: "touch",
+    targetR: 1.5,
+    maxHoldMinutes: 15,
+    filter: (touch) => touch.minuteOffset > 2,
+    plainIntent:
+      "Tests the current clue that earliest touches may be continuation traps.",
+  },
+  {
+    id: "london-ny-15m",
+    label: "15m London/NY only",
+    entryModel: "touch",
+    targetR: 1.5,
+    maxHoldMinutes: 15,
+    filter: (touch) =>
+      touch.timeframe === "15m" &&
+      (touch.session === "London" || touch.session === "NY open"),
+    plainIntent:
+      "Focuses on the sessions that showed better snapback in the intrabar sample.",
+  },
+  {
+    id: "dj30-15m",
+    label: "DJ30 15m only",
+    entryModel: "touch",
+    targetR: 1.5,
+    maxHoldMinutes: 15,
+    filter: (touch) => touch.symbol === "DJ30.R" && touch.timeframe === "15m",
+    plainIntent:
+      "Tests the strongest current single-asset bucket instead of mixing all indices.",
+  },
+  {
+    id: "avoid-jpn-longs",
+    label: "Avoid JPN225 longs",
+    entryModel: "touch",
+    targetR: 1.5,
+    maxHoldMinutes: 15,
+    filter: (touch) =>
+      !(touch.symbol === "JPN225.R" && touch.direction === "long"),
+    plainIntent:
+      "Removes the weakest visible group from the first intrabar run.",
+  },
+];
 
 function parseCsvRecords(text: string) {
   const records: string[][] = [];
@@ -243,17 +371,28 @@ function simulateR(
   const stop = direction === "long" ? entry - risk : entry + risk;
   const target = direction === "long" ? entry + risk * 1.5 : entry - risk * 1.5;
   const window = bars.slice(startIndex + 1, startIndex + 1 + minutes);
-  if (window.length === 0) return { outcome: "no-data" as Outcome, r: 0 };
-  for (const bar of window) {
+  if (window.length === 0)
+    return { outcome: "no-data" as Outcome, r: 0, minutesHeld: 0 };
+  for (const [offset, bar] of window.entries()) {
     const stopHit = direction === "long" ? bar.low <= stop : bar.high >= stop;
     const targetHit =
       direction === "long" ? bar.high >= target : bar.low <= target;
-    if (stopHit) return { outcome: "stop" as Outcome, r: -1 };
-    if (targetHit) return { outcome: "target" as Outcome, r: 1.5 };
+    if (stopHit)
+      return { outcome: "stop" as Outcome, r: -1, minutesHeld: offset + 1 };
+    if (targetHit)
+      return {
+        outcome: "target" as Outcome,
+        r: 1.5,
+        minutesHeld: offset + 1,
+      };
   }
   const last = window[window.length - 1];
   const points = direction === "long" ? last.close - entry : entry - last.close;
-  return { outcome: "timeout" as Outcome, r: points / risk };
+  return {
+    outcome: "timeout" as Outcome,
+    r: points / risk,
+    minutesHeld: window.length,
+  };
 }
 
 function buildPlainRead(touch: Omit<IntrabarTouch, "plainRead">) {
@@ -402,6 +541,144 @@ function buildTouches(bars: MinuteBar[]) {
   return all.sort((a, b) => b.touchTime - a.touchTime);
 }
 
+function entryForRule(touch: TouchContext, rule: ExecutionRule) {
+  const { bars, sourceIndex } = touch;
+  if (rule.entryModel === "touch") {
+    return { entry: touch.entryBand, index: sourceIndex };
+  }
+  if (rule.entryModel === "next-minute") {
+    const next = bars[sourceIndex + 1];
+    if (!next) return undefined;
+    return { entry: next.open, index: sourceIndex + 1 };
+  }
+  const search = bars.slice(sourceIndex, sourceIndex + 6);
+  for (const [offset, bar] of search.entries()) {
+    const rejection =
+      touch.direction === "long"
+        ? bar.close > touch.entryBand && bar.close > bar.open
+        : bar.close < touch.entryBand && bar.close < bar.open;
+    const closeBack =
+      touch.direction === "long"
+        ? bar.close > touch.entryBand
+        : bar.close < touch.entryBand;
+    if (
+      (rule.entryModel === "rejection-minute" && rejection) ||
+      (rule.entryModel === "close-back-through-band" && closeBack)
+    ) {
+      return { entry: bar.close, index: sourceIndex + offset };
+    }
+  }
+  return undefined;
+}
+
+function simulateRule(touch: TouchContext, rule: ExecutionRule) {
+  const entryPoint = entryForRule(touch, rule);
+  if (!entryPoint) return undefined;
+  const risk = touch.bandWidth * 0.5;
+  const sim = simulateR(
+    touch.bars,
+    entryPoint.index,
+    touch.direction,
+    entryPoint.entry,
+    risk,
+    rule.maxHoldMinutes,
+  );
+  const stop =
+    touch.direction === "long"
+      ? entryPoint.entry - risk
+      : entryPoint.entry + risk;
+  const target =
+    touch.direction === "long"
+      ? entryPoint.entry + risk * rule.targetR
+      : entryPoint.entry - risk * rule.targetR;
+  return {
+    ruleId: rule.id,
+    touchId: touch.id,
+    symbol: touch.symbol,
+    timeframe: touch.timeframe,
+    direction: touch.direction,
+    timestamp: touch.touchTime,
+    session: touch.session,
+    entry: entryPoint.entry,
+    stop,
+    target,
+    risk,
+    r: sim.r,
+    outcome: sim.outcome,
+    minutesHeld: sim.minutesHeld,
+  } satisfies RuleResult;
+}
+
+function profitFactor(results: RuleResult[]) {
+  const wins = results
+    .filter((result) => result.r > 0)
+    .reduce((sum, result) => sum + result.r, 0);
+  const losses = Math.abs(
+    results
+      .filter((result) => result.r < 0)
+      .reduce((sum, result) => sum + result.r, 0),
+  );
+  if (losses === 0) return wins > 0 ? 99 : 0;
+  return wins / losses;
+}
+
+function maxDrawdown(results: RuleResult[]) {
+  let equity = 0;
+  let peak = 0;
+  let drawdown = 0;
+  for (const result of results) {
+    equity += result.r;
+    peak = Math.max(peak, equity);
+    drawdown = Math.min(drawdown, equity - peak);
+  }
+  return drawdown;
+}
+
+function summarizeRule(rule: ExecutionRule, results: RuleResult[]): RuleRow {
+  const trades = results.length;
+  const targets = results.filter(
+    (result) => result.outcome === "target",
+  ).length;
+  const stops = results.filter((result) => result.outcome === "stop").length;
+  const avgR = mean(results.map((result) => result.r));
+  const totalR = results.reduce((sum, result) => sum + result.r, 0);
+  const pf = profitFactor(results);
+  const confidence =
+    trades >= 50 ? "medium" : trades >= 20 ? "early" : "too small";
+  const plainRead =
+    trades < 20
+      ? "Interesting, but too few trades to trust."
+      : avgR > 0.25 && stops / trades <= 0.2
+        ? "This is one of the better draft execution rules."
+        : avgR < 0
+          ? "This is not behaving well enough yet."
+          : "Mixed; useful for comparison, not ready as a rule.";
+  return {
+    id: rule.id,
+    label: rule.label,
+    trades,
+    targetRate: trades ? targets / trades : 0,
+    stopRate: trades ? stops / trades : 0,
+    avgR,
+    totalR,
+    profitFactor: pf,
+    maxDrawdownR: maxDrawdown(results),
+    avgMinutesHeld: mean(results.map((result) => result.minutesHeld)),
+    confidence,
+    plainRead,
+  };
+}
+
+function buildExecutionComparisons(touches: TouchContext[]) {
+  return EXECUTION_RULES.map((rule) => {
+    const results = touches
+      .filter(rule.filter)
+      .map((touch) => simulateRule(touch, rule))
+      .filter((result): result is RuleResult => Boolean(result));
+    return { rule, results, row: summarizeRule(rule, results) };
+  }).sort((a, b) => b.row.avgR - a.row.avgR);
+}
+
 function rowFor(label: string, touches: IntrabarTouch[]): SummaryRow {
   const target15 = touches.filter(
     (touch) => touch.outcome15 === "target",
@@ -522,11 +799,118 @@ function Table({
   );
 }
 
+function RuleTable({
+  rows,
+}: {
+  rows: { rule: ExecutionRule; row: RuleRow }[];
+}) {
+  return (
+    <section className="border border-border bg-card p-4">
+      <h2 className="font-display text-lg font-bold">
+        Execution Rule Comparison
+      </h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Same reconstructed touches, different ways to enter. This is where we
+        test whether first touch, waiting, or filtering behaves better.
+      </p>
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full min-w-[980px] text-left text-sm">
+          <thead className="border-b border-border font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <tr>
+              <th className="px-2 py-2">Rule</th>
+              <th className="px-2 py-2 text-right">Trades</th>
+              <th className="px-2 py-2 text-right">Target</th>
+              <th className="px-2 py-2 text-right">Stop</th>
+              <th className="px-2 py-2 text-right">Avg R</th>
+              <th className="px-2 py-2 text-right">Total R</th>
+              <th className="px-2 py-2 text-right">PF</th>
+              <th className="px-2 py-2 text-right">DD</th>
+              <th className="px-2 py-2">Read</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr>
+                <td className="px-2 py-5 text-muted-foreground" colSpan={9}>
+                  Import 1m CSVs to compare execution rules.
+                </td>
+              </tr>
+            ) : (
+              rows.map(({ rule, row }) => (
+                <tr className="border-b border-border/70" key={row.id}>
+                  <td className="px-2 py-2">
+                    <p className="font-mono text-xs text-foreground">
+                      {row.label}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {rule.plainIntent}
+                    </p>
+                  </td>
+                  <td className="px-2 py-2 text-right font-mono">
+                    {row.trades}
+                  </td>
+                  <td className="px-2 py-2 text-right font-mono">
+                    {pct(row.targetRate)}
+                  </td>
+                  <td className="px-2 py-2 text-right font-mono">
+                    {pct(row.stopRate)}
+                  </td>
+                  <td className="px-2 py-2 text-right font-mono">
+                    {fmt(row.avgR)}R
+                  </td>
+                  <td className="px-2 py-2 text-right font-mono">
+                    {fmt(row.totalR)}R
+                  </td>
+                  <td className="px-2 py-2 text-right font-mono">
+                    {row.profitFactor.toFixed(2)}
+                  </td>
+                  <td className="px-2 py-2 text-right font-mono">
+                    {fmt(row.maxDrawdownR)}R
+                  </td>
+                  <td className="px-2 py-2 text-muted-foreground">
+                    {row.plainRead}{" "}
+                    <span className="font-mono text-xs">
+                      ({row.confidence})
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 export default function BrutusIntrabarPage() {
   const [bars, setBars] = useState<MinuteBar[]>([]);
   const [fileNotes, setFileNotes] = useState<string[]>([]);
 
   const touches = useMemo(() => buildTouches(bars), [bars]);
+  const contexts = useMemo(() => {
+    const bySymbol = new Map<string, MinuteBar[]>();
+    for (const bar of bars) {
+      bySymbol.set(bar.symbol, [...(bySymbol.get(bar.symbol) ?? []), bar]);
+    }
+    for (const dataset of bySymbol.values()) {
+      dataset.sort((a, b) => a.timestamp - b.timestamp);
+    }
+    return touches
+      .map((touch) => {
+        const dataset = bySymbol.get(touch.symbol) ?? [];
+        const sourceIndex = dataset.findIndex(
+          (bar) => bar.timestamp === touch.touchTime,
+        );
+        if (sourceIndex < 0) return undefined;
+        return { ...touch, sourceIndex, bars: dataset };
+      })
+      .filter((touch): touch is TouchContext => Boolean(touch));
+  }, [bars, touches]);
+  const executionComparisons = useMemo(
+    () => buildExecutionComparisons(contexts),
+    [contexts],
+  );
   const latestTouches = touches.slice(0, MAX_EVENTS);
   const bySymbol = useMemo(
     () => groupRows(touches, (touch) => `${touch.symbol} | ${touch.timeframe}`),
@@ -617,6 +1001,20 @@ export default function BrutusIntrabarPage() {
                 bySession,
                 byTiming,
                 byDepth,
+                executionComparisons: executionComparisons.map(
+                  ({ rule, row, results }) => ({
+                    rule: {
+                      id: rule.id,
+                      label: rule.label,
+                      entryModel: rule.entryModel,
+                      targetR: rule.targetR,
+                      maxHoldMinutes: rule.maxHoldMinutes,
+                      plainIntent: rule.plainIntent,
+                    },
+                    row,
+                    sampleTrades: results.slice(0, 40),
+                  }),
+                ),
                 latestTouches,
               })
             }
@@ -693,6 +1091,9 @@ export default function BrutusIntrabarPage() {
       )}
 
       <Table rows={bySymbol} title="Symbol / Timeframe Evidence" />
+      <RuleTable
+        rows={executionComparisons.map(({ rule, row }) => ({ rule, row }))}
+      />
       <div className="grid gap-4 xl:grid-cols-2">
         <Table rows={byTiming} title="Touch Timing" />
         <Table rows={byDepth} title="Touch Depth" />
