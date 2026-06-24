@@ -15,15 +15,19 @@ In the Chrome window that opens:
 1. Log into TradingView.
 2. Open any Alchemy chart.
 3. Add the Brutus indicator/exportable indicator you want included in chart-data exports.
-4. Confirm that **Manage layouts > Download chart data** works manually once.
+4. Maximize the Chrome window.
+5. Zoom the chart out to the amount of history you want included.
+6. Confirm that **Manage layouts > Download chart data** works manually once.
 
 Then close the window or leave it open.
 
 ## Run The Batch
 
 ```powershell
-corepack pnpm export:tradingview
+corepack pnpm export:tradingview -- --manual-start
 ```
+
+Manual-start mode opens the chart first and waits. Use that pause to confirm the chart is zoomed out, then press Enter in the terminal to begin the batch.
 
 The runner attempts these symbols:
 
@@ -51,13 +55,35 @@ data/tradingview-exports
 
 A `manifest.json` is written in the same folder. If an export fails, the manifest tells you which symbol/timeframe failed and why.
 
+## Safer / Slower Run
+
+The runner waits 8 seconds between exports by default. If TradingView feels slow or you want the batch to look even less aggressive, run:
+
+```powershell
+corepack pnpm export:tradingview -- --manual-start --pause-ms=15000 --chart-load-ms=15000 --download-wait-ms=30000
+```
+
+## Running From A Mac While Controlling The PC
+
+Run these commands on the Windows PC, not in the Mac terminal. Your MacBook can be the remote-control screen, but the actual terminal should be Windows Terminal, PowerShell, or the Codex terminal on the PC.
+
+Plain version:
+
+1. Open the Windows PC screen from your Mac remote session.
+2. Open Codex or Windows Terminal on the PC.
+3. Go to the repo folder.
+4. Run setup once.
+5. Log into TradingView in the opened Chrome window.
+6. Run the batch command.
+
 ## Notes
 
 - TradingView UI changes can break this because the script clicks the same export controls a person clicks.
+- The script opens Chrome large/maximized, but TradingView's actual visible candle range is still controlled by the chart. Use manual-start mode and zoom out before pressing Enter.
 - If a chart loads slowly, retry with more waiting time:
 
 ```powershell
-corepack pnpm export:tradingview -- --chart-load-ms=15000 --download-wait-ms=30000
+corepack pnpm export:tradingview -- --manual-start --chart-load-ms=15000 --download-wait-ms=30000
 ```
 
 - If the script cannot find the export menu, do one manual export in the Chrome window first, then run it again. TradingView sometimes hides menu items until the layout/session is fully initialized.
