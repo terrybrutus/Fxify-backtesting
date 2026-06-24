@@ -102,6 +102,7 @@ Plain version:
 - The runner targets the chart-layout dropdown beside the visible layout name, such as `DCA`, then clicks **Download chart data...**.
 - The preferred `--use-chart-ui` mode clicks visible TradingView buttons, so it should preserve your manually zoomed-out chart better.
 - In `--use-chart-ui` mode, the runner now tries to verify the chart header actually changed to the target symbol before exporting.
+- If TradingView's watchlist click cannot be verified, the runner falls back to loading the exact `ALCHEMY:<symbol>` URL instead of skipping the symbol.
 - Without `--use-chart-ui`, the script changes the chart by URL and then performs an automatic zoom-out pass after each chart loads.
 - If a chart loads slowly, retry with more waiting time:
 

@@ -298,7 +298,33 @@ function selectSymbolScript(symbol) {
         const match = headerNodes.find((item) => /[A-Z0-9]+\\.R/.test(item.text));
         return match?.text ?? "";
       };
-      if (currentHeaderSymbol().includes(wanted)) return { ok: true, symbol: wanted, verified: true, alreadySelected: true };
+      const currentUrlSymbol = () => {
+        try {
+          const url = new URL(window.location.href);
+          return decodeURIComponent(url.searchParams.get("symbol") ?? "").toUpperCase();
+        } catch {
+          return "";
+        }
+      };
+      const isVerified = () => currentHeaderSymbol().includes(wanted) || currentUrlSymbol().includes(wanted);
+      const clickCenter = (rect) => {
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        const target = document.elementFromPoint(x, y);
+        if (!target) return false;
+        click(target);
+        return true;
+      };
+      if (isVerified()) {
+        return {
+          ok: true,
+          symbol: wanted,
+          verified: true,
+          alreadySelected: true,
+          header: currentHeaderSymbol(),
+          urlSymbol: currentUrlSymbol(),
+        };
+      }
       const candidates = Array.from(document.querySelectorAll('*'))
         .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
         .filter((item) =>
@@ -312,15 +338,32 @@ function selectSymbolScript(symbol) {
       for (const candidate of candidates.slice(0, 8)) {
         const target = candidate.node.closest?.('button, [role="button"], [data-role="button"], [aria-label], [data-symbol]') ?? candidate.node;
         click(target);
-        await sleep(900);
-        const header = currentHeaderSymbol();
-        if (header.includes(wanted)) return { ok: true, symbol: wanted, verified: true, header };
+        await sleep(500);
+        if (!isVerified()) {
+          clickCenter(candidate.rect);
+          await sleep(1000);
+        }
+        if (isVerified()) {
+          return {
+            ok: true,
+            symbol: wanted,
+            verified: true,
+            method: "watchlist-click",
+            header: currentHeaderSymbol(),
+            urlSymbol: currentUrlSymbol(),
+          };
+        }
       }
+      const url = new URL(window.location.href);
+      url.searchParams.set("symbol", "ALCHEMY:" + wanted);
+      window.location.assign(url.toString());
       return {
-        ok: false,
-        error: "Could not verify symbol after clicking right-side watchlist: " + wanted,
-        currentHeader: currentHeaderSymbol(),
-        candidateCount: candidates.length,
+        ok: true,
+        symbol: wanted,
+        verified: false,
+        method: "url-fallback-started",
+        header: currentHeaderSymbol(),
+        urlSymbol: currentUrlSymbol(),
       };
     }
   `;
