@@ -29,6 +29,8 @@ corepack pnpm export:tradingview -- --manual-start
 
 Manual-start mode opens the chart first and waits. Use that pause to confirm the chart is zoomed out, then press Enter in the terminal to begin the batch.
 
+After each symbol/timeframe loads, the runner also sends mouse-wheel zoom-out events over the chart before downloading. This matters because TradingView may reset the visible range when the URL changes.
+
 The runner attempts these symbols:
 
 - `DJ30.R`
@@ -63,6 +65,18 @@ The runner waits 8 seconds between exports by default. If TradingView feels slow
 corepack pnpm export:tradingview -- --manual-start --pause-ms=15000 --chart-load-ms=15000 --download-wait-ms=30000
 ```
 
+If the exported CSVs still do not include enough history, increase the chart zoom-out pass:
+
+```powershell
+corepack pnpm export:tradingview -- --manual-start --pause-ms=15000 --zoom-out-steps=30
+```
+
+If it zooms too far or TradingView feels jumpy, reduce it:
+
+```powershell
+corepack pnpm export:tradingview -- --manual-start --zoom-out-steps=8
+```
+
 ## Running From A Mac While Controlling The PC
 
 Run these commands on the Windows PC, not in the Mac terminal. Your MacBook can be the remote-control screen, but the actual terminal should be Windows Terminal, PowerShell, or the Codex terminal on the PC.
@@ -79,7 +93,7 @@ Plain version:
 ## Notes
 
 - TradingView UI changes can break this because the script clicks the same export controls a person clicks.
-- The script opens Chrome large/maximized, but TradingView's actual visible candle range is still controlled by the chart. Use manual-start mode and zoom out before pressing Enter.
+- The script opens Chrome large/maximized, but TradingView's actual visible candle range is still controlled by the chart. Use manual-start mode and zoom out before pressing Enter. The runner then performs another automatic zoom-out pass after each chart loads.
 - If a chart loads slowly, retry with more waiting time:
 
 ```powershell

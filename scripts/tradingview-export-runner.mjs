@@ -28,6 +28,8 @@ const downloadWaitMs = Number(getArg("--download-wait-ms") ?? 20_000);
 const pauseMs = Number(getArg("--pause-ms") ?? 8_000);
 const windowWidth = Number(getArg("--window-width") ?? 2560);
 const windowHeight = Number(getArg("--window-height") ?? 1440);
+const zoomOutSteps = Number(getArg("--zoom-out-steps") ?? 18);
+const zoomOutDelayMs = Number(getArg("--zoom-out-delay-ms") ?? 120);
 
 if (!globalThis.WebSocket) {
   throw new Error("This script needs Node 22+ because it uses the built-in WebSocket client.");
@@ -67,6 +69,7 @@ async function main() {
   const cdp = await CdpClient.connect(page.webSocketDebuggerUrl);
   await cdp.send("Page.enable");
   await cdp.send("Runtime.enable");
+  await allowInputEvents(cdp);
   await setDownloadBehavior(cdp, exportDir);
   await maximizeWindow(cdp, page.id);
 
@@ -107,6 +110,8 @@ async function main() {
       windowWidth,
       windowHeight,
       manualStart,
+      zoomOutSteps,
+      zoomOutDelayMs,
     },
     results: [],
   };
@@ -151,6 +156,7 @@ async function exportOne(cdp, symbol, interval) {
     const url = `https://www.tradingview.com/chart/?symbol=ALCHEMY%3A${encodeURIComponent(symbol)}&interval=${interval.tv}`;
     await cdp.send("Page.navigate", { url });
     await waitForPageIdle(cdp, chartLoadMs);
+    await zoomOutChart(cdp, zoomOutSteps, zoomOutDelayMs);
 
     const clicked = await runInPage(cdp, exportClickScript());
     if (!clicked?.ok) {
@@ -263,6 +269,52 @@ async function waitForPageIdle(cdp, ms) {
   });
 }
 
+async function zoomOutChart(cdp, steps, delayMs) {
+  if (steps <= 0) return { ok: true, skipped: true };
+  const bounds = await runInPage(cdp, chartBoundsScript());
+  const x = Math.round(bounds?.x ?? windowWidth / 2);
+  const y = Math.round(bounds?.y ?? windowHeight / 2);
+  console.log(`Zooming chart out ${steps} step(s)...`);
+  await cdp.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    x,
+    y,
+  });
+  for (let index = 0; index < steps; index += 1) {
+    await cdp.send("Input.dispatchMouseEvent", {
+      type: "mouseWheel",
+      x,
+      y,
+      deltaX: 0,
+      deltaY: 900,
+    });
+    await sleep(delayMs);
+  }
+  await sleep(750);
+  return { ok: true, x, y, steps };
+}
+
+function chartBoundsScript() {
+  return String.raw`
+    () => {
+      const candidates = Array.from(document.querySelectorAll(
+        '[data-name="chart-widget"], [class*="chart-widget"], canvas'
+      ))
+        .map((node) => node.getBoundingClientRect())
+        .filter((rect) => rect.width > 300 && rect.height > 200)
+        .sort((a, b) => (b.width * b.height) - (a.width * a.height));
+      const rect = candidates[0];
+      if (!rect) return { x: Math.round(window.innerWidth / 2), y: Math.round(window.innerHeight / 2) };
+      return {
+        x: Math.round(rect.left + rect.width / 2),
+        y: Math.round(rect.top + rect.height / 2),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+      };
+    }
+  `;
+}
+
 async function setDownloadBehavior(cdp, downloadPath) {
   try {
     await cdp.send("Browser.setDownloadBehavior", {
@@ -275,6 +327,14 @@ async function setDownloadBehavior(cdp, downloadPath) {
       behavior: "allow",
       downloadPath,
     });
+  }
+}
+
+async function allowInputEvents(cdp) {
+  try {
+    await cdp.send("Input.setIgnoreInputEvents", { ignore: false });
+  } catch {
+    // Some Chrome builds do not expose this command; normal input still works.
   }
 }
 
