@@ -125,6 +125,7 @@ const SYMBOL_MAP: Record<string, string> = {
   "USTEC.R": "USTEC.R",
   "US500.R": "US500.R",
   "JPN225.R": "JPN225.R",
+  "RUS2000.R": "RUS2000.R",
 };
 
 function parseCsvRecords(text: string) {
@@ -238,8 +239,25 @@ function inferMeta(fileName: string) {
   const symbol =
     Object.keys(SYMBOL_MAP).find((candidate) => upper.includes(candidate)) ??
     "UNKNOWN";
+  const normalized = upper.replace(/\s+/g, " ");
+  const match = normalized.match(
+    /(?:,|_|-|\s)(60|45|30|15|5|3|1)(?:\s*\(\d+\))?_?\.CSV$/,
+  );
+  const value = match?.[1];
   const timeframe =
-    upper.includes(", 60") || upper.includes("_60") ? "1H" : "15m";
+    value === "60"
+      ? "1H"
+      : value === "45"
+        ? "45m"
+        : value === "30"
+          ? "30m"
+          : value === "15"
+            ? "15m"
+            : value === "5"
+              ? "5m"
+              : value === "3"
+                ? "3m"
+                : "1m";
   return { symbol, timeframe };
 }
 
@@ -1211,8 +1229,9 @@ export default function BrutusResearchPage() {
                 Import the eight Alchemy TradingView exports
               </h2>
               <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-                Use the files for DJ30.R, USTEC.R, US500.R, and JPN225.R on 15m
-                and 1H. This lab does not use Yahoo proxy candles.
+                Use the Alchemy files for DJ30.R, USTEC.R, US500.R, JPN225.R,
+                and RUS2000.R across 1m, 3m, 5m, 15m, 30m, 45m, and 1H. This lab
+                does not use Yahoo proxy candles.
               </p>
             </div>
           </div>
