@@ -25,6 +25,18 @@ type TvAlert = {
 };
 
 type MatchStatus = "matched" | "nearby" | "no-match" | "no-data";
+type BrutusReviewStatus = "WATCH" | "SKIP" | "TOO LATE";
+
+type BrutusReview = {
+  status: BrutusReviewStatus;
+  reason: string;
+  entry?: number;
+  stop?: number;
+  target?: number;
+  bandWidth?: number;
+  touchToClose?: number;
+  adverse?: number;
+};
 
 type ImportResult = {
   added: number;
@@ -340,6 +352,124 @@ function formatTime(timestamp?: number) {
   }).format(new Date(timestamp));
 }
 
+function directionFor(alert: TvAlert): "long" | "short" | undefined {
+  const direction = alert.direction?.toLowerCase();
+  if (direction === "long" || direction === "buy") return "long";
+  if (direction === "short" || direction === "sell") return "short";
+  return undefined;
+}
+
+function reviewBrutusAlert(alert: TvAlert): BrutusReview {
+  const direction = directionFor(alert);
+  const missing =
+    !alert.brokerSymbol ||
+    !alert.mappedSymbol ||
+    !alert.timeframe ||
+    !direction ||
+    alert.high == null ||
+    alert.low == null ||
+    alert.close == null ||
+    alert.upper == null ||
+    alert.lower == null;
+  if (missing) {
+    return {
+      status: "SKIP",
+      reason: "Missing symbol, direction, timeframe, price, or band data.",
+    };
+  }
+  if (alert.strategy && alert.strategy !== "brutus_band") {
+    return { status: "SKIP", reason: "Not a Brutus band alert." };
+  }
+  if (alert.timeframe !== "15m" && alert.timeframe !== "1H") {
+    return {
+      status: "SKIP",
+      reason: "Only the tested 15m and 1H Brutus exports are in scope.",
+    };
+  }
+
+  const high = alert.high;
+  const low = alert.low;
+  const close = alert.close;
+  const upper = alert.upper;
+  const lower = alert.lower;
+  if (
+    high == null ||
+    low == null ||
+    close == null ||
+    upper == null ||
+    lower == null
+  ) {
+    return {
+      status: "SKIP",
+      reason: "Missing price or band data.",
+    };
+  }
+
+  const bandWidth = Math.max(upper - lower, 0.0001);
+  const entry = direction === "long" ? lower : upper;
+  const stopDistance = bandWidth * 0.5;
+  const stop =
+    direction === "long" ? entry - stopDistance : entry + stopDistance;
+  const target =
+    direction === "long"
+      ? entry + stopDistance * 1.5
+      : entry - stopDistance * 1.5;
+  const touchToClose = direction === "long" ? close - entry : entry - close;
+  const adverse =
+    direction === "long" ? Math.max(entry - low, 0) : Math.max(high - entry, 0);
+  const signalStopHit = adverse >= stopDistance;
+  const movedTooFar = touchToClose > bandWidth * 0.35;
+  const noRejectionYet = touchToClose <= 0;
+
+  if (signalStopHit) {
+    return {
+      status: "SKIP",
+      reason: "The alert candle already moved beyond the half-band stop zone.",
+      entry,
+      stop,
+      target,
+      bandWidth,
+      touchToClose,
+      adverse,
+    };
+  }
+  if (movedTooFar) {
+    return {
+      status: "TOO LATE",
+      reason: "The move has already run too far away from the band touch.",
+      entry,
+      stop,
+      target,
+      bandWidth,
+      touchToClose,
+      adverse,
+    };
+  }
+  if (noRejectionYet) {
+    return {
+      status: "SKIP",
+      reason: "No useful rejection away from the band is visible yet.",
+      entry,
+      stop,
+      target,
+      bandWidth,
+      touchToClose,
+      adverse,
+    };
+  }
+  return {
+    status: "WATCH",
+    reason:
+      "Matches the draft Brutus rule: band touch with manageable entry distance.",
+    entry,
+    stop,
+    target,
+    bandWidth,
+    touchToClose,
+    adverse,
+  };
+}
+
 function downloadText(filename: string, content: string) {
   const blob = new Blob([content], { type: "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -400,6 +530,26 @@ export default function TradingViewCapturePage() {
         return { alert, status, deltaMinutes };
       }),
     [alerts, candleIndex],
+  );
+  const reviewedRows = useMemo(
+    () =>
+      rows.map((row) => ({
+        ...row,
+        brutusReview: reviewBrutusAlert(row.alert),
+      })),
+    [rows],
+  );
+  const reviewCounts = useMemo(
+    () => ({
+      watch: reviewedRows.filter((row) => row.brutusReview.status === "WATCH")
+        .length,
+      skip: reviewedRows.filter((row) => row.brutusReview.status === "SKIP")
+        .length,
+      tooLate: reviewedRows.filter(
+        (row) => row.brutusReview.status === "TOO LATE",
+      ).length,
+    }),
+    [reviewedRows],
   );
 
   function addPayloads(text: string) {
@@ -494,7 +644,18 @@ export default function TradingViewCapturePage() {
               onClick={() =>
                 downloadText(
                   "ict-tradingview-alert-capture.json",
-                  JSON.stringify(alerts, null, 2),
+                  JSON.stringify(
+                    reviewedRows.map(
+                      ({ alert, status, deltaMinutes, brutusReview }) => ({
+                        ...alert,
+                        matchStatus: status,
+                        matchDeltaMinutes: deltaMinutes,
+                        brutusReview,
+                      }),
+                    ),
+                    null,
+                    2,
+                  ),
                 )
               }
               type="button"
@@ -577,6 +738,42 @@ export default function TradingViewCapturePage() {
         </aside>
       </section>
 
+      <section className="grid gap-3 md:grid-cols-4">
+        <div className="border border-primary/50 bg-card p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
+            Draft rule
+          </p>
+          <p className="mt-2 text-sm text-foreground">
+            Good Brutus rejection, band-touch entry, half-band stop, 1.5R
+            target, quick scalp.
+          </p>
+        </div>
+        <div className="border border-lime-500/50 bg-card p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Watch
+          </p>
+          <p className="mt-2 font-display text-2xl font-bold text-lime-300">
+            {reviewCounts.watch}
+          </p>
+        </div>
+        <div className="border border-amber-500/50 bg-card p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Too late
+          </p>
+          <p className="mt-2 font-display text-2xl font-bold text-amber-300">
+            {reviewCounts.tooLate}
+          </p>
+        </div>
+        <div className="border border-destructive/50 bg-card p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Skip
+          </p>
+          <p className="mt-2 font-display text-2xl font-bold text-destructive">
+            {reviewCounts.skip}
+          </p>
+        </div>
+      </section>
+
       <section className="border border-border bg-card p-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-display text-base font-bold">Captured Alerts</h2>
@@ -593,61 +790,90 @@ export default function TradingViewCapturePage() {
                 <th className="px-2 py-2">Map</th>
                 <th className="px-2 py-2">TF</th>
                 <th className="px-2 py-2">Side</th>
+                <th className="px-2 py-2">Rule</th>
                 <th className="px-2 py-2">OHLC</th>
                 <th className="px-2 py-2">Bands</th>
+                <th className="px-2 py-2">Plan</th>
                 <th className="px-2 py-2">Match</th>
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 ? (
+              {reviewedRows.length === 0 ? (
                 <tr>
-                  <td className="px-2 py-6 text-muted-foreground" colSpan={8}>
+                  <td className="px-2 py-6 text-muted-foreground" colSpan={10}>
                     No TradingView alert events imported yet.
                   </td>
                 </tr>
               ) : (
-                rows.map(({ alert, status, deltaMinutes }) => (
-                  <tr className="border-b border-border/60" key={alert.id}>
-                    <td className="px-2 py-2">{formatTime(alert.time)}</td>
-                    <td className="px-2 py-2">
-                      {alert.brokerSymbol ?? "unknown"}
-                    </td>
-                    <td className="px-2 py-2">
-                      {alert.mappedSymbol ?? "unmapped"}
-                    </td>
-                    <td className="px-2 py-2">{alert.timeframe ?? "n/a"}</td>
-                    <td className="px-2 py-2">{alert.direction ?? "n/a"}</td>
-                    <td className="px-2 py-2">
-                      O:{alert.open?.toFixed(2) ?? "?"} H:
-                      {alert.high?.toFixed(2) ?? "?"} L:
-                      {alert.low?.toFixed(2) ?? "?"} C:
-                      {alert.close?.toFixed(2) ?? "?"}
-                    </td>
-                    <td className="px-2 py-2">
-                      U:{alert.upper?.toFixed(2) ?? "?"} L:
-                      {alert.lower?.toFixed(2) ?? "?"}
-                    </td>
-                    <td className="px-2 py-2">
-                      <span
-                        className={
-                          status === "matched"
-                            ? "text-lime-400"
-                            : status === "nearby"
-                              ? "text-amber-300"
-                              : "text-destructive"
-                        }
-                      >
-                        {status}
-                      </span>
-                      {deltaMinutes != null && (
-                        <span className="text-muted-foreground">
-                          {" "}
-                          ({deltaMinutes.toFixed(1)}m)
+                reviewedRows.map(
+                  ({ alert, status, deltaMinutes, brutusReview }) => (
+                    <tr className="border-b border-border/60" key={alert.id}>
+                      <td className="px-2 py-2">{formatTime(alert.time)}</td>
+                      <td className="px-2 py-2">
+                        {alert.brokerSymbol ?? "unknown"}
+                      </td>
+                      <td className="px-2 py-2">
+                        {alert.mappedSymbol ?? "unmapped"}
+                      </td>
+                      <td className="px-2 py-2">{alert.timeframe ?? "n/a"}</td>
+                      <td className="px-2 py-2">{alert.direction ?? "n/a"}</td>
+                      <td className="px-2 py-2">
+                        <span
+                          className={
+                            brutusReview.status === "WATCH"
+                              ? "text-lime-400"
+                              : brutusReview.status === "TOO LATE"
+                                ? "text-amber-300"
+                                : "text-destructive"
+                          }
+                        >
+                          {brutusReview.status}
                         </span>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                        <span className="block max-w-72 whitespace-normal text-muted-foreground">
+                          {brutusReview.reason}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2">
+                        O:{alert.open?.toFixed(2) ?? "?"} H:
+                        {alert.high?.toFixed(2) ?? "?"} L:
+                        {alert.low?.toFixed(2) ?? "?"} C:
+                        {alert.close?.toFixed(2) ?? "?"}
+                      </td>
+                      <td className="px-2 py-2">
+                        U:{alert.upper?.toFixed(2) ?? "?"} L:
+                        {alert.lower?.toFixed(2) ?? "?"}
+                      </td>
+                      <td className="px-2 py-2">
+                        E:{brutusReview.entry?.toFixed(2) ?? "?"} S:
+                        {brutusReview.stop?.toFixed(2) ?? "?"} T:
+                        {brutusReview.target?.toFixed(2) ?? "?"}
+                        <span className="block text-muted-foreground">
+                          move {brutusReview.touchToClose?.toFixed(1) ?? "?"} /
+                          adverse {brutusReview.adverse?.toFixed(1) ?? "?"}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2">
+                        <span
+                          className={
+                            status === "matched"
+                              ? "text-lime-400"
+                              : status === "nearby"
+                                ? "text-amber-300"
+                                : "text-destructive"
+                          }
+                        >
+                          {status}
+                        </span>
+                        {deltaMinutes != null && (
+                          <span className="text-muted-foreground">
+                            {" "}
+                            ({deltaMinutes.toFixed(1)}m)
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ),
+                )
               )}
             </tbody>
           </table>
