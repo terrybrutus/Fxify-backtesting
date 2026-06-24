@@ -269,8 +269,9 @@ async function selectTimeframeInChartUi(cdp, interval) {
 
 function selectSymbolScript(symbol) {
   return `
-    () => {
+    async () => {
       const wanted = ${JSON.stringify(symbol.toUpperCase())};
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       const textOf = (node) => [
         node.innerText,
         node.textContent,
@@ -285,19 +286,42 @@ function selectSymbolScript(symbol) {
         node.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
         node.click();
       };
+      const currentHeaderSymbol = () => {
+        const headerNodes = Array.from(document.querySelectorAll('*'))
+          .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
+          .filter((item) =>
+            item.rect.width > 0 &&
+            item.rect.height > 0 &&
+            item.rect.top < 130 &&
+            item.rect.left < window.innerWidth * 0.35
+          );
+        const match = headerNodes.find((item) => /[A-Z0-9]+\\.R/.test(item.text));
+        return match?.text ?? "";
+      };
+      if (currentHeaderSymbol().includes(wanted)) return { ok: true, symbol: wanted, verified: true, alreadySelected: true };
       const candidates = Array.from(document.querySelectorAll('*'))
         .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
         .filter((item) =>
           item.rect.width > 0 &&
           item.rect.height > 0 &&
-          item.rect.left > window.innerWidth * 0.64 &&
+          item.rect.left > window.innerWidth * 0.72 &&
+          item.rect.top > 80 &&
           item.text.includes(wanted)
         )
-        .sort((a, b) => Math.abs(a.rect.left - window.innerWidth * 0.82) - Math.abs(b.rect.left - window.innerWidth * 0.82));
-      const target = candidates[0]?.node?.closest?.('button, [role="button"], [data-role="button"], [aria-label], [data-symbol]') ?? candidates[0]?.node;
-      if (!target) return { ok: false, error: "Could not find symbol in right-side watchlist: " + wanted };
-      click(target);
-      return { ok: true, symbol: wanted };
+        .sort((a, b) => a.rect.top - b.rect.top || b.rect.width - a.rect.width);
+      for (const candidate of candidates.slice(0, 8)) {
+        const target = candidate.node.closest?.('button, [role="button"], [data-role="button"], [aria-label], [data-symbol]') ?? candidate.node;
+        click(target);
+        await sleep(900);
+        const header = currentHeaderSymbol();
+        if (header.includes(wanted)) return { ok: true, symbol: wanted, verified: true, header };
+      }
+      return {
+        ok: false,
+        error: "Could not verify symbol after clicking right-side watchlist: " + wanted,
+        currentHeader: currentHeaderSymbol(),
+        candidateCount: candidates.length,
+      };
     }
   `;
 }
@@ -400,9 +424,27 @@ function exportClickScript() {
           .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node).trim() }))
           .filter((item) => item.rect.width > 0 && item.rect.height > 0);
         const dialogHints = nodes.filter((item) => item.text.includes("download chart data"));
-        const dialogRect = dialogHints
-          .map((item) => item.rect)
-          .sort((a, b) => (b.width * b.height) - (a.width * a.height))[0];
+        const findDialogRect = () => {
+          for (const hint of dialogHints) {
+            let node = hint.node;
+            for (let depth = 0; node && depth < 8; depth += 1) {
+              const rect = node.getBoundingClientRect();
+              if (
+                rect.width >= 260 &&
+                rect.height >= 160 &&
+                rect.left > window.innerWidth * 0.2 &&
+                rect.right < window.innerWidth * 0.8 &&
+                rect.top > window.innerHeight * 0.15 &&
+                rect.bottom < window.innerHeight * 0.85
+              ) {
+                return rect;
+              }
+              node = node.parentElement;
+            }
+          }
+          return null;
+        };
+        const dialogRect = findDialogRect();
         const buttons = allClickables()
           .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node).trim() }))
           .filter((item) => {
@@ -434,6 +476,11 @@ function exportClickScript() {
         if (lowerRightButton) {
           click(lowerRightButton.node);
           return { ok: true, method: "lower-right-button", text: lowerRightButton.text };
+        }
+        if (dialogRect) {
+          const x = dialogRect.right - 45;
+          const y = dialogRect.bottom - 30;
+          if (clickAt(x, y)) return { ok: true, method: "dialog-coordinate", x, y };
         }
         return { ok: false, error: "Could not find final Download button in chart-data dialog." };
       };
