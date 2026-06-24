@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { createInterface } from "node:readline/promises";
+import { stdin as input, stdout as output } from "node:process";
 
 const symbols = ["DJ30.R", "USTEC.R", "US500.R", "JPN225.R", "RUS2000.R"];
 const intervals = [
@@ -20,8 +22,12 @@ const manifestPath = path.join(exportDir, "manifest.json");
 const remotePort = Number(getArg("--port") ?? 9333);
 const setupOnly = process.argv.includes("--setup");
 const keepOpen = process.argv.includes("--keep-open") || setupOnly;
+const manualStart = process.argv.includes("--manual-start");
 const chartLoadMs = Number(getArg("--chart-load-ms") ?? 10_000);
 const downloadWaitMs = Number(getArg("--download-wait-ms") ?? 20_000);
+const pauseMs = Number(getArg("--pause-ms") ?? 8_000);
+const windowWidth = Number(getArg("--window-width") ?? 2560);
+const windowHeight = Number(getArg("--window-height") ?? 1440);
 
 if (!globalThis.WebSocket) {
   throw new Error("This script needs Node 22+ because it uses the built-in WebSocket client.");
@@ -48,6 +54,8 @@ async function main() {
       "--no-first-run",
       "--no-default-browser-check",
       "--disable-popup-blocking",
+      "--start-maximized",
+      `--window-size=${windowWidth},${windowHeight}`,
       "about:blank",
     ],
     { detached: true, stdio: "ignore" },
@@ -60,6 +68,7 @@ async function main() {
   await cdp.send("Page.enable");
   await cdp.send("Runtime.enable");
   await setDownloadBehavior(cdp, exportDir);
+  await maximizeWindow(cdp, page.id);
 
   if (setupOnly) {
     await cdp.send("Page.navigate", {
@@ -68,9 +77,22 @@ async function main() {
     console.log("\nSetup mode is open.");
     console.log("1. Log into TradingView in the Chrome window.");
     console.log("2. Open a chart and make sure your Brutus indicator is applied.");
-    console.log("3. Run: corepack pnpm export:tradingview\n");
+    console.log("3. Maximize the window and zoom the chart out as far as you want.");
+    console.log("4. Manually confirm Manage layouts > Download chart data works once.");
+    console.log("5. Run: corepack pnpm export:tradingview -- --manual-start\n");
     cdp.close();
     return;
+  }
+
+  if (manualStart) {
+    await cdp.send("Page.navigate", {
+      url: "https://www.tradingview.com/chart/?symbol=ALCHEMY%3ADJ30.R&interval=15",
+    });
+    console.log("\nManual start mode:");
+    console.log("1. In the Chrome window, maximize the chart if needed.");
+    console.log("2. Zoom out to the amount of candles you want exported.");
+    console.log("3. Make sure the Brutus/export indicator is visible on the chart.");
+    await waitForEnter("Press Enter here when the chart is ready and the batch should start...");
   }
 
   const manifest = {
@@ -78,6 +100,14 @@ async function main() {
     exportDir,
     symbols,
     intervals: intervals.map((interval) => interval.label),
+    settings: {
+      chartLoadMs,
+      downloadWaitMs,
+      pauseMs,
+      windowWidth,
+      windowHeight,
+      manualStart,
+    },
     results: [],
   };
 
@@ -86,6 +116,10 @@ async function main() {
       const result = await exportOne(cdp, symbol, interval);
       manifest.results.push(result);
       writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+      if (pauseMs > 0) {
+        console.log(`Waiting ${(pauseMs / 1000).toFixed(1)}s before the next export...`);
+        await sleep(pauseMs);
+      }
     }
   }
 
@@ -241,6 +275,29 @@ async function setDownloadBehavior(cdp, downloadPath) {
       behavior: "allow",
       downloadPath,
     });
+  }
+}
+
+async function maximizeWindow(cdp, targetId) {
+  try {
+    const { windowId } = await cdp.send("Browser.getWindowForTarget", { targetId });
+    await cdp.send("Browser.setWindowBounds", {
+      windowId,
+      bounds: {
+        windowState: "maximized",
+      },
+    });
+  } catch {
+    // Chrome can still run exports if the window manager refuses maximize.
+  }
+}
+
+async function waitForEnter(prompt) {
+  const rl = createInterface({ input, output });
+  try {
+    await rl.question(`${prompt}\n`);
+  } finally {
+    rl.close();
   }
 }
 
