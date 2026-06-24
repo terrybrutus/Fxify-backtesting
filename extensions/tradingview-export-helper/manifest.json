@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "ICT TradingView Export Helper",
+  "version": "0.1.0",
+  "description": "Manual-assisted TradingView chart export helper for Fxify/Alchemy research.",
+  "permissions": ["downloads", "storage"],
+  "host_permissions": ["https://www.tradingview.com/chart/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.tradingview.com/chart/*"],
+      "js": ["content.js"],
+      "css": ["panel.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
