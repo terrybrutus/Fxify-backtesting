@@ -22,6 +22,7 @@ import {
   Target,
   Waves,
   Webhook,
+  ZoomIn,
 } from "lucide-react";
 
 const NAV_GROUPS = [
@@ -48,6 +49,11 @@ const NAV_GROUPS = [
         path: "/brutus-execution",
         label: "Brutus Execution",
         icon: ShieldCheck,
+      },
+      {
+        path: "/brutus-intrabar",
+        label: "Brutus Intrabar",
+        icon: ZoomIn,
       },
       {
         path: "/tradingview-capture",
