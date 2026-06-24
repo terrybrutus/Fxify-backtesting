@@ -129,28 +129,44 @@
     return active?.text?.match(/\b(1m|3m|5m|15m|30m|45m|1h)\b/i)?.[0] ?? "";
   };
 
+  const openChartLayoutMenu = () => {
+    const topRightNodes = visibleNodes()
+      .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
+      .filter((item) => {
+        if (item.rect.top > 70) return false;
+        if (item.rect.left < window.innerWidth * 0.55) return false;
+        if (item.rect.right > window.innerWidth - 160) return false;
+        if (!item.text || item.text.length > 28) return false;
+        return true;
+      });
+
+    const layoutName = topRightNodes.find((item) => /^dca$/i.test(item.text)) ??
+      topRightNodes.find((item) => /layout|chart layout/i.test(item.text));
+
+    if (!layoutName) return { ok: false, error: "Could not find the top-right chart layout name, such as DCA." };
+
+    const y = layoutName.rect.top + layoutName.rect.height / 2;
+    const candidateXs = [
+      layoutName.rect.right + 18,
+      layoutName.rect.right + 10,
+      layoutName.rect.left + layoutName.rect.width / 2
+    ];
+
+    for (const x of candidateXs) {
+      if (clickAt(x, y)) return { ok: true, method: "layout-name-chevron", text: layoutName.text };
+    }
+
+    return { ok: false, error: "Found the chart layout name, but could not click its dropdown." };
+  };
+
   const openExportDialog = async () => {
     chartInfo();
     setStatus("Looking for the chart layout menu...", "info");
 
-    const layoutButton =
-      clickables().find((node) => /manage layouts?|chart layouts?|layout/i.test(textOf(node))) ??
-      visibleNodes()
-        .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
-        .filter((item) => item.rect.top < 90 && item.rect.left > window.innerWidth * 0.55)
-        .find((item) => /(^|\s)(dca|layout|view)(\s|$)/i.test(item.text))?.node;
-
-    if (layoutButton) {
-      clickNode(layoutButton);
-    } else {
-      const clicked =
-        clickAt(window.innerWidth - 270, 28) ||
-        clickAt(window.innerWidth - 230, 28) ||
-        clickAt(window.innerWidth - 315, 28);
-      if (!clicked) {
-        setStatus("Could not open the chart layout menu.", "error");
-        return;
-      }
+    const opened = openChartLayoutMenu();
+    if (!opened.ok) {
+      setStatus(opened.error, "error");
+      return;
     }
 
     await sleep(600);

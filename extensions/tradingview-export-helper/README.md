@@ -42,6 +42,8 @@ Start with one chart only.
 7. Check your Chrome downloads for the CSV.
 8. Click **Save helper log** if something goes wrong and send me that JSON.
 
+If **Open export dialog** fails, make sure the chart layout name, such as `DCA`, is visible in the top-right of TradingView. The helper intentionally avoids clicking broad top-bar buttons because those can open the wrong TradingView menu.
+
 ## What This Proves
 
 This first version answers one question:
