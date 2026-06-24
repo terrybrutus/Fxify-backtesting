@@ -3,6 +3,18 @@ import { useMemo, useState } from "react";
 
 type Direction = "long" | "short";
 type Decision = "ENTER" | "WAIT" | "SKIP" | "EXIT";
+type MomentumContext = {
+  rsi?: number;
+  rsiMa?: number;
+  rsiUpper?: number;
+  rsiLower?: number;
+  rsiDelta?: number;
+  rsiSlope?: "rising" | "falling" | "flat" | "unknown";
+  rsiStretch?: "upper" | "lower" | "none" | "unknown";
+  rsiPosition?: "above-ma" | "below-ma" | "unknown";
+  alignedWithTouch?: boolean;
+  plainRead?: string;
+};
 
 type IntrabarTouch = {
   id: string;
@@ -24,6 +36,7 @@ type IntrabarTouch = {
   outcome60: string;
   session: string;
   plainRead: string;
+  momentum?: MomentumContext;
 };
 
 type IntrabarReport = {
@@ -239,6 +252,18 @@ function scoreTouch(
     blockers.push("Touch is very stretched.");
   }
 
+  if (touch.momentum?.alignedWithTouch) {
+    confidence += 5;
+    evidence.push("RSI also stretched with the touch.");
+  } else if (
+    touch.momentum?.rsiStretch &&
+    touch.momentum.rsiStretch !== "none" &&
+    touch.momentum.rsiStretch !== "unknown"
+  ) {
+    confidence -= 5;
+    evidence.push("RSI stretch is against this touch.");
+  }
+
   confidence = Math.max(0, Math.min(100, confidence));
 
   let decision: Decision = "WAIT";
@@ -405,6 +430,16 @@ function TradeCard({ item }: { item: TradeDecision }) {
           </p>
         </div>
       </div>
+      {item.touch.momentum && (
+        <div className="mt-4 border border-border bg-background p-3">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            RSI context
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {item.touch.momentum.plainRead ?? "RSI context not exported."}
+          </p>
+        </div>
+      )}
     </article>
   );
 }

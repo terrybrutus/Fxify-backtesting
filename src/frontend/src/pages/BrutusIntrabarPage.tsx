@@ -5,11 +5,26 @@ type Direction = "long" | "short";
 type TargetTf = "15m" | "1H";
 type SourceTf = "1m" | "15m" | "1H";
 type Outcome = "target" | "stop" | "timeout" | "no-data";
+type MomentumStretch = "upper" | "lower" | "none" | "unknown";
+type MomentumSlope = "rising" | "falling" | "flat" | "unknown";
 type EntryModel =
   | "touch"
   | "next-minute"
   | "rejection-minute"
   | "close-back-through-band";
+
+type MomentumContext = {
+  rsi?: number;
+  rsiMa?: number;
+  rsiUpper?: number;
+  rsiLower?: number;
+  rsiDelta?: number;
+  rsiSlope?: MomentumSlope;
+  rsiStretch: MomentumStretch;
+  rsiPosition: "above-ma" | "below-ma" | "unknown";
+  alignedWithTouch: boolean;
+  plainRead: string;
+};
 
 type SourceBar = {
   symbol: string;
@@ -19,6 +34,11 @@ type SourceBar = {
   high: number;
   low: number;
   close: number;
+  rsi?: number;
+  rsiMa?: number;
+  rsiUpper?: number;
+  rsiLower?: number;
+  rsiSlope?: MomentumSlope;
 };
 
 type MinuteBar = SourceBar & {
@@ -61,6 +81,7 @@ type IntrabarTouch = {
   outcome15: Outcome;
   outcome60: Outcome;
   session: string;
+  momentum: MomentumContext;
   plainRead: string;
 };
 
@@ -258,6 +279,58 @@ function asNumber(value: string | undefined) {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+function optionalNumber(value: string | undefined) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function momentumFor(
+  bar: Pick<SourceBar, "rsi" | "rsiMa" | "rsiUpper" | "rsiLower" | "rsiSlope">,
+  direction: Direction,
+): MomentumContext {
+  const hasBands =
+    bar.rsi != null &&
+    bar.rsiMa != null &&
+    bar.rsiUpper != null &&
+    bar.rsiLower != null;
+  if (!hasBands) {
+    return {
+      rsiStretch: "unknown",
+      rsiPosition: "unknown",
+      alignedWithTouch: false,
+      plainRead: "RSI context not exported.",
+    };
+  }
+  const rsi = bar.rsi as number;
+  const rsiMa = bar.rsiMa as number;
+  const rsiUpper = bar.rsiUpper as number;
+  const rsiLower = bar.rsiLower as number;
+  const rsiDelta = rsi - rsiMa;
+  const rsiStretch =
+    rsi >= rsiUpper ? "upper" : rsi <= rsiLower ? "lower" : "none";
+  const alignedWithTouch =
+    (direction === "long" && rsiStretch === "lower") ||
+    (direction === "short" && rsiStretch === "upper");
+  const plainRead = alignedWithTouch
+    ? "RSI is stretched with the Brutus touch."
+    : rsiStretch === "none"
+      ? "RSI is not stretched."
+      : "RSI stretch is against this touch.";
+
+  return {
+    rsi,
+    rsiMa,
+    rsiUpper,
+    rsiLower,
+    rsiDelta,
+    rsiSlope: bar.rsiSlope ?? "unknown",
+    rsiStretch,
+    rsiPosition: rsiDelta >= 0 ? "above-ma" : "below-ma",
+    alignedWithTouch,
+    plainRead,
+  };
+}
+
 function inferSymbol(fileName: string) {
   const upper = fileName.toUpperCase();
   return (
@@ -351,6 +424,14 @@ function parseSourceCsv(text: string, fileName: string) {
     const high = asNumber(row[index.get("high") ?? -1]);
     const low = asNumber(row[index.get("low") ?? -1]);
     const close = asNumber(row[index.get("close") ?? -1]);
+    const rsi = optionalNumber(row[index.get("rsi") ?? -1]);
+    const rsiMa = optionalNumber(row[index.get("rsi-based ma") ?? -1]);
+    const rsiUpper = optionalNumber(
+      row[index.get("upper bollinger band") ?? -1],
+    );
+    const rsiLower = optionalNumber(
+      row[index.get("lower bollinger band") ?? -1],
+    );
     if (
       timestamp == null ||
       open == null ||
@@ -369,9 +450,42 @@ function parseSourceCsv(text: string, fileName: string) {
         high,
         low,
         close,
+        rsi,
+        rsiMa,
+        rsiUpper,
+        rsiLower,
       },
     ];
   });
+}
+
+function withMomentumSlope(bars: SourceBar[]) {
+  const byDataset = new Map<string, SourceBar[]>();
+  for (const bar of bars) {
+    const key = `${bar.symbol}|${bar.timeframe}`;
+    byDataset.set(key, [...(byDataset.get(key) ?? []), bar]);
+  }
+  const output: SourceBar[] = [];
+  for (const dataset of byDataset.values()) {
+    const sorted = [...dataset].sort((a, b) => a.timestamp - b.timestamp);
+    sorted.forEach((bar, index) => {
+      const previous = sorted[index - 1];
+      const slopeDelta =
+        previous?.rsi == null || bar.rsi == null
+          ? undefined
+          : bar.rsi - previous.rsi;
+      const rsiSlope =
+        slopeDelta == null
+          ? undefined
+          : Math.abs(slopeDelta) < 0.01
+            ? "flat"
+            : slopeDelta > 0
+              ? "rising"
+              : "falling";
+      output.push({ ...bar, rsiSlope });
+    });
+  }
+  return output;
 }
 
 function mean(values: number[]) {
@@ -494,13 +608,18 @@ function buildPlainRead(touch: Omit<IntrabarTouch, "plainRead">) {
     touch.immediateRejection > 0
       ? "showed quick snapback"
       : "was still pushing through";
-  return `${touch.symbol} ${touch.timeframe} ${touch.direction}: ${fast} ${depth} touch, ${rejection}.`;
+  const momentum =
+    touch.momentum.rsiStretch === "unknown"
+      ? ""
+      : ` ${touch.momentum.plainRead}`;
+  return `${touch.symbol} ${touch.timeframe} ${touch.direction}: ${fast} ${depth} touch, ${rejection}.${momentum}`;
 }
 
 function detectForDataset(
   bars: MinuteBar[],
   timeframe: TargetTf,
   targetMs: number,
+  momentumByBucket: Map<string, SourceBar>,
 ) {
   const events: IntrabarTouch[] = [];
   const completed: PartialBar[] = [];
@@ -585,6 +704,13 @@ function detectForDataset(
         risk,
         60,
       );
+      const targetMomentumBar = momentumByBucket.get(
+        `${bar.symbol}|${timeframe}|${currentBucket}`,
+      );
+      const momentum = momentumFor(
+        targetMomentumBar ?? bar,
+        candidate.direction,
+      );
       const eventBase = {
         id: `${bar.symbol}-${timeframe}-${candidate.direction}-${bar.timestamp}`,
         symbol: bar.symbol,
@@ -605,6 +731,7 @@ function detectForDataset(
         outcome15: result15.outcome,
         outcome60: result60.outcome,
         session: sessionFor(bar.timestamp),
+        momentum,
       };
       events.push({ ...eventBase, plainRead: buildPlainRead(eventBase) });
     }
@@ -613,16 +740,27 @@ function detectForDataset(
   return events;
 }
 
-function buildTouches(bars: MinuteBar[]) {
+function buildTouches(sourceBars: SourceBar[]) {
+  const barsWithSlope = withMomentumSlope(sourceBars);
+  const minuteBars = barsWithSlope.filter(isMinuteBar);
+  const momentumByBucket = new Map<string, SourceBar>();
+  for (const bar of barsWithSlope) {
+    momentumByBucket.set(
+      `${bar.symbol}|${bar.timeframe}|${bar.timestamp}`,
+      bar,
+    );
+  }
   const bySymbol = new Map<string, MinuteBar[]>();
-  for (const bar of bars) {
+  for (const bar of minuteBars) {
     bySymbol.set(bar.symbol, [...(bySymbol.get(bar.symbol) ?? []), bar]);
   }
   const all: IntrabarTouch[] = [];
   for (const dataset of bySymbol.values()) {
     dataset.sort((a, b) => a.timestamp - b.timestamp);
     for (const target of TARGETS) {
-      all.push(...detectForDataset(dataset, target.label, target.ms));
+      all.push(
+        ...detectForDataset(dataset, target.label, target.ms, momentumByBucket),
+      );
     }
   }
   return all.sort((a, b) => b.touchTime - a.touchTime);
@@ -1000,7 +1138,7 @@ export default function BrutusIntrabarPage() {
 
   const minuteBars = useMemo(() => bars.filter(isMinuteBar), [bars]);
   const coverage = useMemo(() => buildCoverage(bars), [bars]);
-  const touches = useMemo(() => buildTouches(minuteBars), [minuteBars]);
+  const touches = useMemo(() => buildTouches(bars), [bars]);
   const contexts = useMemo(() => {
     const bySymbol = new Map<string, MinuteBar[]>();
     for (const bar of minuteBars) {
@@ -1053,6 +1191,19 @@ export default function BrutusIntrabarPage() {
       }),
     [touches],
   );
+  const byMomentum = useMemo(
+    () =>
+      groupRows(touches, (touch) => {
+        if (touch.momentum.rsiStretch === "unknown")
+          return `${touch.timeframe} | RSI not exported`;
+        if (touch.momentum.alignedWithTouch)
+          return `${touch.timeframe} | RSI stretch with touch`;
+        if (touch.momentum.rsiStretch === "none")
+          return `${touch.timeframe} | RSI not stretched`;
+        return `${touch.timeframe} | RSI stretch against touch`;
+      }),
+    [touches],
+  );
 
   async function importFiles(files: FileList | null) {
     if (!files?.length) return;
@@ -1065,7 +1216,7 @@ export default function BrutusIntrabarPage() {
       notes.push(`${file.name}: ${parsed.length} ${timeframe} bars`);
     }
     const before = bars.length;
-    const merged = dedupeBars([...bars, ...imported]);
+    const merged = withMomentumSlope(dedupeBars([...bars, ...imported]));
     const skipped = before + imported.length - merged.length;
     setBars(merged);
     const saved = saveStoredBars(merged);
@@ -1140,6 +1291,10 @@ export default function BrutusIntrabarPage() {
                 bySession,
                 byTiming,
                 byDepth,
+                momentumContext: {
+                  rule: "RSI is a research label only. It does not create Brutus touches or force entries.",
+                  byMomentum,
+                },
                 executionComparisons: executionComparisons.map(
                   ({ rule, row, results }) => ({
                     rule: {
@@ -1302,6 +1457,7 @@ export default function BrutusIntrabarPage() {
         <Table rows={byTiming} title="Touch Timing" />
         <Table rows={byDepth} title="Touch Depth" />
       </div>
+      <Table rows={byMomentum} title="Momentum Context" />
       <Table rows={bySession} title="Session Behavior" />
 
       <section className="border border-border bg-card p-4">
@@ -1316,6 +1472,7 @@ export default function BrutusIntrabarPage() {
                 <th className="px-2 py-2">Setup</th>
                 <th className="px-2 py-2 text-right">Offset</th>
                 <th className="px-2 py-2 text-right">Depth</th>
+                <th className="px-2 py-2">Momentum</th>
                 <th className="px-2 py-2 text-right">15m R</th>
                 <th className="px-2 py-2 text-right">60m R</th>
                 <th className="px-2 py-2">Plain read</th>
@@ -1324,7 +1481,7 @@ export default function BrutusIntrabarPage() {
             <tbody>
               {latestTouches.length === 0 ? (
                 <tr>
-                  <td className="px-2 py-5 text-muted-foreground" colSpan={7}>
+                  <td className="px-2 py-5 text-muted-foreground" colSpan={8}>
                     Import Alchemy CSVs to inspect intrabar touch events.
                   </td>
                 </tr>
@@ -1342,6 +1499,9 @@ export default function BrutusIntrabarPage() {
                     </td>
                     <td className="px-2 py-2 text-right font-mono">
                       {pct(touch.touchDepthRatio)}
+                    </td>
+                    <td className="px-2 py-2 text-xs text-muted-foreground">
+                      {touch.momentum.plainRead}
                     </td>
                     <td className="px-2 py-2 text-right font-mono">
                       {fmt(touch.fifteenMinuteR)}R
