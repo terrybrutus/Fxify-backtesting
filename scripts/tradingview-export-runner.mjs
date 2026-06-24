@@ -31,6 +31,7 @@ const windowWidth = Number(getArg("--window-width") ?? 2560);
 const windowHeight = Number(getArg("--window-height") ?? 1440);
 const zoomOutSteps = Number(getArg("--zoom-out-steps") ?? 18);
 const zoomOutDelayMs = Number(getArg("--zoom-out-delay-ms") ?? 120);
+const startUrl = `https://www.tradingview.com/chart/?symbol=ALCHEMY%3A${encodeURIComponent(symbols[0])}&interval=${intervals[0].tv}`;
 
 if (!globalThis.WebSocket) {
   throw new Error("This script needs Node 22+ because it uses the built-in WebSocket client.");
@@ -75,9 +76,7 @@ async function main() {
   await maximizeWindow(cdp, page.id);
 
   if (setupOnly) {
-    await cdp.send("Page.navigate", {
-      url: "https://www.tradingview.com/chart/?symbol=ALCHEMY%3ADJ30.R&interval=15",
-    });
+    await cdp.send("Page.navigate", { url: startUrl });
     console.log("\nSetup mode is open.");
     console.log("1. Log into TradingView in the Chrome window.");
     console.log("2. Open a chart and make sure your Brutus indicator is applied.");
@@ -89,16 +88,13 @@ async function main() {
   }
 
   if (manualStart) {
-    if (!useChartUi) {
-      await cdp.send("Page.navigate", {
-        url: "https://www.tradingview.com/chart/?symbol=ALCHEMY%3ADJ30.R&interval=15",
-      });
-    }
+    await cdp.send("Page.navigate", { url: startUrl });
+    await waitForPageIdle(cdp, chartLoadMs);
     console.log("\nManual start mode:");
-    console.log("1. In the Chrome window, open the chart layout you want exported.");
-    console.log("2. Set the chart to the first symbol and zoom out to the amount of candles you want.");
-    console.log("3. Make sure the watchlist symbols and timeframe buttons are visible.");
-    console.log("4. Make sure the Brutus/export indicator is visible on the chart.");
+    console.log(`1. The controlled Chrome window should now be on TradingView for ALCHEMY:${symbols[0]}.`);
+    console.log("2. Log in if TradingView asks, then open the chart layout you want exported.");
+    console.log("3. Set the chart zoom to the amount of candles you want.");
+    console.log("4. Make sure the watchlist symbols, timeframe buttons, and Brutus/export indicator are visible.");
     await waitForEnter("Press Enter here when the chart is ready and the batch should start...");
   }
 
