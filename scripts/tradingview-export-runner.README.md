@@ -55,7 +55,7 @@ Outputs are saved to:
 data/tradingview-exports
 ```
 
-A `manifest.json` is written in the same folder. If an export fails, the manifest tells you which symbol/timeframe failed and why.
+A `manifest.json` is written in the same folder after each attempted export. CSV files should appear during the run as each export succeeds. If you only see `manifest.json` and no CSV files, the runner is not reaching TradingView's download action.
 
 ## Safer / Slower Run
 
@@ -101,3 +101,4 @@ corepack pnpm export:tradingview -- --manual-start --chart-load-ms=15000 --downl
 ```
 
 - If the script cannot find the export menu, do one manual export in the Chrome window first, then run it again. TradingView sometimes hides menu items until the layout/session is fully initialized.
+- If the manifest says `export-ui-not-found`, stop the batch with `Ctrl+C`. That means the script clicked the wrong menu or TradingView changed the menu labels.
