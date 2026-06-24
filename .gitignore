@@ -1,6 +1,8 @@
 node_modules/
 dist/
 data/*.csv
+data/tradingview-exports/
+.tradingview-export-profile/
 .mops/
 .old/
 .platform/
