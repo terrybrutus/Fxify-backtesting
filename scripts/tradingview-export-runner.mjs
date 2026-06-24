@@ -395,6 +395,48 @@ function exportClickScript() {
         const y = layoutName.rect.top + layoutName.rect.height / 2;
         return clickAt(x, y) || click(layoutName.node);
       };
+      const clickDownloadDialogButton = () => {
+        const nodes = visibleTextNodes()
+          .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node).trim() }))
+          .filter((item) => item.rect.width > 0 && item.rect.height > 0);
+        const dialogHints = nodes.filter((item) => item.text.includes("download chart data"));
+        const dialogRect = dialogHints
+          .map((item) => item.rect)
+          .sort((a, b) => (b.width * b.height) - (a.width * a.height))[0];
+        const buttons = allClickables()
+          .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node).trim() }))
+          .filter((item) => {
+            if (item.rect.width <= 0 || item.rect.height <= 0) return false;
+            if (item.text !== "download") return false;
+            if (!dialogRect) return true;
+            return (
+              item.rect.left >= dialogRect.left - 20 &&
+              item.rect.right <= dialogRect.right + 20 &&
+              item.rect.top >= dialogRect.top - 20 &&
+              item.rect.bottom <= dialogRect.bottom + 80
+            );
+          })
+          .sort((a, b) => b.rect.top - a.rect.top || b.rect.left - a.rect.left);
+        if (buttons[0]) {
+          click(buttons[0].node);
+          return { ok: true, method: "dialog-button", text: buttons[0].text };
+        }
+        const lowerRightButton = allClickables()
+          .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node).trim() }))
+          .filter((item) =>
+            item.rect.width > 0 &&
+            item.rect.height > 0 &&
+            item.rect.left > window.innerWidth * 0.45 &&
+            item.rect.top > window.innerHeight * 0.42 &&
+            item.text.includes("download")
+          )
+          .sort((a, b) => b.rect.top - a.rect.top || b.rect.left - a.rect.left)[0];
+        if (lowerRightButton) {
+          click(lowerRightButton.node);
+          return { ok: true, method: "lower-right-button", text: lowerRightButton.text };
+        }
+        return { ok: false, error: "Could not find final Download button in chart-data dialog." };
+      };
 
       let menu = findByNeedles(["manage layouts", "manage layout", "chart layouts", "chart layout"]);
       if (!menu) {
@@ -427,11 +469,12 @@ function exportClickScript() {
       if (!exportItem) exportItem = visibleTextNodes().find((node) => textOf(node).includes("export data"));
       if (!exportItem) return { ok: false, error: "Could not find Download chart data menu item." };
       click(exportItem);
-      await sleep(600);
+      await sleep(1000);
 
-      const finalButton = findByNeedles(["export", "download", "save"]);
-      if (finalButton) click(finalButton);
-      return { ok: true };
+      const finalClick = clickDownloadDialogButton();
+      if (!finalClick.ok) return finalClick;
+      await sleep(800);
+      return { ok: true, finalClick };
     }
   `;
 }
