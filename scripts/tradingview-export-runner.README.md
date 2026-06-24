@@ -27,7 +27,7 @@ Then close the window or leave it open.
 corepack pnpm export:tradingview -- --manual-start --use-chart-ui
 ```
 
-Manual-start mode waits before the batch starts. Use that pause to open the chart, pick the starting symbol, and zoom out. `--use-chart-ui` then clicks TradingView's visible timeframe buttons and right-side watchlist symbols instead of reloading the page by URL.
+Manual-start mode now opens the controlled Chrome window directly to the first Alchemy chart before it waits. Use that pause to log in if needed, open the right chart layout, confirm the starting symbol, and zoom out. `--use-chart-ui` then clicks TradingView's visible timeframe buttons and right-side watchlist symbols instead of reloading the page by URL when possible.
 
 This is the preferred mode because it should preserve the zoomed-out chart state better than URL navigation.
 
