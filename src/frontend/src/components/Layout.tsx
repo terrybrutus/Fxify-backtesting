@@ -20,6 +20,7 @@ import {
   ScanSearch,
   ShieldCheck,
   Target,
+  TrafficCone,
   Waves,
   Webhook,
   ZoomIn,
@@ -31,6 +32,11 @@ const NAV_GROUPS = [
     items: [
       { path: "/data", label: "Data Integrity", icon: Database },
       { path: "/daily-desk", label: "Daily Trade Desk", icon: ClipboardCheck },
+      {
+        path: "/brutus-trade-desk",
+        label: "Brutus Trade Desk",
+        icon: TrafficCone,
+      },
       { path: "/live-candidates", label: "Live Candidates", icon: Radio },
       { path: "/decisions", label: "Decision Console", icon: Target },
     ],
