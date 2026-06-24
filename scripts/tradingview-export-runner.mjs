@@ -209,35 +209,40 @@ function exportClickScript() {
         const haystack = textOf(node);
         return needles.some((needle) => haystack.includes(needle));
       });
+      const clickAt = (x, y) => {
+        const node = document.elementFromPoint(x, y);
+        if (!node) return false;
+        click(node.closest?.('button, [role="button"], [data-role="button"], [aria-label], [data-name]') ?? node);
+        return true;
+      };
 
-      let menu = findByNeedles(["manage layouts", "layout"]);
+      let menu = findByNeedles(["manage layouts", "manage layout", "chart layouts", "chart layout"]);
       if (!menu) {
         const rightButtons = allClickables()
           .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
-          .filter((item) => item.rect.left > window.innerWidth * 0.55)
+          .filter((item) => item.rect.left > window.innerWidth * 0.72 && item.rect.top < 120)
           .sort((a, b) => b.rect.left - a.rect.left);
         menu = rightButtons.find((item) =>
-          item.text.includes("layout") ||
+          item.text.includes("manage layout") ||
           item.text.includes("chart layout") ||
-          item.text.includes("save")
+          item.text.includes("layout")
         )?.node;
       }
-      if (!menu) return { ok: false, error: "Could not find Manage layouts button." };
-      click(menu);
+      if (menu) {
+        click(menu);
+      } else {
+        const clickedTopRight = clickAt(window.innerWidth - 145, 24) || clickAt(window.innerWidth - 190, 24);
+        if (!clickedTopRight) return { ok: false, error: "Could not find Manage layouts button." };
+      }
       await sleep(900);
 
-      let exportItem = Array.from(document.querySelectorAll('*')).find((node) => {
+      const visibleTextNodes = () => Array.from(document.querySelectorAll('*')).filter((node) => {
         const rect = node.getBoundingClientRect();
-        const text = textOf(node);
-        return rect.width > 0 && rect.height > 0 && text.includes("download chart data");
+        return rect.width > 0 && rect.height > 0;
       });
-      if (!exportItem) {
-        exportItem = Array.from(document.querySelectorAll('*')).find((node) => {
-          const rect = node.getBoundingClientRect();
-          const text = textOf(node);
-          return rect.width > 0 && rect.height > 0 && text.includes("export chart data");
-        });
-      }
+      let exportItem = visibleTextNodes().find((node) => textOf(node).includes("download chart data"));
+      if (!exportItem) exportItem = visibleTextNodes().find((node) => textOf(node).includes("export chart data"));
+      if (!exportItem) exportItem = visibleTextNodes().find((node) => textOf(node).includes("export data"));
       if (!exportItem) return { ok: false, error: "Could not find Download chart data menu item." };
       click(exportItem);
       await sleep(1200);
