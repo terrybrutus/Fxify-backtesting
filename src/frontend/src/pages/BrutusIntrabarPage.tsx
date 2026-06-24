@@ -1,8 +1,9 @@
-import { Download, Upload, ZoomIn } from "lucide-react";
+import { Download, Trash2, Upload, ZoomIn } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type Direction = "long" | "short";
 type TargetTf = "15m" | "1H";
+type SourceTf = "1m" | "15m" | "1H";
 type Outcome = "target" | "stop" | "timeout" | "no-data";
 type EntryModel =
   | "touch"
@@ -10,13 +11,26 @@ type EntryModel =
   | "rejection-minute"
   | "close-back-through-band";
 
-type MinuteBar = {
+type SourceBar = {
   symbol: string;
+  timeframe: SourceTf;
   timestamp: number;
   open: number;
   high: number;
   low: number;
   close: number;
+};
+
+type MinuteBar = SourceBar & {
+  timeframe: "1m";
+};
+
+type DatasetCoverage = {
+  symbol: string;
+  timeframe: SourceTf;
+  bars: number;
+  start: number;
+  end: number;
 };
 
 type PartialBar = {
@@ -124,6 +138,7 @@ const TARGETS: { label: TargetTf; ms: number }[] = [
 const LENGTH = 9;
 const MULT = 2;
 const MAX_EVENTS = 500;
+const STORAGE_KEY = "ict.brutus.intrabar.source-bars.v2";
 
 const EXECUTION_RULES: ExecutionRule[] = [
   {
@@ -251,7 +266,77 @@ function inferSymbol(fileName: string) {
   );
 }
 
-function parseMinuteCsv(text: string, fileName: string) {
+function inferTimeframe(fileName: string): SourceTf {
+  const normalized = fileName.toUpperCase().replace(/\s+/g, " ");
+  if (/[, _-]60(?:\s*\(\d+\))?\.CSV$/.test(normalized)) return "1H";
+  if (/[, _-]15(?:\s*\(\d+\))?\.CSV$/.test(normalized)) return "15m";
+  if (/[, _-]1(?:\s*\(\d+\))?\.CSV$/.test(normalized)) return "1m";
+  return "1m";
+}
+
+function barKey(bar: SourceBar) {
+  return `${bar.symbol}|${bar.timeframe}|${bar.timestamp}`;
+}
+
+function dedupeBars(bars: SourceBar[]) {
+  const byKey = new Map<string, SourceBar>();
+  for (const bar of bars) {
+    byKey.set(barKey(bar), bar);
+  }
+  return Array.from(byKey.values()).sort(
+    (a, b) =>
+      a.symbol.localeCompare(b.symbol) ||
+      a.timeframe.localeCompare(b.timeframe) ||
+      a.timestamp - b.timestamp,
+  );
+}
+
+function loadStoredBars() {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return dedupeBars(
+      parsed.filter(
+        (bar): bar is SourceBar =>
+          typeof bar?.symbol === "string" &&
+          (bar.timeframe === "1m" ||
+            bar.timeframe === "15m" ||
+            bar.timeframe === "1H") &&
+          Number.isFinite(bar.timestamp) &&
+          Number.isFinite(bar.open) &&
+          Number.isFinite(bar.high) &&
+          Number.isFinite(bar.low) &&
+          Number.isFinite(bar.close),
+      ),
+    );
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredBars(bars: SourceBar[]) {
+  if (typeof window === "undefined") return true;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(bars));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function clearStoredBars() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(STORAGE_KEY);
+}
+
+function isMinuteBar(bar: SourceBar): bar is MinuteBar {
+  return bar.timeframe === "1m";
+}
+
+function parseSourceCsv(text: string, fileName: string) {
   const records = parseCsvRecords(text);
   const [header, ...rows] = records;
   if (!header) return [];
@@ -259,7 +344,8 @@ function parseMinuteCsv(text: string, fileName: string) {
     header.map((cell, cellIndex) => [cell.trim().toLowerCase(), cellIndex]),
   );
   const symbol = inferSymbol(fileName);
-  return rows.flatMap((row): MinuteBar[] => {
+  const timeframe = inferTimeframe(fileName);
+  return rows.flatMap((row): SourceBar[] => {
     const timestamp = asNumber(row[index.get("time") ?? -1]);
     const open = asNumber(row[index.get("open") ?? -1]);
     const high = asNumber(row[index.get("high") ?? -1]);
@@ -277,6 +363,7 @@ function parseMinuteCsv(text: string, fileName: string) {
     return [
       {
         symbol,
+        timeframe,
         timestamp: timestamp * 1000,
         open,
         high,
@@ -725,6 +812,30 @@ function groupRows(
     .sort((a, b) => b.touches - a.touches);
 }
 
+function buildCoverage(bars: SourceBar[]): DatasetCoverage[] {
+  const groups = new Map<string, SourceBar[]>();
+  for (const bar of bars) {
+    const key = `${bar.symbol}|${bar.timeframe}`;
+    groups.set(key, [...(groups.get(key) ?? []), bar]);
+  }
+  return Array.from(groups.values())
+    .map((group) => {
+      const sorted = [...group].sort((a, b) => a.timestamp - b.timestamp);
+      return {
+        symbol: sorted[0].symbol,
+        timeframe: sorted[0].timeframe,
+        bars: sorted.length,
+        start: sorted[0].timestamp,
+        end: sorted[sorted.length - 1].timestamp,
+      };
+    })
+    .sort(
+      (a, b) =>
+        a.symbol.localeCompare(b.symbol) ||
+        a.timeframe.localeCompare(b.timeframe),
+    );
+}
+
 function exportJson(filename: string, payload: unknown) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: "application/json",
@@ -764,7 +875,7 @@ function Table({
             {rows.length === 0 ? (
               <tr>
                 <td className="px-2 py-5 text-muted-foreground" colSpan={7}>
-                  Import 1m Alchemy CSVs to populate this section.
+                  Import Alchemy CSVs to populate this section.
                 </td>
               </tr>
             ) : (
@@ -832,7 +943,7 @@ function RuleTable({
             {rows.length === 0 ? (
               <tr>
                 <td className="px-2 py-5 text-muted-foreground" colSpan={9}>
-                  Import 1m CSVs to compare execution rules.
+                  Import Alchemy CSVs to compare execution rules.
                 </td>
               </tr>
             ) : (
@@ -884,13 +995,15 @@ function RuleTable({
 }
 
 export default function BrutusIntrabarPage() {
-  const [bars, setBars] = useState<MinuteBar[]>([]);
+  const [bars, setBars] = useState<SourceBar[]>(() => loadStoredBars());
   const [fileNotes, setFileNotes] = useState<string[]>([]);
 
-  const touches = useMemo(() => buildTouches(bars), [bars]);
+  const minuteBars = useMemo(() => bars.filter(isMinuteBar), [bars]);
+  const coverage = useMemo(() => buildCoverage(bars), [bars]);
+  const touches = useMemo(() => buildTouches(minuteBars), [minuteBars]);
   const contexts = useMemo(() => {
     const bySymbol = new Map<string, MinuteBar[]>();
-    for (const bar of bars) {
+    for (const bar of minuteBars) {
       bySymbol.set(bar.symbol, [...(bySymbol.get(bar.symbol) ?? []), bar]);
     }
     for (const dataset of bySymbol.values()) {
@@ -906,7 +1019,7 @@ export default function BrutusIntrabarPage() {
         return { ...touch, sourceIndex, bars: dataset };
       })
       .filter((touch): touch is TouchContext => Boolean(touch));
-  }, [bars, touches]);
+  }, [minuteBars, touches]);
   const executionComparisons = useMemo(
     () => buildExecutionComparisons(contexts),
     [contexts],
@@ -943,15 +1056,34 @@ export default function BrutusIntrabarPage() {
 
   async function importFiles(files: FileList | null) {
     if (!files?.length) return;
-    const imported: MinuteBar[] = [];
+    const imported: SourceBar[] = [];
     const notes: string[] = [];
     for (const file of Array.from(files)) {
-      const parsed = parseMinuteCsv(await file.text(), file.name);
+      const parsed = parseSourceCsv(await file.text(), file.name);
       imported.push(...parsed);
-      notes.push(`${file.name}: ${parsed.length} 1m bars`);
+      const timeframe = inferTimeframe(file.name);
+      notes.push(`${file.name}: ${parsed.length} ${timeframe} bars`);
     }
-    setBars(imported.sort((a, b) => a.timestamp - b.timestamp));
-    setFileNotes(notes);
+    const before = bars.length;
+    const merged = dedupeBars([...bars, ...imported]);
+    const skipped = before + imported.length - merged.length;
+    setBars(merged);
+    const saved = saveStoredBars(merged);
+    setFileNotes([
+      ...notes,
+      `Merged dataset: ${merged.length} total bars (${skipped} overlap duplicate${skipped === 1 ? "" : "s"} skipped)`,
+      ...(saved
+        ? []
+        : [
+            "Browser storage is full, so this batch is available now but may need re-upload after refresh.",
+          ]),
+    ]);
+  }
+
+  function clearImportedData() {
+    setBars([]);
+    setFileNotes([]);
+    clearStoredBars();
   }
 
   return (
@@ -962,15 +1094,16 @@ export default function BrutusIntrabarPage() {
             Brutus Intrabar Lab
           </h1>
           <p className="mt-1 max-w-5xl text-sm text-muted-foreground">
-            Import 1m Alchemy TradingView CSVs. This page reconstructs 15m and
-            1H Brutus bands minute by minute, then marks the first 1m candle
-            that touched the developing higher-timeframe band.
+            Import Alchemy TradingView CSVs for 1m, 15m, and 1H together. The
+            page keeps prior imports, removes overlapping duplicates, uses 1m
+            bars for intrabar reconstruction, and exports one combined research
+            packet.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <label className="inline-flex cursor-pointer items-center gap-2 border border-primary bg-primary px-4 py-2 font-mono text-xs text-primary-foreground">
             <Upload className="h-4 w-4" />
-            Import 1m CSVs
+            Import CSV batch
             <input
               accept=".csv"
               className="hidden"
@@ -986,7 +1119,7 @@ export default function BrutusIntrabarPage() {
               exportJson("ict-brutus-intrabar-lab.json", {
                 files: fileNotes,
                 settings: {
-                  source: "1m Alchemy TradingView CSV exports",
+                  source: "Alchemy TradingView CSV exports",
                   length: LENGTH,
                   stdDev: MULT,
                   targetTimeframes: TARGETS.map((target) => target.label),
@@ -994,9 +1127,15 @@ export default function BrutusIntrabarPage() {
                     "This is a 1m developing-band approximation, not tick-level live alert truth.",
                 },
                 totals: {
-                  minuteBars: bars.length,
+                  importedBars: bars.length,
+                  minuteBars: minuteBars.length,
+                  fifteenMinuteBars: bars.filter(
+                    (bar) => bar.timeframe === "15m",
+                  ).length,
+                  hourBars: bars.filter((bar) => bar.timeframe === "1H").length,
                   intrabarTouches: touches.length,
                 },
+                coverage,
                 bySymbol,
                 bySession,
                 byTiming,
@@ -1023,15 +1162,32 @@ export default function BrutusIntrabarPage() {
             <Download className="h-4 w-4" />
             Export Intrabar Lab
           </button>
+          <button
+            className="inline-flex items-center gap-2 border border-red-700/70 bg-red-950/20 px-4 py-2 font-mono text-xs text-red-200 hover:border-red-500 disabled:opacity-40"
+            disabled={bars.length === 0}
+            onClick={clearImportedData}
+            type="button"
+          >
+            <Trash2 className="h-4 w-4" />
+            Clear imported data
+          </button>
         </div>
       </div>
 
       <section className="grid gap-3 md:grid-cols-4">
         <div className="border border-border bg-card p-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            1m candles
+            Imported bars
           </p>
           <p className="mt-2 font-display text-2xl font-bold">{bars.length}</p>
+        </div>
+        <div className="border border-border bg-card p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            1m bars used
+          </p>
+          <p className="mt-2 font-display text-2xl font-bold">
+            {minuteBars.length}
+          </p>
         </div>
         <div className="border border-border bg-card p-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -1040,12 +1196,6 @@ export default function BrutusIntrabarPage() {
           <p className="mt-2 font-display text-2xl font-bold">
             {touches.length}
           </p>
-        </div>
-        <div className="border border-border bg-card p-4">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Timeframes
-          </p>
-          <p className="mt-2 font-display text-2xl font-bold">15m, 1H</p>
         </div>
         <div className="border border-border bg-card p-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -1067,10 +1217,64 @@ export default function BrutusIntrabarPage() {
             <p className="mt-2 max-w-5xl text-sm text-muted-foreground">
               This checks whether the touch happened early, middle, or late
               inside the 15m/1H candle, and whether the next minutes snapped
-              back or kept pushing. It does not know the exact second or tick
-              where TradingView first fired.
+              back or kept pushing. The 15m and 1H uploads are kept with the
+              export for cross-checking, while the 1m bars are what make the
+              intrabar reconstruction possible.
             </p>
           </div>
+        </div>
+      </section>
+
+      <section className="border border-border bg-card p-4">
+        <h2 className="font-display text-lg font-bold">Imported Dataset</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Upload newer overlapping windows any time. The app keeps the old rows
+          and skips duplicate symbol/timeframe/timestamp bars.
+        </p>
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className="border-b border-border font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <tr>
+                <th className="px-2 py-2">Symbol</th>
+                <th className="px-2 py-2">TF</th>
+                <th className="px-2 py-2 text-right">Bars</th>
+                <th className="px-2 py-2">Start</th>
+                <th className="px-2 py-2">End</th>
+              </tr>
+            </thead>
+            <tbody>
+              {coverage.length === 0 ? (
+                <tr>
+                  <td className="px-2 py-5 text-muted-foreground" colSpan={5}>
+                    Import the 1m, 15m, and 1H TradingView CSV exports here.
+                  </td>
+                </tr>
+              ) : (
+                coverage.map((row) => (
+                  <tr
+                    className="border-b border-border/70"
+                    key={`${row.symbol}-${row.timeframe}`}
+                  >
+                    <td className="px-2 py-2 font-mono text-xs">
+                      {row.symbol}
+                    </td>
+                    <td className="px-2 py-2 font-mono text-xs">
+                      {row.timeframe}
+                    </td>
+                    <td className="px-2 py-2 text-right font-mono">
+                      {row.bars}
+                    </td>
+                    <td className="px-2 py-2 font-mono text-xs">
+                      {fmtDate(row.start)}
+                    </td>
+                    <td className="px-2 py-2 font-mono text-xs">
+                      {fmtDate(row.end)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -1121,7 +1325,7 @@ export default function BrutusIntrabarPage() {
               {latestTouches.length === 0 ? (
                 <tr>
                   <td className="px-2 py-5 text-muted-foreground" colSpan={7}>
-                    Import 1m CSVs to inspect intrabar touch events.
+                    Import Alchemy CSVs to inspect intrabar touch events.
                   </td>
                 </tr>
               ) : (
