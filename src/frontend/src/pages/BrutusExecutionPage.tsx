@@ -808,6 +808,117 @@ function TradeTable({ rows }: { rows: TradeResult[] }) {
   );
 }
 
+function tradePlanSteps(row: PlanRow | undefined) {
+  if (!row) {
+    return {
+      verdict: "No trade plan yet",
+      entry: "Import Alchemy CSVs first.",
+      stop: "Unavailable.",
+      target: "Unavailable.",
+      hold: "Unavailable.",
+      avoid: "Unavailable.",
+    };
+  }
+  const entry = row.label.includes("band-touch")
+    ? "Enter near the Brutus band touch, not after chasing the close."
+    : "This plan waits for the signal candle close.";
+  const stop = row.label.includes("band-50")
+    ? "Use a stop about half the current band width beyond the touch."
+    : row.label.includes("atr-50")
+      ? "Use a stop about half the current ATR beyond entry."
+      : row.label.includes("atr-100")
+        ? "Use a stop about one ATR beyond entry."
+        : "Use the tested stop model shown in the plan name.";
+  const target = row.label.includes("2R")
+    ? "Target 2R, but this has been too optimistic unless lower-timeframe proof confirms it."
+    : row.label.includes("1.5R")
+      ? "Target about 1.5R."
+      : "Use the target shown in the plan name.";
+  const hold = row.label.includes("1 bars")
+    ? "Treat it as a quick scalp: one candle max by default."
+    : row.label.includes("2 bars")
+      ? "Give it up to two candles, then reassess or exit."
+      : "Do not hold beyond the tested bar limit unless a separate rule says so.";
+  const avoid =
+    row.optimisticRate > 0.2
+      ? "Avoid live use until lower-timeframe or alert logs prove the same-candle target is actually catchable."
+      : row.avgR <= 0
+        ? "Avoid. The tested plan is not profitable as-is."
+        : "Avoid if price has already run far away from the band touch before you can enter.";
+  return {
+    verdict:
+      row.optimisticRate <= 0.2 && row.avgR > 0
+        ? "Current draft: tradable candidate, not final automation."
+        : "Research candidate only.",
+    entry,
+    stop,
+    target,
+    hold,
+    avoid,
+  };
+}
+
+function TradePlanCard({ row }: { row: PlanRow | undefined }) {
+  const steps = tradePlanSteps(row);
+  return (
+    <section className="border border-primary/60 bg-card p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
+            Current Rule Card
+          </p>
+          <h2 className="mt-1 font-display text-xl font-bold">
+            {steps.verdict}
+          </h2>
+          <p className="mt-2 max-w-4xl text-sm text-muted-foreground">
+            {row?.label ??
+              "The app needs imported TradingView CSVs before it can draft a rule."}
+          </p>
+        </div>
+        {row && (
+          <div className="grid min-w-[360px] grid-cols-3 gap-2 font-mono text-xs">
+            <div className="border border-border bg-background p-3">
+              <p className="text-muted-foreground">Win</p>
+              <p className="mt-1 text-lg text-foreground">{pct(row.winRate)}</p>
+            </div>
+            <div className="border border-border bg-background p-3">
+              <p className="text-muted-foreground">Avg R</p>
+              <p className="mt-1 text-lg text-foreground">{fmt(row.avgR)}</p>
+            </div>
+            <div className="border border-border bg-background p-3">
+              <p className="text-muted-foreground">Optimism</p>
+              <p className="mt-1 text-lg text-foreground">
+                {pct(row.optimisticRate)}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="mt-4 grid gap-3 md:grid-cols-5">
+        {[
+          ["Entry", steps.entry],
+          ["Stop", steps.stop],
+          ["Target", steps.target],
+          ["Hold", steps.hold],
+          ["Avoid", steps.avoid],
+        ].map(([label, text]) => (
+          <div className="border border-border bg-background p-3" key={label}>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              {label}
+            </p>
+            <p className="mt-2 text-sm text-foreground">{text}</p>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">
+        This is a draft trade plan from historical CSV evidence. It is not a
+        live order instruction and still needs lower-timeframe or live alert
+        confirmation.
+      </p>
+    </section>
+  );
+}
+
 export default function BrutusExecutionPage() {
   const [bars, setBars] = useState<BrutusBar[]>([]);
   const [fileNotes, setFileNotes] = useState<string[]>([]);
@@ -871,6 +982,8 @@ export default function BrutusExecutionPage() {
       .filter((result) => result.reason !== "no-data")
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 80) ?? [];
+  const currentRule = realismRows[0];
+  const currentRuleSteps = tradePlanSteps(currentRule);
 
   async function importFiles(files: FileList | null) {
     if (!files?.length) return;
@@ -932,6 +1045,8 @@ export default function BrutusExecutionPage() {
                 realismRows,
                 optimismRows,
                 trapRows,
+                currentRule,
+                currentRuleSteps,
                 selectedPlan: selected?.row,
                 selectedTrades,
               })
@@ -1011,6 +1126,8 @@ export default function BrutusExecutionPage() {
               </div>
             </section>
           )}
+
+          <TradePlanCard row={currentRule} />
 
           <section className="border border-border bg-card p-4">
             <h2 className="font-display text-base font-bold">
