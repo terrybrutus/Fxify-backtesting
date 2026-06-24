@@ -59,10 +59,16 @@ A `manifest.json` is written in the same folder after each attempted export. CSV
 
 ## Safer / Slower Run
 
-The runner waits 8 seconds between exports by default. If TradingView feels slow or you want the batch to look even less aggressive, run:
+The runner waits 4 seconds between exports by default. If TradingView feels slow or you want the batch to look even less aggressive, run:
 
 ```powershell
 corepack pnpm export:tradingview -- --manual-start --pause-ms=15000 --chart-load-ms=15000 --download-wait-ms=30000
+```
+
+For a normal run that is quicker but still paced, use:
+
+```powershell
+corepack pnpm export:tradingview -- --manual-start --pause-ms=5000 --zoom-out-steps=30
 ```
 
 If the exported CSVs still do not include enough history, increase the chart zoom-out pass:
@@ -93,6 +99,7 @@ Plain version:
 ## Notes
 
 - TradingView UI changes can break this because the script clicks the same export controls a person clicks.
+- The runner targets the chart-layout dropdown beside the visible layout name, such as `DCA`, then clicks **Download chart data...**.
 - The script opens Chrome large/maximized, but TradingView's actual visible candle range is still controlled by the chart. Use manual-start mode and zoom out before pressing Enter. The runner then performs another automatic zoom-out pass after each chart loads.
 - If a chart loads slowly, retry with more waiting time:
 
