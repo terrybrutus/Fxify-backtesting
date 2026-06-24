@@ -23,6 +23,7 @@ const remotePort = Number(getArg("--port") ?? 9333);
 const setupOnly = process.argv.includes("--setup");
 const keepOpen = process.argv.includes("--keep-open") || setupOnly;
 const manualStart = process.argv.includes("--manual-start");
+const useChartUi = process.argv.includes("--use-chart-ui");
 const chartLoadMs = Number(getArg("--chart-load-ms") ?? 7_000);
 const downloadWaitMs = Number(getArg("--download-wait-ms") ?? 20_000);
 const pauseMs = Number(getArg("--pause-ms") ?? 4_000);
@@ -82,19 +83,22 @@ async function main() {
     console.log("2. Open a chart and make sure your Brutus indicator is applied.");
     console.log("3. Maximize the window and zoom the chart out as far as you want.");
     console.log("4. Manually confirm Manage layouts > Download chart data works once.");
-    console.log("5. Run: corepack pnpm export:tradingview -- --manual-start\n");
+    console.log("5. Run: corepack pnpm export:tradingview -- --manual-start --use-chart-ui\n");
     cdp.close();
     return;
   }
 
   if (manualStart) {
-    await cdp.send("Page.navigate", {
-      url: "https://www.tradingview.com/chart/?symbol=ALCHEMY%3ADJ30.R&interval=15",
-    });
+    if (!useChartUi) {
+      await cdp.send("Page.navigate", {
+        url: "https://www.tradingview.com/chart/?symbol=ALCHEMY%3ADJ30.R&interval=15",
+      });
+    }
     console.log("\nManual start mode:");
-    console.log("1. In the Chrome window, maximize the chart if needed.");
-    console.log("2. Zoom out to the amount of candles you want exported.");
-    console.log("3. Make sure the Brutus/export indicator is visible on the chart.");
+    console.log("1. In the Chrome window, open the chart layout you want exported.");
+    console.log("2. Set the chart to the first symbol and zoom out to the amount of candles you want.");
+    console.log("3. Make sure the watchlist symbols and timeframe buttons are visible.");
+    console.log("4. Make sure the Brutus/export indicator is visible on the chart.");
     await waitForEnter("Press Enter here when the chart is ready and the batch should start...");
   }
 
@@ -110,20 +114,49 @@ async function main() {
       windowWidth,
       windowHeight,
       manualStart,
+      useChartUi,
       zoomOutSteps,
       zoomOutDelayMs,
     },
     results: [],
   };
 
-  for (const symbol of symbols) {
-    for (const interval of intervals) {
-      const result = await exportOne(cdp, symbol, interval);
-      manifest.results.push(result);
-      writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-      if (pauseMs > 0) {
-        console.log(`Waiting ${(pauseMs / 1000).toFixed(1)}s before the next export...`);
-        await sleep(pauseMs);
+  if (useChartUi) {
+    for (const symbol of symbols) {
+      const selected = await selectSymbolInChartUi(cdp, symbol);
+      if (!selected.ok) {
+        const result = {
+          symbol,
+          timeframe: "all",
+          targetName: null,
+          status: "symbol-ui-not-found",
+          error: selected.error,
+        };
+        manifest.results.push(result);
+        writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+        continue;
+      }
+      await sleep(chartLoadMs);
+      for (const interval of intervals) {
+        const result = await exportOneFromChartUi(cdp, symbol, interval);
+        manifest.results.push(result);
+        writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+        if (pauseMs > 0) {
+          console.log(`Waiting ${(pauseMs / 1000).toFixed(1)}s before the next export...`);
+          await sleep(pauseMs);
+        }
+      }
+    }
+  } else {
+    for (const symbol of symbols) {
+      for (const interval of intervals) {
+        const result = await exportOne(cdp, symbol, interval);
+        manifest.results.push(result);
+        writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+        if (pauseMs > 0) {
+          console.log(`Waiting ${(pauseMs / 1000).toFixed(1)}s before the next export...`);
+          await sleep(pauseMs);
+        }
       }
     }
   }
@@ -179,6 +212,132 @@ async function exportOne(cdp, symbol, interval) {
   } catch (error) {
     return { symbol, timeframe: interval.label, targetName, status: "error", error: error.message };
   }
+}
+
+async function exportOneFromChartUi(cdp, symbol, interval) {
+  const display = `${symbol} ${interval.label}`;
+  const targetName = `ALCHEMY_${symbol}, ${interval.tv}.csv`;
+  const targetPath = path.join(exportDir, targetName);
+  console.log(`\nExporting ${display} from current TradingView UI -> ${targetName}`);
+
+  try {
+    const before = snapshotCsvs(exportDir);
+    const selected = await selectTimeframeInChartUi(cdp, interval);
+    if (!selected.ok) {
+      return {
+        symbol,
+        timeframe: interval.label,
+        targetName,
+        status: "timeframe-ui-not-found",
+        error: selected.error,
+      };
+    }
+    await sleep(chartLoadMs);
+
+    const clicked = await runInPage(cdp, exportClickScript());
+    if (!clicked?.ok) {
+      return { symbol, timeframe: interval.label, targetName, status: "export-ui-not-found", error: clicked?.error };
+    }
+
+    const downloaded = await waitForNewCsv(exportDir, before, downloadWaitMs);
+    if (!downloaded) {
+      return { symbol, timeframe: interval.label, targetName, status: "download-timeout" };
+    }
+
+    renameSync(downloaded, targetPath);
+    return {
+      symbol,
+      timeframe: interval.label,
+      targetName,
+      status: "saved",
+      bytes: statSync(targetPath).size,
+    };
+  } catch (error) {
+    return { symbol, timeframe: interval.label, targetName, status: "error", error: error.message };
+  }
+}
+
+async function selectSymbolInChartUi(cdp, symbol) {
+  console.log(`Selecting watchlist symbol ${symbol}...`);
+  return runInPage(cdp, selectSymbolScript(symbol));
+}
+
+async function selectTimeframeInChartUi(cdp, interval) {
+  console.log(`Selecting timeframe ${interval.label}...`);
+  return runInPage(cdp, selectTimeframeScript(interval.label));
+}
+
+function selectSymbolScript(symbol) {
+  return `
+    () => {
+      const wanted = ${JSON.stringify(symbol.toUpperCase())};
+      const textOf = (node) => [
+        node.innerText,
+        node.textContent,
+        node.getAttribute?.("aria-label"),
+        node.getAttribute?.("title"),
+        node.getAttribute?.("data-symbol"),
+      ].filter(Boolean).join(" ").toUpperCase();
+      const click = (node) => {
+        node.scrollIntoView?.({ block: "center", inline: "center" });
+        node.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+        node.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        node.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+        node.click();
+      };
+      const candidates = Array.from(document.querySelectorAll('*'))
+        .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
+        .filter((item) =>
+          item.rect.width > 0 &&
+          item.rect.height > 0 &&
+          item.rect.left > window.innerWidth * 0.64 &&
+          item.text.includes(wanted)
+        )
+        .sort((a, b) => Math.abs(a.rect.left - window.innerWidth * 0.82) - Math.abs(b.rect.left - window.innerWidth * 0.82));
+      const target = candidates[0]?.node?.closest?.('button, [role="button"], [data-role="button"], [aria-label], [data-symbol]') ?? candidates[0]?.node;
+      if (!target) return { ok: false, error: "Could not find symbol in right-side watchlist: " + wanted };
+      click(target);
+      return { ok: true, symbol: wanted };
+    }
+  `;
+}
+
+function selectTimeframeScript(label) {
+  return `
+    () => {
+      const wanted = ${JSON.stringify(label.toLowerCase())};
+      const aliases = wanted === "1h" ? ["1h", "1 h", "60"] : [wanted, wanted.replace("m", "")];
+      const textOf = (node) => [
+        node.innerText,
+        node.textContent,
+        node.getAttribute?.("aria-label"),
+        node.getAttribute?.("title"),
+        node.getAttribute?.("data-value"),
+      ].filter(Boolean).join(" ").toLowerCase().trim();
+      const click = (node) => {
+        node.scrollIntoView?.({ block: "center", inline: "center" });
+        node.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+        node.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        node.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+        node.click();
+      };
+      const candidates = Array.from(document.querySelectorAll('button, [role="button"], [data-role="button"], [aria-label], [title], [data-value]'))
+        .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
+        .filter((item) => {
+          if (item.rect.width <= 0 || item.rect.height <= 0) return false;
+          if (item.rect.top > 175 || item.rect.left > window.innerWidth * 0.45) return false;
+          return aliases.some((alias) => {
+            const text = item.text.replace(/\\s+/g, " ");
+            return text === alias || text.includes(" " + alias + " ") || text.endsWith(" " + alias);
+          });
+        })
+        .sort((a, b) => a.rect.left - b.rect.left);
+      const target = candidates[0]?.node;
+      if (!target) return { ok: false, error: "Could not find visible timeframe button: " + wanted };
+      click(target);
+      return { ok: true, timeframe: wanted };
+    }
+  `;
 }
 
 function exportClickScript() {
