@@ -10,6 +10,7 @@ import { useMemo, useState } from "react";
 
 type Direction = "long" | "short";
 type Decision = "ENTER" | "WAIT" | "SKIP" | "EXIT";
+type PlaybookVerdict = "TEST" | "WATCH" | "AVOID" | "TOO SMALL";
 type MomentumContext = {
   rsi?: number;
   rsiMa?: number;
@@ -104,6 +105,21 @@ type AlertDecisionMatch = {
   decision?: TradeDecision;
   status: Decision | "NO DATA";
   note: string;
+};
+
+type PlaybookRow = {
+  id: string;
+  family: string;
+  label: string;
+  trades: number;
+  targetRate: number;
+  stopRate: number;
+  avgR15: number;
+  avgR60: number;
+  score: number;
+  verdict: PlaybookVerdict;
+  plainRule: string;
+  pineHint: string;
 };
 
 const STORAGE_KEY = "ict.brutus.trade-desk.report.v1";
@@ -375,6 +391,10 @@ function timeframeFamily(timeframe: string) {
   return "slow";
 }
 
+function displayDecision(decision: Decision) {
+  return decision === "EXIT" ? "DO NOT HOLD" : decision;
+}
+
 function timingLabelFor(touch: IntrabarTouch) {
   const minutes = timeframeMinutes(touch.timeframe);
   const progress = touch.minuteOffset / Math.max(minutes, 1);
@@ -384,11 +404,151 @@ function timingLabelFor(touch: IntrabarTouch) {
   return `${touch.timeframe} | late`;
 }
 
+function plainTimingFor(touch: IntrabarTouch) {
+  const minutes = timeframeMinutes(touch.timeframe);
+  const progress = touch.minuteOffset / Math.max(minutes, 1);
+  if (touch.minuteOffset <= 1) return "first minute";
+  if (progress < 0.33) return "early";
+  if (progress < 0.67) return "middle";
+  return "late";
+}
+
+function depthBucket(touch: IntrabarTouch) {
+  if (touch.touchDepthRatio >= 0.15) return "deep stretch";
+  if (touch.touchDepthRatio >= 0.04) return "moderate pierce";
+  return "light touch";
+}
+
+function snapbackBucket(touch: IntrabarTouch) {
+  if (touch.immediateRejection > 0 && touch.oneMinuteFollowThrough >= 0) {
+    return "snapback started";
+  }
+  if (touch.oneMinuteFollowThrough < 0) return "kept pushing";
+  return "no snapback yet";
+}
+
+function momentumBucket(touch: IntrabarTouch) {
+  if (touch.momentum?.alignedWithTouch) return "RSI aligned";
+  if (
+    touch.momentum?.rsiStretch &&
+    touch.momentum.rsiStretch !== "none" &&
+    touch.momentum.rsiStretch !== "unknown"
+  ) {
+    return "RSI stretched against/near signal";
+  }
+  return "RSI neutral";
+}
+
 function getBucketAverage(
   rows: Array<{ label: string; avgR15: number }> | undefined,
   label: string,
 ) {
   return rows?.find((row) => row.label === label)?.avgR15;
+}
+
+function average(values: number[]) {
+  const filtered = values.filter((value) => Number.isFinite(value));
+  if (!filtered.length) return 0;
+  return filtered.reduce((sum, value) => sum + value, 0) / filtered.length;
+}
+
+function summarizePlaybookGroup(
+  family: string,
+  label: string,
+  touches: IntrabarTouch[],
+): PlaybookRow {
+  const trades = touches.length;
+  const targetRate =
+    trades > 0
+      ? touches.filter((touch) => touch.outcome15 === "target").length / trades
+      : 0;
+  const stopRate =
+    trades > 0
+      ? touches.filter((touch) => touch.outcome15 === "stop").length / trades
+      : 0;
+  const avgR15 = average(touches.map((touch) => touch.fifteenMinuteR));
+  const avgR60 = average(touches.map((touch) => touch.sixtyMinuteR));
+  const score =
+    avgR15 * 45 +
+    avgR60 * 20 +
+    targetRate * 35 -
+    stopRate * 45 +
+    Math.min(trades / 35, 1) * 12;
+  let verdict: PlaybookVerdict = "AVOID";
+  if (trades < 12) verdict = "TOO SMALL";
+  else if (avgR15 >= 0.22 && stopRate <= 0.24 && score > 10) verdict = "TEST";
+  else if (avgR15 >= 0.05 && score > 0) verdict = "WATCH";
+
+  const plainRule =
+    verdict === "TEST"
+      ? `This is a testable rule candidate: ${label}. It has enough sample to paper-trade and convert into a TradingView alert condition.`
+      : verdict === "WATCH"
+        ? `This is interesting but not clean enough yet: ${label}. Watch it, but do not make it a hard rule.`
+        : verdict === "TOO SMALL"
+          ? `Too few examples to trust yet: ${label}.`
+          : `Avoid as a default rule: ${label}. The sample is not paying cleanly enough.`;
+
+  return {
+    id: `${family}:${label}`,
+    family,
+    label,
+    trades,
+    targetRate,
+    stopRate,
+    avgR15,
+    avgR60,
+    score,
+    verdict,
+    plainRule,
+    pineHint: `Filter idea: ${label}. Require the alert to match this bucket before it can say ENTER.`,
+  };
+}
+
+function buildPlaybook(touches: IntrabarTouch[]): PlaybookRow[] {
+  const groups = new Map<string, IntrabarTouch[]>();
+  const add = (family: string, label: string, touch: IntrabarTouch) => {
+    const key = `${family}:${label}`;
+    const list = groups.get(key) ?? [];
+    list.push(touch);
+    groups.set(key, list);
+  };
+
+  for (const touch of touches) {
+    add("Asset + timeframe", `${touch.symbol} ${touch.timeframe}`, touch);
+    add("Session + timeframe", `${touch.session} ${touch.timeframe}`, touch);
+    add(
+      "Timing + timeframe",
+      `${touch.timeframe} ${plainTimingFor(touch)}`,
+      touch,
+    );
+    add("Pierce depth", `${touch.timeframe} ${depthBucket(touch)}`, touch);
+    add("Snapback", `${touch.timeframe} ${snapbackBucket(touch)}`, touch);
+    add("Momentum", `${touch.timeframe} ${momentumBucket(touch)}`, touch);
+    add(
+      "Direction + setup",
+      `${touch.symbol} ${touch.timeframe} ${touch.direction} ${touch.session} ${plainTimingFor(touch)} ${snapbackBucket(touch)}`,
+      touch,
+    );
+  }
+
+  return Array.from(groups.entries())
+    .map(([key, touchesForGroup]) => {
+      const [family, ...labelParts] = key.split(":");
+      return summarizePlaybookGroup(
+        family,
+        labelParts.join(":"),
+        touchesForGroup,
+      );
+    })
+    .sort((a, b) => {
+      const verdictRank: Record<PlaybookVerdict, number> = {
+        TEST: 0,
+        WATCH: 1,
+        AVOID: 2,
+        "TOO SMALL": 3,
+      };
+      return verdictRank[a.verdict] - verdictRank[b.verdict] || b.score - a.score;
+    });
 }
 
 function scoreTouch(
@@ -620,7 +780,21 @@ function DecisionPill({ decision }: { decision: Decision }) {
     <span
       className={`border px-3 py-1 font-display text-xl font-bold ${colors[decision]}`}
     >
-      {decision}
+      {displayDecision(decision)}
+    </span>
+  );
+}
+
+function VerdictPill({ verdict }: { verdict: PlaybookVerdict }) {
+  const colors: Record<PlaybookVerdict, string> = {
+    TEST: "border-lime-400 bg-lime-400/10 text-lime-300",
+    WATCH: "border-amber-300 bg-amber-300/10 text-amber-200",
+    AVOID: "border-red-500 bg-red-500/10 text-red-300",
+    "TOO SMALL": "border-border bg-background text-muted-foreground",
+  };
+  return (
+    <span className={`border px-2 py-1 font-mono text-xs ${colors[verdict]}`}>
+      {verdict}
     </span>
   );
 }
@@ -762,6 +936,16 @@ export default function BrutusTradeDeskPage() {
       exit: decisions.filter((item) => item.decision === "EXIT").length,
     }),
     [decisions],
+  );
+
+  const playbook = useMemo(
+    () => buildPlaybook(report?.latestTouches ?? []),
+    [report],
+  );
+
+  const testablePlaybook = useMemo(
+    () => playbook.filter((row) => row.verdict === "TEST").slice(0, 12),
+    [playbook],
   );
 
   const alertMatches = useMemo(
@@ -921,6 +1105,131 @@ export default function BrutusTradeDeskPage() {
         </div>
       </section>
 
+      {report && (
+        <section className="space-y-3 border border-primary/40 bg-primary/5 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-display text-base font-bold">
+                Brutus Trade Playbook
+              </h2>
+              <p className="mt-1 max-w-4xl text-sm text-muted-foreground">
+                This is the matrix summary. It converts the imported Brutus
+                touches into plain rule candidates for TradingView alerts. It is
+                not looking for one perfect setup; it is separating testable
+                conditions from noisy ones.
+              </p>
+            </div>
+            <button
+              className="border border-border bg-background px-4 py-2 font-mono text-xs hover:border-primary"
+              onClick={() =>
+                exportJson("ict-brutus-playbook.json", {
+                  generatedAt: new Date().toISOString(),
+                  sourceTotals: report.totals,
+                  testable: testablePlaybook,
+                  matrix: playbook,
+                })
+              }
+              type="button"
+            >
+              Export Playbook
+            </button>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="border border-border bg-card p-4">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Testable rules
+              </p>
+              <p className="mt-2 font-display text-2xl font-bold text-lime-300">
+                {playbook.filter((row) => row.verdict === "TEST").length}
+              </p>
+            </div>
+            <div className="border border-border bg-card p-4">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Watch only
+              </p>
+              <p className="mt-2 font-display text-2xl font-bold text-amber-200">
+                {playbook.filter((row) => row.verdict === "WATCH").length}
+              </p>
+            </div>
+            <div className="border border-border bg-card p-4">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Avoid / too small
+              </p>
+              <p className="mt-2 font-display text-2xl font-bold text-red-300">
+                {
+                  playbook.filter(
+                    (row) =>
+                      row.verdict === "AVOID" || row.verdict === "TOO SMALL",
+                  ).length
+                }
+              </p>
+            </div>
+          </div>
+
+          {testablePlaybook.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[980px] border-collapse font-mono text-xs">
+                <thead className="text-left text-muted-foreground">
+                  <tr className="border-b border-border">
+                    <th className="px-2 py-2">Verdict</th>
+                    <th className="px-2 py-2">Family</th>
+                    <th className="px-2 py-2">Rule candidate</th>
+                    <th className="px-2 py-2">Sample</th>
+                    <th className="px-2 py-2">15m R</th>
+                    <th className="px-2 py-2">60m R</th>
+                    <th className="px-2 py-2">Stop rate</th>
+                    <th className="px-2 py-2">Plain rule</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {testablePlaybook.map((row) => (
+                    <tr className="border-b border-border/60" key={row.id}>
+                      <td className="px-2 py-2">
+                        <VerdictPill verdict={row.verdict} />
+                      </td>
+                      <td className="px-2 py-2 text-muted-foreground">
+                        {row.family}
+                      </td>
+                      <td className="px-2 py-2 text-foreground">
+                        {row.label}
+                      </td>
+                      <td className="px-2 py-2">{row.trades}</td>
+                      <td className="px-2 py-2">{row.avgR15.toFixed(2)}</td>
+                      <td className="px-2 py-2">{row.avgR60.toFixed(2)}</td>
+                      <td className="px-2 py-2">
+                        {(row.stopRate * 100).toFixed(1)}%
+                      </td>
+                      <td className="max-w-md whitespace-normal px-2 py-2 text-muted-foreground">
+                        {row.plainRule}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="border border-border bg-card p-4 text-sm text-muted-foreground">
+              No matrix bucket is clean enough to promote yet. That means the
+              correct output is restraint, not a forced trade rule.
+            </div>
+          )}
+
+          <div className="border border-border bg-card p-4">
+            <h3 className="font-display text-sm font-bold uppercase tracking-widest">
+              Current plain-language takeaway
+            </h3>
+            <p className="mt-2 text-sm text-foreground">
+              Use this research to build TradingView alerts around TEST rows
+              only. A live alert should say ENTER only when the symbol,
+              timeframe, session, candle timing, pierce depth, and snapback
+              behavior match one of these rows. Everything else should say SKIP
+              or WATCH.
+            </p>
+          </div>
+        </section>
+      )}
+
       <section className="border border-border bg-card p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -944,7 +1253,7 @@ export default function BrutusTradeDeskPage() {
               SKIP {alertCounts.skip}
             </span>
             <span className="border border-fuchsia-400/50 px-2 py-1 text-fuchsia-200">
-              EXIT {alertCounts.exit}
+              DO NOT HOLD {alertCounts.exit}
             </span>
             <span className="border border-border px-2 py-1 text-muted-foreground">
               NO DATA {alertCounts.noData}
