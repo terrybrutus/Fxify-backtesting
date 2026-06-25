@@ -151,6 +151,20 @@
     return clickNode(node?.closest?.('button, [role="button"], [data-role="button"], [aria-label], [data-name]') ?? node);
   };
 
+  const clickRectCenter = (rect) => {
+    const x = Math.round(rect.left + rect.width / 2);
+    const y = Math.round(rect.top + rect.height / 2);
+    const node = document.elementFromPoint(x, y);
+    if (!node) return false;
+    const target = node.closest?.('button, [role="button"], [data-role="button"], [aria-label], [data-name], [class]') ?? node;
+    target.dispatchEvent(new MouseEvent("mouseover", { bubbles: true, clientX: x, clientY: y }));
+    target.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: x, clientY: y }));
+    target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 0, buttons: 1, clientX: x, clientY: y }));
+    target.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true, button: 0, buttons: 0, clientX: x, clientY: y }));
+    target.click?.();
+    return true;
+  };
+
   const visibleNodes = () =>
     Array.from(document.querySelectorAll("*")).filter((node) => {
       const rect = node.getBoundingClientRect();
@@ -274,7 +288,6 @@
     target.dispatchEvent(new PointerEvent("pointerdown", eventOptions));
     target.dispatchEvent(new MouseEvent("mousedown", eventOptions));
     target.dispatchEvent(new MouseEvent("contextmenu", eventOptions));
-    target.dispatchEvent(new MouseEvent("mouseup", eventOptions));
     return true;
   };
 
@@ -290,17 +303,35 @@
     }
 
     await sleep(700);
-    const tableItem = visibleNodes().find((node) => /^table view$/i.test(textOf(node))) ??
-      visibleNodes().find((node) => /table view/i.test(textOf(node)));
+    const tableItem = visibleNodes()
+      .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
+      .filter((item) => item.rect.width > 0 && item.rect.height > 0)
+      .find((item) => /^table view$/i.test(item.text)) ??
+      visibleNodes()
+        .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
+        .filter((item) => item.rect.width > 0 && item.rect.height > 0)
+        .find((item) => /table view/i.test(item.text));
 
     if (!tableItem) {
       setStatus("Context menu opened, but I could not find Table view.", "error");
       return { ok: false, error: "Context menu opened, but I could not find Table view." };
     }
 
-    clickNode(tableItem);
-    await sleep(900);
-    setStatus("Table view should be open. Now click Download table data.", "ok");
+    setStatus("Found Table view. Selecting it...", "info");
+    if (!clickRectCenter(tableItem.rect)) {
+      setStatus("Found Table view, but could not click it.", "error");
+      return { ok: false, error: "Found Table view, but could not click it." };
+    }
+
+    await sleep(1200);
+    const tableOpened = visibleNodes().some((node) => /download table data|download data/i.test(textOf(node))) ||
+      visibleNodes().some((node) => /go back to chart|back to chart/i.test(textOf(node)));
+    if (!tableOpened) {
+      setStatus("Clicked Table view, but TradingView did not open the table panel.", "error");
+      return { ok: false, error: "Clicked Table view, but TradingView did not open the table panel." };
+    }
+
+    setStatus("Table view is open. Now click Download table data.", "ok");
     return { ok: true };
   };
 
