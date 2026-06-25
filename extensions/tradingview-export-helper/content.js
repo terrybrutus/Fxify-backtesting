@@ -30,6 +30,8 @@
         <strong data-field="source">TradingView tab</strong>
       </div>
       <button type="button" data-action="refresh">Refresh chart info</button>
+      <button type="button" data-action="open-table">Open Table view</button>
+      <button type="button" data-action="download-table">Download table data</button>
       <button type="button" data-action="open-export">Open export dialog</button>
       <button type="button" data-action="click-download">Click modal Download</button>
       <button type="button" data-action="save-log">Save helper log</button>
@@ -127,6 +129,100 @@
       .filter((item) => item.rect.top < 130 && item.rect.left < window.innerWidth * 0.45)
       .find((item) => /\b(1m|3m|5m|15m|30m|45m|1h)\b/i.test(item.text));
     return active?.text?.match(/\b(1m|3m|5m|15m|30m|45m|1h)\b/i)?.[0] ?? "";
+  };
+
+  const chartCanvasPoint = () => {
+    const canvases = Array.from(document.querySelectorAll("canvas"))
+      .map((node) => ({ node, rect: node.getBoundingClientRect() }))
+      .filter((item) =>
+        item.rect.width > window.innerWidth * 0.35 &&
+        item.rect.height > window.innerHeight * 0.25 &&
+        item.rect.top > 40 &&
+        item.rect.left < window.innerWidth * 0.75
+      )
+      .sort((a, b) => (b.rect.width * b.rect.height) - (a.rect.width * a.rect.height));
+
+    const rect = canvases[0]?.rect ?? {
+      left: window.innerWidth * 0.18,
+      top: window.innerHeight * 0.18,
+      width: window.innerWidth * 0.55,
+      height: window.innerHeight * 0.42
+    };
+
+    return {
+      x: Math.round(rect.left + rect.width * 0.52),
+      y: Math.round(rect.top + rect.height * 0.48)
+    };
+  };
+
+  const rightClickAt = (x, y) => {
+    const node = document.elementFromPoint(x, y);
+    if (!node) return false;
+    const target = node.closest?.("canvas, [class], [data-name]") ?? node;
+    const eventOptions = {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+      button: 2,
+      buttons: 2,
+      clientX: x,
+      clientY: y
+    };
+    target.dispatchEvent(new PointerEvent("pointerdown", eventOptions));
+    target.dispatchEvent(new MouseEvent("mousedown", eventOptions));
+    target.dispatchEvent(new MouseEvent("contextmenu", eventOptions));
+    target.dispatchEvent(new MouseEvent("mouseup", eventOptions));
+    return true;
+  };
+
+  const openTableView = async () => {
+    chartInfo();
+    const point = chartCanvasPoint();
+    setStatus(`Right-clicking chart near ${point.x}, ${point.y} for Table view...`, "info");
+
+    if (!rightClickAt(point.x, point.y)) {
+      setStatus("Could not right-click the chart canvas.", "error");
+      return;
+    }
+
+    await sleep(700);
+    const tableItem = visibleNodes().find((node) => /^table view$/i.test(textOf(node))) ??
+      visibleNodes().find((node) => /table view/i.test(textOf(node)));
+
+    if (!tableItem) {
+      setStatus("Context menu opened, but I could not find Table view.", "error");
+      return;
+    }
+
+    clickNode(tableItem);
+    await sleep(900);
+    setStatus("Table view should be open. Now click Download table data.", "ok");
+  };
+
+  const downloadTableData = async () => {
+    chartInfo();
+    const candidates = visibleNodes()
+      .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
+      .filter((item) =>
+        item.rect.width > 0 &&
+        item.rect.height > 0 &&
+        /download|export|save/i.test(item.text)
+      )
+      .sort((a, b) => b.rect.top - a.rect.top || b.rect.left - a.rect.left);
+
+    const target = candidates.find((item) => /download data|download|export csv|csv/i.test(item.text)) ??
+      clickables()
+        .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
+        .find((item) => /download|export|csv/i.test(item.text));
+
+    if (!target) {
+      setStatus("Could not find a download button in Table view.", "error");
+      return;
+    }
+
+    clickNode(target.node);
+    await sleep(800);
+    setStatus("Clicked Table view download. Check Chrome downloads for the CSV.", "ok");
   };
 
   const openChartLayoutMenu = () => {
@@ -254,6 +350,8 @@
       chartInfo();
       setStatus("Chart info refreshed.", "ok");
     }
+    if (action === "open-table") openTableView();
+    if (action === "download-table") downloadTableData();
     if (action === "open-export") openExportDialog();
     if (action === "click-download") clickModalDownload();
     if (action === "save-log") saveLog();
