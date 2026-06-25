@@ -56,6 +56,59 @@
 
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+  const extensionApiAvailable = () => {
+    try {
+      return Boolean(chrome?.runtime?.id);
+    } catch {
+      return false;
+    }
+  };
+
+  const saveLogToStorage = () => {
+    if (!extensionApiAvailable()) return;
+    try {
+      chrome.storage?.local?.set?.({ [STORAGE_KEY]: state.log.slice(-300) });
+    } catch {
+      // Chrome invalidates old content-script extension contexts after reloads.
+    }
+  };
+
+  const loadLogFromStorage = (callback) => {
+    if (!extensionApiAvailable()) {
+      callback([]);
+      return;
+    }
+    try {
+      chrome.storage?.local?.get?.(STORAGE_KEY, (result) => {
+        if (chrome.runtime?.lastError) {
+          callback([]);
+          return;
+        }
+        callback(Array.isArray(result?.[STORAGE_KEY]) ? result[STORAGE_KEY] : []);
+      });
+    } catch {
+      callback([]);
+    }
+  };
+
+  const sendRuntimeMessage = (message, callback) => {
+    if (!extensionApiAvailable()) {
+      callback({ ok: false, error: "Extension context was reloaded. Refresh the TradingView tab." });
+      return;
+    }
+    try {
+      chrome.runtime.sendMessage(message, (response) => {
+        if (chrome.runtime?.lastError) {
+          callback({ ok: false, error: chrome.runtime.lastError.message });
+          return;
+        }
+        callback(response);
+      });
+    } catch (error) {
+      callback({ ok: false, error: error.message });
+    }
+  };
+
   const setStatus = (message, kind = "info") => {
     const status = panel.querySelector('[data-field="status"]');
     status.textContent = message;
@@ -66,7 +119,7 @@
       message,
       chart: state.lastInfo
     });
-    chrome.storage?.local?.set?.({ [STORAGE_KEY]: state.log.slice(-300) });
+    saveLogToStorage();
   };
 
   const textOf = (node) =>
@@ -429,7 +482,7 @@
       currentChart: chartInfo(),
       log: state.log
     };
-    chrome.runtime.sendMessage({ type: "ICT_EXPORT_HELPER_DOWNLOAD_LOG", payload }, (response) => {
+    sendRuntimeMessage({ type: "ICT_EXPORT_HELPER_DOWNLOAD_LOG", payload }, (response) => {
       if (response?.ok) setStatus("Saved helper log JSON.", "ok");
       else setStatus(`Could not save log: ${response?.error ?? "unknown error"}`, "error");
     });
@@ -452,8 +505,8 @@
     if (action === "save-log") saveLog();
   });
 
-  chrome.storage?.local?.get?.(STORAGE_KEY, (result) => {
-    state.log = Array.isArray(result?.[STORAGE_KEY]) ? result[STORAGE_KEY] : [];
+  loadLogFromStorage((log) => {
+    state.log = log;
     chartInfo();
     setStatus("Extension loaded on TradingView.", "ok");
   });

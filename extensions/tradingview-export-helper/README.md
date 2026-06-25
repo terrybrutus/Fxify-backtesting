@@ -29,6 +29,8 @@ It does not bypass TradingView, pull hidden market data, or avoid paid-plan limi
 
 7. You should see a small black **ICT Export Helper** panel in the bottom-right corner.
 
+After every extension code update, reload the extension in `chrome://extensions`, then refresh the TradingView chart tab. Chrome can leave an old content script attached to the page until the tab is refreshed.
+
 ## How To Use It
 
 Start with one chart only.
