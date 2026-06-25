@@ -7,7 +7,9 @@
   const state = {
     log: [],
     lastInfo: null,
-    batchRunning: false
+    batchRunning: false,
+    recording: false,
+    recordingStartedAt: null
   };
 
   const TIMEFRAMES = [
@@ -47,6 +49,8 @@
       <button type="button" data-action="batch-timeframes">Batch current symbol TFs</button>
       <button type="button" data-action="open-export">Open export dialog</button>
       <button type="button" data-action="click-download">Click modal Download</button>
+      <button type="button" data-action="start-recorder">Start recorder</button>
+      <button type="button" data-action="stop-recorder">Stop + save recording</button>
       <button type="button" data-action="save-log">Save helper log</button>
       <div class="ict-tv-status" data-field="status">Ready. Use one chart first.</div>
     </div>
@@ -67,7 +71,7 @@
   const saveLogToStorage = () => {
     if (!extensionApiAvailable()) return;
     try {
-      chrome.storage?.local?.set?.({ [STORAGE_KEY]: state.log.slice(-300) });
+      chrome.storage?.local?.set?.({ [STORAGE_KEY]: state.log.slice(-1000) });
     } catch {
       // Chrome invalidates old content-script extension contexts after reloads.
     }
@@ -136,6 +140,75 @@
       .replace(/\s+/g, " ")
       .trim();
 
+  const cssPath = (node) => {
+    if (!node || node.nodeType !== Node.ELEMENT_NODE) return "";
+    const parts = [];
+    let current = node;
+    while (current && current.nodeType === Node.ELEMENT_NODE && parts.length < 6) {
+      const tag = current.tagName.toLowerCase();
+      const id = current.id ? `#${current.id}` : "";
+      const classes = Array.from(current.classList ?? [])
+        .slice(0, 3)
+        .map((name) => `.${name}`)
+        .join("");
+      parts.unshift(`${tag}${id}${classes}`);
+      current = current.parentElement;
+    }
+    return parts.join(" > ");
+  };
+
+  const describeElement = (node) => {
+    const element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
+    if (!element) return null;
+    const rect = element.getBoundingClientRect();
+    const parentText = textOf(element.parentElement ?? element).slice(0, 300);
+    return {
+      tag: element.tagName.toLowerCase(),
+      role: element.getAttribute("role") ?? "",
+      id: element.id ?? "",
+      classes: Array.from(element.classList ?? []).slice(0, 12),
+      text: textOf(element).slice(0, 300),
+      ariaLabel: element.getAttribute("aria-label") ?? "",
+      title: element.getAttribute("title") ?? "",
+      dataName: element.getAttribute("data-name") ?? "",
+      href: element.getAttribute("href") ?? "",
+      rect: {
+        left: Math.round(rect.left),
+        top: Math.round(rect.top),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height)
+      },
+      path: cssPath(element),
+      parentText
+    };
+  };
+
+  const visibleMenuSnapshot = () =>
+    visibleNodes()
+      .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
+      .filter((item) => item.text && item.text.length < 240)
+      .filter((item) => {
+        const role = item.node.getAttribute?.("role") ?? "";
+        const classes = Array.from(item.node.classList ?? []).join(" ").toLowerCase();
+        const nearPointerMenu = /menu|popup|dropdown|context|item/i.test(role) || /menu|popup|dropdown|context|item/.test(classes);
+        const likelyMenuText = /table view|download|export|add order|settings|copy|remove|chart/i.test(item.text);
+        return nearPointerMenu || likelyMenuText;
+      })
+      .slice(0, 80)
+      .map((item) => ({
+        text: item.text,
+        role: item.node.getAttribute?.("role") ?? "",
+        tag: item.node.tagName?.toLowerCase?.() ?? "",
+        classes: Array.from(item.node.classList ?? []).slice(0, 8),
+        rect: {
+          left: Math.round(item.rect.left),
+          top: Math.round(item.rect.top),
+          width: Math.round(item.rect.width),
+          height: Math.round(item.rect.height)
+        },
+        path: cssPath(item.node)
+      }));
+
   const clickNode = (node) => {
     if (!node) return false;
     node.scrollIntoView?.({ block: "center", inline: "center" });
@@ -144,6 +217,67 @@
     node.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
     node.click();
     return true;
+  };
+
+  const recordEvent = (event, snapshotLabel = "") => {
+    if (!state.recording) return;
+    if (panel.contains(event.target)) return;
+    const pointNode = document.elementFromPoint(event.clientX, event.clientY);
+    const entry = {
+      at: new Date().toISOString(),
+      kind: "record",
+      eventType: event.type,
+      button: event.button,
+      key: event.key ?? "",
+      clientX: Math.round(event.clientX ?? 0),
+      clientY: Math.round(event.clientY ?? 0),
+      target: describeElement(event.target),
+      elementAtPoint: describeElement(pointNode),
+      snapshotLabel,
+      chart: state.lastInfo
+    };
+    state.log.push(entry);
+    saveLogToStorage();
+    setStatus(`Recorded ${event.type}. Keep going, then Stop + save recording.`, "ok");
+  };
+
+  const recordMenuSnapshot = (label) => {
+    if (!state.recording) return;
+    state.log.push({
+      at: new Date().toISOString(),
+      kind: "record-snapshot",
+      label,
+      menuItems: visibleMenuSnapshot(),
+      chart: state.lastInfo
+    });
+    saveLogToStorage();
+  };
+
+  const startRecorder = () => {
+    chartInfo();
+    state.recording = true;
+    state.recordingStartedAt = new Date().toISOString();
+    state.log.push({
+      at: state.recordingStartedAt,
+      kind: "record-start",
+      message: "Manual TradingView recorder started.",
+      chart: state.lastInfo
+    });
+    saveLogToStorage();
+    setStatus("Recorder ON. Manually open Table view/export once, then click Stop + save recording.", "ok");
+  };
+
+  const stopRecorder = () => {
+    state.recording = false;
+    state.log.push({
+      at: new Date().toISOString(),
+      kind: "record-stop",
+      startedAt: state.recordingStartedAt,
+      message: "Manual TradingView recorder stopped.",
+      chart: state.lastInfo
+    });
+    state.recordingStartedAt = null;
+    saveLog();
   };
 
   const clickAt = (x, y) => {
@@ -533,8 +667,40 @@
     if (action === "batch-timeframes") batchCurrentSymbolTimeframes();
     if (action === "open-export") openExportDialog();
     if (action === "click-download") clickModalDownload();
+    if (action === "start-recorder") startRecorder();
+    if (action === "stop-recorder") stopRecorder();
     if (action === "save-log") saveLog();
   });
+
+  document.addEventListener("click", (event) => {
+    recordEvent(event);
+    window.setTimeout(() => recordMenuSnapshot("after click"), 250);
+  }, true);
+
+  document.addEventListener("contextmenu", (event) => {
+    recordEvent(event);
+    window.setTimeout(() => recordMenuSnapshot("after contextmenu"), 350);
+  }, true);
+
+  document.addEventListener("keydown", (event) => {
+    if (!state.recording) return;
+    if (panel.contains(event.target)) return;
+    state.log.push({
+      at: new Date().toISOString(),
+      kind: "record",
+      eventType: "keydown",
+      key: event.key,
+      code: event.code,
+      ctrlKey: event.ctrlKey,
+      shiftKey: event.shiftKey,
+      altKey: event.altKey,
+      metaKey: event.metaKey,
+      target: describeElement(event.target),
+      chart: state.lastInfo
+    });
+    saveLogToStorage();
+    setStatus(`Recorded key ${event.key}.`, "ok");
+  }, true);
 
   loadLogFromStorage((log) => {
     state.log = log;
