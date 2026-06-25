@@ -37,10 +37,12 @@ Start with one chart only.
 2. Make sure your Brutus/export indicator is on the chart.
 3. Zoom out manually the way you want.
 4. In the helper panel, click **Refresh chart info**.
-5. Click **Open export dialog**.
-6. If the TradingView export dialog opens, click **Click modal Download**.
-7. Check your Chrome downloads for the CSV.
-8. Click **Save helper log** if something goes wrong and send me that JSON.
+5. Try **Open Table view** first. This right-clicks the chart and looks for TradingView's **Table view** option.
+6. If Table view opens, click **Download table data**.
+7. If that path fails, manually right-click a blank area of the chart, choose **Table view**, then click **Download table data** in the helper.
+8. The older fallback is **Open export dialog**, then **Click modal Download**.
+9. Check your Chrome downloads for the CSV.
+10. Click **Save helper log** if something goes wrong and send me that JSON.
 
 If **Open export dialog** fails, make sure the chart layout name, such as `DCA`, is visible in the top-right of TradingView. The helper intentionally avoids clicking broad top-bar buttons because those can open the wrong TradingView menu.
 
