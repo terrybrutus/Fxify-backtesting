@@ -1,4 +1,11 @@
-import { Download, ShieldAlert, Target, Upload, Waves } from "lucide-react";
+import {
+  Download,
+  Radio,
+  ShieldAlert,
+  Target,
+  Upload,
+  Waves,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 
 type Direction = "long" | "short";
@@ -75,7 +82,32 @@ type TradeDecision = {
   touch: IntrabarTouch;
 };
 
+type TvAlert = {
+  id: string;
+  alertTime?: string;
+  brokerSymbol?: string;
+  symbol?: string;
+  timeframe?: string;
+  direction?: Direction;
+  candleTime?: number;
+  alertMode?: string;
+  open?: number;
+  high?: number;
+  low?: number;
+  close?: number;
+  upper?: number;
+  lower?: number;
+};
+
+type AlertDecisionMatch = {
+  alert: TvAlert;
+  decision?: TradeDecision;
+  status: Decision | "NO DATA";
+  note: string;
+};
+
 const STORAGE_KEY = "ict.brutus.trade-desk.report.v1";
+const ALERT_STORAGE_KEY = "ict.brutus.trade-desk.alerts.v1";
 const POINT_VALUE = 10;
 
 function fmtDate(timestamp?: number) {
@@ -117,6 +149,26 @@ function saveReport(report: IntrabarReport | null) {
   }
 }
 
+function loadAlerts(): TvAlert[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(ALERT_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveAlerts(alerts: TvAlert[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(ALERT_STORAGE_KEY, JSON.stringify(alerts));
+  } catch {
+    // Keep current-session alerts even if browser storage is full.
+  }
+}
+
 function parseIntrabarReport(text: string): IntrabarReport {
   const parsed = JSON.parse(text);
   if (
@@ -129,6 +181,171 @@ function parseIntrabarReport(text: string): IntrabarReport {
     );
   }
   return parsed as IntrabarReport;
+}
+
+function parseCsvRecords(text: string) {
+  const records: string[][] = [];
+  let row: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    const next = text[index + 1];
+
+    if (char === '"' && inQuotes && next === '"') {
+      current += '"';
+      index += 1;
+      continue;
+    }
+    if (char === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+    if (char === "," && !inQuotes) {
+      row.push(current);
+      current = "";
+      continue;
+    }
+    if ((char === "\n" || char === "\r") && !inQuotes) {
+      if (char === "\r" && next === "\n") index += 1;
+      row.push(current);
+      if (row.some((cell) => cell.trim() !== "")) records.push(row);
+      row = [];
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+
+  row.push(current);
+  if (row.some((cell) => cell.trim() !== "")) records.push(row);
+  return records;
+}
+
+function normalizeTimeframe(value?: string) {
+  const raw = value?.trim();
+  if (!raw) return undefined;
+  const lower = raw.toLowerCase();
+  if (lower === "60" || lower === "1h" || lower === "1hr") return "1H";
+  if (/^\d+$/.test(lower)) return `${Number(lower)}m`;
+  if (lower.endsWith("m")) return lower;
+  if (lower.endsWith("h")) return lower.toUpperCase();
+  return raw;
+}
+
+function normalizeBrokerSymbol(value?: string) {
+  return value
+    ?.replace(/^ALCHEMY:/i, "")
+    .replace(/^ALCHEMYMARKETS:/i, "")
+    .trim()
+    .toUpperCase();
+}
+
+function asNumber(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+}
+
+function directionFrom(value: unknown): Direction | undefined {
+  const lower = String(value ?? "").trim().toLowerCase();
+  if (lower === "long" || lower === "buy") return "long";
+  if (lower === "short" || lower === "sell") return "short";
+  return undefined;
+}
+
+function normalizeAlertPayload(raw: unknown, alertTime?: string): TvAlert | null {
+  if (!raw || typeof raw !== "object") return null;
+  const item = raw as Record<string, unknown>;
+  const brokerSymbol = String(item.symbol ?? item.ticker ?? "").trim();
+  const symbol = normalizeBrokerSymbol(brokerSymbol);
+  const direction = directionFrom(item.direction ?? item.side);
+  const timeframe = normalizeTimeframe(String(item.timeframe ?? item.interval ?? ""));
+  const candleTime = asNumber(item.time ?? item.timestamp);
+  if (!symbol || !timeframe || !direction || candleTime == null) return null;
+  return {
+    id: [
+      symbol,
+      timeframe,
+      direction,
+      candleTime,
+      asNumber(item.alertTime) ?? alertTime ?? "",
+    ].join("|"),
+    alertTime,
+    brokerSymbol,
+    symbol,
+    timeframe,
+    direction,
+    candleTime,
+    alertMode: typeof item.alertMode === "string" ? item.alertMode : undefined,
+    open: asNumber(item.open),
+    high: asNumber(item.high),
+    low: asNumber(item.low),
+    close: asNumber(item.close),
+    upper: asNumber(item.upper),
+    lower: asNumber(item.lower),
+  };
+}
+
+function parseAlertLog(text: string): TvAlert[] {
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+
+  const fromPayload = (value: unknown, alertTime?: string): TvAlert[] => {
+    if (Array.isArray(value)) return value.flatMap((item) => fromPayload(item));
+    const normalized = normalizeAlertPayload(value, alertTime);
+    return normalized ? [normalized] : [];
+  };
+
+  try {
+    return fromPayload(JSON.parse(trimmed));
+  } catch {
+    // Fall through to CSV/JSONL parsing.
+  }
+
+  const jsonl = trimmed
+    .split(/\r?\n/)
+    .flatMap((line) => {
+      try {
+        return fromPayload(JSON.parse(line.trim()));
+      } catch {
+        return [];
+      }
+    });
+  if (jsonl.length) return jsonl;
+
+  const records = parseCsvRecords(trimmed);
+  const [header, ...rows] = records;
+  if (!header) return [];
+  const normalizedHeader = header.map((cell) => cell.trim().toLowerCase());
+  const descriptionIndex = normalizedHeader.indexOf("description");
+  const timeIndex = normalizedHeader.indexOf("time");
+  if (descriptionIndex < 0) return [];
+
+  return rows.flatMap((row) => {
+    const description = row[descriptionIndex]?.trim();
+    if (!description) return [];
+    try {
+      return fromPayload(JSON.parse(description), row[timeIndex]);
+    } catch {
+      return [];
+    }
+  });
+}
+
+function mergeAlerts(current: TvAlert[], incoming: TvAlert[]) {
+  const seen = new Set(current.map((alert) => alert.id));
+  const added: TvAlert[] = [];
+  for (const alert of incoming) {
+    if (seen.has(alert.id)) continue;
+    seen.add(alert.id);
+    added.push(alert);
+  }
+  return [...added, ...current].slice(0, 500);
 }
 
 function sideWord(direction: Direction) {
@@ -343,6 +560,55 @@ function exportJson(filename: string, payload: unknown) {
   URL.revokeObjectURL(url);
 }
 
+function matchAlertsToDecisions(
+  alerts: TvAlert[],
+  decisions: TradeDecision[],
+): AlertDecisionMatch[] {
+  const byBucket = new Map<string, TradeDecision[]>();
+  for (const decision of decisions) {
+    const key = [
+      normalizeBrokerSymbol(decision.symbol),
+      normalizeTimeframe(decision.timeframe),
+      decision.direction,
+      decision.touch.bucketStart,
+    ].join("|");
+    const list = byBucket.get(key) ?? [];
+    list.push(decision);
+    byBucket.set(key, list);
+  }
+
+  return alerts.map((alert) => {
+    const key = [
+      normalizeBrokerSymbol(alert.symbol),
+      normalizeTimeframe(alert.timeframe),
+      alert.direction,
+      alert.candleTime,
+    ].join("|");
+    const matches = byBucket.get(key) ?? [];
+    const decision = matches.sort(
+      (a, b) =>
+        ({ ENTER: 4, WAIT: 3, SKIP: 2, EXIT: 1 })[b.decision] -
+          ({ ENTER: 4, WAIT: 3, SKIP: 2, EXIT: 1 })[a.decision] ||
+        b.confidence - a.confidence,
+    )[0];
+
+    if (!decision) {
+      return {
+        alert,
+        status: "NO DATA",
+        note: "No matching intrabar decision. Usually this alert is newer than the exported candle batch.",
+      };
+    }
+
+    return {
+      alert,
+      decision,
+      status: decision.decision,
+      note: decision.reason,
+    };
+  });
+}
+
 function DecisionPill({ decision }: { decision: Decision }) {
   const colors: Record<Decision, string> = {
     ENTER: "border-lime-400 bg-lime-400/10 text-lime-300",
@@ -470,6 +736,7 @@ export default function BrutusTradeDeskPage() {
   const [report, setReport] = useState<IntrabarReport | null>(() =>
     loadReport(),
   );
+  const [alerts, setAlerts] = useState<TvAlert[]>(() => loadAlerts());
   const [error, setError] = useState("");
 
   const decisions = useMemo(() => {
@@ -497,6 +764,22 @@ export default function BrutusTradeDeskPage() {
     [decisions],
   );
 
+  const alertMatches = useMemo(
+    () => matchAlertsToDecisions(alerts, decisions),
+    [alerts, decisions],
+  );
+
+  const alertCounts = useMemo(
+    () => ({
+      enter: alertMatches.filter((item) => item.status === "ENTER").length,
+      wait: alertMatches.filter((item) => item.status === "WAIT").length,
+      skip: alertMatches.filter((item) => item.status === "SKIP").length,
+      exit: alertMatches.filter((item) => item.status === "EXIT").length,
+      noData: alertMatches.filter((item) => item.status === "NO DATA").length,
+    }),
+    [alertMatches],
+  );
+
   async function importReport(file: File | undefined) {
     if (!file) return;
     try {
@@ -507,6 +790,26 @@ export default function BrutusTradeDeskPage() {
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Could not read Brutus report.",
+      );
+    }
+  }
+
+  async function importAlerts(file: File | undefined) {
+    if (!file) return;
+    try {
+      const parsed = parseAlertLog(await file.text());
+      if (!parsed.length) {
+        throw new Error(
+          "No Brutus TradingView alerts found. Upload the TradingView alerts CSV or JSON export.",
+        );
+      }
+      const merged = mergeAlerts(alerts, parsed);
+      setAlerts(merged);
+      saveAlerts(merged);
+      setError("");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Could not read alert file.",
       );
     }
   }
@@ -533,6 +836,16 @@ export default function BrutusTradeDeskPage() {
               type="file"
             />
           </label>
+          <label className="inline-flex cursor-pointer items-center gap-2 border border-border bg-card px-4 py-2 font-mono text-xs hover:border-primary">
+            <Radio className="h-4 w-4" />
+            Import Alert CSV
+            <input
+              accept=".csv,.json,.jsonl,.txt"
+              className="hidden"
+              onChange={(event) => importAlerts(event.target.files?.[0])}
+              type="file"
+            />
+          </label>
           <button
             className="inline-flex items-center gap-2 border border-border bg-card px-4 py-2 font-mono text-xs hover:border-primary disabled:opacity-40"
             disabled={!decisions.length}
@@ -546,6 +859,8 @@ export default function BrutusTradeDeskPage() {
                 },
                 sourceTotals: report?.totals,
                 counts,
+                alertCounts,
+                alertMatches,
                 decisions,
               })
             }
@@ -603,6 +918,106 @@ export default function BrutusTradeDeskPage() {
           <p className="mt-2 font-display text-2xl font-bold text-red-300">
             {counts.skip}
           </p>
+        </div>
+      </section>
+
+      <section className="border border-border bg-card p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="font-display text-base font-bold">
+              Live Alert Match
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Upload your TradingView alert CSV here. Matching uses the correct
+              field: the alert candle time equals the decision touch bucket
+              start.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 font-mono text-xs">
+            <span className="border border-lime-400/50 px-2 py-1 text-lime-300">
+              ENTER {alertCounts.enter}
+            </span>
+            <span className="border border-amber-300/50 px-2 py-1 text-amber-200">
+              WAIT {alertCounts.wait}
+            </span>
+            <span className="border border-red-500/50 px-2 py-1 text-red-300">
+              SKIP {alertCounts.skip}
+            </span>
+            <span className="border border-fuchsia-400/50 px-2 py-1 text-fuchsia-200">
+              EXIT {alertCounts.exit}
+            </span>
+            <span className="border border-border px-2 py-1 text-muted-foreground">
+              NO DATA {alertCounts.noData}
+            </span>
+          </div>
+        </div>
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full min-w-[980px] border-collapse font-mono text-xs">
+            <thead className="text-left text-muted-foreground">
+              <tr className="border-b border-border">
+                <th className="px-2 py-2">Alert</th>
+                <th className="px-2 py-2">Symbol</th>
+                <th className="px-2 py-2">TF</th>
+                <th className="px-2 py-2">Side</th>
+                <th className="px-2 py-2">Decision</th>
+                <th className="px-2 py-2">Plain Action</th>
+                <th className="px-2 py-2">Entry / Stop / Target</th>
+                <th className="px-2 py-2">Why</th>
+              </tr>
+            </thead>
+            <tbody>
+              {alertMatches.length === 0 ? (
+                <tr>
+                  <td className="px-2 py-6 text-muted-foreground" colSpan={8}>
+                    No TradingView alert CSV imported yet.
+                  </td>
+                </tr>
+              ) : (
+                alertMatches.slice(0, 60).map((item) => (
+                  <tr
+                    className="border-b border-border/60"
+                    key={`${item.alert.id}-${item.status}`}
+                  >
+                    <td className="px-2 py-2">
+                      {item.alert.alertTime
+                        ? new Date(item.alert.alertTime).toLocaleString()
+                        : fmtDate(item.alert.candleTime)}
+                      <span className="block text-muted-foreground">
+                        {item.alert.alertMode ?? "alert"}
+                      </span>
+                    </td>
+                    <td className="px-2 py-2">{item.alert.symbol ?? "n/a"}</td>
+                    <td className="px-2 py-2">
+                      {item.alert.timeframe ?? "n/a"}
+                    </td>
+                    <td className="px-2 py-2">
+                      {item.alert.direction ?? "n/a"}
+                    </td>
+                    <td className="px-2 py-2">
+                      {item.status === "NO DATA" ? (
+                        <span className="border border-border px-2 py-1 text-muted-foreground">
+                          NO DATA
+                        </span>
+                      ) : (
+                        <DecisionPill decision={item.status} />
+                      )}
+                    </td>
+                    <td className="px-2 py-2">
+                      {item.decision?.doNow ?? "Do nothing."}
+                    </td>
+                    <td className="px-2 py-2">
+                      E:{fmtPrice(item.decision?.entry)} S:
+                      {fmtPrice(item.decision?.stop)} T:
+                      {fmtPrice(item.decision?.target)}
+                    </td>
+                    <td className="max-w-sm whitespace-normal px-2 py-2 text-muted-foreground">
+                      {item.note}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 
