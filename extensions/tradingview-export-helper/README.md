@@ -39,13 +39,19 @@ Start with one chart only.
 2. Make sure your Brutus/export indicator is on the chart.
 3. Zoom out manually the way you want.
 4. In the helper panel, click **Refresh chart info**.
-5. Try **Open Table view** first. This right-clicks the chart and looks for TradingView's **Table view** option.
-6. If Table view opens, click **Download table data**.
-7. If that path fails, manually right-click a blank area of the chart, choose **Table view**, then click **Download table data** in the helper.
-8. If one Table view download works, try **Batch current symbol TFs**. It loops through `1m`, `3m`, `5m`, `15m`, `30m`, `45m`, and `1H` for the current symbol.
+5. If the helper clicks the wrong TradingView item, click **Start recorder**.
+6. Manually do the correct TradingView flow once: right-click the chart, choose **Table view**, then click TradingView's download/table controls.
+7. Click **Stop + save recording**. Send that JSON so we can target the real TradingView elements instead of guessing.
+8. Only use **Open Table view** or **Batch current symbol TFs** after the recorded flow proves the right target. Batch loops through `1m`, `3m`, `5m`, `15m`, `30m`, `45m`, and `1H` for the current symbol.
 9. The older fallback is **Open export dialog**, then **Click modal Download**.
 10. Check your Chrome downloads for the CSVs.
 11. Click **Save helper log** if something goes wrong and send me that JSON.
+
+## Manual Recorder
+
+The recorder is passive. It does not block clicks, change orders, or send data anywhere. It records your manual clicks, right-clicks, key presses, element text, roles, classes, coordinates, and nearby visible menu rows into the helper log.
+
+Use it when TradingView opens the wrong menu item or the helper cannot find **Table view**. This is the evidence path for revamping the automation safely.
 
 The batch button does not switch symbols yet. Start on the symbol you want, such as `ALCHEMY:DJ30.R`, then run the timeframe batch. If that works reliably, symbol batching can be added next.
 
