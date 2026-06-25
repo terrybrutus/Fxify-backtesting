@@ -299,6 +299,23 @@
     return true;
   };
 
+  const normalizedText = (value) => value.replace(/\s+/g, " ").trim().toLowerCase();
+
+  const exactTextElement = (label, selector = "*") => {
+    const wanted = normalizedText(label);
+    return Array.from(document.querySelectorAll(selector)).find((node) => normalizedText(textOf(node)) === wanted);
+  };
+
+  const exactButtonByText = (label) => {
+    const textNode = exactTextElement(label, "span, div, button");
+    return textNode?.closest?.('button, [role="button"]') ?? null;
+  };
+
+  const exactMenuRowByText = (label) => {
+    const textNode = exactTextElement(label, "span, div, td, tr");
+    return textNode?.closest?.('tr, [role="menuitem"], [data-role="menuitem"], button, [role="button"]') ?? null;
+  };
+
   const visibleNodes = () =>
     Array.from(document.querySelectorAll("*")).filter((node) => {
       const rect = node.getBoundingClientRect();
@@ -437,14 +454,7 @@
     }
 
     await sleep(700);
-    const tableItem = visibleNodes()
-      .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
-      .filter((item) => item.rect.width > 0 && item.rect.height > 0)
-      .find((item) => /^table view$/i.test(item.text)) ??
-      visibleNodes()
-        .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
-        .filter((item) => item.rect.width > 0 && item.rect.height > 0)
-        .find((item) => /table view/i.test(item.text));
+    const tableItem = exactMenuRowByText("Table view");
 
     if (!tableItem) {
       setStatus("Context menu opened, but I could not find Table view.", "error");
@@ -452,7 +462,7 @@
     }
 
     setStatus("Found Table view. Selecting it...", "info");
-    if (!clickRectCenter(tableItem.rect)) {
+    if (!clickRectCenter(tableItem.getBoundingClientRect())) {
       setStatus("Found Table view, but could not click it.", "error");
       return { ok: false, error: "Found Table view, but could not click it." };
     }
@@ -471,26 +481,14 @@
 
   const downloadTableData = async () => {
     chartInfo();
-    const candidates = visibleNodes()
-      .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
-      .filter((item) =>
-        item.rect.width > 0 &&
-        item.rect.height > 0 &&
-        /download|export|save/i.test(item.text)
-      )
-      .sort((a, b) => b.rect.top - a.rect.top || b.rect.left - a.rect.left);
-
-    const target = candidates.find((item) => /download data|download|export csv|csv/i.test(item.text)) ??
-      clickables()
-        .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
-        .find((item) => /download|export|csv/i.test(item.text));
+    const target = exactButtonByText("Download data");
 
     if (!target) {
       setStatus("Could not find a download button in Table view.", "error");
       return { ok: false, error: "Could not find a download button in Table view." };
     }
 
-    clickNode(target.node);
+    clickNode(target);
     await sleep(1200);
     setStatus("Clicked Table view download. Check Chrome downloads for the CSV.", "ok");
     return { ok: true };
@@ -613,7 +611,8 @@
       }
     }
 
-    const downloadButton = clickables()
+    const downloadButton = exactButtonByText("Download") ??
+      clickables()
       .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
       .filter((item) => /^download$/i.test(item.text))
       .filter((item) => {
@@ -625,10 +624,10 @@
           item.rect.bottom <= dialogRect.bottom + 80
         );
       })
-      .sort((a, b) => b.rect.top - a.rect.top || b.rect.left - a.rect.left)[0];
+      .sort((a, b) => b.rect.top - a.rect.top || b.rect.left - a.rect.left)[0]?.node;
 
     if (downloadButton) {
-      clickNode(downloadButton.node);
+      clickNode(downloadButton);
       setStatus("Clicked modal Download. Watch Chrome downloads for the CSV.", "ok");
       return;
     }
