@@ -6,8 +6,19 @@
 
   const state = {
     log: [],
-    lastInfo: null
+    lastInfo: null,
+    batchRunning: false
   };
+
+  const TIMEFRAMES = [
+    { label: "1m", aliases: ["1m", "1"] },
+    { label: "3m", aliases: ["3m", "3"] },
+    { label: "5m", aliases: ["5m", "5"] },
+    { label: "15m", aliases: ["15m", "15"] },
+    { label: "30m", aliases: ["30m", "30"] },
+    { label: "45m", aliases: ["45m", "45"] },
+    { label: "1H", aliases: ["1h", "1 h", "60"] }
+  ];
 
   const panel = document.createElement("aside");
   panel.id = PANEL_ID;
@@ -32,6 +43,8 @@
       <button type="button" data-action="refresh">Refresh chart info</button>
       <button type="button" data-action="open-table">Open Table view</button>
       <button type="button" data-action="download-table">Download table data</button>
+      <button type="button" data-action="back-chart">Back to chart</button>
+      <button type="button" data-action="batch-timeframes">Batch current symbol TFs</button>
       <button type="button" data-action="open-export">Open export dialog</button>
       <button type="button" data-action="click-download">Click modal Download</button>
       <button type="button" data-action="save-log">Save helper log</button>
@@ -131,6 +144,43 @@
     return active?.text?.match(/\b(1m|3m|5m|15m|30m|45m|1h)\b/i)?.[0] ?? "";
   };
 
+  const backToChart = async () => {
+    const button = visibleNodes().find((node) => /go back to chart|back to chart|chart view/i.test(textOf(node))) ??
+      clickables().find((node) => /go back to chart|back to chart|chart view/i.test(textOf(node)));
+
+    if (!button) {
+      return { ok: true, alreadyChart: true };
+    }
+
+    clickNode(button.node ?? button);
+    await sleep(1000);
+    return { ok: true };
+  };
+
+  const selectTimeframe = async (timeframe) => {
+    await backToChart();
+    chartInfo();
+
+    const aliases = timeframe.aliases.map((alias) => alias.toLowerCase());
+    const candidates = clickables()
+      .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node).toLowerCase() }))
+      .filter((item) => {
+        if (item.rect.top > 150) return false;
+        if (item.rect.left > window.innerWidth * 0.5) return false;
+        const normalized = item.text.replace(/\s+/g, " ").trim();
+        return aliases.some((alias) => normalized === alias || normalized.includes(` ${alias} `) || normalized.endsWith(` ${alias}`));
+      })
+      .sort((a, b) => a.rect.left - b.rect.left);
+
+    const target = candidates[0];
+    if (!target) return { ok: false, error: `Could not find timeframe button ${timeframe.label}.` };
+
+    clickNode(target.node);
+    await sleep(1400);
+    chartInfo();
+    return { ok: true, timeframe: timeframe.label };
+  };
+
   const chartCanvasPoint = () => {
     const canvases = Array.from(document.querySelectorAll("canvas"))
       .map((node) => ({ node, rect: node.getBoundingClientRect() }))
@@ -177,12 +227,13 @@
 
   const openTableView = async () => {
     chartInfo();
+    await backToChart();
     const point = chartCanvasPoint();
     setStatus(`Right-clicking chart near ${point.x}, ${point.y} for Table view...`, "info");
 
     if (!rightClickAt(point.x, point.y)) {
       setStatus("Could not right-click the chart canvas.", "error");
-      return;
+      return { ok: false, error: "Could not right-click the chart canvas." };
     }
 
     await sleep(700);
@@ -191,12 +242,13 @@
 
     if (!tableItem) {
       setStatus("Context menu opened, but I could not find Table view.", "error");
-      return;
+      return { ok: false, error: "Context menu opened, but I could not find Table view." };
     }
 
     clickNode(tableItem);
     await sleep(900);
     setStatus("Table view should be open. Now click Download table data.", "ok");
+    return { ok: true };
   };
 
   const downloadTableData = async () => {
@@ -217,12 +269,53 @@
 
     if (!target) {
       setStatus("Could not find a download button in Table view.", "error");
-      return;
+      return { ok: false, error: "Could not find a download button in Table view." };
     }
 
     clickNode(target.node);
-    await sleep(800);
+    await sleep(1200);
     setStatus("Clicked Table view download. Check Chrome downloads for the CSV.", "ok");
+    return { ok: true };
+  };
+
+  const batchCurrentSymbolTimeframes = async () => {
+    if (state.batchRunning) {
+      setStatus("Batch already running.", "error");
+      return;
+    }
+
+    state.batchRunning = true;
+    const started = chartInfo();
+    setStatus(`Starting Table view batch for ${started.symbol || "current symbol"}...`, "info");
+
+    try {
+      for (const timeframe of TIMEFRAMES) {
+        setStatus(`Batch: switching to ${timeframe.label}...`, "info");
+        const selected = await selectTimeframe(timeframe);
+        if (!selected.ok) {
+          setStatus(`Batch stopped: ${selected.error}`, "error");
+          break;
+        }
+
+        const opened = await openTableView();
+        if (!opened?.ok) {
+          setStatus(`Batch stopped on ${timeframe.label}: ${opened?.error ?? "Table view failed."}`, "error");
+          break;
+        }
+
+        const downloaded = await downloadTableData();
+        if (!downloaded?.ok) {
+          setStatus(`Batch stopped on ${timeframe.label}: ${downloaded?.error ?? "Download failed."}`, "error");
+          break;
+        }
+
+        await backToChart();
+        await sleep(1500);
+      }
+      setStatus("Batch finished or stopped. Check Chrome downloads.", "ok");
+    } finally {
+      state.batchRunning = false;
+    }
   };
 
   const openChartLayoutMenu = () => {
@@ -352,6 +445,8 @@
     }
     if (action === "open-table") openTableView();
     if (action === "download-table") downloadTableData();
+    if (action === "back-chart") backToChart().then(() => setStatus("Returned to chart view if Table view was open.", "ok"));
+    if (action === "batch-timeframes") batchCurrentSymbolTimeframes();
     if (action === "open-export") openExportDialog();
     if (action === "click-download") clickModalDownload();
     if (action === "save-log") saveLog();

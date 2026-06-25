@@ -40,9 +40,12 @@ Start with one chart only.
 5. Try **Open Table view** first. This right-clicks the chart and looks for TradingView's **Table view** option.
 6. If Table view opens, click **Download table data**.
 7. If that path fails, manually right-click a blank area of the chart, choose **Table view**, then click **Download table data** in the helper.
-8. The older fallback is **Open export dialog**, then **Click modal Download**.
-9. Check your Chrome downloads for the CSV.
-10. Click **Save helper log** if something goes wrong and send me that JSON.
+8. If one Table view download works, try **Batch current symbol TFs**. It loops through `1m`, `3m`, `5m`, `15m`, `30m`, `45m`, and `1H` for the current symbol.
+9. The older fallback is **Open export dialog**, then **Click modal Download**.
+10. Check your Chrome downloads for the CSVs.
+11. Click **Save helper log** if something goes wrong and send me that JSON.
+
+The batch button does not switch symbols yet. Start on the symbol you want, such as `ALCHEMY:DJ30.R`, then run the timeframe batch. If that works reliably, symbol batching can be added next.
 
 If **Open export dialog** fails, make sure the chart layout name, such as `DCA`, is visible in the top-right of TradingView. The helper intentionally avoids clicking broad top-bar buttons because those can open the wrong TradingView menu.
 
