@@ -796,10 +796,16 @@ rawShortCondition = (upperSrc >= upper and close < open) or (upperSrc[1] < upper
 varip int latchedBarTime = na
 varip bool rawLongLatched = false
 varip bool rawShortLatched = false
+varip bool alertedLongThisBar = false
+varip bool alertedShortThisBar = false
 if na(latchedBarTime) or time != latchedBarTime
     latchedBarTime := time
     rawLongLatched := false
     rawShortLatched := false
+    alertedLongThisBar := false
+    alertedShortThisBar := false
+newLongTouch = rawLongCondition and not rawLongLatched
+newShortTouch = rawShortCondition and not rawShortLatched
 if rawLongCondition
     rawLongLatched := true
 if rawShortCondition
@@ -855,11 +861,17 @@ plotshape(skipSignal and direction == "long", title="Long SKIP", location=locati
 plotshape(skipSignal and direction == "short", title="Short SKIP", location=location.abovebar, color=color.new(color.gray, 15), style=shape.square, text="SKIP")
 plotshape(conflictSkip, title="Conflict SKIP", location=location.top, color=color.yellow, style=shape.diamond, text="BOTH")
 
-shouldAlert = rawSignal and modeReady and (not liveAlertsOnly or barstate.isrealtime)
-message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v3\\",\\"rawSignal\\":true,\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"rawLongCondition\\":" + str.tostring(rawLongCondition) + ",\\"rawShortCondition\\":" + str.tostring(rawShortCondition) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + direction + "\\",\\"time\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"entry\\":" + entryJson + ",\\"stop\\":" + stopJson + ",\\"target\\":" + targetJson + ",\\"length\\":" + str.tostring(length) + ",\\"stdDev\\":" + str.tostring(mult) + ",\\"reason\\":\\"" + reason + "\\"}"
+firstTouchNewSide = signalMode == "First touch" and barstate.isrealtime and ((rawLongSignal and not alertedLongThisBar) or (rawShortSignal and not alertedShortThisBar))
+confirmedCloseEvent = signalMode == "Confirmed close" and rawSignal and barstate.isconfirmed
+shouldAlert = modeReady and (not liveAlertsOnly or barstate.isrealtime) and (firstTouchNewSide or confirmedCloseEvent)
+message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v3\\",\\"rawSignal\\":true,\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"rawLongCondition\\":" + str.tostring(rawLongCondition) + ",\\"rawShortCondition\\":" + str.tostring(rawShortCondition) + ",\\"newLongTouch\\":" + str.tostring(newLongTouch) + ",\\"newShortTouch\\":" + str.tostring(newShortTouch) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + direction + "\\",\\"time\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"entry\\":" + entryJson + ",\\"stop\\":" + stopJson + ",\\"target\\":" + targetJson + ",\\"length\\":" + str.tostring(length) + ",\\"stdDev\\":" + str.tostring(mult) + ",\\"reason\\":\\"" + reason + "\\"}"
 
 if shouldAlert
-    alert(message, alert.freq_once_per_bar)
+    alert(message, alert.freq_all)
+    if rawLongSignal
+        alertedLongThisBar := true
+    if rawShortSignal
+        alertedShortThisBar := true
 
 alertcondition(longEnter or shortEnter, title="Brutus ENTER", message="Use Any alert() function call for JSON details.")
 alertcondition(longWatch or shortWatch, title="Brutus WAIT", message="Use Any alert() function call for JSON details.")
