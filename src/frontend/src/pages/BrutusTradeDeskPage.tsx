@@ -774,6 +774,7 @@ minMinutesIntoBar = input.float(2.0, minval=0.0, title="Wait This Many Minutes I
 stopBandFraction = input.float(0.35, minval=0.05, maxval=2.0, title="Stop Distance as Band Width Fraction")
 targetR = input.float(1.2, minval=0.25, maxval=5.0, title="Target R")
 liveAlertsOnly = input.bool(true, title="Only Fire Alerts On Live Bars")
+showRawSignals = input.bool(true, title="Show Raw Original Signals")
 
 upperBasis = ta.ema(upperSrc, length)
 lowerBasis = ta.ema(lowerSrc, length)
@@ -820,6 +821,8 @@ target = direction == "long" ? entry + risk * targetR : direction == "short" ? e
 reason = action == "ENTER" ? "Original Brutus signal fired and price started snapping back." : action == "WAIT" ? "Original Brutus signal fired, but snapback is not clean yet." : action == "DO_NOT_HOLD" ? "Original Brutus signal fired, but price is still pushing through the band." : not inSession ? "Original Brutus signal fired outside the active session." : not modeReady ? "Original Brutus signal fired, but this mode waits for bar close." : "Original Brutus signal fired, but the playbook says skip."
 plainAction = action == "ENTER" ? "ENTER: paper trade candidate. Use the entry, stop, and target from this alert." : action == "WAIT" ? "WAIT: do not enter yet. Watch for cleaner snapback." : action == "DO_NOT_HOLD" ? "DO NOT HOLD: price is pushing through the band." : "SKIP: no trade."
 
+plotshape(showRawSignals and rawLongSignal, title="Raw Brutus Long", location=location.belowbar, color=color.new(color.gray, 15), style=shape.triangleup, size=size.tiny, text="RAW")
+plotshape(showRawSignals and rawShortSignal, title="Raw Brutus Short", location=location.abovebar, color=color.new(color.gray, 15), style=shape.triangledown, size=size.tiny, text="RAW")
 plotshape(longEnter, title="Long ENTER", location=location.belowbar, color=color.lime, style=shape.triangleup, text="ENTER")
 plotshape(shortEnter, title="Short ENTER", location=location.abovebar, color=color.red, style=shape.triangledown, text="ENTER")
 plotshape(longWatch, title="Long WAIT", location=location.belowbar, color=color.new(color.lime, 45), style=shape.circle, text="WAIT")
@@ -839,6 +842,8 @@ alertcondition(longEnter or shortEnter, title="Brutus ENTER", message="Use Any a
 alertcondition(longWatch or shortWatch, title="Brutus WAIT", message="Use Any alert() function call for JSON details.")
 alertcondition(doNotHold, title="Brutus DO NOT HOLD", message="Use Any alert() function call for JSON details.")
 alertcondition(skipSignal, title="Brutus SKIP", message="Use Any alert() function call for JSON details.")
+alertcondition(rawLongSignal, title="Raw Brutus Long", message="Use Any alert() function call for JSON details.")
+alertcondition(rawShortSignal, title="Raw Brutus Short", message="Use Any alert() function call for JSON details.")
 `;
 }
 
