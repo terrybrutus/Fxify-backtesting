@@ -7,6 +7,7 @@ type TvAlert = {
   id: string;
   importedAt: number;
   strategy?: string;
+  action?: string;
   alertMode?: string;
   brokerSymbol?: string;
   mappedSymbol?: string;
@@ -25,7 +26,7 @@ type TvAlert = {
 };
 
 type MatchStatus = "matched" | "nearby" | "no-match" | "no-data";
-type BrutusReviewStatus = "WATCH" | "SKIP" | "TOO LATE";
+type BrutusReviewStatus = "ENTER" | "WATCH" | "SKIP" | "TOO LATE";
 
 type BrutusReview = {
   status: BrutusReviewStatus;
@@ -44,7 +45,10 @@ type ImportResult = {
   total: number;
 };
 
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_band","symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","direction":"long","time":1782084600000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"length":9,"stdDev":2}`;
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","direction":"long","time":1782084600000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"entry":51770.3,"stop":51685.2,"target":51872.4,"reason":"Band touched and price started snapping back."}`;
+
+const BRUTUS_STRATEGIES = new Set(["brutus_band", "brutus_playbook_v1"]);
+const BRUTUS_TIMEFRAMES = new Set(["1m", "3m", "5m", "15m", "30m", "45m", "1H"]);
 
 const ALCHEMY_INDEX_SYMBOLS = [
   { broker: "USTEC.R", market: "Nasdaq 100", appSymbol: "NAS100" },
@@ -133,6 +137,7 @@ function normalizePayload(raw: unknown): TvAlert {
     id: crypto.randomUUID(),
     importedAt: Date.now(),
     strategy: asString(item.strategy),
+    action: asString(item.action),
     alertMode: asString(item.alertMode),
     brokerSymbol,
     mappedSymbol: mapBrokerSymbol(brokerSymbol),
@@ -366,8 +371,20 @@ function directionFor(alert: TvAlert): "long" | "short" | undefined {
   return undefined;
 }
 
+function actionFor(alert: TvAlert) {
+  return alert.action?.trim().toUpperCase().replace(/\s+/g, "_");
+}
+
+function rawReasonFor(alert: TvAlert) {
+  return alert.raw && typeof alert.raw === "object"
+    ? asString((alert.raw as Record<string, unknown>).reason)
+    : undefined;
+}
+
 function reviewBrutusAlert(alert: TvAlert): BrutusReview {
   const direction = directionFor(alert);
+  const action = actionFor(alert);
+  const rawReason = rawReasonFor(alert);
   const missing =
     !alert.brokerSymbol ||
     !alert.mappedSymbol ||
@@ -384,13 +401,14 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
       reason: "Missing symbol, direction, timeframe, price, or band data.",
     };
   }
-  if (alert.strategy && alert.strategy !== "brutus_band") {
+  if (alert.strategy && !BRUTUS_STRATEGIES.has(alert.strategy)) {
     return { status: "SKIP", reason: "Not a Brutus band alert." };
   }
-  if (alert.timeframe !== "15m" && alert.timeframe !== "1H") {
+  if (!BRUTUS_TIMEFRAMES.has(alert.timeframe ?? "")) {
     return {
       status: "SKIP",
-      reason: "Only the tested 15m and 1H Brutus exports are in scope.",
+      reason:
+        "Only the tested 1m, 3m, 5m, 15m, 30m, 45m, and 1H Brutus exports are in scope.",
     };
   }
 
@@ -428,6 +446,46 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
   const movedTooFar = touchToClose > bandWidth * 0.35;
   const noRejectionYet = touchToClose <= 0;
 
+  if (action === "ENTER") {
+    return {
+      status: "ENTER",
+      reason:
+        rawReason ?? "TradingView Pine rule says this is an entry candidate.",
+      entry,
+      stop,
+      target,
+      bandWidth,
+      touchToClose,
+      adverse,
+    };
+  }
+  if (action === "WATCH") {
+    return {
+      status: "WATCH",
+      reason:
+        rawReason ?? "TradingView Pine rule says watch, but do not enter yet.",
+      entry,
+      stop,
+      target,
+      bandWidth,
+      touchToClose,
+      adverse,
+    };
+  }
+  if (action === "DO_NOT_HOLD") {
+    return {
+      status: "SKIP",
+      reason:
+        rawReason ??
+        "TradingView Pine rule says do not hold because price is pushing through the band.",
+      entry,
+      stop,
+      target,
+      bandWidth,
+      touchToClose,
+      adverse,
+    };
+  }
   if (signalStopHit) {
     return {
       status: "SKIP",
@@ -548,6 +606,8 @@ export default function TradingViewCapturePage() {
   );
   const reviewCounts = useMemo(
     () => ({
+      enter: reviewedRows.filter((row) => row.brutusReview.status === "ENTER")
+        .length,
       watch: reviewedRows.filter((row) => row.brutusReview.status === "WATCH")
         .length,
       skip: reviewedRows.filter((row) => row.brutusReview.status === "SKIP")
@@ -745,7 +805,7 @@ export default function TradingViewCapturePage() {
         </aside>
       </section>
 
-      <section className="grid gap-3 md:grid-cols-4">
+      <section className="grid gap-3 md:grid-cols-5">
         <div className="border border-primary/50 bg-card p-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
             Draft rule
@@ -753,6 +813,14 @@ export default function TradingViewCapturePage() {
           <p className="mt-2 text-sm text-foreground">
             Good Brutus rejection, band-touch entry, half-band stop, 1.5R
             target, quick scalp.
+          </p>
+        </div>
+        <div className="border border-cyan-500/50 bg-card p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Enter
+          </p>
+          <p className="mt-2 font-display text-2xl font-bold text-cyan-300">
+            {reviewCounts.enter}
           </p>
         </div>
         <div className="border border-lime-500/50 bg-card p-4">
@@ -827,7 +895,9 @@ export default function TradingViewCapturePage() {
                       <td className="px-2 py-2">
                         <span
                           className={
-                            brutusReview.status === "WATCH"
+                            brutusReview.status === "ENTER"
+                              ? "text-cyan-300"
+                              : brutusReview.status === "WATCH"
                               ? "text-lime-400"
                               : brutusReview.status === "TOO LATE"
                                 ? "text-amber-300"
