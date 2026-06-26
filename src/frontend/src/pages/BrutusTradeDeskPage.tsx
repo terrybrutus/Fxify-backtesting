@@ -791,7 +791,8 @@ plot(lower, "Lower", color=color.gray, linewidth=1)
 rawLongSignal = (lowerSrc <= lower and close > open) or (lowerSrc[1] > lower[1] and lowerSrc <= lower)
 rawShortSignal = (upperSrc >= upper and close < open) or (upperSrc[1] < upper[1] and upperSrc >= upper)
 rawSignal = rawLongSignal or rawShortSignal
-direction = rawLongSignal ? "long" : rawShortSignal ? "short" : "none"
+signalConflict = rawLongSignal and rawShortSignal
+direction = signalConflict ? "both" : rawLongSignal ? "long" : rawShortSignal ? "short" : "none"
 mode = signalMode == "Confirmed close" ? "bar_close" : "first_touch"
 modeReady = signalMode == "Confirmed close" ? barstate.isconfirmed : true
 
@@ -806,20 +807,24 @@ shortSnapback = close < upper and close <= open
 longPushThrough = longTouch and close < lower and (lower - close) > bandWidth * 0.05
 shortPushThrough = shortTouch and close > upper and (close - upper) > bandWidth * 0.05
 
-longEnter = rawLongSignal and inSession and modeReady and notTooEarly and longSnapback and not longPushThrough
-shortEnter = rawShortSignal and inSession and modeReady and notTooEarly and shortSnapback and not shortPushThrough
-longWatch = rawLongSignal and inSession and modeReady and not longEnter and not longPushThrough
-shortWatch = rawShortSignal and inSession and modeReady and not shortEnter and not shortPushThrough
-doNotHold = rawSignal and modeReady and (longPushThrough or shortPushThrough)
-skipSignal = rawSignal and modeReady and not (longEnter or shortEnter or longWatch or shortWatch or doNotHold)
+longEnter = rawLongSignal and not signalConflict and inSession and modeReady and notTooEarly and longSnapback and not longPushThrough
+shortEnter = rawShortSignal and not signalConflict and inSession and modeReady and notTooEarly and shortSnapback and not shortPushThrough
+longWatch = rawLongSignal and not signalConflict and inSession and modeReady and not longEnter and not longPushThrough
+shortWatch = rawShortSignal and not signalConflict and inSession and modeReady and not shortEnter and not shortPushThrough
+doNotHold = rawSignal and not signalConflict and modeReady and (longPushThrough or shortPushThrough)
+conflictSkip = signalConflict and modeReady
+skipSignal = (rawSignal and modeReady and not (longEnter or shortEnter or longWatch or shortWatch or doNotHold)) or conflictSkip
 
-action = doNotHold ? "DO_NOT_HOLD" : longEnter or shortEnter ? "ENTER" : longWatch or shortWatch ? "WAIT" : rawSignal ? "SKIP" : "NO_SIGNAL"
+action = conflictSkip ? "SKIP" : doNotHold ? "DO_NOT_HOLD" : longEnter or shortEnter ? "ENTER" : longWatch or shortWatch ? "WAIT" : rawSignal ? "SKIP" : "NO_SIGNAL"
 entry = direction == "long" ? lower : direction == "short" ? upper : na
 risk = bandWidth * stopBandFraction
 stop = direction == "long" ? entry - risk : direction == "short" ? entry + risk : na
 target = direction == "long" ? entry + risk * targetR : direction == "short" ? entry - risk * targetR : na
-reason = action == "ENTER" ? "Original Brutus signal fired and price started snapping back." : action == "WAIT" ? "Original Brutus signal fired, but snapback is not clean yet." : action == "DO_NOT_HOLD" ? "Original Brutus signal fired, but price is still pushing through the band." : not inSession ? "Original Brutus signal fired outside the active session." : not modeReady ? "Original Brutus signal fired, but this mode waits for bar close." : "Original Brutus signal fired, but the playbook says skip."
+reason = signalConflict ? "Both original Brutus long and short signals fired on the same candle. Skip because direction is unclear." : action == "ENTER" ? "Original Brutus signal fired and price started snapping back." : action == "WAIT" ? "Original Brutus signal fired, but snapback is not clean yet." : action == "DO_NOT_HOLD" ? "Original Brutus signal fired, but price is still pushing through the band." : not inSession ? "Original Brutus signal fired outside the active session." : not modeReady ? "Original Brutus signal fired, but this mode waits for bar close." : "Original Brutus signal fired, but the playbook says skip."
 plainAction = action == "ENTER" ? "ENTER: paper trade candidate. Use the entry, stop, and target from this alert." : action == "WAIT" ? "WAIT: do not enter yet. Watch for cleaner snapback." : action == "DO_NOT_HOLD" ? "DO NOT HOLD: price is pushing through the band." : "SKIP: no trade."
+entryJson = na(entry) ? "null" : str.tostring(entry)
+stopJson = na(stop) ? "null" : str.tostring(stop)
+targetJson = na(target) ? "null" : str.tostring(target)
 
 plotshape(showRawSignals and rawLongSignal, title="Raw Brutus Long", location=location.belowbar, color=color.new(color.gray, 15), style=shape.triangleup, size=size.tiny, text="RAW")
 plotshape(showRawSignals and rawShortSignal, title="Raw Brutus Short", location=location.abovebar, color=color.new(color.gray, 15), style=shape.triangledown, size=size.tiny, text="RAW")
@@ -831,9 +836,10 @@ plotshape(doNotHold and direction == "long", title="Long DO NOT HOLD", location=
 plotshape(doNotHold and direction == "short", title="Short DO NOT HOLD", location=location.abovebar, color=color.orange, style=shape.xcross, text="NO")
 plotshape(skipSignal and direction == "long", title="Long SKIP", location=location.belowbar, color=color.new(color.gray, 15), style=shape.square, text="SKIP")
 plotshape(skipSignal and direction == "short", title="Short SKIP", location=location.abovebar, color=color.new(color.gray, 15), style=shape.square, text="SKIP")
+plotshape(conflictSkip, title="Conflict SKIP", location=location.top, color=color.yellow, style=shape.diamond, text="BOTH")
 
 shouldAlert = rawSignal and modeReady and (not liveAlertsOnly or barstate.isrealtime)
-message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v2\\",\\"rawSignal\\":true,\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + direction + "\\",\\"time\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"entry\\":" + str.tostring(entry) + ",\\"stop\\":" + str.tostring(stop) + ",\\"target\\":" + str.tostring(target) + ",\\"length\\":" + str.tostring(length) + ",\\"stdDev\\":" + str.tostring(mult) + ",\\"reason\\":\\"" + reason + "\\"}"
+message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v2\\",\\"rawSignal\\":true,\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + direction + "\\",\\"time\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"entry\\":" + entryJson + ",\\"stop\\":" + stopJson + ",\\"target\\":" + targetJson + ",\\"length\\":" + str.tostring(length) + ",\\"stdDev\\":" + str.tostring(mult) + ",\\"reason\\":\\"" + reason + "\\"}"
 
 if shouldAlert
     alert(message, alert.freq_once_per_bar)
