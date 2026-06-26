@@ -22,6 +22,7 @@ type TvAlert = {
   timeframe?: string;
   direction?: string;
   time?: number;
+  alertTime?: number;
   open?: number;
   high?: number;
   low?: number;
@@ -175,6 +176,13 @@ function normalizePayload(raw: unknown): TvAlert {
     asNumber(item.time) ??
     asNumber(item.timestamp) ??
     (typeof item.time === "string" ? Date.parse(item.time) : undefined);
+  const alertTimestamp =
+    asNumber(item.alertTime) ??
+    asNumber(item.timenow) ??
+    asNumber(item.receivedAt) ??
+    (typeof item.alertTime === "string"
+      ? Date.parse(item.alertTime)
+      : undefined);
   const brokerSymbol =
     asString(item.symbol) ?? asString(item.ticker) ?? asString(item.tickerid);
   return {
@@ -198,6 +206,7 @@ function normalizePayload(raw: unknown): TvAlert {
     ),
     direction: asString(item.direction) ?? asString(item.side),
     time: timestamp,
+    alertTime: alertTimestamp,
     open: asNumber(item.open),
     high: asNumber(item.high),
     low: asNumber(item.low),
@@ -232,6 +241,16 @@ function normalizeTimeframe(timeframe?: string) {
   return raw;
 }
 
+function timeframeMinutes(timeframe?: string) {
+  const normalized = normalizeTimeframe(timeframe);
+  if (!normalized) return undefined;
+  const lower = normalized.toLowerCase();
+  if (lower.endsWith("m")) return Number(lower.replace("m", ""));
+  if (lower.endsWith("h")) return Number(lower.replace("h", "")) * 60;
+  if (lower === "1d") return 1440;
+  return undefined;
+}
+
 function alertIdentity(alert: TvAlert) {
   return [
     alert.strategy ?? "",
@@ -248,6 +267,7 @@ function alertIdentity(alert: TvAlert) {
     alert.timeframe ?? "",
     alert.direction ?? "",
     alert.time ?? "",
+    alert.alertTime ?? "",
     alert.open ?? "",
     alert.high ?? "",
     alert.low ?? "",
@@ -462,6 +482,14 @@ function formatTime(timestamp?: number) {
     minute: "2-digit",
     timeZoneName: "short",
   }).format(new Date(timestamp));
+}
+
+function formatAlertDelay(alert: TvAlert) {
+  if (!alert.time || !alert.alertTime) return "alert time n/a";
+  const minutes = Math.max(0, (alert.alertTime - alert.time) / 60000);
+  if (minutes < 1) return "fired inside first minute";
+  if (minutes < 60) return `fired +${minutes.toFixed(1)}m`;
+  return `fired +${(minutes / 60).toFixed(1)}h`;
 }
 
 function directionFor(alert: TvAlert): "long" | "short" | undefined {
@@ -967,6 +995,16 @@ export default function TradingViewCapturePage() {
     const confirmedAlerts = reviewedRows.filter(
       (row) => row.alert.confirmed === true,
     ).length;
+    const missingAlertTimeAlerts = reviewedRows.filter(
+      (row) => row.alert.rawSignal === true && !row.alert.alertTime,
+    ).length;
+    const lateAlertTimeAlerts = reviewedRows.filter((row) => {
+      const { alert } = row;
+      if (!alert.rawSignal || !alert.time || !alert.alertTime) return false;
+      const expectedMinutes = timeframeMinutes(alert.timeframe);
+      if (!expectedMinutes) return false;
+      return alert.alertTime - alert.time > expectedMinutes * 60000;
+    }).length;
     const verdict =
       reviewedRows.length === 0
         ? "No TradingView alerts imported yet."
@@ -1010,6 +1048,8 @@ export default function TradingViewCapturePage() {
       dataQuality,
       rawSignalAlerts,
       confirmedAlerts,
+      missingAlertTimeAlerts,
+      lateAlertTimeAlerts,
       verdict,
       nextAction,
       topSymbols: topBreakdownRows(bySymbol),
@@ -1268,6 +1308,30 @@ export default function TradingViewCapturePage() {
             </span>
           </p>
           <p>
+            Raw signals:{" "}
+            <span className="text-foreground">
+              {paperSummary.rawSignalAlerts}
+            </span>
+          </p>
+          <p>
+            Confirmed:{" "}
+            <span className="text-foreground">
+              {paperSummary.confirmedAlerts}
+            </span>
+          </p>
+          <p>
+            Missing alert time:{" "}
+            <span className="text-amber-300">
+              {paperSummary.missingAlertTimeAlerts}
+            </span>
+          </p>
+          <p>
+            Late alert time:{" "}
+            <span className="text-destructive">
+              {paperSummary.lateAlertTimeAlerts}
+            </span>
+          </p>
+          <p>
             No data:{" "}
             <span className="text-destructive">
               {paperSummary.matchCounts["no-data"]}
@@ -1400,7 +1464,7 @@ export default function TradingViewCapturePage() {
           <table className="w-full min-w-[980px] border-collapse font-mono text-xs">
             <thead className="text-left text-muted-foreground">
               <tr className="border-b border-border">
-                <th className="px-2 py-2">TradingView time</th>
+                <th className="px-2 py-2">Candle / alert time</th>
                 <th className="px-2 py-2">Broker symbol</th>
                 <th className="px-2 py-2">Map</th>
                 <th className="px-2 py-2">TF</th>
@@ -1427,7 +1491,12 @@ export default function TradingViewCapturePage() {
                     const reviewTag = reviewTagFor(alert, brutusReview, status);
                     return (
                       <tr className="border-b border-border/60" key={alert.id}>
-                        <td className="px-2 py-2">{formatTime(alert.time)}</td>
+                        <td className="px-2 py-2">
+                          {formatTime(alert.time)}
+                          <span className="block text-muted-foreground">
+                            {formatAlertDelay(alert)}
+                          </span>
+                        </td>
                         <td className="px-2 py-2">
                           {alert.brokerSymbol ?? "unknown"}
                         </td>
