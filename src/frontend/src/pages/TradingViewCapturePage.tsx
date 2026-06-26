@@ -7,9 +7,12 @@ type TvAlert = {
   id: string;
   importedAt: number;
   strategy?: string;
+  rawSignal?: boolean;
   action?: string;
   plainAction?: string;
   alertMode?: string;
+  mode?: string;
+  confirmed?: boolean;
   brokerSymbol?: string;
   mappedSymbol?: string;
   timeframe?: string;
@@ -21,6 +24,9 @@ type TvAlert = {
   close?: number;
   upper?: number;
   lower?: number;
+  entry?: number;
+  stop?: number;
+  target?: number;
   length?: number;
   stdDev?: number;
   raw: unknown;
@@ -46,10 +52,18 @@ type ImportResult = {
   total: number;
 };
 
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"entry":51770.3,"stop":51685.2,"target":51872.4,"reason":"Band touched and price started snapping back."}`;
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","rawSignal":true,"mode":"first_touch","confirmed":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
 
 const BRUTUS_STRATEGIES = new Set(["brutus_band", "brutus_playbook_v1"]);
-const BRUTUS_TIMEFRAMES = new Set(["1m", "3m", "5m", "15m", "30m", "45m", "1H"]);
+const BRUTUS_TIMEFRAMES = new Set([
+  "1m",
+  "3m",
+  "5m",
+  "15m",
+  "30m",
+  "45m",
+  "1H",
+]);
 
 const ALCHEMY_INDEX_SYMBOLS = [
   { broker: "USTEC.R", market: "Nasdaq 100", appSymbol: "NAS100" },
@@ -92,6 +106,16 @@ function asNumber(value: unknown) {
 
 function asString(value: unknown) {
   return typeof value === "string" ? value : undefined;
+}
+
+function asBoolean(value: unknown) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const lower = value.trim().toLowerCase();
+    if (lower === "true") return true;
+    if (lower === "false") return false;
+  }
+  return undefined;
 }
 
 function unwrapWebhookPayload(raw: unknown): unknown {
@@ -138,9 +162,12 @@ function normalizePayload(raw: unknown): TvAlert {
     id: crypto.randomUUID(),
     importedAt: Date.now(),
     strategy: asString(item.strategy),
+    rawSignal: asBoolean(item.rawSignal),
     action: asString(item.action),
     plainAction: asString(item.plainAction),
     alertMode: asString(item.alertMode),
+    mode: asString(item.mode),
+    confirmed: asBoolean(item.confirmed),
     brokerSymbol,
     mappedSymbol: mapBrokerSymbol(brokerSymbol),
     timeframe: normalizeTimeframe(
@@ -154,6 +181,9 @@ function normalizePayload(raw: unknown): TvAlert {
     close: asNumber(item.close),
     upper: asNumber(item.upper),
     lower: asNumber(item.lower),
+    entry: asNumber(item.entry),
+    stop: asNumber(item.stop),
+    target: asNumber(item.target),
     length: asNumber(item.length),
     stdDev: asNumber(item.stdDev) ?? asNumber(item.mult),
     raw: unwrapped,
@@ -436,14 +466,17 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
   }
 
   const bandWidth = Math.max(upper - lower, 0.0001);
-  const entry = direction === "long" ? lower : upper;
+  const computedEntry = direction === "long" ? lower : upper;
+  const entry = alert.entry ?? computedEntry;
   const stopDistance = bandWidth * 0.5;
-  const stop =
+  const computedStop =
     direction === "long" ? entry - stopDistance : entry + stopDistance;
-  const target =
+  const stop = alert.stop ?? computedStop;
+  const computedTarget =
     direction === "long"
       ? entry + stopDistance * 1.5
       : entry - stopDistance * 1.5;
+  const target = alert.target ?? computedTarget;
   const touchToClose = direction === "long" ? close - entry : entry - close;
   const adverse =
     direction === "long" ? Math.max(entry - low, 0) : Math.max(high - entry, 0);
@@ -506,7 +539,8 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
   if (movedTooFar) {
     return {
       status: "SKIP",
-      reason: "Skip. The move has already run too far away from the band touch.",
+      reason:
+        "Skip. The move has already run too far away from the band touch.",
       entry,
       stop,
       target,
@@ -552,7 +586,7 @@ function downloadText(filename: string, content: string) {
 
 export default function TradingViewCapturePage() {
   const { candles } = useStrategyWorkspace();
-  const [payloadText, setPayloadText] = useState(EXAMPLE_PAYLOAD);
+  const [payloadText, setPayloadText] = useState("");
   const [alerts, setAlerts] = useState<TvAlert[]>(() => loadAlerts());
   const [error, setError] = useState("");
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
@@ -633,7 +667,8 @@ export default function TradingViewCapturePage() {
     );
     const bySymbol = reviewedRows.reduce<Record<string, typeof reviewCounts>>(
       (acc, row) => {
-        const key = row.alert.mappedSymbol ?? row.alert.brokerSymbol ?? "unknown";
+        const key =
+          row.alert.mappedSymbol ?? row.alert.brokerSymbol ?? "unknown";
         acc[key] ??= { enter: 0, wait: 0, skip: 0, doNotHold: 0 };
         if (row.brutusReview.status === "ENTER") acc[key].enter += 1;
         if (row.brutusReview.status === "WAIT") acc[key].wait += 1;
@@ -643,9 +678,20 @@ export default function TradingViewCapturePage() {
       },
       {},
     );
-    const byTimeframe = reviewedRows.reduce<Record<string, typeof reviewCounts>>(
+    const byTimeframe = reviewedRows.reduce<
+      Record<string, typeof reviewCounts>
+    >((acc, row) => {
+      const key = row.alert.timeframe ?? "unknown";
+      acc[key] ??= { enter: 0, wait: 0, skip: 0, doNotHold: 0 };
+      if (row.brutusReview.status === "ENTER") acc[key].enter += 1;
+      if (row.brutusReview.status === "WAIT") acc[key].wait += 1;
+      if (row.brutusReview.status === "SKIP") acc[key].skip += 1;
+      if (row.brutusReview.status === "DO_NOT_HOLD") acc[key].doNotHold += 1;
+      return acc;
+    }, {});
+    const byMode = reviewedRows.reduce<Record<string, typeof reviewCounts>>(
       (acc, row) => {
-        const key = row.alert.timeframe ?? "unknown";
+        const key = row.alert.mode ?? row.alert.alertMode ?? "unknown";
         acc[key] ??= { enter: 0, wait: 0, skip: 0, doNotHold: 0 };
         if (row.brutusReview.status === "ENTER") acc[key].enter += 1;
         if (row.brutusReview.status === "WAIT") acc[key].wait += 1;
@@ -655,6 +701,12 @@ export default function TradingViewCapturePage() {
       },
       {},
     );
+    const rawSignalAlerts = reviewedRows.filter(
+      (row) => row.alert.rawSignal === true,
+    ).length;
+    const confirmedAlerts = reviewedRows.filter(
+      (row) => row.alert.confirmed === true,
+    ).length;
     const verdict =
       reviewedRows.length === 0
         ? "No TradingView alerts imported yet."
@@ -670,6 +722,9 @@ export default function TradingViewCapturePage() {
       matchCounts,
       bySymbol,
       byTimeframe,
+      byMode,
+      rawSignalAlerts,
+      confirmedAlerts,
       verdict,
     };
   }, [reviewCounts, reviewedRows]);
@@ -720,6 +775,7 @@ export default function TradingViewCapturePage() {
           </div>
           <textarea
             className="mt-3 min-h-32 w-full border border-border bg-background p-3 font-mono text-xs text-foreground"
+            placeholder={EXAMPLE_PAYLOAD}
             value={payloadText}
             onChange={(event) => setPayloadText(event.target.value)}
           />
@@ -958,6 +1014,7 @@ export default function TradingViewCapturePage() {
                 <th className="px-2 py-2">Broker symbol</th>
                 <th className="px-2 py-2">Map</th>
                 <th className="px-2 py-2">TF</th>
+                <th className="px-2 py-2">Mode</th>
                 <th className="px-2 py-2">Side</th>
                 <th className="px-2 py-2">Rule</th>
                 <th className="px-2 py-2">OHLC</th>
@@ -969,7 +1026,7 @@ export default function TradingViewCapturePage() {
             <tbody>
               {reviewedRows.length === 0 ? (
                 <tr>
-                  <td className="px-2 py-6 text-muted-foreground" colSpan={10}>
+                  <td className="px-2 py-6 text-muted-foreground" colSpan={11}>
                     No TradingView alert events imported yet.
                   </td>
                 </tr>
@@ -985,6 +1042,13 @@ export default function TradingViewCapturePage() {
                         {alert.mappedSymbol ?? "unmapped"}
                       </td>
                       <td className="px-2 py-2">{alert.timeframe ?? "n/a"}</td>
+                      <td className="px-2 py-2">
+                        {alert.mode ?? alert.alertMode ?? "n/a"}
+                        <span className="block text-muted-foreground">
+                          {alert.rawSignal ? "raw" : "legacy"} /{" "}
+                          {alert.confirmed ? "confirmed" : "live"}
+                        </span>
+                      </td>
                       <td className="px-2 py-2">{alert.direction ?? "n/a"}</td>
                       <td className="px-2 py-2">
                         <span
@@ -992,10 +1056,10 @@ export default function TradingViewCapturePage() {
                             brutusReview.status === "ENTER"
                               ? "text-cyan-300"
                               : brutusReview.status === "WAIT"
-                              ? "text-lime-400"
-                              : brutusReview.status === "DO_NOT_HOLD"
-                                ? "text-amber-300"
-                                : "text-destructive"
+                                ? "text-lime-400"
+                                : brutusReview.status === "DO_NOT_HOLD"
+                                  ? "text-amber-300"
+                                  : "text-destructive"
                           }
                         >
                           {brutusReview.status.replaceAll("_", " ")}

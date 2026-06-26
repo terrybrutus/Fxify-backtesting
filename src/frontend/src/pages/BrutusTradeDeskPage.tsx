@@ -268,19 +268,26 @@ function asNumber(value: unknown) {
 }
 
 function directionFrom(value: unknown): Direction | undefined {
-  const lower = String(value ?? "").trim().toLowerCase();
+  const lower = String(value ?? "")
+    .trim()
+    .toLowerCase();
   if (lower === "long" || lower === "buy") return "long";
   if (lower === "short" || lower === "sell") return "short";
   return undefined;
 }
 
-function normalizeAlertPayload(raw: unknown, alertTime?: string): TvAlert | null {
+function normalizeAlertPayload(
+  raw: unknown,
+  alertTime?: string,
+): TvAlert | null {
   if (!raw || typeof raw !== "object") return null;
   const item = raw as Record<string, unknown>;
   const brokerSymbol = String(item.symbol ?? item.ticker ?? "").trim();
   const symbol = normalizeBrokerSymbol(brokerSymbol);
   const direction = directionFrom(item.direction ?? item.side);
-  const timeframe = normalizeTimeframe(String(item.timeframe ?? item.interval ?? ""));
+  const timeframe = normalizeTimeframe(
+    String(item.timeframe ?? item.interval ?? ""),
+  );
   const candleTime = asNumber(item.time ?? item.timestamp);
   if (!symbol || !timeframe || !direction || candleTime == null) return null;
   return {
@@ -323,15 +330,13 @@ function parseAlertLog(text: string): TvAlert[] {
     // Fall through to CSV/JSONL parsing.
   }
 
-  const jsonl = trimmed
-    .split(/\r?\n/)
-    .flatMap((line) => {
-      try {
-        return fromPayload(JSON.parse(line.trim()));
-      } catch {
-        return [];
-      }
-    });
+  const jsonl = trimmed.split(/\r?\n/).flatMap((line) => {
+    try {
+      return fromPayload(JSON.parse(line.trim()));
+    } catch {
+      return [];
+    }
+  });
   if (jsonl.length) return jsonl;
 
   const records = parseCsvRecords(trimmed);
@@ -547,7 +552,9 @@ function buildPlaybook(touches: IntrabarTouch[]): PlaybookRow[] {
         AVOID: 2,
         "TOO SMALL": 3,
       };
-      return verdictRank[a.verdict] - verdictRank[b.verdict] || b.score - a.score;
+      return (
+        verdictRank[a.verdict] - verdictRank[b.verdict] || b.score - a.score
+      );
     });
 }
 
@@ -731,7 +738,10 @@ function exportText(filename: string, content: string, type = "text/plain") {
 }
 
 function pineComment(value: string) {
-  return value.replace(/[\r\n]+/g, " ").replaceAll("//", "/ /").slice(0, 160);
+  return value
+    .replace(/[\r\n]+/g, " ")
+    .replaceAll("//", "/ /")
+    .slice(0, 160);
 }
 
 function generateBrutusPineScript(rows: PlaybookRow[]) {
@@ -759,6 +769,7 @@ mult = input.float(2.0, minval=0.001, maxval=50, title="StdDev")
 
 useSessionFilter = input.bool(true, title="Use Active Session Filter")
 activeSession = input.session("0300-1200", title="Active Session")
+signalMode = input.string("First touch", title="Signal Mode", options=["First touch", "Confirmed close"])
 minMinutesIntoBar = input.float(2.0, minval=0.0, title="Wait This Many Minutes Into Live Bar")
 stopBandFraction = input.float(0.35, minval=0.05, maxval=2.0, title="Stop Distance as Band Width Fraction")
 targetR = input.float(1.2, minval=0.25, maxval=5.0, title="Target R")
@@ -775,8 +786,16 @@ bandWidth = math.max(upper - lower, syminfo.mintick)
 plot(upper, "Upper", color=color.gray, linewidth=1)
 plot(lower, "Lower", color=color.gray, linewidth=1)
 
-longTouch = lowerSrc <= lower
-shortTouch = upperSrc >= upper
+// Raw Brutus signal layer. This intentionally matches the original indicator's triangle logic.
+rawLongSignal = (lowerSrc <= lower and close > open) or (lowerSrc[1] > lower[1] and lowerSrc <= lower)
+rawShortSignal = (upperSrc >= upper and close < open) or (upperSrc[1] < upper[1] and upperSrc >= upper)
+rawSignal = rawLongSignal or rawShortSignal
+direction = rawLongSignal ? "long" : rawShortSignal ? "short" : "none"
+mode = signalMode == "Confirmed close" ? "bar_close" : "first_touch"
+modeReady = signalMode == "Confirmed close" ? barstate.isconfirmed : true
+
+longTouch = rawLongSignal
+shortTouch = rawShortSignal
 inSession = not useSessionFilter or not na(time(timeframe.period, activeSession))
 minutesIntoBar = math.max(0.0, (timenow - time) / 60000.0)
 notTooEarly = barstate.isconfirmed or minutesIntoBar >= minMinutesIntoBar
@@ -786,19 +805,19 @@ shortSnapback = close < upper and close <= open
 longPushThrough = longTouch and close < lower and (lower - close) > bandWidth * 0.05
 shortPushThrough = shortTouch and close > upper and (close - upper) > bandWidth * 0.05
 
-longEnter = longTouch and inSession and notTooEarly and longSnapback and not longPushThrough
-shortEnter = shortTouch and inSession and notTooEarly and shortSnapback and not shortPushThrough
-longWatch = longTouch and inSession and not longEnter and not longPushThrough
-shortWatch = shortTouch and inSession and not shortEnter and not shortPushThrough
-doNotHold = longPushThrough or shortPushThrough
+longEnter = rawLongSignal and inSession and modeReady and notTooEarly and longSnapback and not longPushThrough
+shortEnter = rawShortSignal and inSession and modeReady and notTooEarly and shortSnapback and not shortPushThrough
+longWatch = rawLongSignal and inSession and modeReady and not longEnter and not longPushThrough
+shortWatch = rawShortSignal and inSession and modeReady and not shortEnter and not shortPushThrough
+doNotHold = rawSignal and modeReady and (longPushThrough or shortPushThrough)
+skipSignal = rawSignal and modeReady and not (longEnter or shortEnter or longWatch or shortWatch or doNotHold)
 
-action = doNotHold ? "DO_NOT_HOLD" : longEnter or shortEnter ? "ENTER" : longWatch or shortWatch ? "WAIT" : "SKIP"
-direction = longEnter or longWatch or longPushThrough ? "long" : shortEnter or shortWatch or shortPushThrough ? "short" : "none"
+action = doNotHold ? "DO_NOT_HOLD" : longEnter or shortEnter ? "ENTER" : longWatch or shortWatch ? "WAIT" : rawSignal ? "SKIP" : "NO_SIGNAL"
 entry = direction == "long" ? lower : direction == "short" ? upper : na
 risk = bandWidth * stopBandFraction
 stop = direction == "long" ? entry - risk : direction == "short" ? entry + risk : na
 target = direction == "long" ? entry + risk * targetR : direction == "short" ? entry - risk * targetR : na
-reason = action == "ENTER" ? "Band touched and price started snapping back." : action == "WAIT" ? "Band touched, but snapback is not clean yet." : action == "DO_NOT_HOLD" ? "Price is still pushing through the band." : "No trade."
+reason = action == "ENTER" ? "Original Brutus signal fired and price started snapping back." : action == "WAIT" ? "Original Brutus signal fired, but snapback is not clean yet." : action == "DO_NOT_HOLD" ? "Original Brutus signal fired, but price is still pushing through the band." : not inSession ? "Original Brutus signal fired outside the active session." : not modeReady ? "Original Brutus signal fired, but this mode waits for bar close." : "Original Brutus signal fired, but the playbook says skip."
 plainAction = action == "ENTER" ? "ENTER: paper trade candidate. Use the entry, stop, and target from this alert." : action == "WAIT" ? "WAIT: do not enter yet. Watch for cleaner snapback." : action == "DO_NOT_HOLD" ? "DO NOT HOLD: price is pushing through the band." : "SKIP: no trade."
 
 plotshape(longEnter, title="Long ENTER", location=location.belowbar, color=color.lime, style=shape.triangleup, text="ENTER")
@@ -807,9 +826,11 @@ plotshape(longWatch, title="Long WAIT", location=location.belowbar, color=color.
 plotshape(shortWatch, title="Short WAIT", location=location.abovebar, color=color.new(color.red, 45), style=shape.circle, text="WAIT")
 plotshape(doNotHold and direction == "long", title="Long DO NOT HOLD", location=location.belowbar, color=color.orange, style=shape.xcross, text="NO")
 plotshape(doNotHold and direction == "short", title="Short DO NOT HOLD", location=location.abovebar, color=color.orange, style=shape.xcross, text="NO")
+plotshape(skipSignal and direction == "long", title="Long SKIP", location=location.belowbar, color=color.new(color.gray, 15), style=shape.square, text="SKIP")
+plotshape(skipSignal and direction == "short", title="Short SKIP", location=location.abovebar, color=color.new(color.gray, 15), style=shape.square, text="SKIP")
 
-shouldAlert = action != "SKIP" and (not liveAlertsOnly or barstate.isrealtime)
-message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + direction + "\\",\\"time\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"entry\\":" + str.tostring(entry) + ",\\"stop\\":" + str.tostring(stop) + ",\\"target\\":" + str.tostring(target) + ",\\"reason\\":\\"" + reason + "\\"}"
+shouldAlert = rawSignal and modeReady and (not liveAlertsOnly or barstate.isrealtime)
+message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"rawSignal\\":true,\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + direction + "\\",\\"time\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"entry\\":" + str.tostring(entry) + ",\\"stop\\":" + str.tostring(stop) + ",\\"target\\":" + str.tostring(target) + ",\\"length\\":" + str.tostring(length) + ",\\"stdDev\\":" + str.tostring(mult) + ",\\"reason\\":\\"" + reason + "\\"}"
 
 if shouldAlert
     alert(message, alert.freq_once_per_bar)
@@ -817,6 +838,7 @@ if shouldAlert
 alertcondition(longEnter or shortEnter, title="Brutus ENTER", message="Use Any alert() function call for JSON details.")
 alertcondition(longWatch or shortWatch, title="Brutus WAIT", message="Use Any alert() function call for JSON details.")
 alertcondition(doNotHold, title="Brutus DO NOT HOLD", message="Use Any alert() function call for JSON details.")
+alertcondition(skipSignal, title="Brutus SKIP", message="Use Any alert() function call for JSON details.")
 `;
 }
 
@@ -848,7 +870,7 @@ function matchAlertsToDecisions(
     const decision = matches.sort(
       (a, b) =>
         ({ ENTER: 4, WAIT: 3, SKIP: 2, EXIT: 1 })[b.decision] -
-          ({ ENTER: 4, WAIT: 3, SKIP: 2, EXIT: 1 })[a.decision] ||
+          { ENTER: 4, WAIT: 3, SKIP: 2, EXIT: 1 }[a.decision] ||
         b.confidence - a.confidence,
     )[0];
 
@@ -1105,8 +1127,8 @@ export default function BrutusTradeDeskPage() {
           <h1 className="font-display text-2xl font-bold">Brutus Trade Desk</h1>
           <p className="mt-1 max-w-4xl text-sm text-muted-foreground">
             One job: turn Brutus research into plain decisions. This is not an
-            auto-trader. It tells you ENTER, WAIT, SKIP, or DO NOT HOLD using the
-            current draft rule.
+            auto-trader. It tells you ENTER, WAIT, SKIP, or DO NOT HOLD using
+            the current draft rule.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -1245,8 +1267,8 @@ export default function BrutusTradeDeskPage() {
                 }
                 type="button"
               >
-              Export Playbook
-            </button>
+                Export Playbook
+              </button>
             </div>
           </div>
 
@@ -1345,9 +1367,7 @@ export default function BrutusTradeDeskPage() {
                       <td className="px-2 py-2 text-muted-foreground">
                         {row.family}
                       </td>
-                      <td className="px-2 py-2 text-foreground">
-                        {row.label}
-                      </td>
+                      <td className="px-2 py-2 text-foreground">{row.label}</td>
                       <td className="px-2 py-2">{row.trades}</td>
                       <td className="px-2 py-2">{row.avgR15.toFixed(2)}</td>
                       <td className="px-2 py-2">{row.avgR60.toFixed(2)}</td>
