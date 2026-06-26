@@ -1318,8 +1318,9 @@ export default function BrutusTradeDeskPage() {
                 1. Export
               </p>
               <p className="mt-1 text-muted-foreground">
-                Download the Pine script from this page after importing the
-                latest Brutus research.
+                Download the Pine script from this page. It starts from the
+                original Brutus triangle logic, then adds a paper-test decision
+                layer.
               </p>
             </div>
             <div>
@@ -1328,7 +1329,7 @@ export default function BrutusTradeDeskPage() {
               </p>
               <p className="mt-1 text-muted-foreground">
                 Add it to the exact Alchemy chart, such as DJ30.R, USTEC.R,
-                US500.R, or JPN225.R.
+                US500.R, JPN225.R, or RUS2000.R.
               </p>
             </div>
             <div>
@@ -1336,8 +1337,8 @@ export default function BrutusTradeDeskPage() {
                 3. Create alert
               </p>
               <p className="mt-1 text-muted-foreground">
-                Use Any alert() function call. The alert JSON includes ENTER,
-                WAIT, SKIP, or DO NOT HOLD.
+                Use Any alert() function call. First touch is live paper
+                evidence; confirmed close waits for the candle to close.
               </p>
             </div>
             <div>
@@ -1345,7 +1346,8 @@ export default function BrutusTradeDeskPage() {
                 4. Paper-test
               </p>
               <p className="mt-1 text-muted-foreground">
-                Import alert logs into TV Alert Capture and judge the decisions
+                Import alert logs into TV Alert Capture. Trust the alert JSON
+                first, then review ENTER, WAIT, SKIP, and DO NOT HOLD rows
                 before risking real money.
               </p>
             </div>
