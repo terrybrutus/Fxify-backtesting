@@ -623,6 +623,56 @@ export default function TradingViewCapturePage() {
     }),
     [reviewedRows],
   );
+  const paperSummary = useMemo(() => {
+    const matchCounts = reviewedRows.reduce<Record<MatchStatus, number>>(
+      (acc, row) => {
+        acc[row.status] += 1;
+        return acc;
+      },
+      { matched: 0, nearby: 0, "no-match": 0, "no-data": 0 },
+    );
+    const bySymbol = reviewedRows.reduce<Record<string, typeof reviewCounts>>(
+      (acc, row) => {
+        const key = row.alert.mappedSymbol ?? row.alert.brokerSymbol ?? "unknown";
+        acc[key] ??= { enter: 0, wait: 0, skip: 0, doNotHold: 0 };
+        if (row.brutusReview.status === "ENTER") acc[key].enter += 1;
+        if (row.brutusReview.status === "WAIT") acc[key].wait += 1;
+        if (row.brutusReview.status === "SKIP") acc[key].skip += 1;
+        if (row.brutusReview.status === "DO_NOT_HOLD") acc[key].doNotHold += 1;
+        return acc;
+      },
+      {},
+    );
+    const byTimeframe = reviewedRows.reduce<Record<string, typeof reviewCounts>>(
+      (acc, row) => {
+        const key = row.alert.timeframe ?? "unknown";
+        acc[key] ??= { enter: 0, wait: 0, skip: 0, doNotHold: 0 };
+        if (row.brutusReview.status === "ENTER") acc[key].enter += 1;
+        if (row.brutusReview.status === "WAIT") acc[key].wait += 1;
+        if (row.brutusReview.status === "SKIP") acc[key].skip += 1;
+        if (row.brutusReview.status === "DO_NOT_HOLD") acc[key].doNotHold += 1;
+        return acc;
+      },
+      {},
+    );
+    const verdict =
+      reviewedRows.length === 0
+        ? "No TradingView alerts imported yet."
+        : reviewCounts.enter === 0
+          ? "No entry candidates in this alert batch. Keep collecting paper alerts."
+          : matchCounts["no-data"] > reviewedRows.length / 2
+            ? "Entry candidates exist, but most alerts are missing matching app candles. Use TradingView as the live truth and import more alert logs."
+            : "Entry candidates exist. Paper review the ENTER rows against TradingView before risking money.";
+    return {
+      generatedAt: new Date().toISOString(),
+      totalAlerts: reviewedRows.length,
+      actionCounts: reviewCounts,
+      matchCounts,
+      bySymbol,
+      byTimeframe,
+      verdict,
+    };
+  }, [reviewCounts, reviewedRows]);
 
   function addPayloads(text: string) {
     try {
@@ -735,6 +785,18 @@ export default function TradingViewCapturePage() {
               Export captured alerts
             </button>
             <button
+              className="border border-border bg-background px-4 py-2 font-mono text-xs hover:border-primary"
+              onClick={() =>
+                downloadText(
+                  "ict-brutus-paper-summary.json",
+                  JSON.stringify(paperSummary, null, 2),
+                )
+              }
+              type="button"
+            >
+              Export paper summary
+            </button>
+            <button
               className="border border-destructive/40 bg-background px-4 py-2 font-mono text-xs text-destructive hover:border-destructive"
               onClick={() => {
                 setAlerts([]);
@@ -808,6 +870,33 @@ export default function TradingViewCapturePage() {
             </p>
           </div>
         </aside>
+      </section>
+
+      <section className="grid gap-3 border border-cyan-500/40 bg-cyan-500/5 p-4 md:grid-cols-[minmax(0,1fr)_220px]">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">
+            Paper-test batch verdict
+          </p>
+          <p className="mt-2 text-sm text-foreground">{paperSummary.verdict}</p>
+        </div>
+        <div className="font-mono text-xs text-muted-foreground">
+          <p>
+            Alerts:{" "}
+            <span className="text-foreground">{paperSummary.totalAlerts}</span>
+          </p>
+          <p>
+            Matched:{" "}
+            <span className="text-lime-300">
+              {paperSummary.matchCounts.matched}
+            </span>
+          </p>
+          <p>
+            No data:{" "}
+            <span className="text-destructive">
+              {paperSummary.matchCounts["no-data"]}
+            </span>
+          </p>
+        </div>
       </section>
 
       <section className="grid gap-3 md:grid-cols-5">
