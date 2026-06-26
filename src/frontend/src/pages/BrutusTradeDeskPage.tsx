@@ -787,9 +787,26 @@ bandWidth = math.max(upper - lower, syminfo.mintick)
 plot(upper, "Upper", color=color.gray, linewidth=1)
 plot(lower, "Lower", color=color.gray, linewidth=1)
 
-// Raw Brutus signal layer. This intentionally matches the original indicator's triangle logic.
-rawLongSignal = (lowerSrc <= lower and close > open) or (lowerSrc[1] > lower[1] and lowerSrc <= lower)
-rawShortSignal = (upperSrc >= upper and close < open) or (upperSrc[1] < upper[1] and upperSrc >= upper)
+// Raw Brutus signal layer. These two conditions intentionally match the original indicator's triangle logic.
+rawLongCondition = (lowerSrc <= lower and close > open) or (lowerSrc[1] > lower[1] and lowerSrc <= lower)
+rawShortCondition = (upperSrc >= upper and close < open) or (upperSrc[1] < upper[1] and upperSrc >= upper)
+
+// First-touch mode latches the first live intrabar touch so alerts do not disappear just because the candle later changes.
+// Historical bars cannot reconstruct the exact tick that first touched; confirmed-close mode uses the final candle state.
+varip int latchedBarTime = na
+varip bool rawLongLatched = false
+varip bool rawShortLatched = false
+if na(latchedBarTime) or time != latchedBarTime
+    latchedBarTime := time
+    rawLongLatched := false
+    rawShortLatched := false
+if rawLongCondition
+    rawLongLatched := true
+if rawShortCondition
+    rawShortLatched := true
+
+rawLongSignal = signalMode == "First touch" and barstate.isrealtime ? rawLongLatched : rawLongCondition
+rawShortSignal = signalMode == "First touch" and barstate.isrealtime ? rawShortLatched : rawShortCondition
 rawSignal = rawLongSignal or rawShortSignal
 signalConflict = rawLongSignal and rawShortSignal
 direction = signalConflict ? "both" : rawLongSignal ? "long" : rawShortSignal ? "short" : "none"
@@ -839,7 +856,7 @@ plotshape(skipSignal and direction == "short", title="Short SKIP", location=loca
 plotshape(conflictSkip, title="Conflict SKIP", location=location.top, color=color.yellow, style=shape.diamond, text="BOTH")
 
 shouldAlert = rawSignal and modeReady and (not liveAlertsOnly or barstate.isrealtime)
-message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v2\\",\\"rawSignal\\":true,\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + direction + "\\",\\"time\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"entry\\":" + entryJson + ",\\"stop\\":" + stopJson + ",\\"target\\":" + targetJson + ",\\"length\\":" + str.tostring(length) + ",\\"stdDev\\":" + str.tostring(mult) + ",\\"reason\\":\\"" + reason + "\\"}"
+message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v3\\",\\"rawSignal\\":true,\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"rawLongCondition\\":" + str.tostring(rawLongCondition) + ",\\"rawShortCondition\\":" + str.tostring(rawShortCondition) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + direction + "\\",\\"time\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"entry\\":" + entryJson + ",\\"stop\\":" + stopJson + ",\\"target\\":" + targetJson + ",\\"length\\":" + str.tostring(length) + ",\\"stdDev\\":" + str.tostring(mult) + ",\\"reason\\":\\"" + reason + "\\"}"
 
 if shouldAlert
     alert(message, alert.freq_once_per_bar)

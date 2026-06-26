@@ -11,6 +11,8 @@ type TvAlert = {
   rawSignal?: boolean;
   rawLongSignal?: boolean;
   rawShortSignal?: boolean;
+  rawLongCondition?: boolean;
+  rawShortCondition?: boolean;
   signalConflict?: boolean;
   action?: string;
   plainAction?: string;
@@ -70,7 +72,7 @@ type BreakdownRow = {
   total: number;
 };
 
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v2","rawSignal":true,"rawLongSignal":true,"rawShortSignal":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v3","rawSignal":true,"rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
 
 const BRUTUS_STRATEGIES = new Set(["brutus_band", "brutus_playbook_v1"]);
 const BRUTUS_TIMEFRAMES = new Set([
@@ -193,6 +195,8 @@ function normalizePayload(raw: unknown): TvAlert {
     rawSignal: asBoolean(item.rawSignal),
     rawLongSignal: asBoolean(item.rawLongSignal),
     rawShortSignal: asBoolean(item.rawShortSignal),
+    rawLongCondition: asBoolean(item.rawLongCondition),
+    rawShortCondition: asBoolean(item.rawShortCondition),
     signalConflict: asBoolean(item.signalConflict),
     action: asString(item.action),
     plainAction: asString(item.plainAction),
@@ -262,6 +266,8 @@ function alertIdentity(alert: TvAlert) {
     alert.rawSignal ?? "",
     alert.rawLongSignal ?? "",
     alert.rawShortSignal ?? "",
+    alert.rawLongCondition ?? "",
+    alert.rawShortCondition ?? "",
     alert.signalConflict ?? "",
     alert.brokerSymbol ?? "",
     alert.timeframe ?? "",
@@ -1520,8 +1526,15 @@ export default function TradingViewCapturePage() {
                           {(alert.rawLongSignal != null ||
                             alert.rawShortSignal != null) && (
                             <span className="block text-muted-foreground">
-                              L:{alert.rawLongSignal ? "yes" : "no"} S:
+                              Latched L:{alert.rawLongSignal ? "yes" : "no"} S:
                               {alert.rawShortSignal ? "yes" : "no"}
+                            </span>
+                          )}
+                          {(alert.rawLongCondition != null ||
+                            alert.rawShortCondition != null) && (
+                            <span className="block text-muted-foreground">
+                              Now L:{alert.rawLongCondition ? "yes" : "no"} S:
+                              {alert.rawShortCondition ? "yes" : "no"}
                             </span>
                           )}
                         </td>
