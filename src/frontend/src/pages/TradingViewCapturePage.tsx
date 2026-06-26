@@ -515,6 +515,10 @@ function actionFor(alert: TvAlert) {
   return alert.action?.trim().toUpperCase().replace(/\s+/g, "_");
 }
 
+function pineActionLabel(alert: TvAlert) {
+  return actionFor(alert)?.replaceAll("_", " ") ?? "missing";
+}
+
 function isPlaybookAlert(alert: TvAlert) {
   return alert.strategy === "brutus_playbook_v1" || alert.rawSignal === true;
 }
@@ -1482,6 +1486,7 @@ export default function TradingViewCapturePage() {
                 <th className="px-2 py-2">TF</th>
                 <th className="px-2 py-2">Mode</th>
                 <th className="px-2 py-2">Side</th>
+                <th className="px-2 py-2">Pine says</th>
                 <th className="px-2 py-2">Review</th>
                 <th className="px-2 py-2">Rule</th>
                 <th className="px-2 py-2">OHLC</th>
@@ -1493,7 +1498,7 @@ export default function TradingViewCapturePage() {
             <tbody>
               {reviewedRows.length === 0 ? (
                 <tr>
-                  <td className="px-2 py-6 text-muted-foreground" colSpan={12}>
+                  <td className="px-2 py-6 text-muted-foreground" colSpan={13}>
                     No TradingView alert events imported yet.
                   </td>
                 </tr>
@@ -1553,6 +1558,23 @@ export default function TradingViewCapturePage() {
                         </td>
                         <td className="px-2 py-2">
                           {alert.direction ?? "n/a"}
+                        </td>
+                        <td className="px-2 py-2">
+                          <span
+                            className={
+                              actionFor(alert) === "ENTER"
+                                ? "text-cyan-300"
+                                : actionFor(alert) === "WAIT"
+                                  ? "text-lime-300"
+                                  : actionFor(alert) === "DO_NOT_HOLD"
+                                    ? "text-amber-300"
+                                    : actionFor(alert) === "SKIP"
+                                      ? "text-muted-foreground"
+                                      : "text-destructive"
+                            }
+                          >
+                            {pineActionLabel(alert)}
+                          </span>
                         </td>
                         <td className="px-2 py-2">
                           <span className={reviewTagClass(reviewTag)}>
