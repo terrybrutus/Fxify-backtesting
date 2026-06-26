@@ -8,6 +8,7 @@ type TvAlert = {
   importedAt: number;
   strategy?: string;
   action?: string;
+  plainAction?: string;
   alertMode?: string;
   brokerSymbol?: string;
   mappedSymbol?: string;
@@ -45,7 +46,7 @@ type ImportResult = {
   total: number;
 };
 
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","direction":"long","time":1782084600000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"entry":51770.3,"stop":51685.2,"target":51872.4,"reason":"Band touched and price started snapping back."}`;
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"entry":51770.3,"stop":51685.2,"target":51872.4,"reason":"Band touched and price started snapping back."}`;
 
 const BRUTUS_STRATEGIES = new Set(["brutus_band", "brutus_playbook_v1"]);
 const BRUTUS_TIMEFRAMES = new Set(["1m", "3m", "5m", "15m", "30m", "45m", "1H"]);
@@ -138,6 +139,7 @@ function normalizePayload(raw: unknown): TvAlert {
     importedAt: Date.now(),
     strategy: asString(item.strategy),
     action: asString(item.action),
+    plainAction: asString(item.plainAction),
     alertMode: asString(item.alertMode),
     brokerSymbol,
     mappedSymbol: mapBrokerSymbol(brokerSymbol),
@@ -376,9 +378,12 @@ function actionFor(alert: TvAlert) {
 }
 
 function rawReasonFor(alert: TvAlert) {
-  return alert.raw && typeof alert.raw === "object"
-    ? asString((alert.raw as Record<string, unknown>).reason)
-    : undefined;
+  if (alert.plainAction) return alert.plainAction;
+  if (alert.raw && typeof alert.raw === "object") {
+    const raw = alert.raw as Record<string, unknown>;
+    return asString(raw.plainAction) ?? asString(raw.reason);
+  }
+  return undefined;
 }
 
 function reviewBrutusAlert(alert: TvAlert): BrutusReview {

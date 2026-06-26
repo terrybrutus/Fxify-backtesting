@@ -799,6 +799,7 @@ risk = bandWidth * stopBandFraction
 stop = direction == "long" ? entry - risk : direction == "short" ? entry + risk : na
 target = direction == "long" ? entry + risk * targetR : direction == "short" ? entry - risk * targetR : na
 reason = action == "ENTER" ? "Band touched and price started snapping back." : action == "WAIT" ? "Band touched, but snapback is not clean yet." : action == "DO_NOT_HOLD" ? "Price is still pushing through the band." : "No trade."
+plainAction = action == "ENTER" ? "ENTER: paper trade candidate. Use the entry, stop, and target from this alert." : action == "WAIT" ? "WAIT: do not enter yet. Watch for cleaner snapback." : action == "DO_NOT_HOLD" ? "DO NOT HOLD: price is pushing through the band." : "SKIP: no trade."
 
 plotshape(longEnter, title="Long ENTER", location=location.belowbar, color=color.lime, style=shape.triangleup, text="ENTER")
 plotshape(shortEnter, title="Short ENTER", location=location.abovebar, color=color.red, style=shape.triangledown, text="ENTER")
@@ -808,7 +809,7 @@ plotshape(doNotHold and direction == "long", title="Long DO NOT HOLD", location=
 plotshape(doNotHold and direction == "short", title="Short DO NOT HOLD", location=location.abovebar, color=color.orange, style=shape.xcross, text="NO")
 
 shouldAlert = action != "SKIP" and (not liveAlertsOnly or barstate.isrealtime)
-message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"direction\\":\\"" + direction + "\\",\\"time\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"entry\\":" + str.tostring(entry) + ",\\"stop\\":" + str.tostring(stop) + ",\\"target\\":" + str.tostring(target) + ",\\"reason\\":\\"" + reason + "\\"}"
+message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + direction + "\\",\\"time\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"entry\\":" + str.tostring(entry) + ",\\"stop\\":" + str.tostring(stop) + ",\\"target\\":" + str.tostring(target) + ",\\"reason\\":\\"" + reason + "\\"}"
 
 if shouldAlert
     alert(message, alert.freq_once_per_bar)
