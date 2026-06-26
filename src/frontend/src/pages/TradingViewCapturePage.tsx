@@ -52,6 +52,13 @@ type ImportResult = {
   total: number;
 };
 
+type ReviewCounts = {
+  enter: number;
+  wait: number;
+  skip: number;
+  doNotHold: number;
+};
+
 const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","rawSignal":true,"mode":"first_touch","confirmed":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
 
 const BRUTUS_STRATEGIES = new Set(["brutus_band", "brutus_playbook_v1"]);
@@ -407,6 +414,14 @@ function actionFor(alert: TvAlert) {
   return alert.action?.trim().toUpperCase().replace(/\s+/g, "_");
 }
 
+function isPlaybookAlert(alert: TvAlert) {
+  return alert.strategy === "brutus_playbook_v1" || alert.rawSignal === true;
+}
+
+function isLegacyBrutusAlert(alert: TvAlert) {
+  return !isPlaybookAlert(alert) && alert.strategy === "brutus_band";
+}
+
 function rawReasonFor(alert: TvAlert) {
   if (alert.plainAction) return alert.plainAction;
   if (alert.raw && typeof alert.raw === "object") {
@@ -665,7 +680,7 @@ export default function TradingViewCapturePage() {
       },
       { matched: 0, nearby: 0, "no-match": 0, "no-data": 0 },
     );
-    const bySymbol = reviewedRows.reduce<Record<string, typeof reviewCounts>>(
+    const bySymbol = reviewedRows.reduce<Record<string, ReviewCounts>>(
       (acc, row) => {
         const key =
           row.alert.mappedSymbol ?? row.alert.brokerSymbol ?? "unknown";
@@ -678,29 +693,120 @@ export default function TradingViewCapturePage() {
       },
       {},
     );
-    const byTimeframe = reviewedRows.reduce<
-      Record<string, typeof reviewCounts>
-    >((acc, row) => {
-      const key = row.alert.timeframe ?? "unknown";
-      acc[key] ??= { enter: 0, wait: 0, skip: 0, doNotHold: 0 };
-      if (row.brutusReview.status === "ENTER") acc[key].enter += 1;
-      if (row.brutusReview.status === "WAIT") acc[key].wait += 1;
-      if (row.brutusReview.status === "SKIP") acc[key].skip += 1;
-      if (row.brutusReview.status === "DO_NOT_HOLD") acc[key].doNotHold += 1;
-      return acc;
-    }, {});
-    const byMode = reviewedRows.reduce<Record<string, typeof reviewCounts>>(
+    const byTimeframe = reviewedRows.reduce<Record<string, ReviewCounts>>(
+      (acc, row) => {
+        const key = row.alert.timeframe ?? "unknown";
+        acc[key] ??= { enter: 0, wait: 0, skip: 0, doNotHold: 0 };
+        if (row.brutusReview.status === "ENTER") acc[key].enter += 1;
+        if (row.brutusReview.status === "WAIT") acc[key].wait += 1;
+        if (row.brutusReview.status === "SKIP") acc[key].skip += 1;
+        if (row.brutusReview.status === "DO_NOT_HOLD") {
+          acc[key].doNotHold += 1;
+        }
+        return acc;
+      },
+      {},
+    );
+    const byMode = reviewedRows.reduce<Record<string, ReviewCounts>>(
       (acc, row) => {
         const key = row.alert.mode ?? row.alert.alertMode ?? "unknown";
         acc[key] ??= { enter: 0, wait: 0, skip: 0, doNotHold: 0 };
         if (row.brutusReview.status === "ENTER") acc[key].enter += 1;
         if (row.brutusReview.status === "WAIT") acc[key].wait += 1;
         if (row.brutusReview.status === "SKIP") acc[key].skip += 1;
-        if (row.brutusReview.status === "DO_NOT_HOLD") acc[key].doNotHold += 1;
+        if (row.brutusReview.status === "DO_NOT_HOLD") {
+          acc[key].doNotHold += 1;
+        }
         return acc;
       },
       {},
     );
+    const playbookAlerts = reviewedRows.filter((row) =>
+      isPlaybookAlert(row.alert),
+    ).length;
+    const legacyAlerts = reviewedRows.filter((row) =>
+      isLegacyBrutusAlert(row.alert),
+    ).length;
+    const incompleteAlerts = reviewedRows.filter((row) => {
+      const alert = row.alert;
+      return (
+        !alert.brokerSymbol ||
+        !alert.timeframe ||
+        !alert.direction ||
+        alert.high == null ||
+        alert.low == null ||
+        alert.close == null ||
+        alert.upper == null ||
+        alert.lower == null
+      );
+    }).length;
+    const enterRows = reviewedRows.filter(
+      (row) => row.brutusReview.status === "ENTER",
+    );
+    const waitRows = reviewedRows.filter(
+      (row) => row.brutusReview.status === "WAIT",
+    );
+    const failedEnterRows = enterRows.filter((row) => {
+      const review = row.brutusReview;
+      return (
+        review.adverse != null &&
+        review.stop != null &&
+        review.entry != null &&
+        Math.abs(review.entry - review.stop) > 0 &&
+        review.adverse >= Math.abs(review.entry - review.stop)
+      );
+    }).length;
+    const likelyUpgradeWaits = waitRows.filter((row) => {
+      const review = row.brutusReview;
+      return (
+        review.touchToClose != null &&
+        review.bandWidth != null &&
+        review.touchToClose > 0 &&
+        review.touchToClose <= review.bandWidth * 0.35
+      );
+    }).length;
+    const reviewQueue = [
+      ...(enterRows.length
+        ? [
+            `${enterRows.length} ENTER row(s): replay these first. If they do not show immediate snapback on TradingView, the rule is too loose.`,
+          ]
+        : []),
+      ...(likelyUpgradeWaits
+        ? [
+            `${likelyUpgradeWaits} WAIT row(s) are close to entry behavior. These are the main candidates to test for a less strict ENTER rule.`,
+          ]
+        : []),
+      ...(failedEnterRows
+        ? [
+            `${failedEnterRows} ENTER row(s) already crossed the draft stop zone inside the alert candle. Treat those as failed evidence.`,
+          ]
+        : []),
+      ...(legacyAlerts
+        ? [
+            `${legacyAlerts} legacy alert(s) came from the old script. Do not mix them into Playbook readiness claims.`,
+          ]
+        : []),
+      ...(matchCounts["no-data"] || matchCounts["no-match"]
+        ? [
+            `${matchCounts["no-data"] + matchCounts["no-match"]} alert(s) cannot be matched to imported app candles. Trust TradingView first for those rows.`,
+          ]
+        : []),
+      ...(incompleteAlerts
+        ? [
+            `${incompleteAlerts} alert(s) are missing required JSON fields. Recreate those alerts with the latest exported Playbook script.`,
+          ]
+        : []),
+    ];
+    const dataQuality =
+      reviewedRows.length === 0
+        ? "empty"
+        : playbookAlerts === 0
+          ? "legacy-only"
+          : incompleteAlerts > 0
+            ? "incomplete"
+            : matchCounts["no-data"] > reviewedRows.length / 2
+              ? "needs-candles"
+              : "usable-paper-log";
     const rawSignalAlerts = reviewedRows.filter(
       (row) => row.alert.rawSignal === true,
     ).length;
@@ -710,11 +816,15 @@ export default function TradingViewCapturePage() {
     const verdict =
       reviewedRows.length === 0
         ? "No TradingView alerts imported yet."
-        : reviewCounts.enter === 0
-          ? "No entry candidates in this alert batch. Keep collecting paper alerts."
-          : matchCounts["no-data"] > reviewedRows.length / 2
-            ? "Entry candidates exist, but most alerts are missing matching app candles. Use TradingView as the live truth and import more alert logs."
-            : "Entry candidates exist. Paper review the ENTER rows against TradingView before risking money.";
+        : playbookAlerts === 0
+          ? "This batch has no current Playbook alerts. Recreate alerts from the latest exported Pine before using it as evidence."
+          : incompleteAlerts > 0
+            ? "Some alerts are missing required fields. Fix the alert script/log source before judging the strategy."
+            : reviewCounts.enter === 0
+              ? "No entry candidates in this alert batch. Keep collecting paper alerts."
+              : matchCounts["no-data"] > reviewedRows.length / 2
+                ? "Entry candidates exist, but most alerts are missing matching app candles. Use TradingView as the live truth and import more alert logs."
+                : "Entry candidates exist. Paper review the ENTER rows against TradingView before risking money.";
     return {
       generatedAt: new Date().toISOString(),
       totalAlerts: reviewedRows.length,
@@ -723,6 +833,13 @@ export default function TradingViewCapturePage() {
       bySymbol,
       byTimeframe,
       byMode,
+      playbookAlerts,
+      legacyAlerts,
+      incompleteAlerts,
+      failedEnterRows,
+      likelyUpgradeWaits,
+      reviewQueue,
+      dataQuality,
       rawSignalAlerts,
       confirmedAlerts,
       verdict,
@@ -884,7 +1001,7 @@ export default function TradingViewCapturePage() {
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
               FXIFY docs point users to the TradingView Trading Panel broker
-              flow and mention the broker name “Alchemy markets.” That is the
+              flow and mention the broker name "Alchemy markets." That is the
               source to test first, not public Yahoo symbols.
             </p>
           </div>
@@ -934,11 +1051,30 @@ export default function TradingViewCapturePage() {
             Paper-test batch verdict
           </p>
           <p className="mt-2 text-sm text-foreground">{paperSummary.verdict}</p>
+          {paperSummary.reviewQueue.length > 0 && (
+            <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
+              {paperSummary.reviewQueue.slice(0, 5).map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="font-mono text-xs text-muted-foreground">
           <p>
             Alerts:{" "}
             <span className="text-foreground">{paperSummary.totalAlerts}</span>
+          </p>
+          <p>
+            Playbook:{" "}
+            <span className="text-cyan-300">{paperSummary.playbookAlerts}</span>
+          </p>
+          <p>
+            Legacy:{" "}
+            <span className="text-amber-300">{paperSummary.legacyAlerts}</span>
+          </p>
+          <p>
+            Quality:{" "}
+            <span className="text-foreground">{paperSummary.dataQuality}</span>
           </p>
           <p>
             Matched:{" "}
