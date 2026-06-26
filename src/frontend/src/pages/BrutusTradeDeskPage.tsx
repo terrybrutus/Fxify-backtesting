@@ -1245,8 +1245,47 @@ export default function BrutusTradeDeskPage() {
                 }
                 type="button"
               >
-                Export Playbook
-              </button>
+              Export Playbook
+            </button>
+            </div>
+          </div>
+
+          <div className="grid gap-3 border border-cyan-500/40 bg-cyan-500/5 p-4 text-sm md:grid-cols-4">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">
+                1. Export
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Download the Pine script from this page after importing the
+                latest Brutus research.
+              </p>
+            </div>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">
+                2. Paste in TradingView
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Add it to the exact Alchemy chart, such as DJ30.R, USTEC.R,
+                US500.R, or JPN225.R.
+              </p>
+            </div>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">
+                3. Create alert
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Use Any alert() function call. The alert JSON includes ENTER,
+                WAIT, SKIP, or DO NOT HOLD.
+              </p>
+            </div>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">
+                4. Paper-test
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Import alert logs into TV Alert Capture and judge the decisions
+                before risking real money.
+              </p>
             </div>
           </div>
 
