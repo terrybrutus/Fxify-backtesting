@@ -63,6 +63,12 @@ type ReviewCounts = {
   doNotHold: number;
 };
 
+type BreakdownRow = {
+  label: string;
+  counts: ReviewCounts;
+  total: number;
+};
+
 const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v2","rawSignal":true,"rawLongSignal":true,"rawShortSignal":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
 
 const BRUTUS_STRATEGIES = new Set(["brutus_band", "brutus_playbook_v1"]);
@@ -715,6 +721,28 @@ function reviewTagClass(tag: string) {
   return "text-muted-foreground";
 }
 
+function totalReviews(counts: ReviewCounts) {
+  return counts.enter + counts.wait + counts.skip + counts.doNotHold;
+}
+
+function topBreakdownRows(
+  rows: Record<string, ReviewCounts>,
+  limit = 5,
+): BreakdownRow[] {
+  return Object.entries(rows)
+    .map(([label, counts]) => ({
+      label,
+      counts,
+      total: totalReviews(counts),
+    }))
+    .sort((a, b) => b.total - a.total || a.label.localeCompare(b.label))
+    .slice(0, limit);
+}
+
+function countsText(counts: ReviewCounts) {
+  return `E ${counts.enter} / W ${counts.wait} / NO ${counts.doNotHold} / S ${counts.skip}`;
+}
+
 function downloadText(filename: string, content: string) {
   const blob = new Blob([content], { type: "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -951,6 +979,20 @@ export default function TradingViewCapturePage() {
               : matchCounts["no-data"] > reviewedRows.length / 2
                 ? "Entry candidates exist, but most alerts are missing matching app candles. Use TradingView as the live truth and import more alert logs."
                 : "Entry candidates exist. Paper review the ENTER rows against TradingView before risking money.";
+    const nextAction =
+      reviewedRows.length === 0
+        ? "Import the latest TradingView alert CSV from the Alerts Log."
+        : playbookAlerts === 0
+          ? "Replace the old TradingView alerts with alerts created from the latest Playbook Pine export."
+          : incompleteAlerts > 0
+            ? "Fix the alert source first. Missing fields make the batch unreliable."
+            : failedEnterRows > 0
+              ? "Replay the failed ENTER rows first. If they really failed on TradingView, tighten the rule before paper-trading more."
+              : enterRows.length > 0
+                ? "Replay ENTER rows on TradingView. Mark whether snapback happened quickly; do not use real money yet."
+                : likelyUpgradeWaits > 0
+                  ? "Replay the Maybe loosen WAIT rows. These are possible future ENTER-rule candidates."
+                  : "No trade candidate yet. Keep collecting live Playbook alerts.";
     return {
       generatedAt: new Date().toISOString(),
       totalAlerts: reviewedRows.length,
@@ -969,6 +1011,10 @@ export default function TradingViewCapturePage() {
       rawSignalAlerts,
       confirmedAlerts,
       verdict,
+      nextAction,
+      topSymbols: topBreakdownRows(bySymbol),
+      topTimeframes: topBreakdownRows(byTimeframe),
+      topModes: topBreakdownRows(byMode),
     };
   }, [reviewCounts, reviewedRows]);
 
@@ -1178,6 +1224,18 @@ export default function TradingViewCapturePage() {
             Paper-test batch verdict
           </p>
           <p className="mt-2 text-sm text-foreground">{paperSummary.verdict}</p>
+          <div className="mt-3 border border-cyan-500/30 bg-background/40 p-3">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">
+              Next action
+            </p>
+            <p className="mt-1 text-sm text-foreground">
+              {paperSummary.nextAction}
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              This is still paper-trading evidence. Do not treat any row as a
+              real-money instruction until repeated live alerts prove it.
+            </p>
+          </div>
           {paperSummary.reviewQueue.length > 0 && (
             <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
               {paperSummary.reviewQueue.slice(0, 5).map((item) => (
@@ -1215,6 +1273,75 @@ export default function TradingViewCapturePage() {
               {paperSummary.matchCounts["no-data"]}
             </span>
           </p>
+        </div>
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-3">
+        <div className="border border-border bg-card p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Symbols
+          </p>
+          <div className="mt-3 space-y-2 font-mono text-xs">
+            {paperSummary.topSymbols.length ? (
+              paperSummary.topSymbols.map((row) => (
+                <div
+                  className="flex items-center justify-between gap-3"
+                  key={row.label}
+                >
+                  <span className="text-foreground">{row.label}</span>
+                  <span className="text-muted-foreground">
+                    {countsText(row.counts)}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground">No alerts imported.</p>
+            )}
+          </div>
+        </div>
+        <div className="border border-border bg-card p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Timeframes
+          </p>
+          <div className="mt-3 space-y-2 font-mono text-xs">
+            {paperSummary.topTimeframes.length ? (
+              paperSummary.topTimeframes.map((row) => (
+                <div
+                  className="flex items-center justify-between gap-3"
+                  key={row.label}
+                >
+                  <span className="text-foreground">{row.label}</span>
+                  <span className="text-muted-foreground">
+                    {countsText(row.counts)}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground">No alerts imported.</p>
+            )}
+          </div>
+        </div>
+        <div className="border border-border bg-card p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Alert mode
+          </p>
+          <div className="mt-3 space-y-2 font-mono text-xs">
+            {paperSummary.topModes.length ? (
+              paperSummary.topModes.map((row) => (
+                <div
+                  className="flex items-center justify-between gap-3"
+                  key={row.label}
+                >
+                  <span className="text-foreground">{row.label}</span>
+                  <span className="text-muted-foreground">
+                    {countsText(row.counts)}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground">No alerts imported.</p>
+            )}
+          </div>
         </div>
       </section>
 
