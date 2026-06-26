@@ -26,7 +26,7 @@ type TvAlert = {
 };
 
 type MatchStatus = "matched" | "nearby" | "no-match" | "no-data";
-type BrutusReviewStatus = "ENTER" | "WATCH" | "SKIP" | "TOO LATE";
+type BrutusReviewStatus = "ENTER" | "WAIT" | "SKIP" | "DO_NOT_HOLD";
 
 type BrutusReview = {
   status: BrutusReviewStatus;
@@ -459,11 +459,11 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
       adverse,
     };
   }
-  if (action === "WATCH") {
+  if (action === "WAIT" || action === "WATCH") {
     return {
-      status: "WATCH",
+      status: "WAIT",
       reason:
-        rawReason ?? "TradingView Pine rule says watch, but do not enter yet.",
+        rawReason ?? "TradingView Pine rule says wait, but do not enter yet.",
       entry,
       stop,
       target,
@@ -474,7 +474,7 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
   }
   if (action === "DO_NOT_HOLD") {
     return {
-      status: "SKIP",
+      status: "DO_NOT_HOLD",
       reason:
         rawReason ??
         "TradingView Pine rule says do not hold because price is pushing through the band.",
@@ -500,8 +500,8 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
   }
   if (movedTooFar) {
     return {
-      status: "TOO LATE",
-      reason: "The move has already run too far away from the band touch.",
+      status: "SKIP",
+      reason: "Skip. The move has already run too far away from the band touch.",
       entry,
       stop,
       target,
@@ -512,8 +512,8 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
   }
   if (noRejectionYet) {
     return {
-      status: "SKIP",
-      reason: "No useful rejection away from the band is visible yet.",
+      status: "WAIT",
+      reason: "Wait. No useful rejection away from the band is visible yet.",
       entry,
       stop,
       target,
@@ -523,9 +523,9 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
     };
   }
   return {
-    status: "WATCH",
+    status: "WAIT",
     reason:
-      "Matches the draft Brutus rule: band touch with manageable entry distance.",
+      "Wait. This is close to the draft Brutus rule, but it is not a clean entry yet.",
     entry,
     stop,
     target,
@@ -608,12 +608,12 @@ export default function TradingViewCapturePage() {
     () => ({
       enter: reviewedRows.filter((row) => row.brutusReview.status === "ENTER")
         .length,
-      watch: reviewedRows.filter((row) => row.brutusReview.status === "WATCH")
+      wait: reviewedRows.filter((row) => row.brutusReview.status === "WAIT")
         .length,
       skip: reviewedRows.filter((row) => row.brutusReview.status === "SKIP")
         .length,
-      tooLate: reviewedRows.filter(
-        (row) => row.brutusReview.status === "TOO LATE",
+      doNotHold: reviewedRows.filter(
+        (row) => row.brutusReview.status === "DO_NOT_HOLD",
       ).length,
     }),
     [reviewedRows],
@@ -825,18 +825,18 @@ export default function TradingViewCapturePage() {
         </div>
         <div className="border border-lime-500/50 bg-card p-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Watch
+            Wait
           </p>
           <p className="mt-2 font-display text-2xl font-bold text-lime-300">
-            {reviewCounts.watch}
+            {reviewCounts.wait}
           </p>
         </div>
         <div className="border border-amber-500/50 bg-card p-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Too late
+            Do not hold
           </p>
           <p className="mt-2 font-display text-2xl font-bold text-amber-300">
-            {reviewCounts.tooLate}
+            {reviewCounts.doNotHold}
           </p>
         </div>
         <div className="border border-destructive/50 bg-card p-4">
@@ -897,14 +897,14 @@ export default function TradingViewCapturePage() {
                           className={
                             brutusReview.status === "ENTER"
                               ? "text-cyan-300"
-                              : brutusReview.status === "WATCH"
+                              : brutusReview.status === "WAIT"
                               ? "text-lime-400"
-                              : brutusReview.status === "TOO LATE"
+                              : brutusReview.status === "DO_NOT_HOLD"
                                 ? "text-amber-300"
                                 : "text-destructive"
                           }
                         >
-                          {brutusReview.status}
+                          {brutusReview.status.replaceAll("_", " ")}
                         </span>
                         <span className="block max-w-72 whitespace-normal text-muted-foreground">
                           {brutusReview.reason}
