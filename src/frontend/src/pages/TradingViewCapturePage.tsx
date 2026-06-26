@@ -954,6 +954,22 @@ export default function TradingViewCapturePage() {
         review.adverse >= Math.abs(review.entry - review.stop)
       );
     }).length;
+    const paperEvidenceStatus =
+      playbookAlerts === 0
+        ? "No Playbook evidence yet"
+        : playbookAlerts < 20
+          ? "Too early: collect more live alerts"
+          : enterRows.length < 5
+            ? "Early: not enough ENTER evidence"
+            : failedEnterRows > enterRows.length * 0.3
+              ? "Warning: ENTER failures need review"
+              : "Usable paper-test batch";
+    const evidenceNeed =
+      playbookAlerts < 20
+        ? `Need about ${20 - playbookAlerts} more Playbook alert(s) before this batch is useful evidence.`
+        : enterRows.length < 5
+          ? `Need about ${5 - enterRows.length} more ENTER row(s) before judging the entry rule.`
+          : "Enough rows to review directionally, but still not proof of profitability.";
     const likelyUpgradeWaits = waitRows.filter((row) => {
       const review = row.brutusReview;
       return (
@@ -967,6 +983,11 @@ export default function TradingViewCapturePage() {
       ...(enterRows.length
         ? [
             `${enterRows.length} ENTER row(s): replay these first. If they do not show immediate snapback on TradingView, the rule is too loose.`,
+          ]
+        : []),
+      ...(playbookAlerts > 0 && playbookAlerts < 20
+        ? [
+            `${playbookAlerts} Playbook alert(s) is still a small sample. Treat patterns as clues, not a trading rule.`,
           ]
         : []),
       ...(likelyUpgradeWaits
@@ -1060,6 +1081,8 @@ export default function TradingViewCapturePage() {
       incompleteAlerts,
       failedEnterRows,
       likelyUpgradeWaits,
+      paperEvidenceStatus,
+      evidenceNeed,
       reviewQueue,
       dataQuality,
       rawSignalAlerts,
@@ -1280,6 +1303,17 @@ export default function TradingViewCapturePage() {
             Paper-test batch verdict
           </p>
           <p className="mt-2 text-sm text-foreground">{paperSummary.verdict}</p>
+          <div className="mt-3 border border-border bg-background/40 p-3">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              Evidence status
+            </p>
+            <p className="mt-1 text-sm text-foreground">
+              {paperSummary.paperEvidenceStatus}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {paperSummary.evidenceNeed}
+            </p>
+          </div>
           <div className="mt-3 border border-cyan-500/30 bg-background/40 p-3">
             <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">
               Next action
