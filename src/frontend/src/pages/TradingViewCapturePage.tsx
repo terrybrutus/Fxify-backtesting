@@ -7,6 +7,7 @@ type TvAlert = {
   id: string;
   importedAt: number;
   strategy?: string;
+  playbookVersion?: string;
   rawSignal?: boolean;
   action?: string;
   plainAction?: string;
@@ -59,7 +60,7 @@ type ReviewCounts = {
   doNotHold: number;
 };
 
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","rawSignal":true,"mode":"first_touch","confirmed":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v2","rawSignal":true,"mode":"first_touch","confirmed":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
 
 const BRUTUS_STRATEGIES = new Set(["brutus_band", "brutus_playbook_v1"]);
 const BRUTUS_TIMEFRAMES = new Set([
@@ -171,6 +172,7 @@ function normalizePayload(raw: unknown): TvAlert {
     id: crypto.randomUUID(),
     importedAt: Date.now(),
     strategy: asString(item.strategy),
+    playbookVersion: asString(item.playbookVersion),
     rawSignal: asBoolean(item.rawSignal),
     action: asString(item.action),
     plainAction: asString(item.plainAction),
@@ -221,6 +223,7 @@ function normalizeTimeframe(timeframe?: string) {
 function alertIdentity(alert: TvAlert) {
   return [
     alert.strategy ?? "",
+    alert.playbookVersion ?? "",
     alert.alertMode ?? "",
     alert.mode ?? "",
     alert.action ?? "",
@@ -632,6 +635,68 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
   };
 }
 
+function reviewTagFor(
+  alert: TvAlert,
+  review: BrutusReview,
+  matchStatus: MatchStatus,
+) {
+  if (isLegacyBrutusAlert(alert)) return "Old script";
+  if (!isPlaybookAlert(alert)) return "Not Playbook";
+  if (
+    !alert.brokerSymbol ||
+    !alert.timeframe ||
+    !alert.direction ||
+    alert.high == null ||
+    alert.low == null ||
+    alert.close == null ||
+    alert.upper == null ||
+    alert.lower == null
+  ) {
+    return "Missing fields";
+  }
+  if (matchStatus === "no-data" || matchStatus === "no-match") {
+    return "TV only";
+  }
+  const risk =
+    review.entry != null && review.stop != null
+      ? Math.abs(review.entry - review.stop)
+      : undefined;
+  if (
+    review.status === "ENTER" &&
+    risk != null &&
+    risk > 0 &&
+    review.adverse != null &&
+    review.adverse >= risk
+  ) {
+    return "Failed entry";
+  }
+  if (review.status === "ENTER") return "Review first";
+  if (
+    review.status === "WAIT" &&
+    review.touchToClose != null &&
+    review.bandWidth != null &&
+    review.touchToClose > 0 &&
+    review.touchToClose <= review.bandWidth * 0.35
+  ) {
+    return "Maybe loosen";
+  }
+  if (review.status === "DO_NOT_HOLD") return "Trap watch";
+  if (review.status === "SKIP") return "Skip evidence";
+  return "Paper log";
+}
+
+function reviewTagClass(tag: string) {
+  if (tag === "Review first") return "text-cyan-300";
+  if (tag === "Maybe loosen") return "text-lime-300";
+  if (tag === "Failed entry" || tag === "Missing fields") {
+    return "text-destructive";
+  }
+  if (tag === "Trap watch" || tag === "Old script" || tag === "TV only") {
+    return "text-amber-300";
+  }
+  return "text-muted-foreground";
+}
+
 function downloadText(filename: string, content: string) {
   const blob = new Blob([content], { type: "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -988,6 +1053,7 @@ export default function TradingViewCapturePage() {
                         ...alert,
                         matchStatus: status,
                         matchDeltaMinutes: deltaMinutes,
+                        reviewTag: reviewTagFor(alert, brutusReview, status),
                         brutusReview,
                       }),
                     ),
@@ -1195,6 +1261,7 @@ export default function TradingViewCapturePage() {
                 <th className="px-2 py-2">TF</th>
                 <th className="px-2 py-2">Mode</th>
                 <th className="px-2 py-2">Side</th>
+                <th className="px-2 py-2">Review</th>
                 <th className="px-2 py-2">Rule</th>
                 <th className="px-2 py-2">OHLC</th>
                 <th className="px-2 py-2">Bands</th>
@@ -1205,88 +1272,105 @@ export default function TradingViewCapturePage() {
             <tbody>
               {reviewedRows.length === 0 ? (
                 <tr>
-                  <td className="px-2 py-6 text-muted-foreground" colSpan={11}>
+                  <td className="px-2 py-6 text-muted-foreground" colSpan={12}>
                     No TradingView alert events imported yet.
                   </td>
                 </tr>
               ) : (
                 reviewedRows.map(
-                  ({ alert, status, deltaMinutes, brutusReview }) => (
-                    <tr className="border-b border-border/60" key={alert.id}>
-                      <td className="px-2 py-2">{formatTime(alert.time)}</td>
-                      <td className="px-2 py-2">
-                        {alert.brokerSymbol ?? "unknown"}
-                      </td>
-                      <td className="px-2 py-2">
-                        {alert.mappedSymbol ?? "unmapped"}
-                      </td>
-                      <td className="px-2 py-2">{alert.timeframe ?? "n/a"}</td>
-                      <td className="px-2 py-2">
-                        {alert.mode ?? alert.alertMode ?? "n/a"}
-                        <span className="block text-muted-foreground">
-                          {alert.rawSignal ? "raw" : "legacy"} /{" "}
-                          {alert.confirmed ? "confirmed" : "live"}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2">{alert.direction ?? "n/a"}</td>
-                      <td className="px-2 py-2">
-                        <span
-                          className={
-                            brutusReview.status === "ENTER"
-                              ? "text-cyan-300"
-                              : brutusReview.status === "WAIT"
+                  ({ alert, status, deltaMinutes, brutusReview }) => {
+                    const reviewTag = reviewTagFor(alert, brutusReview, status);
+                    return (
+                      <tr className="border-b border-border/60" key={alert.id}>
+                        <td className="px-2 py-2">{formatTime(alert.time)}</td>
+                        <td className="px-2 py-2">
+                          {alert.brokerSymbol ?? "unknown"}
+                        </td>
+                        <td className="px-2 py-2">
+                          {alert.mappedSymbol ?? "unmapped"}
+                        </td>
+                        <td className="px-2 py-2">
+                          {alert.timeframe ?? "n/a"}
+                        </td>
+                        <td className="px-2 py-2">
+                          {alert.mode ?? alert.alertMode ?? "n/a"}
+                          <span className="block text-muted-foreground">
+                            {alert.rawSignal ? "raw" : "legacy"} /{" "}
+                            {alert.confirmed ? "confirmed" : "live"}
+                          </span>
+                          {alert.playbookVersion && (
+                            <span className="block text-muted-foreground">
+                              {alert.playbookVersion}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-2 py-2">
+                          {alert.direction ?? "n/a"}
+                        </td>
+                        <td className="px-2 py-2">
+                          <span className={reviewTagClass(reviewTag)}>
+                            {reviewTag}
+                          </span>
+                        </td>
+                        <td className="px-2 py-2">
+                          <span
+                            className={
+                              brutusReview.status === "ENTER"
+                                ? "text-cyan-300"
+                                : brutusReview.status === "WAIT"
+                                  ? "text-lime-400"
+                                  : brutusReview.status === "DO_NOT_HOLD"
+                                    ? "text-amber-300"
+                                    : "text-destructive"
+                            }
+                          >
+                            {brutusReview.status.replaceAll("_", " ")}
+                          </span>
+                          <span className="block max-w-72 whitespace-normal text-muted-foreground">
+                            {brutusReview.reason}
+                          </span>
+                        </td>
+                        <td className="px-2 py-2">
+                          O:{alert.open?.toFixed(2) ?? "?"} H:
+                          {alert.high?.toFixed(2) ?? "?"} L:
+                          {alert.low?.toFixed(2) ?? "?"} C:
+                          {alert.close?.toFixed(2) ?? "?"}
+                        </td>
+                        <td className="px-2 py-2">
+                          U:{alert.upper?.toFixed(2) ?? "?"} L:
+                          {alert.lower?.toFixed(2) ?? "?"}
+                        </td>
+                        <td className="px-2 py-2">
+                          E:{brutusReview.entry?.toFixed(2) ?? "?"} S:
+                          {brutusReview.stop?.toFixed(2) ?? "?"} T:
+                          {brutusReview.target?.toFixed(2) ?? "?"}
+                          <span className="block text-muted-foreground">
+                            move {brutusReview.touchToClose?.toFixed(1) ?? "?"}{" "}
+                            / adverse {brutusReview.adverse?.toFixed(1) ?? "?"}
+                          </span>
+                        </td>
+                        <td className="px-2 py-2">
+                          <span
+                            className={
+                              status === "matched"
                                 ? "text-lime-400"
-                                : brutusReview.status === "DO_NOT_HOLD"
+                                : status === "nearby"
                                   ? "text-amber-300"
                                   : "text-destructive"
-                          }
-                        >
-                          {brutusReview.status.replaceAll("_", " ")}
-                        </span>
-                        <span className="block max-w-72 whitespace-normal text-muted-foreground">
-                          {brutusReview.reason}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2">
-                        O:{alert.open?.toFixed(2) ?? "?"} H:
-                        {alert.high?.toFixed(2) ?? "?"} L:
-                        {alert.low?.toFixed(2) ?? "?"} C:
-                        {alert.close?.toFixed(2) ?? "?"}
-                      </td>
-                      <td className="px-2 py-2">
-                        U:{alert.upper?.toFixed(2) ?? "?"} L:
-                        {alert.lower?.toFixed(2) ?? "?"}
-                      </td>
-                      <td className="px-2 py-2">
-                        E:{brutusReview.entry?.toFixed(2) ?? "?"} S:
-                        {brutusReview.stop?.toFixed(2) ?? "?"} T:
-                        {brutusReview.target?.toFixed(2) ?? "?"}
-                        <span className="block text-muted-foreground">
-                          move {brutusReview.touchToClose?.toFixed(1) ?? "?"} /
-                          adverse {brutusReview.adverse?.toFixed(1) ?? "?"}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2">
-                        <span
-                          className={
-                            status === "matched"
-                              ? "text-lime-400"
-                              : status === "nearby"
-                                ? "text-amber-300"
-                                : "text-destructive"
-                          }
-                        >
-                          {status}
-                        </span>
-                        {deltaMinutes != null && (
-                          <span className="text-muted-foreground">
-                            {" "}
-                            ({deltaMinutes.toFixed(1)}m)
+                            }
+                          >
+                            {status}
                           </span>
-                        )}
-                      </td>
-                    </tr>
-                  ),
+                          {deltaMinutes != null && (
+                            <span className="text-muted-foreground">
+                              {" "}
+                              ({deltaMinutes.toFixed(1)}m)
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  },
                 )
               )}
             </tbody>
