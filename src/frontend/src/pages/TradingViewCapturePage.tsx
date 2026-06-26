@@ -8,6 +8,7 @@ type TvAlert = {
   importedAt: number;
   strategy?: string;
   action?: string;
+  plainAction?: string;
   alertMode?: string;
   brokerSymbol?: string;
   mappedSymbol?: string;
@@ -26,7 +27,7 @@ type TvAlert = {
 };
 
 type MatchStatus = "matched" | "nearby" | "no-match" | "no-data";
-type BrutusReviewStatus = "ENTER" | "WATCH" | "SKIP" | "TOO LATE";
+type BrutusReviewStatus = "ENTER" | "WAIT" | "SKIP" | "DO_NOT_HOLD";
 
 type BrutusReview = {
   status: BrutusReviewStatus;
@@ -45,7 +46,7 @@ type ImportResult = {
   total: number;
 };
 
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","direction":"long","time":1782084600000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"entry":51770.3,"stop":51685.2,"target":51872.4,"reason":"Band touched and price started snapping back."}`;
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"entry":51770.3,"stop":51685.2,"target":51872.4,"reason":"Band touched and price started snapping back."}`;
 
 const BRUTUS_STRATEGIES = new Set(["brutus_band", "brutus_playbook_v1"]);
 const BRUTUS_TIMEFRAMES = new Set(["1m", "3m", "5m", "15m", "30m", "45m", "1H"]);
@@ -138,6 +139,7 @@ function normalizePayload(raw: unknown): TvAlert {
     importedAt: Date.now(),
     strategy: asString(item.strategy),
     action: asString(item.action),
+    plainAction: asString(item.plainAction),
     alertMode: asString(item.alertMode),
     brokerSymbol,
     mappedSymbol: mapBrokerSymbol(brokerSymbol),
@@ -376,9 +378,12 @@ function actionFor(alert: TvAlert) {
 }
 
 function rawReasonFor(alert: TvAlert) {
-  return alert.raw && typeof alert.raw === "object"
-    ? asString((alert.raw as Record<string, unknown>).reason)
-    : undefined;
+  if (alert.plainAction) return alert.plainAction;
+  if (alert.raw && typeof alert.raw === "object") {
+    const raw = alert.raw as Record<string, unknown>;
+    return asString(raw.plainAction) ?? asString(raw.reason);
+  }
+  return undefined;
 }
 
 function reviewBrutusAlert(alert: TvAlert): BrutusReview {
@@ -459,11 +464,11 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
       adverse,
     };
   }
-  if (action === "WATCH") {
+  if (action === "WAIT" || action === "WATCH") {
     return {
-      status: "WATCH",
+      status: "WAIT",
       reason:
-        rawReason ?? "TradingView Pine rule says watch, but do not enter yet.",
+        rawReason ?? "TradingView Pine rule says wait, but do not enter yet.",
       entry,
       stop,
       target,
@@ -474,7 +479,7 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
   }
   if (action === "DO_NOT_HOLD") {
     return {
-      status: "SKIP",
+      status: "DO_NOT_HOLD",
       reason:
         rawReason ??
         "TradingView Pine rule says do not hold because price is pushing through the band.",
@@ -500,8 +505,8 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
   }
   if (movedTooFar) {
     return {
-      status: "TOO LATE",
-      reason: "The move has already run too far away from the band touch.",
+      status: "SKIP",
+      reason: "Skip. The move has already run too far away from the band touch.",
       entry,
       stop,
       target,
@@ -512,8 +517,8 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
   }
   if (noRejectionYet) {
     return {
-      status: "SKIP",
-      reason: "No useful rejection away from the band is visible yet.",
+      status: "WAIT",
+      reason: "Wait. No useful rejection away from the band is visible yet.",
       entry,
       stop,
       target,
@@ -523,9 +528,9 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
     };
   }
   return {
-    status: "WATCH",
+    status: "WAIT",
     reason:
-      "Matches the draft Brutus rule: band touch with manageable entry distance.",
+      "Wait. This is close to the draft Brutus rule, but it is not a clean entry yet.",
     entry,
     stop,
     target,
@@ -608,16 +613,66 @@ export default function TradingViewCapturePage() {
     () => ({
       enter: reviewedRows.filter((row) => row.brutusReview.status === "ENTER")
         .length,
-      watch: reviewedRows.filter((row) => row.brutusReview.status === "WATCH")
+      wait: reviewedRows.filter((row) => row.brutusReview.status === "WAIT")
         .length,
       skip: reviewedRows.filter((row) => row.brutusReview.status === "SKIP")
         .length,
-      tooLate: reviewedRows.filter(
-        (row) => row.brutusReview.status === "TOO LATE",
+      doNotHold: reviewedRows.filter(
+        (row) => row.brutusReview.status === "DO_NOT_HOLD",
       ).length,
     }),
     [reviewedRows],
   );
+  const paperSummary = useMemo(() => {
+    const matchCounts = reviewedRows.reduce<Record<MatchStatus, number>>(
+      (acc, row) => {
+        acc[row.status] += 1;
+        return acc;
+      },
+      { matched: 0, nearby: 0, "no-match": 0, "no-data": 0 },
+    );
+    const bySymbol = reviewedRows.reduce<Record<string, typeof reviewCounts>>(
+      (acc, row) => {
+        const key = row.alert.mappedSymbol ?? row.alert.brokerSymbol ?? "unknown";
+        acc[key] ??= { enter: 0, wait: 0, skip: 0, doNotHold: 0 };
+        if (row.brutusReview.status === "ENTER") acc[key].enter += 1;
+        if (row.brutusReview.status === "WAIT") acc[key].wait += 1;
+        if (row.brutusReview.status === "SKIP") acc[key].skip += 1;
+        if (row.brutusReview.status === "DO_NOT_HOLD") acc[key].doNotHold += 1;
+        return acc;
+      },
+      {},
+    );
+    const byTimeframe = reviewedRows.reduce<Record<string, typeof reviewCounts>>(
+      (acc, row) => {
+        const key = row.alert.timeframe ?? "unknown";
+        acc[key] ??= { enter: 0, wait: 0, skip: 0, doNotHold: 0 };
+        if (row.brutusReview.status === "ENTER") acc[key].enter += 1;
+        if (row.brutusReview.status === "WAIT") acc[key].wait += 1;
+        if (row.brutusReview.status === "SKIP") acc[key].skip += 1;
+        if (row.brutusReview.status === "DO_NOT_HOLD") acc[key].doNotHold += 1;
+        return acc;
+      },
+      {},
+    );
+    const verdict =
+      reviewedRows.length === 0
+        ? "No TradingView alerts imported yet."
+        : reviewCounts.enter === 0
+          ? "No entry candidates in this alert batch. Keep collecting paper alerts."
+          : matchCounts["no-data"] > reviewedRows.length / 2
+            ? "Entry candidates exist, but most alerts are missing matching app candles. Use TradingView as the live truth and import more alert logs."
+            : "Entry candidates exist. Paper review the ENTER rows against TradingView before risking money.";
+    return {
+      generatedAt: new Date().toISOString(),
+      totalAlerts: reviewedRows.length,
+      actionCounts: reviewCounts,
+      matchCounts,
+      bySymbol,
+      byTimeframe,
+      verdict,
+    };
+  }, [reviewCounts, reviewedRows]);
 
   function addPayloads(text: string) {
     try {
@@ -730,6 +785,18 @@ export default function TradingViewCapturePage() {
               Export captured alerts
             </button>
             <button
+              className="border border-border bg-background px-4 py-2 font-mono text-xs hover:border-primary"
+              onClick={() =>
+                downloadText(
+                  "ict-brutus-paper-summary.json",
+                  JSON.stringify(paperSummary, null, 2),
+                )
+              }
+              type="button"
+            >
+              Export paper summary
+            </button>
+            <button
               className="border border-destructive/40 bg-background px-4 py-2 font-mono text-xs text-destructive hover:border-destructive"
               onClick={() => {
                 setAlerts([]);
@@ -805,6 +872,33 @@ export default function TradingViewCapturePage() {
         </aside>
       </section>
 
+      <section className="grid gap-3 border border-cyan-500/40 bg-cyan-500/5 p-4 md:grid-cols-[minmax(0,1fr)_220px]">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">
+            Paper-test batch verdict
+          </p>
+          <p className="mt-2 text-sm text-foreground">{paperSummary.verdict}</p>
+        </div>
+        <div className="font-mono text-xs text-muted-foreground">
+          <p>
+            Alerts:{" "}
+            <span className="text-foreground">{paperSummary.totalAlerts}</span>
+          </p>
+          <p>
+            Matched:{" "}
+            <span className="text-lime-300">
+              {paperSummary.matchCounts.matched}
+            </span>
+          </p>
+          <p>
+            No data:{" "}
+            <span className="text-destructive">
+              {paperSummary.matchCounts["no-data"]}
+            </span>
+          </p>
+        </div>
+      </section>
+
       <section className="grid gap-3 md:grid-cols-5">
         <div className="border border-primary/50 bg-card p-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
@@ -825,18 +919,18 @@ export default function TradingViewCapturePage() {
         </div>
         <div className="border border-lime-500/50 bg-card p-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Watch
+            Wait
           </p>
           <p className="mt-2 font-display text-2xl font-bold text-lime-300">
-            {reviewCounts.watch}
+            {reviewCounts.wait}
           </p>
         </div>
         <div className="border border-amber-500/50 bg-card p-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Too late
+            Do not hold
           </p>
           <p className="mt-2 font-display text-2xl font-bold text-amber-300">
-            {reviewCounts.tooLate}
+            {reviewCounts.doNotHold}
           </p>
         </div>
         <div className="border border-destructive/50 bg-card p-4">
@@ -897,14 +991,14 @@ export default function TradingViewCapturePage() {
                           className={
                             brutusReview.status === "ENTER"
                               ? "text-cyan-300"
-                              : brutusReview.status === "WATCH"
+                              : brutusReview.status === "WAIT"
                               ? "text-lime-400"
-                              : brutusReview.status === "TOO LATE"
+                              : brutusReview.status === "DO_NOT_HOLD"
                                 ? "text-amber-300"
                                 : "text-destructive"
                           }
                         >
-                          {brutusReview.status}
+                          {brutusReview.status.replaceAll("_", " ")}
                         </span>
                         <span className="block max-w-72 whitespace-normal text-muted-foreground">
                           {brutusReview.reason}

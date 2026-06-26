@@ -792,29 +792,30 @@ longWatch = longTouch and inSession and not longEnter and not longPushThrough
 shortWatch = shortTouch and inSession and not shortEnter and not shortPushThrough
 doNotHold = longPushThrough or shortPushThrough
 
-action = doNotHold ? "DO_NOT_HOLD" : longEnter or shortEnter ? "ENTER" : longWatch or shortWatch ? "WATCH" : "SKIP"
+action = doNotHold ? "DO_NOT_HOLD" : longEnter or shortEnter ? "ENTER" : longWatch or shortWatch ? "WAIT" : "SKIP"
 direction = longEnter or longWatch or longPushThrough ? "long" : shortEnter or shortWatch or shortPushThrough ? "short" : "none"
 entry = direction == "long" ? lower : direction == "short" ? upper : na
 risk = bandWidth * stopBandFraction
 stop = direction == "long" ? entry - risk : direction == "short" ? entry + risk : na
 target = direction == "long" ? entry + risk * targetR : direction == "short" ? entry - risk * targetR : na
-reason = action == "ENTER" ? "Band touched and price started snapping back." : action == "WATCH" ? "Band touched, but snapback is not clean yet." : action == "DO_NOT_HOLD" ? "Price is still pushing through the band." : "No trade."
+reason = action == "ENTER" ? "Band touched and price started snapping back." : action == "WAIT" ? "Band touched, but snapback is not clean yet." : action == "DO_NOT_HOLD" ? "Price is still pushing through the band." : "No trade."
+plainAction = action == "ENTER" ? "ENTER: paper trade candidate. Use the entry, stop, and target from this alert." : action == "WAIT" ? "WAIT: do not enter yet. Watch for cleaner snapback." : action == "DO_NOT_HOLD" ? "DO NOT HOLD: price is pushing through the band." : "SKIP: no trade."
 
 plotshape(longEnter, title="Long ENTER", location=location.belowbar, color=color.lime, style=shape.triangleup, text="ENTER")
 plotshape(shortEnter, title="Short ENTER", location=location.abovebar, color=color.red, style=shape.triangledown, text="ENTER")
-plotshape(longWatch, title="Long WATCH", location=location.belowbar, color=color.new(color.lime, 45), style=shape.circle, text="WATCH")
-plotshape(shortWatch, title="Short WATCH", location=location.abovebar, color=color.new(color.red, 45), style=shape.circle, text="WATCH")
+plotshape(longWatch, title="Long WAIT", location=location.belowbar, color=color.new(color.lime, 45), style=shape.circle, text="WAIT")
+plotshape(shortWatch, title="Short WAIT", location=location.abovebar, color=color.new(color.red, 45), style=shape.circle, text="WAIT")
 plotshape(doNotHold and direction == "long", title="Long DO NOT HOLD", location=location.belowbar, color=color.orange, style=shape.xcross, text="NO")
 plotshape(doNotHold and direction == "short", title="Short DO NOT HOLD", location=location.abovebar, color=color.orange, style=shape.xcross, text="NO")
 
 shouldAlert = action != "SKIP" and (not liveAlertsOnly or barstate.isrealtime)
-message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"direction\\":\\"" + direction + "\\",\\"time\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"entry\\":" + str.tostring(entry) + ",\\"stop\\":" + str.tostring(stop) + ",\\"target\\":" + str.tostring(target) + ",\\"reason\\":\\"" + reason + "\\"}"
+message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + direction + "\\",\\"time\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"entry\\":" + str.tostring(entry) + ",\\"stop\\":" + str.tostring(stop) + ",\\"target\\":" + str.tostring(target) + ",\\"reason\\":\\"" + reason + "\\"}"
 
 if shouldAlert
     alert(message, alert.freq_once_per_bar)
 
 alertcondition(longEnter or shortEnter, title="Brutus ENTER", message="Use Any alert() function call for JSON details.")
-alertcondition(longWatch or shortWatch, title="Brutus WATCH", message="Use Any alert() function call for JSON details.")
+alertcondition(longWatch or shortWatch, title="Brutus WAIT", message="Use Any alert() function call for JSON details.")
 alertcondition(doNotHold, title="Brutus DO NOT HOLD", message="Use Any alert() function call for JSON details.")
 `;
 }
@@ -1104,7 +1105,7 @@ export default function BrutusTradeDeskPage() {
           <h1 className="font-display text-2xl font-bold">Brutus Trade Desk</h1>
           <p className="mt-1 max-w-4xl text-sm text-muted-foreground">
             One job: turn Brutus research into plain decisions. This is not an
-            auto-trader. It tells you ENTER, WAIT, SKIP, or EXIT using the
+            auto-trader. It tells you ENTER, WAIT, SKIP, or DO NOT HOLD using the
             current draft rule.
           </p>
         </div>
@@ -1244,8 +1245,47 @@ export default function BrutusTradeDeskPage() {
                 }
                 type="button"
               >
-                Export Playbook
-              </button>
+              Export Playbook
+            </button>
+            </div>
+          </div>
+
+          <div className="grid gap-3 border border-cyan-500/40 bg-cyan-500/5 p-4 text-sm md:grid-cols-4">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">
+                1. Export
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Download the Pine script from this page after importing the
+                latest Brutus research.
+              </p>
+            </div>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">
+                2. Paste in TradingView
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Add it to the exact Alchemy chart, such as DJ30.R, USTEC.R,
+                US500.R, or JPN225.R.
+              </p>
+            </div>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">
+                3. Create alert
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Use Any alert() function call. The alert JSON includes ENTER,
+                WAIT, SKIP, or DO NOT HOLD.
+              </p>
+            </div>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">
+                4. Paper-test
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Import alert logs into TV Alert Capture and judge the decisions
+                before risking real money.
+              </p>
             </div>
           </div>
 
@@ -1338,7 +1378,7 @@ export default function BrutusTradeDeskPage() {
               only. A live alert should say ENTER only when the symbol,
               timeframe, session, candle timing, pierce depth, and snapback
               behavior match one of these rows. Everything else should say SKIP
-              or WATCH.
+              or WAIT.
             </p>
           </div>
         </section>
