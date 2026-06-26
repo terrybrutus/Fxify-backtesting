@@ -91,7 +91,9 @@ function loadAlerts(): TvAlert[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed)
-      ? parsed.map((alert) => normalizePayload(alert.raw ?? alert))
+      ? parsed
+          .map((alert) => normalizePayload(alert.raw ?? alert))
+          .filter(isImportableAlert)
       : [];
   } catch {
     return [];
@@ -197,12 +199,19 @@ function normalizePayload(raw: unknown): TvAlert {
   };
 }
 
+function isImportableAlert(alert: TvAlert) {
+  return Boolean(
+    alert.brokerSymbol &&
+      (alert.strategy || alert.action || alert.direction || alert.time != null),
+  );
+}
+
 function normalizeTimeframe(timeframe?: string) {
   const raw = timeframe?.trim();
   if (!raw) return undefined;
   const lower = raw.toLowerCase();
-  if (lower === "15") return "15m";
   if (lower === "60") return "1H";
+  if (/^\d+$/.test(lower)) return `${lower}m`;
   if (lower.endsWith("m")) return lower;
   if (lower.endsWith("h")) return lower.toUpperCase();
   if (lower === "1d" || lower === "d") return "1D";
@@ -213,6 +222,10 @@ function alertIdentity(alert: TvAlert) {
   return [
     alert.strategy ?? "",
     alert.alertMode ?? "",
+    alert.mode ?? "",
+    alert.action ?? "",
+    alert.confirmed ?? "",
+    alert.rawSignal ?? "",
     alert.brokerSymbol ?? "",
     alert.timeframe ?? "",
     alert.direction ?? "",
@@ -284,6 +297,25 @@ function parseCsvRecords(text: string) {
   return records;
 }
 
+function possibleJsonFragments(value: string) {
+  const trimmed = value.trim();
+  const fragments = new Set<string>();
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+    fragments.add(trimmed);
+  }
+  const objectStart = trimmed.indexOf("{");
+  const objectEnd = trimmed.lastIndexOf("}");
+  if (objectStart >= 0 && objectEnd > objectStart) {
+    fragments.add(trimmed.slice(objectStart, objectEnd + 1));
+  }
+  const arrayStart = trimmed.indexOf("[");
+  const arrayEnd = trimmed.lastIndexOf("]");
+  if (arrayStart >= 0 && arrayEnd > arrayStart) {
+    fragments.add(trimmed.slice(arrayStart, arrayEnd + 1));
+  }
+  return [...fragments];
+}
+
 function parseCsvText(
   text: string,
   normalizeMany: (value: unknown) => TvAlert[],
@@ -291,25 +323,35 @@ function parseCsvText(
   const records = parseCsvRecords(text);
   const [header, ...rows] = records;
   if (!header) return [];
-  const descriptionIndex = header.findIndex(
-    (cell) => cell.trim().toLowerCase() === "description",
+  const normalizedHeader = header.map((cell) =>
+    cell.trim().toLowerCase().replaceAll(" ", ""),
   );
+  const preferredColumns = [
+    "description",
+    "message",
+    "body",
+    "requestbody",
+    "payload",
+  ];
+  const preferredIndexes = preferredColumns
+    .map((name) => normalizedHeader.indexOf(name))
+    .filter((index) => index >= 0);
   const candidateCells =
-    descriptionIndex >= 0
-      ? rows.map((row) => row[descriptionIndex] ?? "")
+    preferredIndexes.length > 0
+      ? rows.flatMap((row) => preferredIndexes.map((index) => row[index] ?? ""))
       : records.flat();
+
   return candidateCells.flatMap((cell) => {
-    const trimmed = cell.trim();
-    if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) return [];
-    try {
-      return normalizeMany(JSON.parse(trimmed));
-    } catch {
-      try {
-        return normalizeMany(JSON.parse(trimmed.replaceAll('""', '"')));
-      } catch {
-        return [];
+    for (const fragment of possibleJsonFragments(cell)) {
+      for (const candidate of [fragment, fragment.replaceAll('""', '"')]) {
+        try {
+          return normalizeMany(JSON.parse(candidate));
+        } catch {
+          // Try the next candidate.
+        }
       }
     }
+    return [];
   });
 }
 
@@ -319,7 +361,8 @@ function parsePayloadText(text: string) {
   const normalizeMany = (value: unknown): TvAlert[] => {
     const unwrapped = unwrapWebhookPayload(value);
     if (Array.isArray(unwrapped)) return unwrapped.flatMap(normalizeMany);
-    return [normalizePayload(unwrapped)];
+    const alert = normalizePayload(unwrapped);
+    return isImportableAlert(alert) ? [alert] : [];
   };
   try {
     const parsed = JSON.parse(trimmed);
