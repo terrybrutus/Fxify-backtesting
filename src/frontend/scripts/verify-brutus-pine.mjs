@@ -1,0 +1,79 @@
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const here = dirname(fileURLToPath(import.meta.url));
+const sourcePath = resolve(here, "../src/pages/BrutusTradeDeskPage.tsx");
+const source = readFileSync(sourcePath, "utf8");
+const normalizedSource = source.replaceAll('\\\\"', '"').replaceAll('\\"', '"');
+
+const requiredSnippets = [
+  {
+    label: "Pine v6 export",
+    text: "return `//@version=6",
+  },
+  {
+    label: "original long triangle condition",
+    text: "rawLongCondition = (lowerSrc <= lower and close > open) or (lowerSrc[1] > lower[1] and lowerSrc <= lower)",
+  },
+  {
+    label: "original short triangle condition",
+    text: "rawShortCondition = (upperSrc >= upper and close < open) or (upperSrc[1] < upper[1] and upperSrc >= upper)",
+  },
+  {
+    label: "first-touch intrabar latch",
+    text: "varip bool rawLongLatched = false",
+  },
+  {
+    label: "per-side alert latch",
+    text: "varip bool alertedShortThisBar = false",
+  },
+  {
+    label: "new side touch event",
+    text: 'firstTouchNewSide = signalMode == "First touch" and barstate.isrealtime',
+  },
+  {
+    label: "all alert calls allowed after per-side gating",
+    text: "alert(message, alert.freq_all)",
+  },
+  {
+    label: "raw parity v3 payload",
+    text: '"playbookVersion":"raw-parity-v3"',
+  },
+  {
+    label: "raw signal JSON field",
+    text: '"rawSignal":true',
+  },
+  {
+    label: "raw condition JSON fields",
+    text: '"rawLongCondition":" + str.tostring(rawLongCondition)',
+  },
+  {
+    label: "new touch JSON fields",
+    text: '"newLongTouch":" + str.tostring(newLongTouch)',
+  },
+  {
+    label: "alert fire timestamp JSON field",
+    text: '"alertTime":" + str.tostring(timenow)',
+  },
+  {
+    label: "paper-only warning",
+    text: "This is a paper-test alert bridge. It does not prove the strategy is live-trade ready by itself.",
+  },
+];
+
+const missing = requiredSnippets.filter(
+  (item) => !normalizedSource.includes(item.text),
+);
+
+if (missing.length > 0) {
+  console.error("Brutus Pine export verifier failed.");
+  for (const item of missing) {
+    console.error(`- Missing: ${item.label}`);
+  }
+  process.exit(1);
+}
+
+console.log(
+  `Brutus Pine export verifier passed (${requiredSnippets.length} invariants).`,
+);
