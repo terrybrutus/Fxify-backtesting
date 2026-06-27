@@ -468,6 +468,10 @@ const requiredCaptureSnippets = [
     label: "capture event breakdown",
     text: "topEvents: topBreakdownRows(byEvent)",
   },
+  {
+    label: "capture example uses current plain action",
+    text: "PAPER BUY NOW. Skip if you are late.",
+  },
 ];
 
 const missingCapture = requiredCaptureSnippets.filter(
