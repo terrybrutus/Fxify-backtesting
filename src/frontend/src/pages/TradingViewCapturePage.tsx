@@ -1171,6 +1171,23 @@ export default function TradingViewCapturePage() {
       topModes: topBreakdownRows(byMode),
     };
   }, [latestReviewedRows, reviewCounts, reviewedRows]);
+  const reviewQueues = useMemo(() => {
+    const withTags = latestReviewedRows.map((row) => ({
+      ...row,
+      reviewTag: reviewTagFor(row.alert, row.brutusReview, row.status),
+    }));
+    return {
+      failedEntries: withTags
+        .filter((row) => row.reviewTag === "Failed entry")
+        .slice(0, 6),
+      maybeLoosenWaits: withTags
+        .filter((row) => row.reviewTag === "Maybe loosen")
+        .slice(0, 6),
+      cleanEntries: withTags
+        .filter((row) => row.reviewTag === "Review first")
+        .slice(0, 6),
+    };
+  }, [latestReviewedRows]);
 
   function addPayloads(text: string) {
     try {
@@ -1286,6 +1303,17 @@ export default function TradingViewCapturePage() {
                       generatedAt: new Date().toISOString(),
                       playbookVersion: LATEST_PLAYBOOK_VERSION,
                       note: "Latest Playbook rows only. Older Playbook and legacy alerts are excluded from this evidence export.",
+                      queues: {
+                        failedEntries: reviewQueues.failedEntries.map(
+                          exportableReviewedRow,
+                        ),
+                        maybeLoosenWaits: reviewQueues.maybeLoosenWaits.map(
+                          exportableReviewedRow,
+                        ),
+                        cleanEntries: reviewQueues.cleanEntries.map(
+                          exportableReviewedRow,
+                        ),
+                      },
                       rows: latestReviewedRows.map(exportableReviewedRow),
                     },
                     null,
@@ -1558,6 +1586,110 @@ export default function TradingViewCapturePage() {
               ))
             ) : (
               <p className="text-muted-foreground">No alerts imported.</p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-3 xl:grid-cols-3">
+        <div className="border border-destructive/50 bg-card p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-destructive">
+            Failed ENTERs to replay first
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            These are the rows that can kill the draft rule fastest. If
+            TradingView confirms they failed, tighten ENTER before paper
+            trading.
+          </p>
+          <div className="mt-3 space-y-2">
+            {reviewQueues.failedEntries.length ? (
+              reviewQueues.failedEntries.map((row) => (
+                <div
+                  className="border border-border bg-background/40 p-2 font-mono text-xs"
+                  key={row.alert.id}
+                >
+                  <p className="text-foreground">
+                    {row.alert.mappedSymbol ?? row.alert.brokerSymbol}{" "}
+                    {row.alert.timeframe} {row.alert.direction}{" "}
+                    {formatTime(row.alert.time)}
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    Replay this. It already crossed the draft stop zone.
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">
+                No failed latest ENTER rows in this batch.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="border border-lime-500/50 bg-card p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-lime-300">
+            WAITs that might become ENTERs
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            These are the best loosen-test candidates. They were close to
+            snapback, but the current rule still said WAIT.
+          </p>
+          <div className="mt-3 space-y-2">
+            {reviewQueues.maybeLoosenWaits.length ? (
+              reviewQueues.maybeLoosenWaits.map((row) => (
+                <div
+                  className="border border-border bg-background/40 p-2 font-mono text-xs"
+                  key={row.alert.id}
+                >
+                  <p className="text-foreground">
+                    {row.alert.mappedSymbol ?? row.alert.brokerSymbol}{" "}
+                    {row.alert.timeframe} {row.alert.direction}{" "}
+                    {formatTime(row.alert.time)}
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    Check if the next candles paid. If yes repeatedly, ENTER may
+                    be too strict.
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">
+                No close WAIT rows in this batch yet.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="border border-cyan-500/50 bg-card p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">
+            Clean ENTERs to paper check
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            These are not trade approvals. They are the rows to compare against
+            TradingView first.
+          </p>
+          <div className="mt-3 space-y-2">
+            {reviewQueues.cleanEntries.length ? (
+              reviewQueues.cleanEntries.map((row) => (
+                <div
+                  className="border border-border bg-background/40 p-2 font-mono text-xs"
+                  key={row.alert.id}
+                >
+                  <p className="text-foreground">
+                    {row.alert.mappedSymbol ?? row.alert.brokerSymbol}{" "}
+                    {row.alert.timeframe} {row.alert.direction}{" "}
+                    {formatTime(row.alert.time)}
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    Paper review only. Confirm the label appeared live before
+                    trusting it.
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">
+                No clean latest ENTER rows in this batch.
+              </p>
             )}
           </div>
         </div>
