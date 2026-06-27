@@ -78,8 +78,8 @@ const requiredSnippets = [
     text: "alert(message, alert.freq_all)",
   },
   {
-    label: "raw parity v9 payload",
-    text: '"playbookVersion":"raw-parity-v9"',
+    label: "raw parity v10 payload",
+    text: '"playbookVersion":"raw-parity-v10"',
   },
   {
     label: "raw signal JSON field",
@@ -90,8 +90,16 @@ const requiredSnippets = [
     text: '"decisionEvent":"',
   },
   {
+    label: "previous action JSON field",
+    text: '"previousAction":"',
+  },
+  {
     label: "decision event calculation",
     text: 'decisionEvent = confirmedCloseEvent ? "confirmed_close" : firstTouchNewSide ? "first_touch" : firstTouchDecisionChanged ? "decision_change" : "none"',
+  },
+  {
+    label: "previous action calculation",
+    text: 'previousAction = direction == "long" ? lastLongAlertAction : direction == "short" ? lastShortAlertAction : signalConflict ? "both" : ""',
   },
   {
     label: "raw condition JSON fields",
@@ -222,8 +230,8 @@ const requiredSnippets = [
     text: "Because that formula uses candle color, an open candle can change until it closes.",
   },
   {
-    label: "v9 same candle decision-change instruction",
-    text: "The v9 script alerts",
+    label: "v10 same candle decision-change instruction",
+    text: "The v10 script alerts",
   },
 ];
 
@@ -361,20 +369,32 @@ const requiredCaptureSnippets = [
     text: "DO NOT ENTER. Price is still pushing through the band.",
   },
   {
-    label: "capture page v9 decision-change note",
-    text: "Latest Playbook v9 can produce more than one alert",
+    label: "capture page v10 decision-change note",
+    text: "Latest Playbook v10 can produce more than one alert",
   },
   {
     label: "capture parses decision event",
     text: "decisionEvent: asString(item.decisionEvent)",
   },
   {
+    label: "capture parses previous action",
+    text: "previousAction: asString(item.previousAction)",
+  },
+  {
     label: "capture exports decision event",
     text: "decision_event",
   },
   {
+    label: "capture exports previous action",
+    text: "previous_action",
+  },
+  {
     label: "capture displays decision event",
     text: "event {alert.decisionEvent.replaceAll",
+  },
+  {
+    label: "capture displays previous action",
+    text: "from ${alert.previousAction}",
   },
   {
     label: "capture summarizes alert event",

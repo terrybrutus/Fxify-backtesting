@@ -11,6 +11,7 @@ type TvAlert = {
   playbookVersion?: string;
   rawSignal?: boolean;
   decisionEvent?: string;
+  previousAction?: string;
   rawLongSignal?: boolean;
   rawShortSignal?: boolean;
   rawLongCondition?: boolean;
@@ -115,8 +116,8 @@ type PaperOutcomeCounts = Record<PaperOutcome, number>;
 
 type EvidenceFilter = "latest" | "older" | "all";
 
-const LATEST_PLAYBOOK_VERSION = "raw-parity-v9";
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v9","rawSignal":true,"decisionEvent":"decision_change","rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
+const LATEST_PLAYBOOK_VERSION = "raw-parity-v10";
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v10","rawSignal":true,"decisionEvent":"decision_change","previousAction":"WAIT","rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
 
 const BRUTUS_STRATEGIES = new Set(["brutus_band", "brutus_playbook_v1"]);
 const BRUTUS_TIMEFRAMES = new Set([
@@ -266,6 +267,7 @@ function normalizePayload(raw: unknown): TvAlert {
     playbookVersion: asString(item.playbookVersion),
     rawSignal: asBoolean(item.rawSignal),
     decisionEvent: asString(item.decisionEvent),
+    previousAction: asString(item.previousAction),
     rawLongSignal: asBoolean(item.rawLongSignal),
     rawShortSignal: asBoolean(item.rawShortSignal),
     rawLongCondition: asBoolean(item.rawLongCondition),
@@ -654,6 +656,9 @@ function missingPlaybookFields(alert: TvAlert) {
   const missing: string[] = [];
   if (alert.rawSignal !== true) missing.push("rawSignal");
   if (!alert.decisionEvent) missing.push("decisionEvent");
+  if (alert.decisionEvent === "decision_change" && !alert.previousAction) {
+    missing.push("previousAction");
+  }
   if (!actionFor(alert)) missing.push("action");
   if (!rawReasonFor(alert)) missing.push("reason");
   if (!alert.mode && !alert.alertMode) missing.push("mode");
@@ -1072,6 +1077,7 @@ function evidenceRowsToCsv(
     "timeframe",
     "mode",
     "decision_event",
+    "previous_action",
     "confirmed",
     "direction",
     "pine_action",
@@ -1105,6 +1111,7 @@ function evidenceRowsToCsv(
       alert.timeframe,
       alert.mode ?? alert.alertMode,
       alert.decisionEvent,
+      alert.previousAction,
       alert.confirmed,
       alert.direction,
       actionFor(alert),
@@ -2034,7 +2041,7 @@ export default function TradingViewCapturePage() {
               the wick entry you were trying to study.
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Latest Playbook v9 can produce more than one alert on the same
+              Latest Playbook v10 can produce more than one alert on the same
               live candle when the decision changes, such as WAIT becoming
               ENTER or DO NOT HOLD.
             </p>
@@ -2669,6 +2676,9 @@ export default function TradingViewCapturePage() {
                           {alert.decisionEvent && (
                             <span className="block text-cyan-300">
                               event {alert.decisionEvent.replaceAll("_", " ")}
+                              {alert.previousAction
+                                ? ` from ${alert.previousAction}`
+                                : ""}
                             </span>
                           )}
                           {isPlaybookAlert(alert) && (
