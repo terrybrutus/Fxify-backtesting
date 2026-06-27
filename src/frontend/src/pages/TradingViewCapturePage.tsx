@@ -1645,6 +1645,23 @@ export default function TradingViewCapturePage() {
                       : likelyUpgradeWaits > 0
                         ? "Replay the Maybe loosen WAIT rows. These are possible future ENTER-rule candidates."
                         : "No trade candidate yet. Keep collecting live Playbook alerts.";
+    const enterOutcomes = paperOutcomeByDecision.ENTER;
+    const waitOutcomes = paperOutcomeByDecision.WAIT;
+    const trapOutcomes = paperOutcomeByDecision.DO_NOT_HOLD;
+    const outcomeRead =
+      reviewedOutcomeRows < 10
+        ? "Not enough marked outcomes yet. Mark at least 10 latest rows before changing the rule."
+        : enterOutcomes.failed >= 2 &&
+            enterOutcomes.failed >= enterOutcomes.paid
+          ? "Tighten ENTER. Marked ENTER rows are failing too often."
+          : waitOutcomes.missed >= 2 && waitOutcomes.missed > waitOutcomes.failed
+            ? "Test a looser ENTER rule. WAIT rows are being marked as missed opportunities."
+            : trapOutcomes.paid >= 2 && trapOutcomes.paid > trapOutcomes.failed
+              ? "Keep the DO NOT HOLD filter. Marked trap rows are helping avoid bad holds."
+              : enterOutcomes.paid >= 5 &&
+                  enterOutcomes.paid > enterOutcomes.failed * 2
+                ? "Current ENTER rule is worth continued paper testing. Do not use real money yet."
+                : "No rule change yet. Keep marking outcomes until one pattern is obvious.";
     return {
       generatedAt: new Date().toISOString(),
       totalAlerts: reviewedRows.length,
@@ -1667,6 +1684,7 @@ export default function TradingViewCapturePage() {
       likelyUpgradeWaits,
       paperOutcomeCounts,
       paperOutcomeByDecision,
+      outcomeRead,
       reviewedOutcomeRows,
       readinessChecks,
       readinessPassed,
@@ -2104,6 +2122,9 @@ export default function TradingViewCapturePage() {
           <div className="mt-3 border border-border bg-background/40 p-3">
             <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               Paper outcome scoreboard
+            </p>
+            <p className="mt-1 text-sm text-foreground">
+              {paperSummary.outcomeRead}
             </p>
             <div className="mt-2 grid gap-2 font-mono text-xs text-muted-foreground sm:grid-cols-2">
               {(

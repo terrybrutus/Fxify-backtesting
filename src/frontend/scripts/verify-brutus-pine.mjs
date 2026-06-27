@@ -300,6 +300,22 @@ const requiredCaptureSnippets = [
     label: "DO NOT HOLD trap filter guidance",
     text: "the trap filter is doing useful work",
   },
+  {
+    label: "outcome recommendation export",
+    text: "outcomeRead,",
+  },
+  {
+    label: "tighten ENTER recommendation",
+    text: "Tighten ENTER. Marked ENTER rows are failing too often.",
+  },
+  {
+    label: "loosen ENTER recommendation",
+    text: "Test a looser ENTER rule. WAIT rows are being marked as missed opportunities.",
+  },
+  {
+    label: "not enough outcomes recommendation",
+    text: "Mark at least 10 latest rows before changing the rule.",
+  },
 ];
 
 const missingCapture = requiredCaptureSnippets.filter(
