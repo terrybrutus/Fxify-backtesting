@@ -812,6 +812,26 @@ function downloadText(filename: string, content: string) {
   URL.revokeObjectURL(url);
 }
 
+function exportableReviewedRow({
+  alert,
+  status,
+  deltaMinutes,
+  brutusReview,
+}: {
+  alert: TvAlert;
+  status: MatchStatus;
+  deltaMinutes?: number;
+  brutusReview: BrutusReview;
+}) {
+  return {
+    ...alert,
+    matchStatus: status,
+    matchDeltaMinutes: deltaMinutes,
+    reviewTag: reviewTagFor(alert, brutusReview, status),
+    brutusReview,
+  };
+}
+
 export default function TradingViewCapturePage() {
   const { candles } = useStrategyWorkspace();
   const [payloadText, setPayloadText] = useState("");
@@ -1246,15 +1266,7 @@ export default function TradingViewCapturePage() {
                 downloadText(
                   "ict-tradingview-alert-capture.json",
                   JSON.stringify(
-                    reviewedRows.map(
-                      ({ alert, status, deltaMinutes, brutusReview }) => ({
-                        ...alert,
-                        matchStatus: status,
-                        matchDeltaMinutes: deltaMinutes,
-                        reviewTag: reviewTagFor(alert, brutusReview, status),
-                        brutusReview,
-                      }),
-                    ),
+                    reviewedRows.map(exportableReviewedRow),
                     null,
                     2,
                   ),
@@ -1263,6 +1275,27 @@ export default function TradingViewCapturePage() {
               type="button"
             >
               Export captured alerts
+            </button>
+            <button
+              className="border border-lime-500/60 bg-background px-4 py-2 font-mono text-xs text-lime-300 hover:border-lime-400"
+              onClick={() =>
+                downloadText(
+                  "ict-brutus-current-evidence.json",
+                  JSON.stringify(
+                    {
+                      generatedAt: new Date().toISOString(),
+                      playbookVersion: LATEST_PLAYBOOK_VERSION,
+                      note: "Latest Playbook rows only. Older Playbook and legacy alerts are excluded from this evidence export.",
+                      rows: latestReviewedRows.map(exportableReviewedRow),
+                    },
+                    null,
+                    2,
+                  ),
+                )
+              }
+              type="button"
+            >
+              Export current evidence
             </button>
             <button
               className="border border-border bg-background px-4 py-2 font-mono text-xs hover:border-primary"
