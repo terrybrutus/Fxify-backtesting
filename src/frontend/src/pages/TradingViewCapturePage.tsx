@@ -585,6 +585,15 @@ function missingPlaybookFields(alert: TvAlert) {
   return missing;
 }
 
+function playbookContractIssues(alert: TvAlert) {
+  const issues: string[] = [];
+  if (alert.length !== 9) issues.push("Length is not locked to 9");
+  if (alert.upperSource !== "high") issues.push("Upper band source is not high");
+  if (alert.lowerSource !== "low") issues.push("Lower band source is not low");
+  if (alert.stdDev !== 2) issues.push("StdDev is not locked to 2");
+  return issues;
+}
+
 function isPlaybookAlert(alert: TvAlert) {
   return alert.strategy === "brutus_playbook_v1" || alert.rawSignal === true;
 }
@@ -1084,6 +1093,20 @@ export default function TradingViewCapturePage() {
     const incompleteAlerts = latestReviewedRows.filter(
       (row) => missingPlaybookFields(row.alert).length > 0,
     ).length;
+    const contractIssueCounts = latestReviewedRows.reduce<
+      Record<string, number>
+    >((acc, row) => {
+      for (const issue of playbookContractIssues(row.alert)) {
+        acc[issue] = (acc[issue] ?? 0) + 1;
+      }
+      return acc;
+    }, {});
+    const contractIssueSummary = Object.entries(contractIssueCounts)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([issue, count]) => `${issue}: ${count}`);
+    const contractIssueAlerts = latestReviewedRows.filter(
+      (row) => playbookContractIssues(row.alert).length > 0,
+    ).length;
     const enterRows = latestReviewedRows.filter(
       (row) => row.brutusReview.status === "ENTER",
     );
@@ -1156,6 +1179,11 @@ export default function TradingViewCapturePage() {
             `${stalePlaybookAlerts} Playbook alert(s) are from an older export. Recreate those TradingView alerts from the latest Pine before judging readiness.`,
           ]
         : []),
+      ...(contractIssueAlerts
+        ? [
+            `${contractIssueAlerts} latest Playbook alert(s) do not prove the exact original Brutus settings. Re-export raw-parity-v6 before judging them.`,
+          ]
+        : []),
       ...(matchCounts["no-data"] || matchCounts["no-match"]
         ? [
             `${matchCounts["no-data"] + matchCounts["no-match"]} alert(s) cannot be matched to imported app candles. Trust TradingView first for those rows.`,
@@ -1176,11 +1204,13 @@ export default function TradingViewCapturePage() {
             ? "mixed-playbook-versions"
             : latestPlaybookAlerts === 0
               ? "no-latest-playbook"
-              : incompleteAlerts > 0
-                ? "incomplete"
-                : matchCounts["no-data"] > reviewedRows.length / 2
-                  ? "needs-candles"
-                  : "usable-paper-log";
+              : contractIssueAlerts > 0
+                ? "wrong-brutus-settings"
+                : incompleteAlerts > 0
+                  ? "incomplete"
+                  : matchCounts["no-data"] > reviewedRows.length / 2
+                    ? "needs-candles"
+                    : "usable-paper-log";
     const rawSignalAlerts = reviewedRows.filter(
       (row) => row.alert.rawSignal === true,
     ).length;
@@ -1202,17 +1232,19 @@ export default function TradingViewCapturePage() {
         ? "No TradingView alerts imported yet."
         : playbookAlerts === 0
           ? "This batch has no current Playbook alerts. Recreate alerts from the latest exported Pine before using it as evidence."
-          : latestPlaybookAlerts === 0
-            ? "This batch only has older Playbook rows. Export the latest Pine and collect fresh alerts."
-            : stalePlaybookAlerts > 0
-              ? "This batch mixes old and current Playbook exports. Use only the latest-version rows for readiness claims."
-              : incompleteAlerts > 0
-                ? "Some alerts are missing required fields. Fix the alert script/log source before judging the strategy."
-                : reviewCounts.enter === 0
-                  ? "No entry candidates in this alert batch. Keep collecting paper alerts."
-                  : matchCounts["no-data"] > reviewedRows.length / 2
-                    ? "Entry candidates exist, but most alerts are missing matching app candles. Use TradingView as the live truth and import more alert logs."
-                    : "Entry candidates exist. Paper review the ENTER rows against TradingView before risking money.";
+            : latestPlaybookAlerts === 0
+              ? "This batch only has older Playbook rows. Export the latest Pine and collect fresh alerts."
+              : stalePlaybookAlerts > 0
+                ? "This batch mixes old and current Playbook exports. Use only the latest-version rows for readiness claims."
+                : contractIssueAlerts > 0
+                  ? "Some latest Playbook alerts do not prove the exact original Brutus settings. Do not use this batch for readiness claims."
+                  : incompleteAlerts > 0
+                    ? "Some alerts are missing required fields. Fix the alert script/log source before judging the strategy."
+                    : reviewCounts.enter === 0
+                      ? "No entry candidates in this alert batch. Keep collecting paper alerts."
+                      : matchCounts["no-data"] > reviewedRows.length / 2
+                        ? "Entry candidates exist, but most alerts are missing matching app candles. Use TradingView as the live truth and import more alert logs."
+                        : "Entry candidates exist. Paper review the ENTER rows against TradingView before risking money.";
     const nextAction =
       reviewedRows.length === 0
         ? "Import the latest TradingView alert CSV from the Alerts Log."
@@ -1222,15 +1254,17 @@ export default function TradingViewCapturePage() {
             ? "Create fresh alerts from the latest exported Pine, then import that new CSV."
             : stalePlaybookAlerts > 0
               ? `Filter to ${LATEST_PLAYBOOK_VERSION} rows or recreate the older alerts before using this batch.`
-              : incompleteAlerts > 0
-                ? "Fix the alert source first. Missing fields make the batch unreliable."
-                : failedEnterRows > 0
-                  ? "Replay the failed ENTER rows first. If they really failed on TradingView, tighten the rule before paper-trading more."
-                  : enterRows.length > 0
-                    ? "Replay ENTER rows on TradingView. Mark whether snapback happened quickly; do not use real money yet."
-                    : likelyUpgradeWaits > 0
-                      ? "Replay the Maybe loosen WAIT rows. These are possible future ENTER-rule candidates."
-                      : "No trade candidate yet. Keep collecting live Playbook alerts.";
+              : contractIssueAlerts > 0
+                ? "Export the newest Pine and recreate the TradingView alerts. The batch must prove length 9, upper high, lower low, and StdDev 2."
+                : incompleteAlerts > 0
+                  ? "Fix the alert source first. Missing fields make the batch unreliable."
+                  : failedEnterRows > 0
+                    ? "Replay the failed ENTER rows first. If they really failed on TradingView, tighten the rule before paper-trading more."
+                    : enterRows.length > 0
+                      ? "Replay ENTER rows on TradingView. Mark whether snapback happened quickly; do not use real money yet."
+                      : likelyUpgradeWaits > 0
+                        ? "Replay the Maybe loosen WAIT rows. These are possible future ENTER-rule candidates."
+                        : "No trade candidate yet. Keep collecting live Playbook alerts.";
     return {
       generatedAt: new Date().toISOString(),
       totalAlerts: reviewedRows.length,
@@ -1245,6 +1279,9 @@ export default function TradingViewCapturePage() {
       stalePlaybookAlerts,
       legacyAlerts,
       incompleteAlerts,
+      contractIssueAlerts,
+      contractIssueCounts,
+      contractIssueSummary,
       failedEnterRows,
       likelyUpgradeWaits,
       paperEvidenceStatus,
@@ -1542,6 +1579,21 @@ export default function TradingViewCapturePage() {
                 <li key={item}>{item}</li>
               ))}
             </ul>
+          )}
+          {paperSummary.contractIssueAlerts > 0 && (
+            <div className="mt-3 border border-amber-400/50 bg-amber-400/5 p-3">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-amber-300">
+                Brutus settings mismatch
+              </p>
+              <p className="mt-1 text-sm text-foreground">
+                These alerts do not prove they used the original Brutus setup.
+                Do not judge the strategy from them.
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Required: length 9, upper source high, lower source low, StdDev
+                2. {paperSummary.contractIssueSummary.join(" | ")}
+              </p>
+            </div>
           )}
           {paperSummary.missingFieldSummary.length > 0 && (
             <div className="mt-3 border border-destructive/40 bg-destructive/5 p-3">
