@@ -965,6 +965,89 @@ function downloadText(filename: string, content: string) {
   URL.revokeObjectURL(url);
 }
 
+function csvCell(value: unknown) {
+  if (value == null) return "";
+  const text =
+    typeof value === "number" && Number.isFinite(value)
+      ? String(value)
+      : String(value);
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
+function evidenceRowsToCsv(
+  rows: Array<{
+    alert: TvAlert;
+    status: MatchStatus;
+    deltaMinutes?: number;
+    brutusReview: BrutusReview;
+  }>,
+) {
+  const headers = [
+    "candle_time",
+    "alert_delay",
+    "broker_symbol",
+    "mapped_symbol",
+    "timeframe",
+    "mode",
+    "confirmed",
+    "direction",
+    "pine_action",
+    "review_status",
+    "review_tag",
+    "plain_instruction",
+    "session_ok",
+    "timing_ok",
+    "minutes_into_bar",
+    "long_snapback",
+    "short_snapback",
+    "long_push_through",
+    "short_push_through",
+    "entry",
+    "stop",
+    "target",
+    "move",
+    "adverse",
+    "match_status",
+    "match_delta_minutes",
+    "reason",
+  ];
+  const body = rows.map((row) => {
+    const { alert, brutusReview } = row;
+    return [
+      formatTime(alert.time),
+      formatAlertDelay(alert),
+      alert.brokerSymbol,
+      alert.mappedSymbol,
+      alert.timeframe,
+      alert.mode ?? alert.alertMode,
+      alert.confirmed,
+      alert.direction,
+      actionFor(alert),
+      brutusReview.status,
+      reviewTagFor(alert, brutusReview, row.status),
+      plainRowInstruction(alert, brutusReview),
+      alert.inSession,
+      alert.notTooEarly,
+      alert.minutesIntoBar,
+      alert.longSnapback,
+      alert.shortSnapback,
+      alert.longPushThrough,
+      alert.shortPushThrough,
+      brutusReview.entry,
+      brutusReview.stop,
+      brutusReview.target,
+      brutusReview.touchToClose,
+      brutusReview.adverse,
+      row.status,
+      row.deltaMinutes,
+      brutusReview.reason,
+    ]
+      .map(csvCell)
+      .join(",");
+  });
+  return [headers.map(csvCell).join(","), ...body].join("\n");
+}
+
 function exportableReviewedRow({
   alert,
   status,
@@ -1565,6 +1648,18 @@ export default function TradingViewCapturePage() {
               type="button"
             >
               Export current evidence
+            </button>
+            <button
+              className="border border-lime-500/60 bg-background px-4 py-2 font-mono text-xs text-lime-300 hover:border-lime-400"
+              onClick={() =>
+                downloadText(
+                  "ict-brutus-current-evidence.csv",
+                  evidenceRowsToCsv(latestReviewedRows),
+                )
+              }
+              type="button"
+            >
+              Export evidence CSV
             </button>
             <button
               className="border border-border bg-background px-4 py-2 font-mono text-xs hover:border-primary"
