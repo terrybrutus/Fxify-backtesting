@@ -101,6 +101,18 @@ const requiredSnippets = [
     text: '"shortPushThrough":" + str.tostring(shortPushThrough)',
   },
   {
+    label: "specific wait reason for early live candle",
+    text: "it is still too early in the live candle",
+  },
+  {
+    label: "specific wait reason for missing snapback",
+    text: "snapback is not clean yet",
+  },
+  {
+    label: "specific skip reason for session gate",
+    text: "outside the active session",
+  },
+  {
     label: "original triangle long marker",
     text: 'plotshape(showOriginalSignals and rawLongCondition, title="Original Triangle Long Match"',
   },

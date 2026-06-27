@@ -858,8 +858,11 @@ entry = direction == "long" ? lower : direction == "short" ? upper : na
 risk = bandWidth * stopBandFraction
 stop = direction == "long" ? entry - risk : direction == "short" ? entry + risk : na
 target = direction == "long" ? entry + risk * targetR : direction == "short" ? entry - risk * targetR : na
-reason = signalConflict ? "Both original Brutus long and short signals fired on the same candle. Skip because direction is unclear." : action == "ENTER" ? "Original Brutus signal fired and price started snapping back." : action == "WAIT" ? "Original Brutus signal fired, but snapback is not clean yet." : action == "DO_NOT_HOLD" ? "Original Brutus signal fired, but price is still pushing through the band." : not inSession ? "Original Brutus signal fired outside the active session." : not modeReady ? "Original Brutus signal fired, but this mode waits for bar close." : "Original Brutus signal fired, but the playbook says skip."
-plainAction = action == "ENTER" ? "ENTER: paper trade candidate. Use the entry, stop, and target from this alert." : action == "WAIT" ? "WAIT: do not enter yet. Watch for cleaner snapback." : action == "DO_NOT_HOLD" ? "DO NOT HOLD: price is pushing through the band." : "SKIP: no trade."
+snapbackOk = direction == "long" ? longSnapback : direction == "short" ? shortSnapback : false
+waitReason = not notTooEarly ? "Original Brutus signal fired, but it is still too early in the live candle." : not snapbackOk ? "Original Brutus signal fired, but snapback is not clean yet." : "Original Brutus signal fired, but the playbook still says wait."
+skipReason = not inSession ? "Original Brutus signal fired outside the active session." : not modeReady ? "Original Brutus signal fired, but this mode waits for bar close." : "Original Brutus signal fired, but the playbook says skip."
+reason = signalConflict ? "Both original Brutus long and short signals fired on the same candle. Skip because direction is unclear." : action == "ENTER" ? "Original Brutus signal fired and price started snapping back." : action == "WAIT" ? waitReason : action == "DO_NOT_HOLD" ? "Original Brutus signal fired, but price is still pushing through the band." : skipReason
+plainAction = action == "ENTER" ? "ENTER: paper trade candidate. Use the entry, stop, and target from this alert." : action == "WAIT" ? "WAIT: do not enter yet. " + waitReason : action == "DO_NOT_HOLD" ? "DO NOT HOLD: price is pushing through the band." : "SKIP: no trade. " + skipReason
 entryJson = na(entry) ? "null" : str.tostring(entry)
 stopJson = na(stop) ? "null" : str.tostring(stop)
 targetJson = na(target) ? "null" : str.tostring(target)
