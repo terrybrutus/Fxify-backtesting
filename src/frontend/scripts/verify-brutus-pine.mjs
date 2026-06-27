@@ -167,11 +167,19 @@ const requiredSnippets = [
   },
   {
     label: "visible audit panel",
-    text: "var table auditPanel = table.new(position.top_right, 1, 5, border_width=1)",
+    text: "var table auditPanel = table.new(position.top_right, 1, 6, border_width=1)",
   },
   {
     label: "audit panel locked settings warning",
     text: "Locked: length 9, high/low bands, StdDev 2",
+  },
+  {
+    label: "audit panel shows raw signal alert state",
+    text: 'rawAuditText = rawSignal ? "Raw " + action + " | alert " + (shouldAlert ? "will fire" : "held") : "No raw Brutus signal now"',
+  },
+  {
+    label: "audit panel renders raw alert state",
+    text: "table.cell(auditPanel, 0, 2, rawAuditText",
   },
   {
     label: "audit panel parity instruction",
