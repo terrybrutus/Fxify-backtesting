@@ -11,6 +11,7 @@ import { useMemo, useState } from "react";
 type Direction = "long" | "short";
 type Decision = "ENTER" | "WAIT" | "SKIP" | "DO_NOT_HOLD";
 type PlaybookVerdict = "TEST" | "WATCH" | "AVOID" | "TOO SMALL";
+type PaperOutcome = "unreviewed" | "paid" | "failed" | "missed";
 type MomentumContext = {
   rsi?: number;
   rsiMa?: number;
@@ -154,11 +155,16 @@ type AlertGroupRow = {
   different: number;
   pineOnly: number;
   noData: number;
+  paid: number;
+  failed: number;
+  missed: number;
+  reviewed: number;
   latestAlertTime: number;
 };
 
 const STORAGE_KEY = "ict.brutus.trade-desk.report.v1";
 const ALERT_STORAGE_KEY = "ict.brutus.trade-desk.alerts.v1";
+const PAPER_OUTCOME_STORAGE_KEY = "ict.brutus.trade-desk.paperOutcomes.v1";
 const LATEST_PLAYBOOK_VERSION = "raw-parity-v10";
 const POINT_VALUE = 10;
 
@@ -218,6 +224,36 @@ function saveAlerts(alerts: TvAlert[]) {
     window.localStorage.setItem(ALERT_STORAGE_KEY, JSON.stringify(alerts));
   } catch {
     // Keep current-session alerts even if browser storage is full.
+  }
+}
+
+function loadPaperOutcomes(): Record<string, PaperOutcome> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(PAPER_OUTCOME_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return {};
+    }
+    return Object.fromEntries(
+      Object.entries(parsed).filter((entry): entry is [string, PaperOutcome] =>
+        ["unreviewed", "paid", "failed", "missed"].includes(String(entry[1])),
+      ),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function savePaperOutcomes(outcomes: Record<string, PaperOutcome>) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      PAPER_OUTCOME_STORAGE_KEY,
+      JSON.stringify(outcomes),
+    );
+  } catch {
+    // Outcome marking still works during the current session.
   }
 }
 
@@ -510,6 +546,17 @@ function isLatestPlaybookAlert(alert: TvAlert) {
   );
 }
 
+function paperOutcomeKey(alert: TvAlert) {
+  return [
+    alert.symbol ?? "unknown",
+    normalizeTimeframe(alert.timeframe) ?? "n/a",
+    alert.direction ?? "n/a",
+    alert.candleTime ?? "no-time",
+    alert.action ?? "NO_ACTION",
+    alert.decisionEvent ?? "event",
+  ].join("|");
+}
+
 function alertVersionLabel(alert: TvAlert) {
   if (isLatestPlaybookAlert(alert)) return "Current Playbook";
   if (isPlaybookAlert(alert)) return "Old Playbook";
@@ -555,6 +602,20 @@ function timeframeFamily(timeframe: string) {
 
 function displayDecision(decision: Decision | "NO DATA") {
   return decision.replaceAll("_", " ");
+}
+
+function paperOutcomeLabel(outcome: PaperOutcome) {
+  if (outcome === "paid") return "Paid";
+  if (outcome === "failed") return "Failed";
+  if (outcome === "missed") return "Wait paid";
+  return "Unreviewed";
+}
+
+function paperOutcomeClass(outcome: PaperOutcome) {
+  if (outcome === "paid") return "text-lime-300";
+  if (outcome === "failed") return "text-red-300";
+  if (outcome === "missed") return "text-amber-200";
+  return "text-muted-foreground";
 }
 
 function timingLabelFor(touch: IntrabarTouch) {
@@ -1270,6 +1331,9 @@ export default function BrutusTradeDeskPage() {
     loadReport(),
   );
   const [alerts, setAlerts] = useState<TvAlert[]>(() => loadAlerts());
+  const [paperOutcomes, setPaperOutcomes] = useState<
+    Record<string, PaperOutcome>
+  >(() => loadPaperOutcomes());
   const [error, setError] = useState("");
 
   const decisions = useMemo(() => {
@@ -1353,6 +1417,52 @@ export default function BrutusTradeDeskPage() {
     [latestAlertMatches],
   );
 
+  const paperOutcomeCounts = useMemo(() => {
+    const countsByDecision = {
+      ENTER: { unreviewed: 0, paid: 0, failed: 0, missed: 0 },
+      WAIT: { unreviewed: 0, paid: 0, failed: 0, missed: 0 },
+      SKIP: { unreviewed: 0, paid: 0, failed: 0, missed: 0 },
+      DO_NOT_HOLD: { unreviewed: 0, paid: 0, failed: 0, missed: 0 },
+      "NO DATA": { unreviewed: 0, paid: 0, failed: 0, missed: 0 },
+    } satisfies Record<Decision | "NO DATA", Record<PaperOutcome, number>>;
+    const totals = { unreviewed: 0, paid: 0, failed: 0, missed: 0 };
+
+    for (const item of latestAlertMatches) {
+      const outcome =
+        paperOutcomes[paperOutcomeKey(item.alert)] ?? "unreviewed";
+      totals[outcome] += 1;
+      countsByDecision[item.status][outcome] += 1;
+    }
+
+    const reviewed = totals.paid + totals.failed + totals.missed;
+    return {
+      ...totals,
+      reviewed,
+      byDecision: countsByDecision,
+    };
+  }, [latestAlertMatches, paperOutcomes]);
+
+  const paperOutcomeRead = useMemo(() => {
+    if (!latestAlertMatches.length) {
+      return "No current Playbook alerts imported yet.";
+    }
+    if (paperOutcomeCounts.reviewed < 10) {
+      return "Mark at least 10 current alerts before changing the rule.";
+    }
+    const enter = paperOutcomeCounts.byDecision.ENTER;
+    const wait = paperOutcomeCounts.byDecision.WAIT;
+    if (enter.failed > enter.paid && enter.failed >= 3) {
+      return "Tighten ENTER. Marked ENTER rows are failing too often.";
+    }
+    if (wait.missed >= 3 && wait.missed > enter.paid) {
+      return "Test a looser ENTER rule. WAIT rows are being marked as missed opportunities.";
+    }
+    if (enter.paid >= 5 && enter.paid > enter.failed) {
+      return "Current ENTER rule is worth continued paper testing. Do not use real money yet.";
+    }
+    return "No rule change yet. Keep marking outcomes until one pattern is obvious.";
+  }, [latestAlertMatches.length, paperOutcomeCounts]);
+
   const agreementCounts = useMemo(
     () => ({
       match: latestAlertMatches.filter((item) => item.agreement === "MATCH")
@@ -1390,6 +1500,10 @@ export default function BrutusTradeDeskPage() {
           different: 0,
           pineOnly: 0,
           noData: 0,
+          paid: 0,
+          failed: 0,
+          missed: 0,
+          reviewed: 0,
           latestAlertTime: 0,
         } satisfies AlertGroupRow);
       current.count += 1;
@@ -1397,6 +1511,12 @@ export default function BrutusTradeDeskPage() {
       current.different += item.agreement === "DIFFERENT" ? 1 : 0;
       current.pineOnly += item.agreement === "PINE ONLY" ? 1 : 0;
       current.noData += item.agreement === "NO DATA" ? 1 : 0;
+      const outcome =
+        paperOutcomes[paperOutcomeKey(item.alert)] ?? "unreviewed";
+      current.paid += outcome === "paid" ? 1 : 0;
+      current.failed += outcome === "failed" ? 1 : 0;
+      current.missed += outcome === "missed" ? 1 : 0;
+      current.reviewed += outcome !== "unreviewed" ? 1 : 0;
       const alertTime =
         typeof item.alert.alertTime === "number"
           ? item.alert.alertTime
@@ -1408,9 +1528,10 @@ export default function BrutusTradeDeskPage() {
       (a, b) =>
         b.count - a.count ||
         b.match - a.match ||
+        b.reviewed - a.reviewed ||
         b.latestAlertTime - a.latestAlertTime,
     );
-  }, [latestAlertMatches]);
+  }, [latestAlertMatches, paperOutcomes]);
 
   const alertReviewInstruction = useMemo(() => {
     if (!alertMatches.length) {
@@ -1428,6 +1549,12 @@ export default function BrutusTradeDeskPage() {
     if (agreementCounts.pineOnly > 0) {
       return "Review PINE ONLY rows in TradingView. They are newer than your imported candle batch, so the app cannot score them yet.";
     }
+    if (paperOutcomeCounts.byDecision.ENTER.failed > 0) {
+      return "Replay failed ENTER rows first. If they really failed on TradingView, tighten the rule before paper-trading more.";
+    }
+    if (paperOutcomeCounts.byDecision.WAIT.missed > 0) {
+      return "Review WAIT rows marked Wait paid. If these keep working, the ENTER rule is too strict.";
+    }
     if (alertCounts.enter > 0) {
       return "Paper-review ENTER rows next. The question is simple: did this work if taken immediately, or was it already too late?";
     }
@@ -1440,8 +1567,20 @@ export default function BrutusTradeDeskPage() {
     alertCounts,
     alertMatches.length,
     alertVersionCounts.contractIssues,
+    paperOutcomeCounts,
     latestAlertMatches.length,
   ]);
+
+  function markPaperOutcome(alert: TvAlert, outcome: PaperOutcome) {
+    const key = paperOutcomeKey(alert);
+    setPaperOutcomes((current) => {
+      const next = { ...current };
+      if (outcome === "unreviewed") delete next[key];
+      else next[key] = outcome;
+      savePaperOutcomes(next);
+      return next;
+    });
+  }
 
   async function importReport(file: File | undefined) {
     if (!file) return;
@@ -1524,6 +1663,9 @@ export default function BrutusTradeDeskPage() {
                 counts,
                 alertVersionCounts,
                 alertCounts,
+                paperOutcomeCounts,
+                paperOutcomeRead,
+                paperOutcomes,
                 alertSummaryRows,
                 latestAlertMatches,
                 alertMatches,
@@ -1893,6 +2035,42 @@ export default function BrutusTradeDeskPage() {
             </span>
           </div>
         </div>
+        <div className="mt-3 grid gap-3 border border-border bg-background p-3 md:grid-cols-[1.25fr_2fr]">
+          <div>
+            <p className="font-display text-sm font-bold">
+              Paper outcome scoreboard
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {paperOutcomeRead}
+            </p>
+          </div>
+          <div className="grid gap-2 font-mono text-xs sm:grid-cols-4">
+            <div className="border border-border p-2">
+              <span className="block text-muted-foreground">Marked</span>
+              <span className="text-lg text-foreground">
+                {paperOutcomeCounts.reviewed}
+              </span>
+            </div>
+            <div className="border border-lime-400/40 p-2">
+              <span className="block text-muted-foreground">Paid</span>
+              <span className="text-lg text-lime-300">
+                {paperOutcomeCounts.paid}
+              </span>
+            </div>
+            <div className="border border-red-500/40 p-2">
+              <span className="block text-muted-foreground">Failed</span>
+              <span className="text-lg text-red-300">
+                {paperOutcomeCounts.failed}
+              </span>
+            </div>
+            <div className="border border-amber-300/40 p-2">
+              <span className="block text-muted-foreground">Wait paid</span>
+              <span className="text-lg text-amber-200">
+                {paperOutcomeCounts.missed}
+              </span>
+            </div>
+          </div>
+        </div>
         {alertSummaryRows.length > 0 && (
           <div className="mt-3 border border-border bg-background p-3">
             <div className="flex flex-wrap items-start justify-between gap-2">
@@ -1910,7 +2088,7 @@ export default function BrutusTradeDeskPage() {
               </p>
             </div>
             <div className="mt-3 overflow-x-auto">
-              <table className="w-full min-w-[760px] border-collapse font-mono text-xs">
+              <table className="w-full min-w-[900px] border-collapse font-mono text-xs">
                 <thead className="text-left text-muted-foreground">
                   <tr className="border-b border-border">
                     <th className="px-2 py-2">Symbol</th>
@@ -1918,6 +2096,7 @@ export default function BrutusTradeDeskPage() {
                     <th className="px-2 py-2">Action</th>
                     <th className="px-2 py-2">Alerts</th>
                     <th className="px-2 py-2">Clean matches</th>
+                    <th className="px-2 py-2">Paper result</th>
                     <th className="px-2 py-2">Needs review</th>
                     <th className="px-2 py-2">Latest</th>
                   </tr>
@@ -1930,6 +2109,15 @@ export default function BrutusTradeDeskPage() {
                       <td className="px-2 py-2">{displayDecision(row.action)}</td>
                       <td className="px-2 py-2">{row.count}</td>
                       <td className="px-2 py-2 text-lime-300">{row.match}</td>
+                      <td className="px-2 py-2">
+                        <span className="text-lime-300">{row.paid} paid</span>
+                        <span className="block text-red-300">
+                          {row.failed} failed
+                        </span>
+                        <span className="block text-amber-200">
+                          {row.missed} wait paid
+                        </span>
+                      </td>
                       <td
                         className={
                           row.different + row.pineOnly + row.noData > 0
@@ -1950,7 +2138,7 @@ export default function BrutusTradeDeskPage() {
           </div>
         )}
         <div className="mt-3 overflow-x-auto">
-          <table className="w-full min-w-[980px] border-collapse font-mono text-xs">
+          <table className="w-full min-w-[1140px] border-collapse font-mono text-xs">
             <thead className="text-left text-muted-foreground">
               <tr className="border-b border-border">
                 <th className="px-2 py-2">Alert</th>
@@ -1962,22 +2150,28 @@ export default function BrutusTradeDeskPage() {
                 <th className="px-2 py-2">Pine vs app</th>
                 <th className="px-2 py-2">Plain Action</th>
                 <th className="px-2 py-2">Entry / Stop / Target</th>
+                <th className="px-2 py-2">Paper result</th>
                 <th className="px-2 py-2">Why</th>
               </tr>
             </thead>
             <tbody>
               {alertMatches.length === 0 ? (
                 <tr>
-                  <td className="px-2 py-6 text-muted-foreground" colSpan={10}>
+                  <td className="px-2 py-6 text-muted-foreground" colSpan={11}>
                     No TradingView alert CSV imported yet.
                   </td>
                 </tr>
               ) : (
-                alertMatches.slice(0, 60).map((item) => (
-                  <tr
-                    className="border-b border-border/60"
-                    key={`${item.alert.id}-${item.status}`}
-                  >
+                alertMatches.slice(0, 60).map((item) => {
+                  const outcome =
+                    paperOutcomes[paperOutcomeKey(item.alert)] ??
+                    "unreviewed";
+                  const canMark = isLatestPlaybookAlert(item.alert);
+                  return (
+                    <tr
+                      className="border-b border-border/60"
+                      key={`${item.alert.id}-${item.status}`}
+                    >
                     <td className="px-2 py-2">
                       {item.alert.alertTime
                         ? new Date(item.alert.alertTime).toLocaleString()
@@ -2059,11 +2253,54 @@ export default function BrutusTradeDeskPage() {
                       {fmtPrice(item.alert.stop ?? item.decision?.stop)} T:
                       {fmtPrice(item.alert.target ?? item.decision?.target)}
                     </td>
+                    <td className="px-2 py-2">
+                      <span className={paperOutcomeClass(outcome)}>
+                        {paperOutcomeLabel(outcome)}
+                      </span>
+                      {canMark ? (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {(["paid", "failed", "missed"] as const).map(
+                            (nextOutcome) => (
+                              <button
+                                className={
+                                  outcome === nextOutcome
+                                    ? "border border-primary bg-primary px-2 py-1 text-primary-foreground"
+                                    : "border border-border px-2 py-1 text-muted-foreground hover:border-primary hover:text-foreground"
+                                }
+                                key={nextOutcome}
+                                onClick={() =>
+                                  markPaperOutcome(item.alert, nextOutcome)
+                                }
+                                type="button"
+                              >
+                                {paperOutcomeLabel(nextOutcome)}
+                              </button>
+                            ),
+                          )}
+                          {outcome !== "unreviewed" && (
+                            <button
+                              className="border border-border px-2 py-1 text-muted-foreground hover:border-primary hover:text-foreground"
+                              onClick={() =>
+                                markPaperOutcome(item.alert, "unreviewed")
+                              }
+                              type="button"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="mt-1 block text-muted-foreground">
+                          Current Playbook only
+                        </span>
+                      )}
+                    </td>
                     <td className="max-w-sm whitespace-normal px-2 py-2 text-muted-foreground">
                       {item.alert.reason ?? item.note}
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

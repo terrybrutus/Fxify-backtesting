@@ -560,6 +560,26 @@ const requiredTradeDeskSnippets = [
     text: "alertSummaryRows,",
   },
   {
+    label: "trade desk paper outcome storage",
+    text: "ict.brutus.trade-desk.paperOutcomes.v1",
+  },
+  {
+    label: "trade desk paper outcome key",
+    text: "function paperOutcomeKey(alert: TvAlert)",
+  },
+  {
+    label: "trade desk paper outcome scoreboard",
+    text: "Paper outcome scoreboard",
+  },
+  {
+    label: "trade desk wait paid outcome",
+    text: "Wait paid",
+  },
+  {
+    label: "trade desk exports paper outcome read",
+    text: "paperOutcomeRead,",
+  },
+  {
     label: "trade desk warns when alert parameters drift",
     text: "Some current Playbook alerts failed the locked-parameter check.",
   },
