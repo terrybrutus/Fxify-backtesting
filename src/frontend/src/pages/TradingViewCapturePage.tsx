@@ -90,6 +90,12 @@ type BreakdownRow = {
   total: number;
 };
 
+type GateCount = {
+  yes: number;
+  no: number;
+  unknown: number;
+};
+
 type EvidenceFilter = "latest" | "older" | "all";
 
 const LATEST_PLAYBOOK_VERSION = "raw-parity-v7";
@@ -926,6 +932,10 @@ function countsText(counts: ReviewCounts) {
   return `E ${counts.enter} / W ${counts.wait} / NO ${counts.doNotHold} / S ${counts.skip}`;
 }
 
+function gateCountText(counts: GateCount) {
+  return `yes ${counts.yes} / no ${counts.no} / ? ${counts.unknown}`;
+}
+
 function downloadText(filename: string, content: string) {
   const blob = new Blob([content], { type: "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -1109,6 +1119,44 @@ export default function TradingViewCapturePage() {
         return acc;
       },
       {},
+    );
+    const emptyGate = (): GateCount => ({ yes: 0, no: 0, unknown: 0 });
+    const addGate = (counts: GateCount, value?: boolean) => {
+      if (value == null) counts.unknown += 1;
+      else if (value) counts.yes += 1;
+      else counts.no += 1;
+    };
+    const gateSummary = latestReviewedRows.reduce(
+      (acc, row) => {
+        const direction = directionFor(row.alert);
+        const snapback =
+          direction === "long"
+            ? row.alert.longSnapback
+            : direction === "short"
+              ? row.alert.shortSnapback
+              : undefined;
+        const pushThrough =
+          direction === "long"
+            ? row.alert.longPushThrough
+            : direction === "short"
+              ? row.alert.shortPushThrough
+              : undefined;
+        acc.total += 1;
+        addGate(acc.sessionOk, row.alert.inSession);
+        addGate(acc.timingOk, row.alert.notTooEarly);
+        addGate(acc.snapback, snapback);
+        addGate(acc.pushThrough, pushThrough);
+        addGate(acc.confirmed, row.alert.confirmed);
+        return acc;
+      },
+      {
+        total: 0,
+        sessionOk: emptyGate(),
+        timingOk: emptyGate(),
+        snapback: emptyGate(),
+        pushThrough: emptyGate(),
+        confirmed: emptyGate(),
+      },
     );
     const playbookAlerts = reviewedRows.filter((row) =>
       isPlaybookAlert(row.alert),
@@ -1338,6 +1386,7 @@ export default function TradingViewCapturePage() {
       missingFieldSummary,
       verdict,
       nextAction,
+      gateSummary,
       topSymbols: topBreakdownRows(bySymbol),
       topTimeframes: topBreakdownRows(byTimeframe),
       topModes: topBreakdownRows(byMode),
@@ -1618,6 +1667,42 @@ export default function TradingViewCapturePage() {
             <p className="mt-2 text-xs text-muted-foreground">
               This is still paper-trading evidence. Do not treat any row as a
               real-money instruction until repeated live alerts prove it.
+            </p>
+          </div>
+          <div className="mt-3 border border-border bg-background/40 p-3">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              Why labels happened
+            </p>
+            <div className="mt-2 grid gap-2 font-mono text-xs text-muted-foreground sm:grid-cols-2">
+              <p>
+                Session OK:{" "}
+                <span className="text-foreground">
+                  {gateCountText(paperSummary.gateSummary.sessionOk)}
+                </span>
+              </p>
+              <p>
+                Timing OK:{" "}
+                <span className="text-foreground">
+                  {gateCountText(paperSummary.gateSummary.timingOk)}
+                </span>
+              </p>
+              <p>
+                Snapback:{" "}
+                <span className="text-foreground">
+                  {gateCountText(paperSummary.gateSummary.snapback)}
+                </span>
+              </p>
+              <p>
+                Push-through trap:{" "}
+                <span className="text-foreground">
+                  {gateCountText(paperSummary.gateSummary.pushThrough)}
+                </span>
+              </p>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              This shows the gate pattern behind the labels. If WAIT rows have
+              snapback but no ENTER, the entry rule may be too strict. If ENTER
+              rows also show push-through, the rule is too loose.
             </p>
           </div>
           {paperSummary.reviewQueue.length > 0 && (
