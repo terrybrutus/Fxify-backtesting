@@ -810,6 +810,7 @@ function reviewTagFor(
   if (isLegacyBrutusAlert(alert)) return "Old script";
   if (!isPlaybookAlert(alert)) return "Not Playbook";
   if (!isLatestPlaybookAlert(alert)) return "Old Playbook";
+  if (playbookContractIssues(alert).length > 0) return "Wrong settings";
   if (alert.signalConflict) return "Skip evidence";
   if (isLatestPlaybookAlert(alert) && missingPlaybookFields(alert).length > 0) {
     return "Missing fields";
@@ -848,7 +849,11 @@ function reviewTagFor(
 function reviewTagClass(tag: string) {
   if (tag === "Review first") return "text-cyan-300";
   if (tag === "Maybe loosen") return "text-lime-300";
-  if (tag === "Failed entry" || tag === "Missing fields") {
+  if (
+    tag === "Failed entry" ||
+    tag === "Missing fields" ||
+    tag === "Wrong settings"
+  ) {
     return "text-destructive";
   }
   if (
@@ -2016,6 +2021,20 @@ export default function TradingViewCapturePage() {
                               {alert.playbookVersion}
                             </span>
                           )}
+                          {isPlaybookAlert(alert) && (
+                            <span
+                              className={`block ${
+                                playbookContractIssues(alert).length > 0
+                                  ? "text-destructive"
+                                  : "text-muted-foreground"
+                              }`}
+                            >
+                              L:{alert.length ?? "?"} U:
+                              {alert.upperSource ?? "?"} L:
+                              {alert.lowerSource ?? "?"} SD:
+                              {alert.stdDev ?? "?"}
+                            </span>
+                          )}
                           {(alert.rawLongSignal != null ||
                             alert.rawShortSignal != null) && (
                             <span className="block text-muted-foreground">
@@ -2062,6 +2081,11 @@ export default function TradingViewCapturePage() {
                           <span className={reviewTagClass(reviewTag)}>
                             {reviewTag}
                           </span>
+                          {reviewTag === "Wrong settings" && (
+                            <span className="block max-w-56 whitespace-normal text-destructive">
+                              Recreate this alert from the latest locked Pine.
+                            </span>
+                          )}
                         </td>
                         <td className="px-2 py-2">
                           <span
