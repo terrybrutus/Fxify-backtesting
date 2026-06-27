@@ -72,6 +72,10 @@ const requiredSnippets = [
     label: "paper-only warning",
     text: "This is a paper-test alert bridge. It does not prove the strategy is live-trade ready by itself.",
   },
+  {
+    label: "original-marker parity warning",
+    text: "ORIG markers must match the old Brutus triangles before trusting ENTER, WAIT, SKIP, or DO NOT HOLD labels.",
+  },
 ];
 
 const missing = requiredSnippets.filter(
