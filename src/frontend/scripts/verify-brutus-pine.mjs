@@ -25,6 +25,22 @@ const requiredSnippets = [
     text: "varip bool rawLongLatched = false",
   },
   {
+    label: "locked original length",
+    text: "length = 9",
+  },
+  {
+    label: "locked original standard deviation",
+    text: "mult = 2.0",
+  },
+  {
+    label: "locked upper source",
+    text: "upperSrc = high",
+  },
+  {
+    label: "locked lower source",
+    text: "lowerSrc = low",
+  },
+  {
     label: "per-side alert latch",
     text: "varip bool alertedShortThisBar = false",
   },
@@ -38,7 +54,7 @@ const requiredSnippets = [
   },
   {
     label: "raw parity v5 payload",
-    text: '"playbookVersion":"raw-parity-v5"',
+    text: '"playbookVersion":"raw-parity-v6"',
   },
   {
     label: "raw signal JSON field",
@@ -81,6 +97,14 @@ const requiredSnippets = [
     text: '"touchDepthRatio":" + str.tostring(touchDepthRatio)',
   },
   {
+    label: "upper source JSON field",
+    text: '"upperSource":"high"',
+  },
+  {
+    label: "lower source JSON field",
+    text: '"lowerSource":"low"',
+  },
+  {
     label: "bar timestamp alias JSON field",
     text: '"timestamp":" + str.tostring(time)',
   },
@@ -102,10 +126,36 @@ const missing = requiredSnippets.filter(
   (item) => !normalizedSource.includes(item.text),
 );
 
-if (missing.length > 0) {
+const forbiddenSnippets = [
+  {
+    label: "editable upper source input",
+    text: "input.source(high",
+  },
+  {
+    label: "editable lower source input",
+    text: "input.source(low",
+  },
+  {
+    label: "editable length input",
+    text: "input.int(9",
+  },
+  {
+    label: "editable stdDev input",
+    text: 'title="StdDev"',
+  },
+];
+
+const forbidden = forbiddenSnippets.filter((item) =>
+  normalizedSource.includes(item.text),
+);
+
+if (missing.length > 0 || forbidden.length > 0) {
   console.error("Brutus Pine export verifier failed.");
   for (const item of missing) {
     console.error(`- Missing: ${item.label}`);
+  }
+  for (const item of forbidden) {
+    console.error(`- Forbidden: ${item.label}`);
   }
   process.exit(1);
 }
