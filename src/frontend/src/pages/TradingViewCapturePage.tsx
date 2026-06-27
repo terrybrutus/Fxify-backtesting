@@ -2013,6 +2013,11 @@ export default function TradingViewCapturePage() {
               close rows are cleaner historically, but they may be later than
               the wick entry you were trying to study.
             </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Latest Playbook v8 can produce more than one alert on the same
+              live candle when the decision changes, such as WAIT becoming
+              ENTER or DO NOT HOLD.
+            </p>
           </div>
         </aside>
       </section>

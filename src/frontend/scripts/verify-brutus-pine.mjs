@@ -213,6 +213,10 @@ const requiredSnippets = [
     label: "open-bar repaint warning",
     text: "Because that formula uses candle color, an open candle can change until it closes.",
   },
+  {
+    label: "v8 same candle decision-change instruction",
+    text: "The v8 script alerts",
+  },
 ];
 
 const missing = requiredSnippets.filter(
@@ -347,6 +351,10 @@ const requiredCaptureSnippets = [
   {
     label: "plain do not enter instruction",
     text: "DO NOT ENTER. Price is still pushing through the band.",
+  },
+  {
+    label: "capture page v8 decision-change note",
+    text: "Latest Playbook v8 can produce more than one alert",
   },
 ];
 

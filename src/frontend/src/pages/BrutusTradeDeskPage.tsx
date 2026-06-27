@@ -1377,9 +1377,11 @@ export default function BrutusTradeDeskPage() {
               </p>
               <p className="mt-1 text-muted-foreground">
                 Use Any alert() function call. First touch is live paper
-                evidence, not perfect historical replay. Confirmed close waits
-                for the candle to close. Because your original triangle formula
-                uses candle color, open-bar ORIG markers can change until close.
+                evidence, not perfect historical replay. The v8 script alerts
+                again if that same live candle changes from WAIT to ENTER or DO
+                NOT HOLD. Confirmed close waits for the candle to close.
+                Because your original triangle formula uses candle color,
+                open-bar ORIG markers can change until close.
               </p>
             </div>
             <div>
