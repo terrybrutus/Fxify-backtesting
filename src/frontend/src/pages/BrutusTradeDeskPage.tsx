@@ -144,6 +144,19 @@ type PlaybookRow = {
   pineHint: string;
 };
 
+type AlertGroupRow = {
+  key: string;
+  symbol: string;
+  timeframe: string;
+  action: Decision | "NO DATA";
+  count: number;
+  match: number;
+  different: number;
+  pineOnly: number;
+  noData: number;
+  latestAlertTime: number;
+};
+
 const STORAGE_KEY = "ict.brutus.trade-desk.report.v1";
 const ALERT_STORAGE_KEY = "ict.brutus.trade-desk.alerts.v1";
 const LATEST_PLAYBOOK_VERSION = "raw-parity-v10";
@@ -544,7 +557,7 @@ function timeframeFamily(timeframe: string) {
   return "slow";
 }
 
-function displayDecision(decision: Decision) {
+function displayDecision(decision: Decision | "NO DATA") {
   return decision.replaceAll("_", " ");
 }
 
@@ -1362,6 +1375,47 @@ export default function BrutusTradeDeskPage() {
     [latestAlertMatches],
   );
 
+  const alertSummaryRows = useMemo(() => {
+    const groups = new Map<string, AlertGroupRow>();
+    for (const item of latestAlertMatches) {
+      const symbol = item.alert.symbol ?? "unknown";
+      const timeframe = normalizeTimeframe(item.alert.timeframe) ?? "n/a";
+      const action = item.alert.action ?? item.status;
+      const key = [symbol, timeframe, action].join("|");
+      const current =
+        groups.get(key) ??
+        ({
+          key,
+          symbol,
+          timeframe,
+          action,
+          count: 0,
+          match: 0,
+          different: 0,
+          pineOnly: 0,
+          noData: 0,
+          latestAlertTime: 0,
+        } satisfies AlertGroupRow);
+      current.count += 1;
+      current.match += item.agreement === "MATCH" ? 1 : 0;
+      current.different += item.agreement === "DIFFERENT" ? 1 : 0;
+      current.pineOnly += item.agreement === "PINE ONLY" ? 1 : 0;
+      current.noData += item.agreement === "NO DATA" ? 1 : 0;
+      const alertTime =
+        typeof item.alert.alertTime === "number"
+          ? item.alert.alertTime
+          : item.alert.candleTime ?? 0;
+      current.latestAlertTime = Math.max(current.latestAlertTime, alertTime);
+      groups.set(key, current);
+    }
+    return [...groups.values()].sort(
+      (a, b) =>
+        b.count - a.count ||
+        b.match - a.match ||
+        b.latestAlertTime - a.latestAlertTime,
+    );
+  }, [latestAlertMatches]);
+
   const alertReviewInstruction = useMemo(() => {
     if (!alertMatches.length) {
       return "Import the latest TradingView Playbook alert CSV. Do not judge live alerts from screenshots alone.";
@@ -1474,6 +1528,7 @@ export default function BrutusTradeDeskPage() {
                 counts,
                 alertVersionCounts,
                 alertCounts,
+                alertSummaryRows,
                 latestAlertMatches,
                 alertMatches,
                 decisions,
@@ -1842,6 +1897,62 @@ export default function BrutusTradeDeskPage() {
             </span>
           </div>
         </div>
+        {alertSummaryRows.length > 0 && (
+          <div className="mt-3 border border-border bg-background p-3">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p className="font-display text-sm font-bold">
+                  Current Alert Summary
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Current Playbook alerts only, grouped by symbol, timeframe,
+                  and Pine action.
+                </p>
+              </div>
+              <p className="font-mono text-xs text-muted-foreground">
+                {alertSummaryRows.length} groups
+              </p>
+            </div>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[760px] border-collapse font-mono text-xs">
+                <thead className="text-left text-muted-foreground">
+                  <tr className="border-b border-border">
+                    <th className="px-2 py-2">Symbol</th>
+                    <th className="px-2 py-2">TF</th>
+                    <th className="px-2 py-2">Action</th>
+                    <th className="px-2 py-2">Alerts</th>
+                    <th className="px-2 py-2">Clean matches</th>
+                    <th className="px-2 py-2">Needs review</th>
+                    <th className="px-2 py-2">Latest</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {alertSummaryRows.slice(0, 16).map((row) => (
+                    <tr className="border-b border-border/60" key={row.key}>
+                      <td className="px-2 py-2">{row.symbol}</td>
+                      <td className="px-2 py-2">{row.timeframe}</td>
+                      <td className="px-2 py-2">{displayDecision(row.action)}</td>
+                      <td className="px-2 py-2">{row.count}</td>
+                      <td className="px-2 py-2 text-lime-300">{row.match}</td>
+                      <td
+                        className={
+                          row.different + row.pineOnly + row.noData > 0
+                            ? "px-2 py-2 text-amber-200"
+                            : "px-2 py-2 text-muted-foreground"
+                        }
+                      >
+                        {row.different + row.pineOnly + row.noData}
+                      </td>
+                      <td className="px-2 py-2 text-muted-foreground">
+                        {fmtDate(row.latestAlertTime)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[980px] border-collapse font-mono text-xs">
             <thead className="text-left text-muted-foreground">

@@ -548,6 +548,18 @@ const requiredTradeDeskSnippets = [
     text: "Current Playbook",
   },
   {
+    label: "trade desk summarizes alerts by symbol timeframe action",
+    text: "Current Alert Summary",
+  },
+  {
+    label: "trade desk current summary excludes old alerts",
+    text: "Current Playbook alerts only, grouped by symbol, timeframe,",
+  },
+  {
+    label: "trade desk exports grouped alert summary",
+    text: "alertSummaryRows,",
+  },
+  {
     label: "trade desk warns when alert parameters drift",
     text: "Some current Playbook alerts failed the locked-parameter check.",
   },
