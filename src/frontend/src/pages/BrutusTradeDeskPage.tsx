@@ -320,6 +320,25 @@ function normalizeAlertPayload(
   };
 }
 
+function possibleJsonFragments(value: string) {
+  const trimmed = value.trim();
+  const fragments = new Set<string>();
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+    fragments.add(trimmed);
+  }
+  const objectStart = trimmed.indexOf("{");
+  const objectEnd = trimmed.lastIndexOf("}");
+  if (objectStart >= 0 && objectEnd > objectStart) {
+    fragments.add(trimmed.slice(objectStart, objectEnd + 1));
+  }
+  const arrayStart = trimmed.indexOf("[");
+  const arrayEnd = trimmed.lastIndexOf("]");
+  if (arrayStart >= 0 && arrayEnd > arrayStart) {
+    fragments.add(trimmed.slice(arrayStart, arrayEnd + 1));
+  }
+  return [...fragments];
+}
+
 function parseAlertLog(text: string): TvAlert[] {
   const trimmed = text.trim();
   if (!trimmed) return [];
@@ -348,19 +367,39 @@ function parseAlertLog(text: string): TvAlert[] {
   const records = parseCsvRecords(trimmed);
   const [header, ...rows] = records;
   if (!header) return [];
-  const normalizedHeader = header.map((cell) => cell.trim().toLowerCase());
-  const descriptionIndex = normalizedHeader.indexOf("description");
+  const normalizedHeader = header.map((cell) =>
+    cell.trim().toLowerCase().replaceAll(" ", ""),
+  );
+  const preferredColumns = [
+    "description",
+    "message",
+    "body",
+    "requestbody",
+    "payload",
+  ];
+  const preferredIndexes = preferredColumns
+    .map((name) => normalizedHeader.indexOf(name))
+    .filter((index) => index >= 0);
+  if (!preferredIndexes.length) return [];
   const timeIndex = normalizedHeader.indexOf("time");
-  if (descriptionIndex < 0) return [];
 
   return rows.flatMap((row) => {
-    const description = row[descriptionIndex]?.trim();
-    if (!description) return [];
-    try {
-      return fromPayload(JSON.parse(description), row[timeIndex]);
-    } catch {
-      return [];
+    const alertTime = timeIndex >= 0 ? row[timeIndex] : undefined;
+    for (const index of preferredIndexes) {
+      const cell = row[index]?.trim();
+      if (!cell) continue;
+      for (const fragment of possibleJsonFragments(cell)) {
+        for (const candidate of [fragment, fragment.replaceAll('""', '"')]) {
+          try {
+            const parsed = JSON.parse(candidate);
+            return fromPayload(parsed, alertTime);
+          } catch {
+            // Try the next candidate.
+          }
+        }
+      }
     }
+    return [];
   });
 }
 

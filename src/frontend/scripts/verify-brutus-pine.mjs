@@ -486,6 +486,29 @@ const missingCapture = requiredCaptureSnippets.filter(
   (item) => !normalizedCaptureSource.includes(item.text),
 );
 
+const requiredTradeDeskSnippets = [
+  {
+    label: "trade desk parses embedded JSON fragments",
+    text: "function possibleJsonFragments(value: string)",
+  },
+  {
+    label: "trade desk tolerant CSV header normalization",
+    text: 'cell.trim().toLowerCase().replaceAll(" ", "")',
+  },
+  {
+    label: "trade desk accepts TradingView request body columns",
+    text: '"requestbody"',
+  },
+  {
+    label: "trade desk accepts doubled quote CSV JSON",
+    text: "fragment.replaceAll('\"\"', '\"')",
+  },
+];
+
+const missingTradeDesk = requiredTradeDeskSnippets.filter(
+  (item) => !normalizedSource.includes(item.text),
+);
+
 const forbiddenSnippets = [
   {
     label: "editable upper source input",
@@ -509,13 +532,21 @@ const forbidden = forbiddenSnippets.filter((item) =>
   normalizedSource.includes(item.text),
 );
 
-if (missing.length > 0 || missingCapture.length > 0 || forbidden.length > 0) {
+if (
+  missing.length > 0 ||
+  missingCapture.length > 0 ||
+  missingTradeDesk.length > 0 ||
+  forbidden.length > 0
+) {
   console.error("Brutus Pine export verifier failed.");
   for (const item of missing) {
     console.error(`- Missing: ${item.label}`);
   }
   for (const item of missingCapture) {
     console.error(`- Missing capture workflow: ${item.label}`);
+  }
+  for (const item of missingTradeDesk) {
+    console.error(`- Missing trade desk workflow: ${item.label}`);
   }
   for (const item of forbidden) {
     console.error(`- Forbidden: ${item.label}`);
@@ -524,5 +555,5 @@ if (missing.length > 0 || missingCapture.length > 0 || forbidden.length > 0) {
 }
 
 console.log(
-  `Brutus Pine export verifier passed (${requiredSnippets.length + requiredCaptureSnippets.length} invariants).`,
+  `Brutus Pine export verifier passed (${requiredSnippets.length + requiredCaptureSnippets.length + requiredTradeDeskSnippets.length} invariants).`,
 );
