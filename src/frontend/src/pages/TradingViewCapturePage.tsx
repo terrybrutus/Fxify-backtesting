@@ -936,6 +936,25 @@ function gateCountText(counts: GateCount) {
   return `yes ${counts.yes} / no ${counts.no} / ? ${counts.unknown}`;
 }
 
+function plainRowInstruction(alert: TvAlert, review: BrutusReview) {
+  const side =
+    directionFor(alert) === "long"
+      ? "paper long"
+      : directionFor(alert) === "short"
+        ? "paper short"
+        : "paper trade";
+  if (review.status === "ENTER") {
+    return `Paper only: take the ${side} setup and record whether snapback paid.`;
+  }
+  if (review.status === "WAIT") {
+    return "Do not enter yet. Watch whether the next candles prove snapback.";
+  }
+  if (review.status === "DO_NOT_HOLD") {
+    return "Do not open this trade. If paper-tracking it, stop holding and mark it as a trap.";
+  }
+  return "Skip it. No action besides logging the alert.";
+}
+
 function downloadText(filename: string, content: string) {
   const blob = new Blob([content], { type: "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -2263,10 +2282,15 @@ export default function TradingViewCapturePage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-2 py-2">
-                          E:{brutusReview.entry?.toFixed(2) ?? "?"} S:
-                          {brutusReview.stop?.toFixed(2) ?? "?"} T:
-                          {brutusReview.target?.toFixed(2) ?? "?"}
+                        <td className="max-w-72 whitespace-normal px-2 py-2">
+                          <span className="block text-foreground">
+                            {plainRowInstruction(alert, brutusReview)}
+                          </span>
+                          <span className="block text-muted-foreground">
+                            Entry {brutusReview.entry?.toFixed(2) ?? "?"} /
+                            stop {brutusReview.stop?.toFixed(2) ?? "?"} /
+                            target {brutusReview.target?.toFixed(2) ?? "?"}
+                          </span>
                           <span className="block text-muted-foreground">
                             move {brutusReview.touchToClose?.toFixed(1) ?? "?"}{" "}
                             / adverse {brutusReview.adverse?.toFixed(1) ?? "?"}
