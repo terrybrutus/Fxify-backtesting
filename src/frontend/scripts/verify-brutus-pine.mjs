@@ -4,8 +4,13 @@ import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const sourcePath = resolve(here, "../src/pages/BrutusTradeDeskPage.tsx");
+const capturePath = resolve(here, "../src/pages/TradingViewCapturePage.tsx");
 const source = readFileSync(sourcePath, "utf8");
+const captureSource = readFileSync(capturePath, "utf8");
 const normalizedSource = source.replaceAll('\\\\"', '"').replaceAll('\\"', '"');
+const normalizedCaptureSource = captureSource
+  .replaceAll('\\\\"', '"')
+  .replaceAll('\\"', '"');
 
 const requiredSnippets = [
   {
@@ -194,6 +199,53 @@ const missing = requiredSnippets.filter(
   (item) => !normalizedSource.includes(item.text),
 );
 
+const requiredCaptureSnippets = [
+  {
+    label: "visible readiness gates",
+    text: "Readiness gates",
+  },
+  {
+    label: "latest Playbook sample gate",
+    text: "Latest Playbook sample",
+  },
+  {
+    label: "ENTER sample gate",
+    text: "ENTER sample",
+  },
+  {
+    label: "failed ENTER gate",
+    text: "ENTER failures controlled",
+  },
+  {
+    label: "exact Brutus settings gate",
+    text: "Exact Brutus settings",
+  },
+  {
+    label: "raw signal coverage gate",
+    text: "Raw signal coverage",
+  },
+  {
+    label: "alert timing evidence gate",
+    text: "Alert timing evidence",
+  },
+  {
+    label: "paper-only readiness status",
+    text: "Still paper only: more or cleaner evidence is required.",
+  },
+  {
+    label: "real-money proof denial",
+    text: "Clean enough for paper-trade review. Still not real-money proof.",
+  },
+  {
+    label: "readiness exported in paper summary",
+    text: "readinessChecks,",
+  },
+];
+
+const missingCapture = requiredCaptureSnippets.filter(
+  (item) => !normalizedCaptureSource.includes(item.text),
+);
+
 const forbiddenSnippets = [
   {
     label: "editable upper source input",
@@ -217,10 +269,13 @@ const forbidden = forbiddenSnippets.filter((item) =>
   normalizedSource.includes(item.text),
 );
 
-if (missing.length > 0 || forbidden.length > 0) {
+if (missing.length > 0 || missingCapture.length > 0 || forbidden.length > 0) {
   console.error("Brutus Pine export verifier failed.");
   for (const item of missing) {
     console.error(`- Missing: ${item.label}`);
+  }
+  for (const item of missingCapture) {
+    console.error(`- Missing capture workflow: ${item.label}`);
   }
   for (const item of forbidden) {
     console.error(`- Forbidden: ${item.label}`);
@@ -229,5 +284,5 @@ if (missing.length > 0 || forbidden.length > 0) {
 }
 
 console.log(
-  `Brutus Pine export verifier passed (${requiredSnippets.length} invariants).`,
+  `Brutus Pine export verifier passed (${requiredSnippets.length + requiredCaptureSnippets.length} invariants).`,
 );
