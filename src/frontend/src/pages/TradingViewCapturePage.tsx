@@ -869,19 +869,26 @@ export default function TradingViewCapturePage() {
       })),
     [rows],
   );
+  const latestReviewedRows = useMemo(
+    () => reviewedRows.filter((row) => isLatestPlaybookAlert(row.alert)),
+    [reviewedRows],
+  );
   const reviewCounts = useMemo(
     () => ({
-      enter: reviewedRows.filter((row) => row.brutusReview.status === "ENTER")
-        .length,
-      wait: reviewedRows.filter((row) => row.brutusReview.status === "WAIT")
-        .length,
-      skip: reviewedRows.filter((row) => row.brutusReview.status === "SKIP")
-        .length,
-      doNotHold: reviewedRows.filter(
+      enter: latestReviewedRows.filter(
+        (row) => row.brutusReview.status === "ENTER",
+      ).length,
+      wait: latestReviewedRows.filter(
+        (row) => row.brutusReview.status === "WAIT",
+      ).length,
+      skip: latestReviewedRows.filter(
+        (row) => row.brutusReview.status === "SKIP",
+      ).length,
+      doNotHold: latestReviewedRows.filter(
         (row) => row.brutusReview.status === "DO_NOT_HOLD",
       ).length,
     }),
-    [reviewedRows],
+    [latestReviewedRows],
   );
   const paperSummary = useMemo(() => {
     const matchCounts = reviewedRows.reduce<Record<MatchStatus, number>>(
@@ -891,7 +898,7 @@ export default function TradingViewCapturePage() {
       },
       { matched: 0, nearby: 0, "no-match": 0, "no-data": 0 },
     );
-    const bySymbol = reviewedRows.reduce<Record<string, ReviewCounts>>(
+    const bySymbol = latestReviewedRows.reduce<Record<string, ReviewCounts>>(
       (acc, row) => {
         const key =
           row.alert.mappedSymbol ?? row.alert.brokerSymbol ?? "unknown";
@@ -904,7 +911,7 @@ export default function TradingViewCapturePage() {
       },
       {},
     );
-    const byTimeframe = reviewedRows.reduce<Record<string, ReviewCounts>>(
+    const byTimeframe = latestReviewedRows.reduce<Record<string, ReviewCounts>>(
       (acc, row) => {
         const key = row.alert.timeframe ?? "unknown";
         acc[key] ??= { enter: 0, wait: 0, skip: 0, doNotHold: 0 };
@@ -918,7 +925,7 @@ export default function TradingViewCapturePage() {
       },
       {},
     );
-    const byMode = reviewedRows.reduce<Record<string, ReviewCounts>>(
+    const byMode = latestReviewedRows.reduce<Record<string, ReviewCounts>>(
       (acc, row) => {
         const key = row.alert.mode ?? row.alert.alertMode ?? "unknown";
         acc[key] ??= { enter: 0, wait: 0, skip: 0, doNotHold: 0 };
@@ -955,10 +962,10 @@ export default function TradingViewCapturePage() {
         alert.lower == null
       );
     }).length;
-    const enterRows = reviewedRows.filter(
+    const enterRows = latestReviewedRows.filter(
       (row) => row.brutusReview.status === "ENTER",
     );
-    const waitRows = reviewedRows.filter(
+    const waitRows = latestReviewedRows.filter(
       (row) => row.brutusReview.status === "WAIT",
     );
     const failedEnterRows = enterRows.filter((row) => {
@@ -972,9 +979,9 @@ export default function TradingViewCapturePage() {
       );
     }).length;
     const paperEvidenceStatus =
-      playbookAlerts === 0
+      latestPlaybookAlerts === 0
         ? "No Playbook evidence yet"
-        : playbookAlerts < 20
+        : latestPlaybookAlerts < 20
           ? "Too early: collect more live alerts"
           : enterRows.length < 5
             ? "Early: not enough ENTER evidence"
@@ -982,8 +989,8 @@ export default function TradingViewCapturePage() {
               ? "Warning: ENTER failures need review"
               : "Usable paper-test batch";
     const evidenceNeed =
-      playbookAlerts < 20
-        ? `Need about ${20 - playbookAlerts} more Playbook alert(s) before this batch is useful evidence.`
+      latestPlaybookAlerts < 20
+        ? `Need about ${20 - latestPlaybookAlerts} more latest Playbook alert(s) before this batch is useful evidence.`
         : enterRows.length < 5
           ? `Need about ${5 - enterRows.length} more ENTER row(s) before judging the entry rule.`
           : "Enough rows to review directionally, but still not proof of profitability.";
@@ -1002,9 +1009,9 @@ export default function TradingViewCapturePage() {
             `${enterRows.length} ENTER row(s): replay these first. If they do not show immediate snapback on TradingView, the rule is too loose.`,
           ]
         : []),
-      ...(playbookAlerts > 0 && playbookAlerts < 20
+      ...(latestPlaybookAlerts > 0 && latestPlaybookAlerts < 20
         ? [
-            `${playbookAlerts} Playbook alert(s) is still a small sample. Treat patterns as clues, not a trading rule.`,
+            `${latestPlaybookAlerts} latest Playbook alert(s) is still a small sample. Treat patterns as clues, not a trading rule.`,
           ]
         : []),
       ...(likelyUpgradeWaits
@@ -1045,11 +1052,13 @@ export default function TradingViewCapturePage() {
           ? "legacy-only"
           : stalePlaybookAlerts > 0
             ? "mixed-playbook-versions"
-            : incompleteAlerts > 0
-              ? "incomplete"
-              : matchCounts["no-data"] > reviewedRows.length / 2
-                ? "needs-candles"
-                : "usable-paper-log";
+            : latestPlaybookAlerts === 0
+              ? "no-latest-playbook"
+              : incompleteAlerts > 0
+                ? "incomplete"
+                : matchCounts["no-data"] > reviewedRows.length / 2
+                  ? "needs-candles"
+                  : "usable-paper-log";
     const rawSignalAlerts = reviewedRows.filter(
       (row) => row.alert.rawSignal === true,
     ).length;
@@ -1071,34 +1080,39 @@ export default function TradingViewCapturePage() {
         ? "No TradingView alerts imported yet."
         : playbookAlerts === 0
           ? "This batch has no current Playbook alerts. Recreate alerts from the latest exported Pine before using it as evidence."
-          : stalePlaybookAlerts > 0
-            ? "This batch mixes old and current Playbook exports. Use only the latest-version rows for readiness claims."
-            : incompleteAlerts > 0
-              ? "Some alerts are missing required fields. Fix the alert script/log source before judging the strategy."
-              : reviewCounts.enter === 0
-                ? "No entry candidates in this alert batch. Keep collecting paper alerts."
-                : matchCounts["no-data"] > reviewedRows.length / 2
-                  ? "Entry candidates exist, but most alerts are missing matching app candles. Use TradingView as the live truth and import more alert logs."
-                  : "Entry candidates exist. Paper review the ENTER rows against TradingView before risking money.";
+          : latestPlaybookAlerts === 0
+            ? "This batch only has older Playbook rows. Export the latest Pine and collect fresh alerts."
+            : stalePlaybookAlerts > 0
+              ? "This batch mixes old and current Playbook exports. Use only the latest-version rows for readiness claims."
+              : incompleteAlerts > 0
+                ? "Some alerts are missing required fields. Fix the alert script/log source before judging the strategy."
+                : reviewCounts.enter === 0
+                  ? "No entry candidates in this alert batch. Keep collecting paper alerts."
+                  : matchCounts["no-data"] > reviewedRows.length / 2
+                    ? "Entry candidates exist, but most alerts are missing matching app candles. Use TradingView as the live truth and import more alert logs."
+                    : "Entry candidates exist. Paper review the ENTER rows against TradingView before risking money.";
     const nextAction =
       reviewedRows.length === 0
         ? "Import the latest TradingView alert CSV from the Alerts Log."
         : playbookAlerts === 0
           ? "Replace the old TradingView alerts with alerts created from the latest Playbook Pine export."
-          : stalePlaybookAlerts > 0
-            ? `Filter to ${LATEST_PLAYBOOK_VERSION} rows or recreate the older alerts before using this batch.`
-            : incompleteAlerts > 0
-              ? "Fix the alert source first. Missing fields make the batch unreliable."
-              : failedEnterRows > 0
-                ? "Replay the failed ENTER rows first. If they really failed on TradingView, tighten the rule before paper-trading more."
-                : enterRows.length > 0
-                  ? "Replay ENTER rows on TradingView. Mark whether snapback happened quickly; do not use real money yet."
-                  : likelyUpgradeWaits > 0
-                    ? "Replay the Maybe loosen WAIT rows. These are possible future ENTER-rule candidates."
-                    : "No trade candidate yet. Keep collecting live Playbook alerts.";
+          : latestPlaybookAlerts === 0
+            ? "Create fresh alerts from the latest exported Pine, then import that new CSV."
+            : stalePlaybookAlerts > 0
+              ? `Filter to ${LATEST_PLAYBOOK_VERSION} rows or recreate the older alerts before using this batch.`
+              : incompleteAlerts > 0
+                ? "Fix the alert source first. Missing fields make the batch unreliable."
+                : failedEnterRows > 0
+                  ? "Replay the failed ENTER rows first. If they really failed on TradingView, tighten the rule before paper-trading more."
+                  : enterRows.length > 0
+                    ? "Replay ENTER rows on TradingView. Mark whether snapback happened quickly; do not use real money yet."
+                    : likelyUpgradeWaits > 0
+                      ? "Replay the Maybe loosen WAIT rows. These are possible future ENTER-rule candidates."
+                      : "No trade candidate yet. Keep collecting live Playbook alerts.";
     return {
       generatedAt: new Date().toISOString(),
       totalAlerts: reviewedRows.length,
+      evidenceAlerts: latestReviewedRows.length,
       actionCounts: reviewCounts,
       matchCounts,
       bySymbol,
@@ -1125,7 +1139,7 @@ export default function TradingViewCapturePage() {
       topTimeframes: topBreakdownRows(byTimeframe),
       topModes: topBreakdownRows(byMode),
     };
-  }, [reviewCounts, reviewedRows]);
+  }, [latestReviewedRows, reviewCounts, reviewedRows]);
 
   function addPayloads(text: string) {
     try {
@@ -1370,6 +1384,10 @@ export default function TradingViewCapturePage() {
             <span className="text-foreground">{paperSummary.totalAlerts}</span>
           </p>
           <p>
+            Evidence rows:{" "}
+            <span className="text-lime-300">{paperSummary.evidenceAlerts}</span>
+          </p>
+          <p>
             Playbook:{" "}
             <span className="text-cyan-300">{paperSummary.playbookAlerts}</span>
           </p>
@@ -1504,11 +1522,11 @@ export default function TradingViewCapturePage() {
       <section className="grid gap-3 md:grid-cols-5">
         <div className="border border-primary/50 bg-card p-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
-            Draft rule
+            Draft rule counts
           </p>
           <p className="mt-2 text-sm text-foreground">
-            Good Brutus rejection, band-touch entry, half-band stop, 1.5R
-            target, quick scalp.
+            Latest Playbook rows only. Older exports stay visible below, but do
+            not count as current evidence.
           </p>
         </div>
         <div className="border border-cyan-500/50 bg-card p-4">
