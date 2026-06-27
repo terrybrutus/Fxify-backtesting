@@ -22,6 +22,14 @@ type TvAlert = {
   alertMode?: string;
   mode?: string;
   confirmed?: boolean;
+  modeReady?: boolean;
+  inSession?: boolean;
+  minutesIntoBar?: number;
+  notTooEarly?: boolean;
+  longSnapback?: boolean;
+  shortSnapback?: boolean;
+  longPushThrough?: boolean;
+  shortPushThrough?: boolean;
   brokerSymbol?: string;
   mappedSymbol?: string;
   timeframe?: string;
@@ -84,8 +92,8 @@ type BreakdownRow = {
 
 type EvidenceFilter = "latest" | "older" | "all";
 
-const LATEST_PLAYBOOK_VERSION = "raw-parity-v6";
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v6","rawSignal":true,"rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
+const LATEST_PLAYBOOK_VERSION = "raw-parity-v7";
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v7","rawSignal":true,"rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
 
 const BRUTUS_STRATEGIES = new Set(["brutus_band", "brutus_playbook_v1"]);
 const BRUTUS_TIMEFRAMES = new Set([
@@ -220,6 +228,14 @@ function normalizePayload(raw: unknown): TvAlert {
     alertMode: asString(item.alertMode),
     mode: asString(item.mode),
     confirmed: asBoolean(item.confirmed),
+    modeReady: asBoolean(item.modeReady),
+    inSession: asBoolean(item.inSession),
+    minutesIntoBar: asNumber(item.minutesIntoBar),
+    notTooEarly: asBoolean(item.notTooEarly),
+    longSnapback: asBoolean(item.longSnapback),
+    shortSnapback: asBoolean(item.shortSnapback),
+    longPushThrough: asBoolean(item.longPushThrough),
+    shortPushThrough: asBoolean(item.shortPushThrough),
     brokerSymbol,
     mappedSymbol: mapBrokerSymbol(brokerSymbol),
     timeframe: normalizeTimeframe(
@@ -284,6 +300,14 @@ function alertIdentity(alert: TvAlert) {
     alert.mode ?? "",
     alert.action ?? "",
     alert.confirmed ?? "",
+    alert.modeReady ?? "",
+    alert.inSession ?? "",
+    alert.minutesIntoBar ?? "",
+    alert.notTooEarly ?? "",
+    alert.longSnapback ?? "",
+    alert.shortSnapback ?? "",
+    alert.longPushThrough ?? "",
+    alert.shortPushThrough ?? "",
     alert.rawSignal ?? "",
     alert.rawLongSignal ?? "",
     alert.rawShortSignal ?? "",
@@ -557,6 +581,11 @@ function pineActionLabel(alert: TvAlert) {
   return actionFor(alert)?.replaceAll("_", " ") ?? "missing";
 }
 
+function gateLabel(value?: boolean) {
+  if (value == null) return "?";
+  return value ? "yes" : "no";
+}
+
 function missingPlaybookFields(alert: TvAlert) {
   const missing: string[] = [];
   if (alert.rawSignal !== true) missing.push("rawSignal");
@@ -564,6 +593,14 @@ function missingPlaybookFields(alert: TvAlert) {
   if (!rawReasonFor(alert)) missing.push("reason");
   if (!alert.mode && !alert.alertMode) missing.push("mode");
   if (alert.confirmed == null) missing.push("confirmed");
+  if (alert.modeReady == null) missing.push("modeReady");
+  if (alert.inSession == null) missing.push("inSession");
+  if (alert.minutesIntoBar == null) missing.push("minutesIntoBar");
+  if (alert.notTooEarly == null) missing.push("notTooEarly");
+  if (alert.longSnapback == null) missing.push("longSnapback");
+  if (alert.shortSnapback == null) missing.push("shortSnapback");
+  if (alert.longPushThrough == null) missing.push("longPushThrough");
+  if (alert.shortPushThrough == null) missing.push("shortPushThrough");
   if (!alert.brokerSymbol) missing.push("symbol");
   if (!alert.timeframe) missing.push("timeframe");
   if (!directionFor(alert)) missing.push("direction");
@@ -1186,7 +1223,7 @@ export default function TradingViewCapturePage() {
         : []),
       ...(contractIssueAlerts
         ? [
-            `${contractIssueAlerts} latest Playbook alert(s) do not prove the exact original Brutus settings. Re-export raw-parity-v6 before judging them.`,
+            `${contractIssueAlerts} latest Playbook alert(s) do not prove the exact original Brutus settings. Re-export ${LATEST_PLAYBOOK_VERSION} before judging them.`,
           ]
         : []),
       ...(matchCounts["no-data"] || matchCounts["no-match"]
@@ -2059,6 +2096,19 @@ export default function TradingViewCapturePage() {
                             <span className="block text-muted-foreground">
                               New L:{alert.newLongTouch ? "yes" : "no"} S:
                               {alert.newShortTouch ? "yes" : "no"}
+                            </span>
+                          )}
+                          {isLatestPlaybookAlert(alert) && (
+                            <span className="block max-w-56 whitespace-normal text-muted-foreground">
+                              Gates: session {gateLabel(alert.inSession)}, time{" "}
+                              {gateLabel(alert.notTooEarly)}, snap L:
+                              {gateLabel(alert.longSnapback)} S:
+                              {gateLabel(alert.shortSnapback)}, push L:
+                              {gateLabel(alert.longPushThrough)} S:
+                              {gateLabel(alert.shortPushThrough)}
+                              {alert.minutesIntoBar != null
+                                ? `, ${alert.minutesIntoBar.toFixed(1)}m in`
+                                : ""}
                             </span>
                           )}
                         </td>

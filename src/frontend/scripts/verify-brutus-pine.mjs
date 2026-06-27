@@ -53,8 +53,8 @@ const requiredSnippets = [
     text: "alert(message, alert.freq_all)",
   },
   {
-    label: "raw parity v5 payload",
-    text: '"playbookVersion":"raw-parity-v6"',
+    label: "raw parity v7 payload",
+    text: '"playbookVersion":"raw-parity-v7"',
   },
   {
     label: "raw signal JSON field",
@@ -67,6 +67,38 @@ const requiredSnippets = [
   {
     label: "new touch JSON fields",
     text: '"newLongTouch":" + str.tostring(newLongTouch)',
+  },
+  {
+    label: "mode ready JSON field",
+    text: '"modeReady":" + str.tostring(modeReady)',
+  },
+  {
+    label: "session gate JSON field",
+    text: '"inSession":" + str.tostring(inSession)',
+  },
+  {
+    label: "minutes into bar JSON field",
+    text: '"minutesIntoBar":" + str.tostring(minutesIntoBar)',
+  },
+  {
+    label: "not too early JSON field",
+    text: '"notTooEarly":" + str.tostring(notTooEarly)',
+  },
+  {
+    label: "snapback JSON field",
+    text: '"longSnapback":" + str.tostring(longSnapback)',
+  },
+  {
+    label: "short snapback JSON field",
+    text: '"shortSnapback":" + str.tostring(shortSnapback)',
+  },
+  {
+    label: "push-through JSON field",
+    text: '"longPushThrough":" + str.tostring(longPushThrough)',
+  },
+  {
+    label: "short push-through JSON field",
+    text: '"shortPushThrough":" + str.tostring(shortPushThrough)',
   },
   {
     label: "original triangle long marker",
