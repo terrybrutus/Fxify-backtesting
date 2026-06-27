@@ -86,12 +86,22 @@ type TradeDecision = {
 type TvAlert = {
   id: string;
   alertTime?: string;
+  playbookVersion?: string;
+  rawSignal?: boolean;
+  decisionEvent?: string;
+  previousAction?: string;
+  action?: Decision;
+  plainAction?: string;
+  reason?: string;
   brokerSymbol?: string;
   symbol?: string;
   timeframe?: string;
   direction?: Direction;
   candleTime?: number;
   alertMode?: string;
+  confirmed?: boolean;
+  mode?: string;
+  modeReady?: boolean;
   open?: number;
   high?: number;
   low?: number;
@@ -101,6 +111,9 @@ type TvAlert = {
   bandWidth?: number;
   touchDepth?: number;
   touchDepthRatio?: number;
+  entry?: number;
+  stop?: number;
+  target?: number;
 };
 
 type AlertDecisionMatch = {
@@ -108,6 +121,7 @@ type AlertDecisionMatch = {
   decision?: TradeDecision;
   status: Decision | "NO DATA";
   note: string;
+  agreement: "MATCH" | "DIFFERENT" | "PINE ONLY" | "NO DATA";
 };
 
 type PlaybookRow = {
@@ -279,6 +293,21 @@ function directionFrom(value: unknown): Direction | undefined {
   return undefined;
 }
 
+function decisionFrom(value: unknown): Decision | undefined {
+  const upper = String(value ?? "")
+    .trim()
+    .toUpperCase();
+  if (
+    upper === "ENTER" ||
+    upper === "WAIT" ||
+    upper === "SKIP" ||
+    upper === "DO_NOT_HOLD"
+  ) {
+    return upper;
+  }
+  return undefined;
+}
+
 function normalizeAlertPayload(
   raw: unknown,
   alertTime?: string,
@@ -302,12 +331,29 @@ function normalizeAlertPayload(
       asNumber(item.alertTime) ?? alertTime ?? "",
     ].join("|"),
     alertTime,
+    playbookVersion:
+      typeof item.playbookVersion === "string" ? item.playbookVersion : undefined,
+    rawSignal:
+      typeof item.rawSignal === "boolean" ? item.rawSignal : undefined,
+    decisionEvent:
+      typeof item.decisionEvent === "string" ? item.decisionEvent : undefined,
+    previousAction:
+      typeof item.previousAction === "string" ? item.previousAction : undefined,
+    action: decisionFrom(item.action),
+    plainAction:
+      typeof item.plainAction === "string" ? item.plainAction : undefined,
+    reason: typeof item.reason === "string" ? item.reason : undefined,
     brokerSymbol,
     symbol,
     timeframe,
     direction,
     candleTime,
     alertMode: typeof item.alertMode === "string" ? item.alertMode : undefined,
+    confirmed:
+      typeof item.confirmed === "boolean" ? item.confirmed : undefined,
+    mode: typeof item.mode === "string" ? item.mode : undefined,
+    modeReady:
+      typeof item.modeReady === "boolean" ? item.modeReady : undefined,
     open: asNumber(item.open),
     high: asNumber(item.high),
     low: asNumber(item.low),
@@ -317,6 +363,9 @@ function normalizeAlertPayload(
     bandWidth: asNumber(item.bandWidth),
     touchDepth: asNumber(item.touchDepth),
     touchDepthRatio: asNumber(item.touchDepthRatio),
+    entry: asNumber(item.entry),
+    stop: asNumber(item.stop),
+    target: asNumber(item.target),
   };
 }
 
@@ -1000,6 +1049,7 @@ function matchAlertsToDecisions(
         alert,
         status: "NO DATA",
         note: "No matching intrabar decision. Usually this alert is newer than the exported candle batch.",
+        agreement: alert.action ? "PINE ONLY" : "NO DATA",
       };
     }
 
@@ -1008,6 +1058,12 @@ function matchAlertsToDecisions(
       decision,
       status: decision.decision,
       note: decision.reason,
+      agreement:
+        alert.action == null
+          ? "NO DATA"
+          : alert.action === decision.decision
+            ? "MATCH"
+            : "DIFFERENT",
     };
   });
 }
@@ -1601,6 +1657,7 @@ export default function BrutusTradeDeskPage() {
                 <th className="px-2 py-2">TF</th>
                 <th className="px-2 py-2">Side</th>
                 <th className="px-2 py-2">Decision</th>
+                <th className="px-2 py-2">Pine vs app</th>
                 <th className="px-2 py-2">Plain Action</th>
                 <th className="px-2 py-2">Entry / Stop / Target</th>
                 <th className="px-2 py-2">Why</th>
@@ -1609,7 +1666,7 @@ export default function BrutusTradeDeskPage() {
             <tbody>
               {alertMatches.length === 0 ? (
                 <tr>
-                  <td className="px-2 py-6 text-muted-foreground" colSpan={8}>
+                  <td className="px-2 py-6 text-muted-foreground" colSpan={9}>
                     No TradingView alert CSV imported yet.
                   </td>
                 </tr>
@@ -1644,15 +1701,34 @@ export default function BrutusTradeDeskPage() {
                       )}
                     </td>
                     <td className="px-2 py-2">
-                      {item.decision?.doNow ?? "Do nothing."}
+                      <span
+                        className={
+                          item.agreement === "MATCH"
+                            ? "text-lime-300"
+                            : item.agreement === "DIFFERENT"
+                              ? "text-amber-200"
+                              : "text-muted-foreground"
+                        }
+                      >
+                        {item.alert.action ?? "no pine action"} /{" "}
+                        {item.status}
+                      </span>
+                      <span className="block text-muted-foreground">
+                        {item.agreement.toLowerCase().replaceAll("_", " ")}
+                      </span>
                     </td>
                     <td className="px-2 py-2">
-                      E:{fmtPrice(item.decision?.entry)} S:
-                      {fmtPrice(item.decision?.stop)} T:
-                      {fmtPrice(item.decision?.target)}
+                      {item.alert.plainAction ??
+                        item.decision?.doNow ??
+                        "Do nothing."}
+                    </td>
+                    <td className="px-2 py-2">
+                      E:{fmtPrice(item.alert.entry ?? item.decision?.entry)} S:
+                      {fmtPrice(item.alert.stop ?? item.decision?.stop)} T:
+                      {fmtPrice(item.alert.target ?? item.decision?.target)}
                     </td>
                     <td className="max-w-sm whitespace-normal px-2 py-2 text-muted-foreground">
-                      {item.note}
+                      {item.alert.reason ?? item.note}
                     </td>
                   </tr>
                 ))

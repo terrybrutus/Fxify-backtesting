@@ -496,6 +496,26 @@ const requiredTradeDeskSnippets = [
     text: "fragment.replaceAll('\"\"', '\"')",
   },
   {
+    label: "trade desk preserves Pine action",
+    text: "action: decisionFrom(item.action)",
+  },
+  {
+    label: "trade desk preserves Pine plain action",
+    text: "plainAction:",
+  },
+  {
+    label: "trade desk compares Pine versus app decision",
+    text: "Pine vs app",
+  },
+  {
+    label: "trade desk flags mismatched decisions",
+    text: "DIFFERENT",
+  },
+  {
+    label: "trade desk prefers Pine alert price levels",
+    text: "item.alert.entry ?? item.decision?.entry",
+  },
+  {
     label: "trade desk plain paper trade instruction",
     text: "PAPER ${plainTradeWord(touch.direction)} NOW. Skip if you are late.",
   },
