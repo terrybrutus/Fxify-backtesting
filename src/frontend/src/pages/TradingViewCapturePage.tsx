@@ -1003,20 +1003,20 @@ function emptyPaperOutcomeCounts(): PaperOutcomeCounts {
 function plainRowInstruction(alert: TvAlert, review: BrutusReview) {
   const side =
     directionFor(alert) === "long"
-      ? "paper long"
+      ? "LONG"
       : directionFor(alert) === "short"
-        ? "paper short"
-        : "paper trade";
+        ? "SHORT"
+        : "TRADE";
   if (review.status === "ENTER") {
-    return `Paper only: take the ${side} setup and record whether snapback paid.`;
+    return `PAPER ENTER ${side}. Use the listed stop and target. Mark Paid or Failed after the move resolves.`;
   }
   if (review.status === "WAIT") {
-    return "Do not enter yet. Watch whether the next candles prove snapback.";
+    return "WAIT. Do nothing now. Mark Missed only if it clearly paid without giving an ENTER.";
   }
   if (review.status === "DO_NOT_HOLD") {
-    return "Do not open this trade. If paper-tracking it, stop holding and mark it as a trap.";
+    return "DO NOT ENTER. Price is still pushing through the band. If paper-tracking, exit the idea.";
   }
-  return "Skip it. No action besides logging the alert.";
+  return "SKIP. Ignore this alert and wait for the next one.";
 }
 
 function paperOutcomeLabel(outcome: PaperOutcome) {

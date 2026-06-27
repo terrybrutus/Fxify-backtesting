@@ -316,6 +316,18 @@ const requiredCaptureSnippets = [
     label: "not enough outcomes recommendation",
     text: "Mark at least 10 latest rows before changing the rule.",
   },
+  {
+    label: "plain paper enter instruction",
+    text: "PAPER ENTER",
+  },
+  {
+    label: "plain missed wait instruction",
+    text: "Mark Missed only if it clearly paid without giving an ENTER.",
+  },
+  {
+    label: "plain do not enter instruction",
+    text: "DO NOT ENTER. Price is still pushing through the band.",
+  },
 ];
 
 const missingCapture = requiredCaptureSnippets.filter(
