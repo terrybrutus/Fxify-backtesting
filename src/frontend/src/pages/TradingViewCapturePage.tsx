@@ -1493,10 +1493,10 @@ export default function TradingViewCapturePage() {
               How You Get This Data
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Start with TradingView using a temporary Webhook.site URL. Create
-              the Brutus alert, set the webhook URL there, then copy either the
-              received request body or a JSON export into this page. Later we
-              replace Webhook.site with our own hosted endpoint.
+              Start with TradingView alerts created from the latest Playbook
+              Pine. Export the TradingView Alert Log CSV, paste one JSON body,
+              or upload a Webhook.site export. This page treats those alerts as
+              paper evidence, not trade approval.
             </p>
           </div>
           <div className="border border-border bg-card p-4">
@@ -1544,6 +1544,11 @@ export default function TradingViewCapturePage() {
               Matched means the imported app candle is within one minute of the
               TradingView alert. Nearby means the instrument mapping is
               plausible but the feed/timeframe is not exact enough yet.
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Timing truth: first-touch rows are live alert evidence. Confirmed
+              close rows are cleaner historically, but they may be later than
+              the wick entry you were trying to study.
             </p>
           </div>
         </aside>

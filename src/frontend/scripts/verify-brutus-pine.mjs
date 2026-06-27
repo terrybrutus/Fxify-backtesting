@@ -82,7 +82,7 @@ const requiredSnippets = [
   },
   {
     label: "visible audit panel",
-    text: "var table auditPanel = table.new(position.top_right, 1, 4, border_width=1)",
+    text: "var table auditPanel = table.new(position.top_right, 1, 5, border_width=1)",
   },
   {
     label: "audit panel locked settings warning",
@@ -91,6 +91,10 @@ const requiredSnippets = [
   {
     label: "audit panel parity instruction",
     text: "Check ORIG markers against old triangles first",
+  },
+  {
+    label: "audit panel open-bar timing warning",
+    text: "Open-bar ORIG can change until candle close",
   },
   {
     label: "audit panel paper-only warning",
@@ -135,6 +139,10 @@ const requiredSnippets = [
   {
     label: "original-marker parity warning",
     text: "ORIG markers must match the old Brutus triangles before trusting ENTER, WAIT, SKIP, or DO NOT HOLD labels.",
+  },
+  {
+    label: "open-bar repaint warning",
+    text: "Because that formula uses candle color, an open candle can change until it closes.",
   },
 ];
 

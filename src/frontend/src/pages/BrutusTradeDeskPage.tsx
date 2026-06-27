@@ -767,6 +767,7 @@ indicator("Brutus Playbook Alerts", overlay=true)
 // Use this on TradingView Alchemy symbols first: DJ30.R, USTEC.R, US500.R, JPN225.R, and RUS2000.R.
 // This is a paper-test alert bridge. It does not prove the strategy is live-trade ready by itself.
 // Sanity check: keep Show Original Triangle Matches on first. ORIG markers must match the old Brutus triangles before trusting ENTER, WAIT, SKIP, or DO NOT HOLD labels.
+// Timing truth: ORIG matches the old triangle formula. Because that formula uses candle color, an open candle can change until it closes. First-touch alerts are live evidence, not perfect historical replay.
 ${testRows || "// No TEST rows were available when this script was exported. Keep this in paper-test mode."}
 
 // Exact original Brutus Bollinger settings. These are locked so Playbook alerts cannot silently drift from the old indicator.
@@ -877,12 +878,13 @@ plotshape(skipSignal and direction == "long", title="Long SKIP", location=locati
 plotshape(skipSignal and direction == "short", title="Short SKIP", location=location.abovebar, color=color.new(color.gray, 15), style=shape.square, text="SKIP")
 plotshape(conflictSkip, title="Conflict SKIP", location=location.top, color=color.yellow, style=shape.diamond, text="BOTH")
 
-var table auditPanel = table.new(position.top_right, 1, 4, border_width=1)
+var table auditPanel = table.new(position.top_right, 1, 5, border_width=1)
 if showAuditPanel and barstate.islast
     table.cell(auditPanel, 0, 0, "Brutus Playbook raw-parity-v6", text_color=color.white, bgcolor=color.new(color.black, 0))
     table.cell(auditPanel, 0, 1, "Locked: length 9, high/low bands, StdDev 2", text_color=color.white, bgcolor=color.new(color.black, 15))
     table.cell(auditPanel, 0, 2, "Check ORIG markers against old triangles first", text_color=color.yellow, bgcolor=color.new(color.black, 15))
-    table.cell(auditPanel, 0, 3, "Paper evidence only - not live-trade approval", text_color=color.orange, bgcolor=color.new(color.black, 15))
+    table.cell(auditPanel, 0, 3, "Open-bar ORIG can change until candle close", text_color=color.yellow, bgcolor=color.new(color.black, 15))
+    table.cell(auditPanel, 0, 4, "Paper evidence only - not live-trade approval", text_color=color.orange, bgcolor=color.new(color.black, 15))
 
 firstTouchNewSide = signalMode == "First touch" and barstate.isrealtime and ((rawLongSignal and not alertedLongThisBar) or (rawShortSignal and not alertedShortThisBar))
 confirmedCloseEvent = signalMode == "Confirmed close" and rawSignal and barstate.isconfirmed
@@ -1365,9 +1367,9 @@ export default function BrutusTradeDeskPage() {
               </p>
               <p className="mt-1 text-muted-foreground">
                 Use Any alert() function call. First touch is live paper
-                evidence; confirmed close waits for the candle to close. A
-                Playbook label classifies the ORIG signal as ENTER, WAIT, SKIP,
-                or DO NOT HOLD.
+                evidence, not perfect historical replay. Confirmed close waits
+                for the candle to close. Because your original triangle formula
+                uses candle color, open-bar ORIG markers can change until close.
               </p>
             </div>
             <div>
