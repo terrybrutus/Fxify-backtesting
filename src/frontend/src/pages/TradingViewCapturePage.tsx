@@ -18,6 +18,7 @@ type TvAlert = {
   signalConflict?: boolean;
   action?: string;
   plainAction?: string;
+  reason?: string;
   alertMode?: string;
   mode?: string;
   confirmed?: boolean;
@@ -213,6 +214,7 @@ function normalizePayload(raw: unknown): TvAlert {
     signalConflict: asBoolean(item.signalConflict),
     action: asString(item.action),
     plainAction: asString(item.plainAction),
+    reason: asString(item.reason),
     alertMode: asString(item.alertMode),
     mode: asString(item.mode),
     confirmed: asBoolean(item.confirmed),
@@ -548,6 +550,30 @@ function pineActionLabel(alert: TvAlert) {
   return actionFor(alert)?.replaceAll("_", " ") ?? "missing";
 }
 
+function missingPlaybookFields(alert: TvAlert) {
+  const missing: string[] = [];
+  if (alert.rawSignal !== true) missing.push("rawSignal");
+  if (!actionFor(alert)) missing.push("action");
+  if (!rawReasonFor(alert)) missing.push("reason");
+  if (!alert.mode && !alert.alertMode) missing.push("mode");
+  if (alert.confirmed == null) missing.push("confirmed");
+  if (!alert.brokerSymbol) missing.push("symbol");
+  if (!alert.timeframe) missing.push("timeframe");
+  if (!directionFor(alert)) missing.push("direction");
+  if (alert.time == null) missing.push("timestamp");
+  if (alert.alertTime == null) missing.push("alertTime");
+  if (alert.open == null) missing.push("open");
+  if (alert.high == null) missing.push("high");
+  if (alert.low == null) missing.push("low");
+  if (alert.close == null) missing.push("close");
+  if (alert.upper == null) missing.push("upper");
+  if (alert.lower == null) missing.push("lower");
+  if (alert.entry == null) missing.push("entry");
+  if (alert.stop == null) missing.push("stop");
+  if (alert.target == null) missing.push("target");
+  return missing;
+}
+
 function isPlaybookAlert(alert: TvAlert) {
   return alert.strategy === "brutus_playbook_v1" || alert.rawSignal === true;
 }
@@ -563,6 +589,7 @@ function isLegacyBrutusAlert(alert: TvAlert) {
 }
 
 function rawReasonFor(alert: TvAlert) {
+  if (alert.reason) return alert.reason;
   if (alert.plainAction) return alert.plainAction;
   if (alert.raw && typeof alert.raw === "object") {
     const raw = alert.raw as Record<string, unknown>;
@@ -764,16 +791,7 @@ function reviewTagFor(
   if (!isPlaybookAlert(alert)) return "Not Playbook";
   if (!isLatestPlaybookAlert(alert)) return "Old Playbook";
   if (alert.signalConflict) return "Skip evidence";
-  if (
-    !alert.brokerSymbol ||
-    !alert.timeframe ||
-    !alert.direction ||
-    alert.high == null ||
-    alert.low == null ||
-    alert.close == null ||
-    alert.upper == null ||
-    alert.lower == null
-  ) {
+  if (isLatestPlaybookAlert(alert) && missingPlaybookFields(alert).length > 0) {
     return "Missing fields";
   }
   if (matchStatus === "no-data" || matchStatus === "no-match") {
@@ -1024,19 +1042,21 @@ export default function TradingViewCapturePage() {
     const legacyAlerts = reviewedRows.filter((row) =>
       isLegacyBrutusAlert(row.alert),
     ).length;
-    const incompleteAlerts = reviewedRows.filter((row) => {
-      const alert = row.alert;
-      return (
-        !alert.brokerSymbol ||
-        !alert.timeframe ||
-        !alert.direction ||
-        alert.high == null ||
-        alert.low == null ||
-        alert.close == null ||
-        alert.upper == null ||
-        alert.lower == null
-      );
-    }).length;
+    const missingFieldCounts = latestReviewedRows.reduce<
+      Record<string, number>
+    >((acc, row) => {
+      for (const field of missingPlaybookFields(row.alert)) {
+        acc[field] = (acc[field] ?? 0) + 1;
+      }
+      return acc;
+    }, {});
+    const missingFieldSummary = Object.entries(missingFieldCounts)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 8)
+      .map(([field, count]) => `${field}: ${count}`);
+    const incompleteAlerts = latestReviewedRows.filter(
+      (row) => missingPlaybookFields(row.alert).length > 0,
+    ).length;
     const enterRows = latestReviewedRows.filter(
       (row) => row.brutusReview.status === "ENTER",
     );
@@ -1116,7 +1136,7 @@ export default function TradingViewCapturePage() {
         : []),
       ...(incompleteAlerts
         ? [
-            `${incompleteAlerts} alert(s) are missing required JSON fields. Recreate those alerts with the latest exported Playbook script.`,
+            `${incompleteAlerts} latest Playbook alert(s) are missing required JSON fields: ${missingFieldSummary.join(", ")}.`,
           ]
         : []),
     ];
@@ -1208,6 +1228,8 @@ export default function TradingViewCapturePage() {
       confirmedAlerts,
       missingAlertTimeAlerts,
       lateAlertTimeAlerts,
+      missingFieldCounts,
+      missingFieldSummary,
       verdict,
       nextAction,
       topSymbols: topBreakdownRows(bySymbol),
@@ -1492,6 +1514,19 @@ export default function TradingViewCapturePage() {
                 <li key={item}>{item}</li>
               ))}
             </ul>
+          )}
+          {paperSummary.missingFieldSummary.length > 0 && (
+            <div className="mt-3 border border-destructive/40 bg-destructive/5 p-3">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-destructive">
+                Missing alert fields
+              </p>
+              <p className="mt-1 text-sm text-foreground">
+                Fix the alert source before judging this batch.
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {paperSummary.missingFieldSummary.join(" | ")}
+              </p>
+            </div>
           )}
         </div>
         <div className="font-mono text-xs text-muted-foreground">
