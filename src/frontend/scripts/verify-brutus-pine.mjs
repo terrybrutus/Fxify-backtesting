@@ -600,6 +600,18 @@ const requiredTradeDeskSnippets = [
     text: "Review PINE ONLY rows in TradingView.",
   },
   {
+    label: "trade desk multi-file alert import",
+    text: "multiple",
+  },
+  {
+    label: "trade desk alert import result",
+    text: "Alert files:",
+  },
+  {
+    label: "trade desk clear stale alerts",
+    text: "Clear Alerts",
+  },
+  {
     label: "trade desk prefers Pine alert price levels",
     text: "item.alert.entry ?? item.decision?.entry",
   },

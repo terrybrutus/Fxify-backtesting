@@ -130,6 +130,17 @@ type AlertDecisionMatch = {
   agreement: "MATCH" | "DIFFERENT" | "PINE ONLY" | "NO DATA";
 };
 
+type AlertImportResult = {
+  files: number;
+  parsed: number;
+  added: number;
+  duplicates: number;
+  current: number;
+  old: number;
+  legacy: number;
+  contractIssues: number;
+};
+
 type PlaybookRow = {
   id: string;
   family: string;
@@ -225,6 +236,11 @@ function saveAlerts(alerts: TvAlert[]) {
   } catch {
     // Keep current-session alerts even if browser storage is full.
   }
+}
+
+function clearSavedAlerts() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(ALERT_STORAGE_KEY);
 }
 
 function loadPaperOutcomes(): Record<string, PaperOutcome> {
@@ -1335,6 +1351,8 @@ export default function BrutusTradeDeskPage() {
   const [paperOutcomes, setPaperOutcomes] = useState<
     Record<string, PaperOutcome>
   >(() => loadPaperOutcomes());
+  const [alertImportResult, setAlertImportResult] =
+    useState<AlertImportResult | null>(null);
   const [error, setError] = useState("");
 
   const decisions = useMemo(() => {
@@ -1597,24 +1615,55 @@ export default function BrutusTradeDeskPage() {
     }
   }
 
-  async function importAlerts(file: File | undefined) {
-    if (!file) return;
+  async function importAlerts(files: FileList | null | undefined) {
+    const selectedFiles = [...(files ?? [])];
+    if (!selectedFiles.length) return;
     try {
-      const parsed = parseAlertLog(await file.text());
+      const parsed = (
+        await Promise.all(
+          selectedFiles.map(async (file) => parseAlertLog(await file.text())),
+        )
+      ).flat();
       if (!parsed.length) {
         throw new Error(
           "No Brutus TradingView alerts found. Upload the TradingView alerts CSV or JSON export.",
         );
       }
+      const before = new Set(alerts.map((alert) => alert.id));
       const merged = mergeAlerts(alerts, parsed);
+      const after = new Set(merged.map((alert) => alert.id));
+      const added = [...after].filter((id) => !before.has(id)).length;
+      const duplicates = Math.max(0, parsed.length - added);
+      const result: AlertImportResult = {
+        files: selectedFiles.length,
+        parsed: parsed.length,
+        added,
+        duplicates,
+        current: parsed.filter(isLatestPlaybookAlert).length,
+        old: parsed.filter(
+          (alert) => isPlaybookAlert(alert) && !isLatestPlaybookAlert(alert),
+        ).length,
+        legacy: parsed.filter((alert) => !isPlaybookAlert(alert)).length,
+        contractIssues: parsed.filter(
+          (alert) => playbookContractIssues(alert).length > 0,
+        ).length,
+      };
       setAlerts(merged);
       saveAlerts(merged);
+      setAlertImportResult(result);
       setError("");
     } catch (err) {
+      setAlertImportResult(null);
       setError(
         err instanceof Error ? err.message : "Could not read alert file.",
       );
     }
+  }
+
+  function clearAlertEvidence() {
+    setAlerts([]);
+    clearSavedAlerts();
+    setAlertImportResult(null);
   }
 
   return (
@@ -1641,14 +1690,23 @@ export default function BrutusTradeDeskPage() {
           </label>
           <label className="inline-flex cursor-pointer items-center gap-2 border border-border bg-card px-4 py-2 font-mono text-xs hover:border-primary">
             <Radio className="h-4 w-4" />
-            Import Alert CSV
+            Import Alert Logs
             <input
               accept=".csv,.json,.jsonl,.txt"
               className="hidden"
-              onChange={(event) => importAlerts(event.target.files?.[0])}
+              multiple
+              onChange={(event) => importAlerts(event.target.files)}
               type="file"
             />
           </label>
+          <button
+            className="inline-flex items-center gap-2 border border-border bg-card px-4 py-2 font-mono text-xs hover:border-destructive disabled:opacity-40"
+            disabled={!alerts.length}
+            onClick={clearAlertEvidence}
+            type="button"
+          >
+            Clear Alerts
+          </button>
           <button
             className="inline-flex items-center gap-2 border border-border bg-card px-4 py-2 font-mono text-xs hover:border-primary disabled:opacity-40"
             disabled={!decisions.length}
@@ -1684,6 +1742,50 @@ export default function BrutusTradeDeskPage() {
       {error && (
         <section className="border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
           {error}
+        </section>
+      )}
+
+      {alertImportResult && !error && (
+        <section className="grid gap-2 border border-cyan-500/40 bg-cyan-500/5 p-3 font-mono text-xs md:grid-cols-4">
+          <span>
+            Alert files:{" "}
+            <strong className="text-foreground">
+              {alertImportResult.files}
+            </strong>
+          </span>
+          <span>
+            Added / duplicate:{" "}
+            <strong className="text-lime-300">
+              {alertImportResult.added}
+            </strong>{" "}
+            /{" "}
+            <strong className="text-muted-foreground">
+              {alertImportResult.duplicates}
+            </strong>
+          </span>
+          <span>
+            Current / old / legacy:{" "}
+            <strong className="text-cyan-200">
+              {alertImportResult.current}
+            </strong>{" "}
+            /{" "}
+            <strong className="text-amber-200">
+              {alertImportResult.old}
+            </strong>{" "}
+            /{" "}
+            <strong className="text-muted-foreground">
+              {alertImportResult.legacy}
+            </strong>
+          </span>
+          <span
+            className={
+              alertImportResult.contractIssues > 0
+                ? "text-red-300"
+                : "text-muted-foreground"
+            }
+          >
+            Settings issues: {alertImportResult.contractIssues}
+          </span>
         </section>
       )}
 
