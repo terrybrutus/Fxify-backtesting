@@ -53,6 +53,18 @@ const requiredSnippets = [
     text: '"newLongTouch":" + str.tostring(newLongTouch)',
   },
   {
+    label: "original triangle long marker",
+    text: 'plotshape(showOriginalSignals and rawLongCondition, title="Original Triangle Long Match"',
+  },
+  {
+    label: "original triangle short marker",
+    text: 'plotshape(showOriginalSignals and rawShortCondition, title="Original Triangle Short Match"',
+  },
+  {
+    label: "live latch marker is separate from original marker",
+    text: 'plotshape(showLiveLatchSignals and rawLongSignal and not rawLongCondition, title="Live Latched Long Touch"',
+  },
+  {
     label: "alert fire timestamp JSON field",
     text: '"alertTime":" + str.tostring(timenow)',
   },

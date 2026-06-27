@@ -774,7 +774,8 @@ minMinutesIntoBar = input.float(2.0, minval=0.0, title="Wait This Many Minutes I
 stopBandFraction = input.float(0.35, minval=0.05, maxval=2.0, title="Stop Distance as Band Width Fraction")
 targetR = input.float(1.2, minval=0.25, maxval=5.0, title="Target R")
 liveAlertsOnly = input.bool(true, title="Only Fire Alerts On Live Bars")
-showRawSignals = input.bool(true, title="Show Raw Original Signals")
+showOriginalSignals = input.bool(true, title="Show Original Triangle Matches")
+showLiveLatchSignals = input.bool(false, title="Show Live First-Touch Latches")
 
 upperBasis = ta.ema(upperSrc, length)
 lowerBasis = ta.ema(lowerSrc, length)
@@ -849,8 +850,10 @@ entryJson = na(entry) ? "null" : str.tostring(entry)
 stopJson = na(stop) ? "null" : str.tostring(stop)
 targetJson = na(target) ? "null" : str.tostring(target)
 
-plotshape(showRawSignals and rawLongSignal, title="Raw Brutus Long", location=location.belowbar, color=color.new(color.gray, 15), style=shape.triangleup, size=size.tiny, text="RAW")
-plotshape(showRawSignals and rawShortSignal, title="Raw Brutus Short", location=location.abovebar, color=color.new(color.gray, 15), style=shape.triangledown, size=size.tiny, text="RAW")
+plotshape(showOriginalSignals and rawLongCondition, title="Original Triangle Long Match", location=location.belowbar, color=color.new(color.gray, 5), style=shape.triangleup, size=size.tiny, text="ORIG")
+plotshape(showOriginalSignals and rawShortCondition, title="Original Triangle Short Match", location=location.abovebar, color=color.new(color.gray, 5), style=shape.triangledown, size=size.tiny, text="ORIG")
+plotshape(showLiveLatchSignals and rawLongSignal and not rawLongCondition, title="Live Latched Long Touch", location=location.belowbar, color=color.new(color.aqua, 15), style=shape.triangleup, size=size.tiny, text="LIVE")
+plotshape(showLiveLatchSignals and rawShortSignal and not rawShortCondition, title="Live Latched Short Touch", location=location.abovebar, color=color.new(color.aqua, 15), style=shape.triangledown, size=size.tiny, text="LIVE")
 plotshape(longEnter, title="Long ENTER", location=location.belowbar, color=color.lime, style=shape.triangleup, text="ENTER")
 plotshape(shortEnter, title="Short ENTER", location=location.abovebar, color=color.red, style=shape.triangledown, text="ENTER")
 plotshape(longWatch, title="Long WAIT", location=location.belowbar, color=color.new(color.lime, 45), style=shape.circle, text="WAIT")
@@ -1320,7 +1323,7 @@ export default function BrutusTradeDeskPage() {
               <p className="mt-1 text-muted-foreground">
                 Download the Pine script from this page. It starts from the
                 original Brutus triangle logic, then adds a paper-test decision
-                layer.
+                layer. ORIG markers should match your old triangles.
               </p>
             </div>
             <div>
@@ -1338,7 +1341,9 @@ export default function BrutusTradeDeskPage() {
               </p>
               <p className="mt-1 text-muted-foreground">
                 Use Any alert() function call. First touch is live paper
-                evidence; confirmed close waits for the candle to close.
+                evidence; confirmed close waits for the candle to close. A
+                Playbook label classifies the ORIG signal as ENTER, WAIT, SKIP,
+                or DO NOT HOLD.
               </p>
             </div>
             <div>
