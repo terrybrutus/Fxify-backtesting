@@ -81,6 +81,22 @@ const requiredSnippets = [
     text: 'plotshape(showLiveLatchSignals and rawLongSignal and not rawLongCondition, title="Live Latched Long Touch"',
   },
   {
+    label: "visible audit panel",
+    text: "var table auditPanel = table.new(position.top_right, 1, 4, border_width=1)",
+  },
+  {
+    label: "audit panel locked settings warning",
+    text: "Locked: length 9, high/low bands, StdDev 2",
+  },
+  {
+    label: "audit panel parity instruction",
+    text: "Check ORIG markers against old triangles first",
+  },
+  {
+    label: "audit panel paper-only warning",
+    text: "Paper evidence only - not live-trade approval",
+  },
+  {
     label: "alert fire timestamp JSON field",
     text: '"alertTime":" + str.tostring(timenow)',
   },

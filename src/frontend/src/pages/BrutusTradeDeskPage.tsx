@@ -784,6 +784,7 @@ targetR = input.float(1.2, minval=0.25, maxval=5.0, title="Target R")
 liveAlertsOnly = input.bool(true, title="Only Fire Alerts On Live Bars")
 showOriginalSignals = input.bool(true, title="Show Original Triangle Matches")
 showLiveLatchSignals = input.bool(false, title="Show Live First-Touch Latches")
+showAuditPanel = input.bool(true, title="Show Brutus Audit Panel")
 
 upperBasis = ta.ema(upperSrc, length)
 lowerBasis = ta.ema(lowerSrc, length)
@@ -875,6 +876,13 @@ plotshape(doNotHold and direction == "short", title="Short DO NOT HOLD", locatio
 plotshape(skipSignal and direction == "long", title="Long SKIP", location=location.belowbar, color=color.new(color.gray, 15), style=shape.square, text="SKIP")
 plotshape(skipSignal and direction == "short", title="Short SKIP", location=location.abovebar, color=color.new(color.gray, 15), style=shape.square, text="SKIP")
 plotshape(conflictSkip, title="Conflict SKIP", location=location.top, color=color.yellow, style=shape.diamond, text="BOTH")
+
+var table auditPanel = table.new(position.top_right, 1, 4, border_width=1)
+if showAuditPanel and barstate.islast
+    table.cell(auditPanel, 0, 0, "Brutus Playbook raw-parity-v6", text_color=color.white, bgcolor=color.new(color.black, 0))
+    table.cell(auditPanel, 0, 1, "Locked: length 9, high/low bands, StdDev 2", text_color=color.white, bgcolor=color.new(color.black, 15))
+    table.cell(auditPanel, 0, 2, "Check ORIG markers against old triangles first", text_color=color.yellow, bgcolor=color.new(color.black, 15))
+    table.cell(auditPanel, 0, 3, "Paper evidence only - not live-trade approval", text_color=color.orange, bgcolor=color.new(color.black, 15))
 
 firstTouchNewSide = signalMode == "First touch" and barstate.isrealtime and ((rawLongSignal and not alertedLongThisBar) or (rawShortSignal and not alertedShortThisBar))
 confirmedCloseEvent = signalMode == "Confirmed close" and rawSignal and barstate.isconfirmed
