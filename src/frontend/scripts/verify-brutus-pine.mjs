@@ -260,6 +260,30 @@ const requiredCaptureSnippets = [
     label: "multiple file input",
     text: "multiple",
   },
+  {
+    label: "paper outcome storage",
+    text: "ict.tradingview.paperOutcomes.v1",
+  },
+  {
+    label: "manual paper outcome gate",
+    text: "Manual paper outcomes",
+  },
+  {
+    label: "paper outcome CSV export",
+    text: "paper_outcome",
+  },
+  {
+    label: "paper outcome JSON export",
+    text: "paperOutcome:",
+  },
+  {
+    label: "paper result table column",
+    text: "Paper result",
+  },
+  {
+    label: "paid outcome button",
+    text: '(["paid", "failed", "missed"] as const)',
+  },
 ];
 
 const missingCapture = requiredCaptureSnippets.filter(

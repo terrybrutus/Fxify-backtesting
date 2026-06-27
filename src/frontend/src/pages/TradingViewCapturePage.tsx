@@ -2,6 +2,7 @@ import { useStrategyWorkspace } from "@/hooks/useStrategyWorkspace";
 import { useMemo, useState } from "react";
 
 const STORAGE_KEY = "ict.tradingview.alerts.v1";
+const PAPER_OUTCOME_STORAGE_KEY = "ict.tradingview.paperOutcomes.v1";
 
 type TvAlert = {
   id: string;
@@ -107,6 +108,8 @@ type ReadinessCheck = {
   detail: string;
 };
 
+type PaperOutcome = "unreviewed" | "paid" | "failed" | "missed";
+
 type EvidenceFilter = "latest" | "older" | "all";
 
 const LATEST_PLAYBOOK_VERSION = "raw-parity-v7";
@@ -153,6 +156,33 @@ function loadAlerts(): TvAlert[] {
 
 function saveAlerts(alerts: TvAlert[]) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts));
+}
+
+function loadPaperOutcomes(): Record<string, PaperOutcome> {
+  try {
+    const raw = window.localStorage.getItem(PAPER_OUTCOME_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return {};
+    }
+    return Object.fromEntries(
+      Object.entries(parsed).filter((entry): entry is [string, PaperOutcome] =>
+        ["unreviewed", "paid", "failed", "missed"].includes(
+          String(entry[1]),
+        ),
+      ),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function savePaperOutcomes(outcomes: Record<string, PaperOutcome>) {
+  window.localStorage.setItem(
+    PAPER_OUTCOME_STORAGE_KEY,
+    JSON.stringify(outcomes),
+  );
 }
 
 function asNumber(value: unknown) {
@@ -979,6 +1009,20 @@ function plainRowInstruction(alert: TvAlert, review: BrutusReview) {
   return "Skip it. No action besides logging the alert.";
 }
 
+function paperOutcomeLabel(outcome: PaperOutcome) {
+  if (outcome === "paid") return "Paid";
+  if (outcome === "failed") return "Failed";
+  if (outcome === "missed") return "Missed";
+  return "Unreviewed";
+}
+
+function paperOutcomeClass(outcome: PaperOutcome) {
+  if (outcome === "paid") return "text-lime-300";
+  if (outcome === "failed") return "text-destructive";
+  if (outcome === "missed") return "text-amber-300";
+  return "text-muted-foreground";
+}
+
 function downloadText(filename: string, content: string) {
   const blob = new Blob([content], { type: "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -1005,6 +1049,7 @@ function evidenceRowsToCsv(
     deltaMinutes?: number;
     brutusReview: BrutusReview;
   }>,
+  paperOutcomes: Record<string, PaperOutcome> = {},
 ) {
   const headers = [
     "candle_time",
@@ -1018,6 +1063,7 @@ function evidenceRowsToCsv(
     "pine_action",
     "review_status",
     "review_tag",
+    "paper_outcome",
     "plain_instruction",
     "session_ok",
     "timing_ok",
@@ -1049,6 +1095,7 @@ function evidenceRowsToCsv(
       actionFor(alert),
       brutusReview.status,
       reviewTagFor(alert, brutusReview, row.status),
+      paperOutcomes[alertIdentity(alert)] ?? "unreviewed",
       plainRowInstruction(alert, brutusReview),
       alert.inSession,
       alert.notTooEarly,
@@ -1096,6 +1143,9 @@ export default function TradingViewCapturePage() {
   const { candles } = useStrategyWorkspace();
   const [payloadText, setPayloadText] = useState("");
   const [alerts, setAlerts] = useState<TvAlert[]>(() => loadAlerts());
+  const [paperOutcomes, setPaperOutcomes] = useState<
+    Record<string, PaperOutcome>
+  >(() => loadPaperOutcomes());
   const [error, setError] = useState("");
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [evidenceFilter, setEvidenceFilter] =
@@ -1345,6 +1395,19 @@ export default function TradingViewCapturePage() {
     const latestMissingAlertTimeAlerts = latestReviewedRows.filter(
       (row) => row.alert.rawSignal === true && !row.alert.alertTime,
     ).length;
+    const paperOutcomeCounts = latestReviewedRows.reduce(
+      (acc, row) => {
+        const outcome =
+          paperOutcomes[alertIdentity(row.alert)] ?? "unreviewed";
+        acc[outcome] += 1;
+        return acc;
+      },
+      { unreviewed: 0, paid: 0, failed: 0, missed: 0 },
+    );
+    const reviewedOutcomeRows =
+      paperOutcomeCounts.paid +
+      paperOutcomeCounts.failed +
+      paperOutcomeCounts.missed;
     const failedEnterRate =
       enterRows.length > 0 ? failedEnterRows / enterRows.length : undefined;
     const readinessChecks: ReadinessCheck[] = [
@@ -1400,6 +1463,11 @@ export default function TradingViewCapturePage() {
           latestMissingAlertTimeAlerts === 0
             ? "alertTime present"
             : `${latestMissingAlertTimeAlerts} missing alertTime`,
+      },
+      {
+        label: "Manual paper outcomes",
+        passed: latestPlaybookAlerts >= 20 && reviewedOutcomeRows >= 10,
+        detail: `${reviewedOutcomeRows}/10 latest rows marked paid, failed, or missed`,
       },
     ];
     const readinessPassed = readinessChecks.filter((check) => check.passed).length;
@@ -1571,6 +1639,8 @@ export default function TradingViewCapturePage() {
       failedEnterRows,
       failedEnterRate,
       likelyUpgradeWaits,
+      paperOutcomeCounts,
+      reviewedOutcomeRows,
       readinessChecks,
       readinessPassed,
       readinessStatus,
@@ -1592,7 +1662,7 @@ export default function TradingViewCapturePage() {
       topModes: topBreakdownRows(byMode),
       topPierce: topBreakdownRows(byPierce),
     };
-  }, [latestReviewedRows, reviewCounts, reviewedRows]);
+  }, [latestReviewedRows, paperOutcomes, reviewCounts, reviewedRows]);
   const reviewQueues = useMemo(() => {
     const withTags = latestReviewedRows.map((row) => ({
       ...row,
@@ -1645,6 +1715,27 @@ export default function TradingViewCapturePage() {
         err instanceof Error ? err.message : "Could not parse alert files.",
       );
     }
+  }
+
+  function markPaperOutcome(alert: TvAlert, outcome: PaperOutcome) {
+    const key = alertIdentity(alert);
+    setPaperOutcomes((current) => {
+      const next = { ...current };
+      if (outcome === "unreviewed") delete next[key];
+      else next[key] = outcome;
+      savePaperOutcomes(next);
+      return next;
+    });
+  }
+
+  function exportReviewedRowWithOutcome(
+    row: Parameters<typeof exportableReviewedRow>[0],
+  ) {
+    return {
+      ...exportableReviewedRow(row),
+      paperOutcome:
+        paperOutcomes[alertIdentity(row.alert)] ?? ("unreviewed" as const),
+    };
   }
 
   return (
@@ -1734,7 +1825,7 @@ export default function TradingViewCapturePage() {
                 downloadText(
                   "ict-tradingview-alert-capture.json",
                   JSON.stringify(
-                    reviewedRows.map(exportableReviewedRow),
+                    reviewedRows.map(exportReviewedRowWithOutcome),
                     null,
                     2,
                   ),
@@ -1756,16 +1847,16 @@ export default function TradingViewCapturePage() {
                       note: "Latest Playbook rows only. Older Playbook and legacy alerts are excluded from this evidence export.",
                       queues: {
                         failedEntries: reviewQueues.failedEntries.map(
-                          exportableReviewedRow,
+                          exportReviewedRowWithOutcome,
                         ),
                         maybeLoosenWaits: reviewQueues.maybeLoosenWaits.map(
-                          exportableReviewedRow,
+                          exportReviewedRowWithOutcome,
                         ),
                         cleanEntries: reviewQueues.cleanEntries.map(
-                          exportableReviewedRow,
+                          exportReviewedRowWithOutcome,
                         ),
                       },
-                      rows: latestReviewedRows.map(exportableReviewedRow),
+                      rows: latestReviewedRows.map(exportReviewedRowWithOutcome),
                     },
                     null,
                     2,
@@ -1781,7 +1872,7 @@ export default function TradingViewCapturePage() {
               onClick={() =>
                 downloadText(
                   "ict-brutus-current-evidence.csv",
-                  evidenceRowsToCsv(latestReviewedRows),
+                  evidenceRowsToCsv(latestReviewedRows, paperOutcomes),
                 )
               }
               type="button"
@@ -2062,6 +2153,26 @@ export default function TradingViewCapturePage() {
             Raw signals:{" "}
             <span className="text-foreground">
               {paperSummary.rawSignalAlerts}
+            </span>
+          </p>
+          <p>
+            Paper marked:{" "}
+            <span className="text-foreground">
+              {paperSummary.reviewedOutcomeRows}
+            </span>
+          </p>
+          <p>
+            Paid / failed / missed:{" "}
+            <span className="text-lime-300">
+              {paperSummary.paperOutcomeCounts.paid}
+            </span>{" "}
+            /{" "}
+            <span className="text-destructive">
+              {paperSummary.paperOutcomeCounts.failed}
+            </span>{" "}
+            /{" "}
+            <span className="text-amber-300">
+              {paperSummary.paperOutcomeCounts.missed}
             </span>
           </p>
           <p>
@@ -2377,6 +2488,7 @@ export default function TradingViewCapturePage() {
                 <th className="px-2 py-2">Side</th>
                 <th className="px-2 py-2">Pine says</th>
                 <th className="px-2 py-2">Review</th>
+                <th className="px-2 py-2">Paper result</th>
                 <th className="px-2 py-2">Rule</th>
                 <th className="px-2 py-2">OHLC</th>
                 <th className="px-2 py-2">Bands</th>
@@ -2388,7 +2500,7 @@ export default function TradingViewCapturePage() {
             <tbody>
               {filteredReviewedRows.length === 0 ? (
                 <tr>
-                  <td className="px-2 py-6 text-muted-foreground" colSpan={14}>
+                  <td className="px-2 py-6 text-muted-foreground" colSpan={15}>
                     {reviewedRows.length === 0
                       ? "No TradingView alert events imported yet."
                       : "No alerts match this filter."}
@@ -2398,6 +2510,8 @@ export default function TradingViewCapturePage() {
                 filteredReviewedRows.map(
                   ({ alert, status, deltaMinutes, brutusReview }) => {
                     const reviewTag = reviewTagFor(alert, brutusReview, status);
+                    const paperOutcome =
+                      paperOutcomes[alertIdentity(alert)] ?? "unreviewed";
                     return (
                       <tr className="border-b border-border/60" key={alert.id}>
                         <td className="px-2 py-2">
@@ -2504,6 +2618,42 @@ export default function TradingViewCapturePage() {
                               Recreate this alert from the latest locked Pine.
                             </span>
                           )}
+                        </td>
+                        <td className="px-2 py-2">
+                          <span className={paperOutcomeClass(paperOutcome)}>
+                            {paperOutcomeLabel(paperOutcome)}
+                          </span>
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {(["paid", "failed", "missed"] as const).map(
+                              (outcome) => (
+                                <button
+                                  className={`border px-2 py-1 text-[10px] ${
+                                    paperOutcome === outcome
+                                      ? "border-primary bg-primary text-primary-foreground"
+                                      : "border-border bg-background text-muted-foreground hover:border-primary"
+                                  }`}
+                                  key={outcome}
+                                  onClick={() =>
+                                    markPaperOutcome(alert, outcome)
+                                  }
+                                  type="button"
+                                >
+                                  {paperOutcomeLabel(outcome)}
+                                </button>
+                              ),
+                            )}
+                            {paperOutcome !== "unreviewed" && (
+                              <button
+                                className="border border-border bg-background px-2 py-1 text-[10px] text-muted-foreground hover:border-primary"
+                                onClick={() =>
+                                  markPaperOutcome(alert, "unreviewed")
+                                }
+                                type="button"
+                              >
+                                Clear
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td className="px-2 py-2">
                           <span
