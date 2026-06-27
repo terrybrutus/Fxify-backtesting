@@ -1275,6 +1275,38 @@ export default function BrutusTradeDeskPage() {
     [alertMatches],
   );
 
+  const agreementCounts = useMemo(
+    () => ({
+      match: alertMatches.filter((item) => item.agreement === "MATCH").length,
+      different: alertMatches.filter((item) => item.agreement === "DIFFERENT")
+        .length,
+      pineOnly: alertMatches.filter((item) => item.agreement === "PINE ONLY")
+        .length,
+      noData: alertMatches.filter((item) => item.agreement === "NO DATA")
+        .length,
+    }),
+    [alertMatches],
+  );
+
+  const alertReviewInstruction = useMemo(() => {
+    if (!alertMatches.length) {
+      return "Import the latest TradingView Playbook alert CSV.";
+    }
+    if (agreementCounts.different > 0) {
+      return "Review DIFFERENT rows first. Pine live behavior and the app model disagree.";
+    }
+    if (agreementCounts.pineOnly > 0) {
+      return "Review PINE ONLY rows in TradingView. They are newer than the imported intrabar batch.";
+    }
+    if (alertCounts.enter > 0) {
+      return "Paper-review ENTER rows next. Mark whether they paid, failed, or were too late.";
+    }
+    if (alertCounts.wait > 0) {
+      return "Review WAIT rows that paid anyway. Repeated misses mean ENTER is too strict.";
+    }
+    return "No entry evidence yet. Keep collecting alerts without forcing a trade.";
+  }, [agreementCounts, alertCounts, alertMatches.length]);
+
   async function importReport(file: File | undefined) {
     if (!file) return;
     try {
@@ -1656,6 +1688,28 @@ export default function BrutusTradeDeskPage() {
             </span>
             <span className="border border-border px-2 py-1 text-muted-foreground">
               NO DATA {alertCounts.noData}
+            </span>
+          </div>
+        </div>
+        <div className="mt-3 grid gap-2 border border-border bg-background p-3 text-sm md:grid-cols-[1.5fr_1fr]">
+          <div>
+            <p className="font-display text-sm font-bold">Next review step</p>
+            <p className="mt-1 text-muted-foreground">
+              {alertReviewInstruction}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 font-mono text-xs">
+            <span className="border border-lime-400/50 px-2 py-1 text-lime-300">
+              MATCH {agreementCounts.match}
+            </span>
+            <span className="border border-amber-300/50 px-2 py-1 text-amber-200">
+              DIFFERENT {agreementCounts.different}
+            </span>
+            <span className="border border-cyan-400/50 px-2 py-1 text-cyan-200">
+              PINE ONLY {agreementCounts.pineOnly}
+            </span>
+            <span className="border border-border px-2 py-1 text-muted-foreground">
+              NO DATA {agreementCounts.noData}
             </span>
           </div>
         </div>

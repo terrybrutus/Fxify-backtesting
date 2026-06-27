@@ -524,6 +524,18 @@ const requiredTradeDeskSnippets = [
     text: "DIFFERENT",
   },
   {
+    label: "trade desk gives next alert review step",
+    text: "Next review step",
+  },
+  {
+    label: "trade desk prioritizes decision disagreements",
+    text: "Review DIFFERENT rows first. Pine live behavior and the app model disagree.",
+  },
+  {
+    label: "trade desk calls out pine-only rows",
+    text: "Review PINE ONLY rows in TradingView.",
+  },
+  {
     label: "trade desk prefers Pine alert price levels",
     text: "item.alert.entry ?? item.decision?.entry",
   },
