@@ -397,6 +397,21 @@ function alertIdentity(alert: TvAlert) {
   ].join("|");
 }
 
+function paperOutcomeKey(alert: TvAlert) {
+  return [
+    alert.strategy ?? "",
+    alert.playbookVersion ?? "",
+    alert.brokerSymbol ?? "",
+    alert.timeframe ?? "",
+    alert.time ?? "",
+    alert.alertTime ?? "",
+    alert.decisionEvent ?? "",
+    alert.previousAction ?? "",
+    alert.action ?? "",
+    alert.direction ?? "",
+  ].join("|");
+}
+
 function mergeAlerts(incoming: TvAlert[], current: TvAlert[]) {
   const seen = new Set(current.map(alertIdentity));
   const uniqueIncoming: TvAlert[] = [];
@@ -1082,6 +1097,7 @@ function evidenceRowsToCsv(
   paperOutcomes: Record<string, PaperOutcome> = {},
 ) {
   const headers = [
+    "event_key",
     "candle_time",
     "alert_delay",
     "broker_symbol",
@@ -1116,6 +1132,7 @@ function evidenceRowsToCsv(
   const body = rows.map((row) => {
     const { alert, brutusReview } = row;
     return [
+      paperOutcomeKey(alert),
       formatTime(alert.time),
       formatAlertDelay(alert),
       alert.brokerSymbol,
@@ -1129,7 +1146,7 @@ function evidenceRowsToCsv(
       actionFor(alert),
       brutusReview.status,
       reviewTagFor(alert, brutusReview, row.status),
-      paperOutcomes[alertIdentity(alert)] ?? "unreviewed",
+      paperOutcomes[paperOutcomeKey(alert)] ?? "unreviewed",
       plainRowInstruction(alert, brutusReview),
       alert.inSession,
       alert.notTooEarly,
@@ -1446,7 +1463,7 @@ export default function TradingViewCapturePage() {
     const paperOutcomeCounts = latestReviewedRows.reduce(
       (acc, row) => {
         const outcome =
-          paperOutcomes[alertIdentity(row.alert)] ?? "unreviewed";
+          paperOutcomes[paperOutcomeKey(row.alert)] ?? "unreviewed";
         acc[outcome] += 1;
         return acc;
       },
@@ -1461,7 +1478,7 @@ export default function TradingViewCapturePage() {
     >(
       (acc, row) => {
         const outcome =
-          paperOutcomes[alertIdentity(row.alert)] ?? "unreviewed";
+          paperOutcomes[paperOutcomeKey(row.alert)] ?? "unreviewed";
         acc[row.brutusReview.status][outcome] += 1;
         return acc;
       },
@@ -1802,7 +1819,7 @@ export default function TradingViewCapturePage() {
   }
 
   function markPaperOutcome(alert: TvAlert, outcome: PaperOutcome) {
-    const key = alertIdentity(alert);
+    const key = paperOutcomeKey(alert);
     setPaperOutcomes((current) => {
       const next = { ...current };
       if (outcome === "unreviewed") delete next[key];
@@ -1816,9 +1833,10 @@ export default function TradingViewCapturePage() {
     row: Parameters<typeof exportableReviewedRow>[0],
   ) {
     return {
+      eventKey: paperOutcomeKey(row.alert),
       ...exportableReviewedRow(row),
       paperOutcome:
-        paperOutcomes[alertIdentity(row.alert)] ?? ("unreviewed" as const),
+        paperOutcomes[paperOutcomeKey(row.alert)] ?? ("unreviewed" as const),
     };
   }
 
@@ -2656,7 +2674,7 @@ export default function TradingViewCapturePage() {
                   ({ alert, status, deltaMinutes, brutusReview }) => {
                     const reviewTag = reviewTagFor(alert, brutusReview, status);
                     const paperOutcome =
-                      paperOutcomes[alertIdentity(alert)] ?? "unreviewed";
+                      paperOutcomes[paperOutcomeKey(alert)] ?? "unreviewed";
                     return (
                       <tr className="border-b border-border/60" key={alert.id}>
                         <td className="px-2 py-2">

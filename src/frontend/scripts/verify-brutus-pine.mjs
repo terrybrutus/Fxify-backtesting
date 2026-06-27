@@ -317,6 +317,22 @@ const requiredCaptureSnippets = [
     text: "paperOutcome:",
   },
   {
+    label: "stable paper outcome key",
+    text: "function paperOutcomeKey(alert: TvAlert)",
+  },
+  {
+    label: "event key CSV export",
+    text: '"event_key"',
+  },
+  {
+    label: "event key JSON export",
+    text: "eventKey: paperOutcomeKey(row.alert)",
+  },
+  {
+    label: "paper outcomes use stable key",
+    text: "paperOutcomes[paperOutcomeKey(alert)]",
+  },
+  {
     label: "paper result table column",
     text: "Paper result",
   },
