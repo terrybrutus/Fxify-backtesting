@@ -341,6 +341,18 @@ const requiredCaptureSnippets = [
     text: '"signal_conflict"',
   },
   {
+    label: "pine plain action CSV export",
+    text: '"pine_plain_action"',
+  },
+  {
+    label: "pine reason CSV export",
+    text: '"pine_reason"',
+  },
+  {
+    label: "review reason CSV export",
+    text: '"review_reason"',
+  },
+  {
     label: "event key JSON export",
     text: "eventKey: paperOutcomeKey(row.alert)",
   },

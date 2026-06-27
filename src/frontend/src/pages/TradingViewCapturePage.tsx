@@ -1135,7 +1135,9 @@ function evidenceRowsToCsv(
     "adverse",
     "match_status",
     "match_delta_minutes",
-    "reason",
+    "pine_plain_action",
+    "pine_reason",
+    "review_reason",
   ];
   const body = rows.map((row) => {
     const { alert, brutusReview } = row;
@@ -1178,6 +1180,8 @@ function evidenceRowsToCsv(
       brutusReview.adverse,
       row.status,
       row.deltaMinutes,
+      alert.plainAction,
+      rawReasonFor(alert),
       brutusReview.reason,
     ]
       .map(csvCell)
