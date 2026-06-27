@@ -1032,6 +1032,22 @@ export default function TradingViewCapturePage() {
       },
       {},
     );
+    const byPierce = latestReviewedRows.reduce<Record<string, ReviewCounts>>(
+      (acc, row) => {
+        const key = pierceLabel(
+          row.alert.touchDepthRatio ?? row.brutusReview.touchDepthRatio,
+        );
+        acc[key] ??= { enter: 0, wait: 0, skip: 0, doNotHold: 0 };
+        if (row.brutusReview.status === "ENTER") acc[key].enter += 1;
+        if (row.brutusReview.status === "WAIT") acc[key].wait += 1;
+        if (row.brutusReview.status === "SKIP") acc[key].skip += 1;
+        if (row.brutusReview.status === "DO_NOT_HOLD") {
+          acc[key].doNotHold += 1;
+        }
+        return acc;
+      },
+      {},
+    );
     const playbookAlerts = reviewedRows.filter((row) =>
       isPlaybookAlert(row.alert),
     ).length;
@@ -1235,6 +1251,7 @@ export default function TradingViewCapturePage() {
       topSymbols: topBreakdownRows(bySymbol),
       topTimeframes: topBreakdownRows(byTimeframe),
       topModes: topBreakdownRows(byMode),
+      topPierce: topBreakdownRows(byPierce),
     };
   }, [latestReviewedRows, reviewCounts, reviewedRows]);
   const reviewQueues = useMemo(() => {
@@ -1601,7 +1618,7 @@ export default function TradingViewCapturePage() {
         </div>
       </section>
 
-      <section className="grid gap-3 md:grid-cols-3">
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <div className="border border-border bg-card p-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             Symbols
@@ -1653,6 +1670,28 @@ export default function TradingViewCapturePage() {
           <div className="mt-3 space-y-2 font-mono text-xs">
             {paperSummary.topModes.length ? (
               paperSummary.topModes.map((row) => (
+                <div
+                  className="flex items-center justify-between gap-3"
+                  key={row.label}
+                >
+                  <span className="text-foreground">{row.label}</span>
+                  <span className="text-muted-foreground">
+                    {countsText(row.counts)}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground">No alerts imported.</p>
+            )}
+          </div>
+        </div>
+        <div className="border border-border bg-card p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Pierce depth
+          </p>
+          <div className="mt-3 space-y-2 font-mono text-xs">
+            {paperSummary.topPierce.length ? (
+              paperSummary.topPierce.map((row) => (
                 <div
                   className="flex items-center justify-between gap-3"
                   key={row.label}
