@@ -1394,6 +1394,33 @@ export default function BrutusTradeDeskPage() {
             </div>
           </div>
 
+          <div className="grid gap-2 border border-border bg-background p-3 font-mono text-xs md:grid-cols-4">
+            <div>
+              <p className="font-bold text-muted-foreground">ORIG</p>
+              <p className="mt-1 text-muted-foreground">
+                Old Brutus triangle match. Use this only to verify parity.
+              </p>
+            </div>
+            <div>
+              <p className="font-bold text-amber-200">WAIT</p>
+              <p className="mt-1 text-muted-foreground">
+                No trade yet. Watch only; wait for an ENTER alert.
+              </p>
+            </div>
+            <div>
+              <p className="font-bold text-lime-300">ENTER</p>
+              <p className="mt-1 text-muted-foreground">
+                Paper trade candidate. Take it immediately or skip it.
+              </p>
+            </div>
+            <div>
+              <p className="font-bold text-red-300">SKIP / NO</p>
+              <p className="mt-1 text-muted-foreground">
+                No trade. The move is noisy, late, or pushing through.
+              </p>
+            </div>
+          </div>
+
           <div className="grid gap-3 border border-cyan-500/40 bg-cyan-500/5 p-4 text-sm md:grid-cols-4">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">

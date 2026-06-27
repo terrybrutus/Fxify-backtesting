@@ -503,6 +503,14 @@ const requiredTradeDeskSnippets = [
     label: "trade desk plain do not fight instruction",
     text: "NO TRADE. Do not fight this move.",
   },
+  {
+    label: "trade desk label map explains original triangles",
+    text: "Old Brutus triangle match. Use this only to verify parity.",
+  },
+  {
+    label: "trade desk label map explains immediate enter",
+    text: "Paper trade candidate. Take it immediately or skip it.",
+  },
 ];
 
 const missingTradeDesk = requiredTradeDeskSnippets.filter(
