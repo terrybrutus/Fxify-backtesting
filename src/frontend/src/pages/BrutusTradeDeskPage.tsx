@@ -85,7 +85,7 @@ type TradeDecision = {
 
 type TvAlert = {
   id: string;
-  alertTime?: string;
+  alertTime?: number | string;
   playbookVersion?: string;
   rawSignal?: boolean;
   decisionEvent?: string;
@@ -284,6 +284,16 @@ function asNumber(value: unknown) {
   return undefined;
 }
 
+function alertTimeFrom(item: Record<string, unknown>, fallback?: string) {
+  return (
+    asNumber(item.alertTime) ??
+    asNumber(item.timenow) ??
+    asNumber(item.receivedAt) ??
+    (typeof item.alertTime === "string" ? item.alertTime : undefined) ??
+    fallback
+  );
+}
+
 function directionFrom(value: unknown): Direction | undefined {
   const lower = String(value ?? "")
     .trim()
@@ -321,6 +331,7 @@ function normalizeAlertPayload(
     String(item.timeframe ?? item.interval ?? ""),
   );
   const candleTime = asNumber(item.time ?? item.timestamp ?? item.candleTime);
+  const importedAlertTime = alertTimeFrom(item, alertTime);
   if (!symbol || !timeframe || !direction || candleTime == null) return null;
   return {
     id: [
@@ -328,9 +339,9 @@ function normalizeAlertPayload(
       timeframe,
       direction,
       candleTime,
-      asNumber(item.alertTime) ?? alertTime ?? "",
+      importedAlertTime ?? "",
     ].join("|"),
-    alertTime,
+    alertTime: importedAlertTime,
     playbookVersion:
       typeof item.playbookVersion === "string" ? item.playbookVersion : undefined,
     rawSignal:
@@ -1681,7 +1692,18 @@ export default function BrutusTradeDeskPage() {
                         ? new Date(item.alert.alertTime).toLocaleString()
                         : fmtDate(item.alert.candleTime)}
                       <span className="block text-muted-foreground">
-                        {item.alert.alertMode ?? "alert"}
+                        fired alert
+                      </span>
+                      <span className="block text-muted-foreground">
+                        candle {fmtDate(item.alert.candleTime)}
+                      </span>
+                      <span className="block text-muted-foreground">
+                        {item.alert.mode ?? item.alert.alertMode ?? "alert"}
+                        {item.alert.confirmed != null
+                          ? item.alert.confirmed
+                            ? " | confirmed"
+                            : " | open bar"
+                          : ""}
                       </span>
                     </td>
                     <td className="px-2 py-2">{item.alert.symbol ?? "n/a"}</td>

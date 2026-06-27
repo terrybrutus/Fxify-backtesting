@@ -500,6 +500,18 @@ const requiredTradeDeskSnippets = [
     text: "action: decisionFrom(item.action)",
   },
   {
+    label: "trade desk preserves numeric Pine alert time",
+    text: "function alertTimeFrom(item: Record<string, unknown>, fallback?: string)",
+  },
+  {
+    label: "trade desk displays alert fire time",
+    text: "fired alert",
+  },
+  {
+    label: "trade desk displays candle bucket time",
+    text: "candle {fmtDate(item.alert.candleTime)}",
+  },
+  {
     label: "trade desk preserves Pine plain action",
     text: "plainAction:",
   },
