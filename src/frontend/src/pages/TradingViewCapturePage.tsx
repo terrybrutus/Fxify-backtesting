@@ -75,6 +75,11 @@ type ImportResult = {
   added: number;
   duplicates: number;
   total: number;
+  latestPlaybook: number;
+  oldPlaybook: number;
+  legacy: number;
+  incomplete: number;
+  contractIssues: number;
 };
 
 type ReviewCounts = {
@@ -363,6 +368,19 @@ function mergeAlerts(incoming: TvAlert[], current: TvAlert[]) {
       added: uniqueIncoming.length,
       duplicates,
       total: current.length + uniqueIncoming.length,
+      latestPlaybook: uniqueIncoming.filter(isLatestPlaybookAlert).length,
+      oldPlaybook: uniqueIncoming.filter(
+        (alert) => isPlaybookAlert(alert) && !isLatestPlaybookAlert(alert),
+      ).length,
+      legacy: uniqueIncoming.filter(isLegacyBrutusAlert).length,
+      incomplete: uniqueIncoming.filter(
+        (alert) =>
+          isLatestPlaybookAlert(alert) && missingPlaybookFields(alert).length > 0,
+      ).length,
+      contractIssues: uniqueIncoming.filter(
+        (alert) =>
+          isLatestPlaybookAlert(alert) && playbookContractIssues(alert).length > 0,
+      ).length,
     },
   };
 }
@@ -1609,6 +1627,26 @@ export default function TradingViewCapturePage() {
     }
   }
 
+  async function addPayloadFiles(files: FileList | null) {
+    if (!files?.length) return;
+    try {
+      const texts = await Promise.all(
+        Array.from(files).map((file) => file.text()),
+      );
+      const parsed = texts.flatMap((text) => parsePayloadText(text));
+      const merged = mergeAlerts(parsed, alerts);
+      setAlerts(merged.alerts);
+      saveAlerts(merged.alerts);
+      setImportResult(merged.result);
+      setError("");
+    } catch (err) {
+      setImportResult(null);
+      setError(
+        err instanceof Error ? err.message : "Could not parse alert files.",
+      );
+    }
+  }
+
   return (
     <div className="space-y-3 p-6" data-ocid="tradingview.capture.page">
       <div>
@@ -1645,19 +1683,29 @@ export default function TradingViewCapturePage() {
           />
           {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
           {importResult && !error && (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Added{" "}
-              <span className="font-mono text-primary">
-                {importResult.added}
-              </span>{" "}
-              alert(s), skipped{" "}
-              <span className="font-mono text-amber-300">
-                {importResult.duplicates}
-              </span>{" "}
-              duplicate(s). Stored total:{" "}
-              <span className="font-mono text-foreground">{alerts.length}</span>
-              .
-            </p>
+            <div className="mt-2 border border-border bg-background/40 p-3 text-sm text-muted-foreground">
+              <p>
+                Added{" "}
+                <span className="font-mono text-primary">
+                  {importResult.added}
+                </span>{" "}
+                alert(s), skipped{" "}
+                <span className="font-mono text-amber-300">
+                  {importResult.duplicates}
+                </span>{" "}
+                duplicate(s). Stored total:{" "}
+                <span className="font-mono text-foreground">
+                  {alerts.length}
+                </span>
+                .
+              </p>
+              <p className="mt-1 font-mono text-xs">
+                Latest Playbook {importResult.latestPlaybook} | Old Playbook{" "}
+                {importResult.oldPlaybook} | Legacy {importResult.legacy} |
+                Incomplete {importResult.incomplete} | Settings mismatch{" "}
+                {importResult.contractIssues}
+              </p>
+            </div>
           )}
           <div className="mt-3 flex flex-wrap gap-2">
             <button
@@ -1673,11 +1721,10 @@ export default function TradingViewCapturePage() {
                 accept=".csv,.json,.jsonl,.txt"
                 className="hidden"
                 onChange={async (event) => {
-                  const file = event.target.files?.[0];
-                  if (!file) return;
-                  addPayloads(await file.text());
+                  await addPayloadFiles(event.target.files);
                   event.target.value = "";
                 }}
+                multiple
                 type="file"
               />
             </label>

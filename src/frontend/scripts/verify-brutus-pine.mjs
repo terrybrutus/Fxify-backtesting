@@ -240,6 +240,26 @@ const requiredCaptureSnippets = [
     label: "readiness exported in paper summary",
     text: "readinessChecks,",
   },
+  {
+    label: "multi-file TradingView alert upload",
+    text: "async function addPayloadFiles(files: FileList | null)",
+  },
+  {
+    label: "latest Playbook import count",
+    text: "Latest Playbook {importResult.latestPlaybook}",
+  },
+  {
+    label: "old Playbook import count",
+    text: "{importResult.oldPlaybook}",
+  },
+  {
+    label: "settings mismatch import count",
+    text: "{importResult.contractIssues}",
+  },
+  {
+    label: "multiple file input",
+    text: "multiple",
+  },
 ];
 
 const missingCapture = requiredCaptureSnippets.filter(
