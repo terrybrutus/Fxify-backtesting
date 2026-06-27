@@ -534,10 +534,6 @@ function plainTradeWord(direction: Direction) {
   return direction === "long" ? "BUY" : "SELL";
 }
 
-function stopVerb(direction: Direction) {
-  return direction === "long" ? "below" : "above";
-}
-
 function targetText(direction: Direction) {
   return direction === "long"
     ? "Target the snapback upward."
