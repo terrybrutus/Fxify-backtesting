@@ -37,8 +37,8 @@ const requiredSnippets = [
     text: "alert(message, alert.freq_all)",
   },
   {
-    label: "raw parity v3 payload",
-    text: '"playbookVersion":"raw-parity-v3"',
+    label: "raw parity v4 payload",
+    text: '"playbookVersion":"raw-parity-v4"',
   },
   {
     label: "raw signal JSON field",
