@@ -1292,21 +1292,21 @@ export default function BrutusTradeDeskPage() {
 
   const alertReviewInstruction = useMemo(() => {
     if (!alertMatches.length) {
-      return "Import the latest TradingView Playbook alert CSV.";
+      return "Import the latest TradingView Playbook alert CSV. Do not judge live alerts from screenshots alone.";
     }
     if (agreementCounts.different > 0) {
-      return "Review DIFFERENT rows first. Pine live behavior and the app model disagree.";
+      return "Stop and review DIFFERENT rows first. Pine and the app disagree, so those rows are not tradeable evidence yet.";
     }
     if (agreementCounts.pineOnly > 0) {
-      return "Review PINE ONLY rows in TradingView. They are newer than the imported intrabar batch.";
+      return "Review PINE ONLY rows in TradingView. They are newer than your imported candle batch, so the app cannot score them yet.";
     }
     if (alertCounts.enter > 0) {
-      return "Paper-review ENTER rows next. Mark whether they paid, failed, or were too late.";
+      return "Paper-review ENTER rows next. The question is simple: did this work if taken immediately, or was it already too late?";
     }
     if (alertCounts.wait > 0) {
-      return "Review WAIT rows that paid anyway. Repeated misses mean ENTER is too strict.";
+      return "Review WAIT rows that still paid. If too many WAIT rows work, the entry rule is too strict.";
     }
-    return "No entry evidence yet. Keep collecting alerts without forcing a trade.";
+    return "No entry evidence yet. Keep collecting alerts; do not force a trade from this batch.";
   }, [agreementCounts, alertCounts, alertMatches.length]);
 
   async function importReport(file: File | undefined) {
@@ -1383,7 +1383,7 @@ export default function BrutusTradeDeskPage() {
                 generatedAt: new Date().toISOString(),
                 rule: {
                   plain:
-                    "Compare all intraday Brutus timeframes. Prefer London/NY. Avoid first-minute touches. Treat JPN225 longs cautiously. Enter only after snapback starts.",
+                    "Import intrabar data, then TradingView alerts. Only paper-review ENTER rows when Pine and the app agree. Treat stale, DIFFERENT, or PINE ONLY rows as review items, not trade calls.",
                   pointValue: POINT_VALUE,
                 },
                 sourceTotals: report?.totals,
@@ -1446,6 +1446,33 @@ export default function BrutusTradeDeskPage() {
           </p>
           <p className="mt-2 font-display text-2xl font-bold text-red-300">
             {counts.skip}
+          </p>
+        </div>
+      </section>
+
+      <section className="grid gap-3 border border-border bg-card p-4 md:grid-cols-3">
+        <div>
+          <p className="font-display text-sm font-bold">Use This In Order</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            First import the Brutus Intrabar JSON. Then import the newest
+            TradingView alert CSV. Then review Live Alert Match from top to
+            bottom.
+          </p>
+        </div>
+        <div>
+          <p className="font-display text-sm font-bold">What Counts</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            ENTER only means paper-trade candidate. MATCH means Pine and app
+            agree. DIFFERENT or PINE ONLY means pause and verify before trusting
+            the row.
+          </p>
+        </div>
+        <div>
+          <p className="font-display text-sm font-bold">What To Ignore</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Do not trade from old screenshots, unmatched alerts, or rows where
+            the candle batch is stale. Those are research clues, not live
+            decisions.
           </p>
         </div>
       </section>

@@ -537,7 +537,7 @@ const requiredTradeDeskSnippets = [
   },
   {
     label: "trade desk prioritizes decision disagreements",
-    text: "Review DIFFERENT rows first. Pine live behavior and the app model disagree.",
+    text: "Stop and review DIFFERENT rows first. Pine and the app disagree, so those rows are not tradeable evidence yet.",
   },
   {
     label: "trade desk calls out pine-only rows",
