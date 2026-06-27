@@ -110,6 +110,8 @@ type ReadinessCheck = {
 
 type PaperOutcome = "unreviewed" | "paid" | "failed" | "missed";
 
+type PaperOutcomeCounts = Record<PaperOutcome, number>;
+
 type EvidenceFilter = "latest" | "older" | "all";
 
 const LATEST_PLAYBOOK_VERSION = "raw-parity-v7";
@@ -990,6 +992,14 @@ function gateCountText(counts: GateCount) {
   return `yes ${counts.yes} / no ${counts.no} / ? ${counts.unknown}`;
 }
 
+function paperOutcomeCountsText(counts: PaperOutcomeCounts) {
+  return `Paid ${counts.paid} / Failed ${counts.failed} / Missed ${counts.missed} / Open ${counts.unreviewed}`;
+}
+
+function emptyPaperOutcomeCounts(): PaperOutcomeCounts {
+  return { unreviewed: 0, paid: 0, failed: 0, missed: 0 };
+}
+
 function plainRowInstruction(alert: TvAlert, review: BrutusReview) {
   const side =
     directionFor(alert) === "long"
@@ -1408,6 +1418,22 @@ export default function TradingViewCapturePage() {
       paperOutcomeCounts.paid +
       paperOutcomeCounts.failed +
       paperOutcomeCounts.missed;
+    const paperOutcomeByDecision = latestReviewedRows.reduce<
+      Record<BrutusReviewStatus, PaperOutcomeCounts>
+    >(
+      (acc, row) => {
+        const outcome =
+          paperOutcomes[alertIdentity(row.alert)] ?? "unreviewed";
+        acc[row.brutusReview.status][outcome] += 1;
+        return acc;
+      },
+      {
+        ENTER: emptyPaperOutcomeCounts(),
+        WAIT: emptyPaperOutcomeCounts(),
+        SKIP: emptyPaperOutcomeCounts(),
+        DO_NOT_HOLD: emptyPaperOutcomeCounts(),
+      },
+    );
     const failedEnterRate =
       enterRows.length > 0 ? failedEnterRows / enterRows.length : undefined;
     const readinessChecks: ReadinessCheck[] = [
@@ -1640,6 +1666,7 @@ export default function TradingViewCapturePage() {
       failedEnterRate,
       likelyUpgradeWaits,
       paperOutcomeCounts,
+      paperOutcomeByDecision,
       reviewedOutcomeRows,
       readinessChecks,
       readinessPassed,
@@ -2072,6 +2099,35 @@ export default function TradingViewCapturePage() {
               This shows the gate pattern behind the labels. If WAIT rows have
               snapback but no ENTER, the entry rule may be too strict. If ENTER
               rows also show push-through, the rule is too loose.
+            </p>
+          </div>
+          <div className="mt-3 border border-border bg-background/40 p-3">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              Paper outcome scoreboard
+            </p>
+            <div className="mt-2 grid gap-2 font-mono text-xs text-muted-foreground sm:grid-cols-2">
+              {(
+                [
+                  ["ENTER", "ENTER"],
+                  ["WAIT", "WAIT"],
+                  ["DO_NOT_HOLD", "DO NOT HOLD"],
+                  ["SKIP", "SKIP"],
+                ] as const
+              ).map(([status, label]) => (
+                <p key={status}>
+                  {label}:{" "}
+                  <span className="text-foreground">
+                    {paperOutcomeCountsText(
+                      paperSummary.paperOutcomeByDecision[status],
+                    )}
+                  </span>
+                </p>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              If ENTER fails often, tighten the rule. If WAIT is often missed,
+              the rule may be too strict. If DO NOT HOLD avoids failed moves,
+              the trap filter is doing useful work.
             </p>
           </div>
           {paperSummary.reviewQueue.length > 0 && (

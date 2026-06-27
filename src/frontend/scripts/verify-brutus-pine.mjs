@@ -284,6 +284,22 @@ const requiredCaptureSnippets = [
     label: "paid outcome button",
     text: '(["paid", "failed", "missed"] as const)',
   },
+  {
+    label: "paper outcome scoreboard",
+    text: "Paper outcome scoreboard",
+  },
+  {
+    label: "outcomes grouped by Playbook decision",
+    text: "paperOutcomeByDecision",
+  },
+  {
+    label: "WAIT missed guidance",
+    text: "If WAIT is often missed",
+  },
+  {
+    label: "DO NOT HOLD trap filter guidance",
+    text: "the trap filter is doing useful work",
+  },
 ];
 
 const missingCapture = requiredCaptureSnippets.filter(
