@@ -85,6 +85,7 @@ type TradeDecision = {
 
 type TvAlert = {
   id: string;
+  strategy?: string;
   alertTime?: number | string;
   playbookVersion?: string;
   rawSignal?: boolean;
@@ -114,6 +115,10 @@ type TvAlert = {
   entry?: number;
   stop?: number;
   target?: number;
+  length?: number;
+  upperSource?: string;
+  lowerSource?: string;
+  stdDev?: number;
 };
 
 type AlertDecisionMatch = {
@@ -141,6 +146,7 @@ type PlaybookRow = {
 
 const STORAGE_KEY = "ict.brutus.trade-desk.report.v1";
 const ALERT_STORAGE_KEY = "ict.brutus.trade-desk.alerts.v1";
+const LATEST_PLAYBOOK_VERSION = "raw-parity-v10";
 const POINT_VALUE = 10;
 
 function fmtDate(timestamp?: number) {
@@ -342,6 +348,7 @@ function normalizeAlertPayload(
       importedAlertTime ?? "",
     ].join("|"),
     alertTime: importedAlertTime,
+    strategy: typeof item.strategy === "string" ? item.strategy : undefined,
     playbookVersion:
       typeof item.playbookVersion === "string" ? item.playbookVersion : undefined,
     rawSignal:
@@ -377,6 +384,12 @@ function normalizeAlertPayload(
     entry: asNumber(item.entry),
     stop: asNumber(item.stop),
     target: asNumber(item.target),
+    length: asNumber(item.length),
+    upperSource:
+      typeof item.upperSource === "string" ? item.upperSource : undefined,
+    lowerSource:
+      typeof item.lowerSource === "string" ? item.lowerSource : undefined,
+    stdDev: asNumber(item.stdDev),
   };
 }
 
@@ -472,6 +485,32 @@ function mergeAlerts(current: TvAlert[], incoming: TvAlert[]) {
     added.push(alert);
   }
   return [...added, ...current].slice(0, 500);
+}
+
+function isPlaybookAlert(alert: TvAlert) {
+  return alert.strategy === "brutus_playbook_v1" || alert.rawSignal === true;
+}
+
+function isLatestPlaybookAlert(alert: TvAlert) {
+  return (
+    isPlaybookAlert(alert) && alert.playbookVersion === LATEST_PLAYBOOK_VERSION
+  );
+}
+
+function alertVersionLabel(alert: TvAlert) {
+  if (isLatestPlaybookAlert(alert)) return "Current Playbook";
+  if (isPlaybookAlert(alert)) return "Old Playbook";
+  return "Legacy / other";
+}
+
+function playbookContractIssues(alert: TvAlert) {
+  const issues: string[] = [];
+  if (!isLatestPlaybookAlert(alert)) return issues;
+  if (alert.length !== 9) issues.push("length");
+  if (alert.upperSource !== "high") issues.push("upper source");
+  if (alert.lowerSource !== "low") issues.push("lower source");
+  if (alert.stdDev !== 2) issues.push("stdDev");
+  return issues;
 }
 
 function sideWord(direction: Direction) {
@@ -1265,34 +1304,73 @@ export default function BrutusTradeDeskPage() {
     [alerts, decisions],
   );
 
-  const alertCounts = useMemo(
+  const latestAlertMatches = useMemo(
+    () =>
+      alertMatches.filter((item) => isLatestPlaybookAlert(item.alert)),
+    [alertMatches],
+  );
+
+  const alertVersionCounts = useMemo(
     () => ({
-      enter: alertMatches.filter((item) => item.status === "ENTER").length,
-      wait: alertMatches.filter((item) => item.status === "WAIT").length,
-      skip: alertMatches.filter((item) => item.status === "SKIP").length,
-      doNotHold: alertMatches.filter((item) => item.status === "DO_NOT_HOLD")
+      current: alertMatches.filter((item) =>
+        isLatestPlaybookAlert(item.alert),
+      ).length,
+      old: alertMatches.filter(
+        (item) =>
+          isPlaybookAlert(item.alert) && !isLatestPlaybookAlert(item.alert),
+      ).length,
+      legacy: alertMatches.filter((item) => !isPlaybookAlert(item.alert))
         .length,
-      noData: alertMatches.filter((item) => item.status === "NO DATA").length,
+      contractIssues: alertMatches.filter(
+        (item) => playbookContractIssues(item.alert).length > 0,
+      ).length,
     }),
     [alertMatches],
   );
 
-  const agreementCounts = useMemo(
+  const alertCounts = useMemo(
     () => ({
-      match: alertMatches.filter((item) => item.agreement === "MATCH").length,
-      different: alertMatches.filter((item) => item.agreement === "DIFFERENT")
+      enter: latestAlertMatches.filter((item) => item.status === "ENTER")
         .length,
-      pineOnly: alertMatches.filter((item) => item.agreement === "PINE ONLY")
+      wait: latestAlertMatches.filter((item) => item.status === "WAIT").length,
+      skip: latestAlertMatches.filter((item) => item.status === "SKIP").length,
+      doNotHold: latestAlertMatches.filter(
+        (item) => item.status === "DO_NOT_HOLD",
+      )
         .length,
-      noData: alertMatches.filter((item) => item.agreement === "NO DATA")
+      noData: latestAlertMatches.filter((item) => item.status === "NO DATA")
         .length,
     }),
-    [alertMatches],
+    [latestAlertMatches],
+  );
+
+  const agreementCounts = useMemo(
+    () => ({
+      match: latestAlertMatches.filter((item) => item.agreement === "MATCH")
+        .length,
+      different: latestAlertMatches.filter(
+        (item) => item.agreement === "DIFFERENT",
+      )
+        .length,
+      pineOnly: latestAlertMatches.filter(
+        (item) => item.agreement === "PINE ONLY",
+      )
+        .length,
+      noData: latestAlertMatches.filter((item) => item.agreement === "NO DATA")
+        .length,
+    }),
+    [latestAlertMatches],
   );
 
   const alertReviewInstruction = useMemo(() => {
     if (!alertMatches.length) {
       return "Import the latest TradingView Playbook alert CSV. Do not judge live alerts from screenshots alone.";
+    }
+    if (!latestAlertMatches.length) {
+      return "This file has no current raw-parity-v10 Playbook alerts. Keep it as history, but do not use it for this evidence loop.";
+    }
+    if (alertVersionCounts.contractIssues > 0) {
+      return "Some current Playbook alerts failed the locked-parameter check. Re-export the Pine script before trusting this batch.";
     }
     if (agreementCounts.different > 0) {
       return "Stop and review DIFFERENT rows first. Pine and the app disagree, so those rows are not tradeable evidence yet.";
@@ -1307,7 +1385,13 @@ export default function BrutusTradeDeskPage() {
       return "Review WAIT rows that still paid. If too many WAIT rows work, the entry rule is too strict.";
     }
     return "No entry evidence yet. Keep collecting alerts; do not force a trade from this batch.";
-  }, [agreementCounts, alertCounts, alertMatches.length]);
+  }, [
+    agreementCounts,
+    alertCounts,
+    alertMatches.length,
+    alertVersionCounts.contractIssues,
+    latestAlertMatches.length,
+  ]);
 
   async function importReport(file: File | undefined) {
     if (!file) return;
@@ -1388,7 +1472,9 @@ export default function BrutusTradeDeskPage() {
                 },
                 sourceTotals: report?.totals,
                 counts,
+                alertVersionCounts,
                 alertCounts,
+                latestAlertMatches,
                 alertMatches,
                 decisions,
               })
@@ -1590,8 +1676,8 @@ export default function BrutusTradeDeskPage() {
                 4. Paper-test
               </p>
               <p className="mt-1 text-muted-foreground">
-                Import alert logs into TV Alert Capture. Trust the alert JSON
-                first, then review ENTER, WAIT, SKIP, and DO NOT HOLD rows
+                Import alert logs back into this Trade Desk. Trust the alert
+                JSON first, then review ENTER, WAIT, SKIP, and DO NOT HOLD rows
                 before risking real money.
               </p>
             </div>
@@ -1703,6 +1789,15 @@ export default function BrutusTradeDeskPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2 font-mono text-xs">
+            <span className="border border-cyan-400/50 px-2 py-1 text-cyan-200">
+              CURRENT {alertVersionCounts.current}
+            </span>
+            <span className="border border-amber-300/50 px-2 py-1 text-amber-200">
+              OLD {alertVersionCounts.old}
+            </span>
+            <span className="border border-border px-2 py-1 text-muted-foreground">
+              LEGACY {alertVersionCounts.legacy}
+            </span>
             <span className="border border-lime-400/50 px-2 py-1 text-lime-300">
               ENTER {alertCounts.enter}
             </span>
@@ -1718,6 +1813,11 @@ export default function BrutusTradeDeskPage() {
             <span className="border border-border px-2 py-1 text-muted-foreground">
               NO DATA {alertCounts.noData}
             </span>
+            {alertVersionCounts.contractIssues > 0 && (
+              <span className="border border-red-500/50 px-2 py-1 text-red-300">
+                PARAMETER ISSUE {alertVersionCounts.contractIssues}
+              </span>
+            )}
           </div>
         </div>
         <div className="mt-3 grid gap-2 border border-border bg-background p-3 text-sm md:grid-cols-[1.5fr_1fr]">
@@ -1747,6 +1847,7 @@ export default function BrutusTradeDeskPage() {
             <thead className="text-left text-muted-foreground">
               <tr className="border-b border-border">
                 <th className="px-2 py-2">Alert</th>
+                <th className="px-2 py-2">Source</th>
                 <th className="px-2 py-2">Symbol</th>
                 <th className="px-2 py-2">TF</th>
                 <th className="px-2 py-2">Side</th>
@@ -1760,7 +1861,7 @@ export default function BrutusTradeDeskPage() {
             <tbody>
               {alertMatches.length === 0 ? (
                 <tr>
-                  <td className="px-2 py-6 text-muted-foreground" colSpan={9}>
+                  <td className="px-2 py-6 text-muted-foreground" colSpan={10}>
                     No TradingView alert CSV imported yet.
                   </td>
                 </tr>
@@ -1787,7 +1888,26 @@ export default function BrutusTradeDeskPage() {
                             ? " | confirmed"
                             : " | open bar"
                           : ""}
+                        </span>
+                    </td>
+                    <td className="px-2 py-2">
+                      <span
+                        className={
+                          isLatestPlaybookAlert(item.alert)
+                            ? "text-cyan-200"
+                            : isPlaybookAlert(item.alert)
+                              ? "text-amber-200"
+                              : "text-muted-foreground"
+                        }
+                      >
+                        {alertVersionLabel(item.alert)}
                       </span>
+                      {playbookContractIssues(item.alert).length > 0 && (
+                        <span className="block text-red-300">
+                          Fix{" "}
+                          {playbookContractIssues(item.alert).join(", ")}
+                        </span>
+                      )}
                     </td>
                     <td className="px-2 py-2">{item.alert.symbol ?? "n/a"}</td>
                     <td className="px-2 py-2">

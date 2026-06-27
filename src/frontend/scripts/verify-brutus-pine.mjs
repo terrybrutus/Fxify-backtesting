@@ -536,6 +536,22 @@ const requiredTradeDeskSnippets = [
     text: "Next review step",
   },
   {
+    label: "trade desk isolates latest playbook alerts",
+    text: "const latestAlertMatches = useMemo(",
+  },
+  {
+    label: "trade desk counts old playbook alerts separately",
+    text: "old: alertMatches.filter(",
+  },
+  {
+    label: "trade desk labels current playbook rows",
+    text: "Current Playbook",
+  },
+  {
+    label: "trade desk warns when alert parameters drift",
+    text: "Some current Playbook alerts failed the locked-parameter check.",
+  },
+  {
     label: "trade desk prioritizes decision disagreements",
     text: "Stop and review DIFFERENT rows first. Pine and the app disagree, so those rows are not tradeable evidence yet.",
   },
