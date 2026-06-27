@@ -74,6 +74,8 @@ type BreakdownRow = {
   total: number;
 };
 
+type EvidenceFilter = "latest" | "older" | "all";
+
 const LATEST_PLAYBOOK_VERSION = "raw-parity-v4";
 const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v4","rawSignal":true,"rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
 
@@ -816,6 +818,8 @@ export default function TradingViewCapturePage() {
   const [alerts, setAlerts] = useState<TvAlert[]>(() => loadAlerts());
   const [error, setError] = useState("");
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [evidenceFilter, setEvidenceFilter] =
+    useState<EvidenceFilter>("latest");
 
   const candleIndex = useMemo(() => {
     const map = new Map<string, { timestamp: number; close: number }[]>();
@@ -873,6 +877,13 @@ export default function TradingViewCapturePage() {
     () => reviewedRows.filter((row) => isLatestPlaybookAlert(row.alert)),
     [reviewedRows],
   );
+  const filteredReviewedRows = useMemo(() => {
+    if (evidenceFilter === "latest") return latestReviewedRows;
+    if (evidenceFilter === "older") {
+      return reviewedRows.filter((row) => !isLatestPlaybookAlert(row.alert));
+    }
+    return reviewedRows;
+  }, [evidenceFilter, latestReviewedRows, reviewedRows]);
   const reviewCounts = useMemo(
     () => ({
       enter: latestReviewedRows.filter(
@@ -1564,11 +1575,39 @@ export default function TradingViewCapturePage() {
       </section>
 
       <section className="border border-border bg-card p-4">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="font-display text-base font-bold">Captured Alerts</h2>
-          <p className="font-mono text-xs text-muted-foreground">
-            {alerts.length} stored
-          </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-display text-base font-bold">
+              Captured Alerts
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Current Evidence shows only latest Playbook rows. Older rows stay
+              available for audit, but do not count toward readiness.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              ["latest", "Current Evidence"],
+              ["older", "Older / ignored"],
+              ["all", "All imported"],
+            ].map(([value, label]) => (
+              <button
+                className={`border px-3 py-2 font-mono text-xs ${
+                  evidenceFilter === value
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background text-muted-foreground hover:border-primary"
+                }`}
+                key={value}
+                onClick={() => setEvidenceFilter(value as EvidenceFilter)}
+                type="button"
+              >
+                {label}
+              </button>
+            ))}
+            <p className="font-mono text-xs text-muted-foreground">
+              {filteredReviewedRows.length} shown / {alerts.length} stored
+            </p>
+          </div>
         </div>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[980px] border-collapse font-mono text-xs">
@@ -1590,14 +1629,16 @@ export default function TradingViewCapturePage() {
               </tr>
             </thead>
             <tbody>
-              {reviewedRows.length === 0 ? (
+              {filteredReviewedRows.length === 0 ? (
                 <tr>
                   <td className="px-2 py-6 text-muted-foreground" colSpan={13}>
-                    No TradingView alert events imported yet.
+                    {reviewedRows.length === 0
+                      ? "No TradingView alert events imported yet."
+                      : "No alerts match this filter."}
                   </td>
                 </tr>
               ) : (
-                reviewedRows.map(
+                filteredReviewedRows.map(
                   ({ alert, status, deltaMinutes, brutusReview }) => {
                     const reviewTag = reviewTagFor(alert, brutusReview, status);
                     return (
