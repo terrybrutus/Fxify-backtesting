@@ -418,14 +418,18 @@ function sideWord(direction: Direction) {
   return direction === "long" ? "LONG" : "SHORT";
 }
 
+function plainTradeWord(direction: Direction) {
+  return direction === "long" ? "BUY" : "SELL";
+}
+
 function stopVerb(direction: Direction) {
   return direction === "long" ? "below" : "above";
 }
 
 function targetText(direction: Direction) {
   return direction === "long"
-    ? "Take profit if price snaps upward."
-    : "Take profit if price snaps downward.";
+    ? "Target the snapback upward."
+    : "Target the snapback downward.";
 }
 
 function timeframeMinutes(timeframe: string) {
@@ -718,25 +722,25 @@ function scoreTouch(
   confidence = Math.max(0, Math.min(100, confidence));
 
   let decision: Decision = "WAIT";
-  let reason = "Setup is close, but wait for a cleaner 1m turn.";
-  let doNow = "Wait for the next 1m candle.";
-  let plainExit = `Skip if price keeps moving ${stopVerb(touch.direction)} the band.`;
+  let reason = "Setup is close, but it has not snapped back enough yet.";
+  let doNow = "NO TRADE YET. Watch only.";
+  let plainExit = "Enter only if a later alert says ENTER.";
 
   if (blockers.some((blocker) => blocker.includes("Next 1m kept pushing"))) {
     decision = "DO_NOT_HOLD";
     reason = "Price kept moving against the setup.";
-    doNow = "Do not open a new trade here.";
-    plainExit = "If already paper-tracking it, stop holding and reassess.";
+    doNow = "NO TRADE. Do not fight this move.";
+    plainExit = "If already paper-tracking it, mark it failed.";
   } else if (confidence >= 78 && blockers.length === 0) {
     decision = "ENTER";
     reason =
       "Best current Brutus pattern: right session, right timing, and snapback started.";
-    doNow = `${sideWord(touch.direction)} now. Stop ${stopVerb(touch.direction)} the recent touch.`;
+    doNow = `PAPER ${plainTradeWord(touch.direction)} NOW. Skip if you are late.`;
     plainExit = targetText(touch.direction);
   } else if (confidence < 55 || blockers.length >= 2) {
     decision = "SKIP";
     reason = blockers[0] ?? "Not enough current evidence.";
-    doNow = "Do nothing.";
+    doNow = "SKIP. No trade.";
     plainExit = "Wait for the next alert.";
   }
 
@@ -902,10 +906,11 @@ risk = bandWidth * stopBandFraction
 stop = direction == "long" ? entry - risk : direction == "short" ? entry + risk : na
 target = direction == "long" ? entry + risk * targetR : direction == "short" ? entry - risk * targetR : na
 snapbackOk = direction == "long" ? longSnapback : direction == "short" ? shortSnapback : false
+tradeWord = direction == "long" ? "BUY" : direction == "short" ? "SELL" : "TRADE"
 waitReason = not notTooEarly ? "Original Brutus signal fired, but it is still too early in the live candle." : not snapbackOk ? "Original Brutus signal fired, but snapback is not clean yet." : "Original Brutus signal fired, but the playbook still says wait."
 skipReason = not inSession ? "Original Brutus signal fired outside the active session." : not modeReady ? "Original Brutus signal fired, but this mode waits for bar close." : "Original Brutus signal fired, but the playbook says skip."
 reason = signalConflict ? "Both original Brutus long and short signals fired on the same candle. Skip because direction is unclear." : action == "ENTER" ? "Original Brutus signal fired and price started snapping back." : action == "WAIT" ? waitReason : action == "DO_NOT_HOLD" ? "Original Brutus signal fired, but price is still pushing through the band." : skipReason
-plainAction = action == "ENTER" ? "ENTER: paper trade candidate. Use the entry, stop, and target from this alert." : action == "WAIT" ? "WAIT: do not enter yet. " + waitReason : action == "DO_NOT_HOLD" ? "DO NOT HOLD: price is pushing through the band." : "SKIP: no trade. " + skipReason
+plainAction = action == "ENTER" ? "PAPER " + tradeWord + " NOW. Skip if you are late." : action == "WAIT" ? "NO TRADE YET. Watch only." : action == "DO_NOT_HOLD" ? "NO TRADE. Do not fight this move." : "SKIP. No trade."
 entryJson = na(entry) ? "null" : str.tostring(entry)
 stopJson = na(stop) ? "null" : str.tostring(stop)
 targetJson = na(target) ? "null" : str.tostring(target)

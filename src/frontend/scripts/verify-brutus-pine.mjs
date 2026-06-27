@@ -401,18 +401,6 @@ const requiredCaptureSnippets = [
     text: "Mark at least 10 latest rows before changing the rule.",
   },
   {
-    label: "plain paper enter instruction",
-    text: "PAPER ENTER",
-  },
-  {
-    label: "plain missed wait instruction",
-    text: "Mark Missed only if it clearly paid without giving an ENTER.",
-  },
-  {
-    label: "plain do not enter instruction",
-    text: "DO NOT ENTER. Price is still pushing through the band.",
-  },
-  {
     label: "capture page v10 decision-change note",
     text: "Latest Playbook v10 can produce more than one alert",
   },
@@ -502,6 +490,18 @@ const requiredTradeDeskSnippets = [
   {
     label: "trade desk accepts doubled quote CSV JSON",
     text: "fragment.replaceAll('\"\"', '\"')",
+  },
+  {
+    label: "trade desk plain paper trade instruction",
+    text: "PAPER ${plainTradeWord(touch.direction)} NOW. Skip if you are late.",
+  },
+  {
+    label: "trade desk plain wait instruction",
+    text: "NO TRADE YET. Watch only.",
+  },
+  {
+    label: "trade desk plain do not fight instruction",
+    text: "NO TRADE. Do not fight this move.",
   },
 ];
 
