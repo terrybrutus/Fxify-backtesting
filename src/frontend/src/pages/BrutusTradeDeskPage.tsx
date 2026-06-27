@@ -9,7 +9,7 @@ import {
 import { useMemo, useState } from "react";
 
 type Direction = "long" | "short";
-type Decision = "ENTER" | "WAIT" | "SKIP" | "EXIT";
+type Decision = "ENTER" | "WAIT" | "SKIP" | "DO_NOT_HOLD";
 type PlaybookVerdict = "TEST" | "WATCH" | "AVOID" | "TOO SMALL";
 type MomentumContext = {
   rsi?: number;
@@ -397,7 +397,7 @@ function timeframeFamily(timeframe: string) {
 }
 
 function displayDecision(decision: Decision) {
-  return decision === "EXIT" ? "DO NOT HOLD" : decision;
+  return decision.replaceAll("_", " ");
 }
 
 function timingLabelFor(touch: IntrabarTouch) {
@@ -678,7 +678,7 @@ function scoreTouch(
   let plainExit = `Skip if price keeps moving ${stopVerb(touch.direction)} the band.`;
 
   if (blockers.some((blocker) => blocker.includes("Next 1m kept pushing"))) {
-    decision = "EXIT";
+    decision = "DO_NOT_HOLD";
     reason = "Price kept moving against the setup.";
     doNow = "Do not stay in this trade.";
     plainExit = "Exit now if already in.";
@@ -913,8 +913,8 @@ function matchAlertsToDecisions(
     const matches = byBucket.get(key) ?? [];
     const decision = matches.sort(
       (a, b) =>
-        ({ ENTER: 4, WAIT: 3, SKIP: 2, EXIT: 1 })[b.decision] -
-          { ENTER: 4, WAIT: 3, SKIP: 2, EXIT: 1 }[a.decision] ||
+        ({ ENTER: 4, WAIT: 3, SKIP: 2, DO_NOT_HOLD: 1 })[b.decision] -
+          { ENTER: 4, WAIT: 3, SKIP: 2, DO_NOT_HOLD: 1 }[a.decision] ||
         b.confidence - a.confidence,
     )[0];
 
@@ -940,7 +940,7 @@ function DecisionPill({ decision }: { decision: Decision }) {
     ENTER: "border-lime-400 bg-lime-400/10 text-lime-300",
     WAIT: "border-amber-300 bg-amber-300/10 text-amber-200",
     SKIP: "border-red-500 bg-red-500/10 text-red-300",
-    EXIT: "border-fuchsia-400 bg-fuchsia-400/10 text-fuchsia-200",
+    DO_NOT_HOLD: "border-fuchsia-400 bg-fuchsia-400/10 text-fuchsia-200",
   };
   return (
     <span
@@ -1087,7 +1087,7 @@ export default function BrutusTradeDeskPage() {
         const rank: Record<Decision, number> = {
           ENTER: 0,
           WAIT: 1,
-          EXIT: 2,
+          DO_NOT_HOLD: 2,
           SKIP: 3,
         };
         return rank[a.decision] - rank[b.decision] || b.time - a.time;
@@ -1099,7 +1099,8 @@ export default function BrutusTradeDeskPage() {
       enter: decisions.filter((item) => item.decision === "ENTER").length,
       wait: decisions.filter((item) => item.decision === "WAIT").length,
       skip: decisions.filter((item) => item.decision === "SKIP").length,
-      exit: decisions.filter((item) => item.decision === "EXIT").length,
+      doNotHold: decisions.filter((item) => item.decision === "DO_NOT_HOLD")
+        .length,
     }),
     [decisions],
   );
@@ -1124,7 +1125,8 @@ export default function BrutusTradeDeskPage() {
       enter: alertMatches.filter((item) => item.status === "ENTER").length,
       wait: alertMatches.filter((item) => item.status === "WAIT").length,
       skip: alertMatches.filter((item) => item.status === "SKIP").length,
-      exit: alertMatches.filter((item) => item.status === "EXIT").length,
+      doNotHold: alertMatches.filter((item) => item.status === "DO_NOT_HOLD")
+        .length,
       noData: alertMatches.filter((item) => item.status === "NO DATA").length,
     }),
     [alertMatches],
@@ -1255,10 +1257,10 @@ export default function BrutusTradeDeskPage() {
         </div>
         <div className="border border-fuchsia-400/50 bg-card p-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Exit
+            Do not hold
           </p>
           <p className="mt-2 font-display text-2xl font-bold text-fuchsia-200">
-            {counts.exit}
+            {counts.doNotHold}
           </p>
         </div>
         <div className="border border-red-500/50 bg-card p-4">
@@ -1476,7 +1478,7 @@ export default function BrutusTradeDeskPage() {
               SKIP {alertCounts.skip}
             </span>
             <span className="border border-fuchsia-400/50 px-2 py-1 text-fuchsia-200">
-              DO NOT HOLD {alertCounts.exit}
+              DO NOT HOLD {alertCounts.doNotHold}
             </span>
             <span className="border border-border px-2 py-1 text-muted-foreground">
               NO DATA {alertCounts.noData}
