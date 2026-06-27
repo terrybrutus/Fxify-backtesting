@@ -50,6 +50,26 @@ const requiredSnippets = [
     text: "varip bool alertedShortThisBar = false",
   },
   {
+    label: "per-side last action memory",
+    text: 'varip string lastLongAlertAction = ""',
+  },
+  {
+    label: "decision change alert detection",
+    text: "firstTouchDecisionChanged = signalMode == \"First touch\" and barstate.isrealtime",
+  },
+  {
+    label: "alert fires on first touch or decision change",
+    text: "firstTouchNewSide or firstTouchDecisionChanged or confirmedCloseEvent",
+  },
+  {
+    label: "long action memory update",
+    text: "lastLongAlertAction := action",
+  },
+  {
+    label: "short action memory update",
+    text: "lastShortAlertAction := action",
+  },
+  {
     label: "new side touch event",
     text: 'firstTouchNewSide = signalMode == "First touch" and barstate.isrealtime',
   },
@@ -58,8 +78,8 @@ const requiredSnippets = [
     text: "alert(message, alert.freq_all)",
   },
   {
-    label: "raw parity v7 payload",
-    text: '"playbookVersion":"raw-parity-v7"',
+    label: "raw parity v8 payload",
+    text: '"playbookVersion":"raw-parity-v8"',
   },
   {
     label: "raw signal JSON field",
