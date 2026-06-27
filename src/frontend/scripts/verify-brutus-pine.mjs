@@ -429,6 +429,22 @@ const requiredCaptureSnippets = [
     text: "from ${alert.previousAction}",
   },
   {
+    label: "plain live touch table label",
+    text: "Live touch held L:",
+  },
+  {
+    label: "plain original triangle table label",
+    text: "Original triangle now L:",
+  },
+  {
+    label: "plain first touch table label",
+    text: "First touch this update L:",
+  },
+  {
+    label: "plain conflict skip table label",
+    text: "Both long and short fired. Treat as skip evidence.",
+  },
+  {
     label: "capture identity includes decision event",
     text: "alert.decisionEvent ?? \"\"",
   },

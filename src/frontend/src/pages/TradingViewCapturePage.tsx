@@ -2744,22 +2744,30 @@ export default function TradingViewCapturePage() {
                           {(alert.rawLongSignal != null ||
                             alert.rawShortSignal != null) && (
                             <span className="block text-muted-foreground">
-                              Latched L:{alert.rawLongSignal ? "yes" : "no"} S:
+                              Live touch held L:
+                              {alert.rawLongSignal ? "yes" : "no"} S:
                               {alert.rawShortSignal ? "yes" : "no"}
                             </span>
                           )}
                           {(alert.rawLongCondition != null ||
                             alert.rawShortCondition != null) && (
                             <span className="block text-muted-foreground">
-                              Now L:{alert.rawLongCondition ? "yes" : "no"} S:
+                              Original triangle now L:
+                              {alert.rawLongCondition ? "yes" : "no"} S:
                               {alert.rawShortCondition ? "yes" : "no"}
                             </span>
                           )}
                           {(alert.newLongTouch != null ||
                             alert.newShortTouch != null) && (
                             <span className="block text-muted-foreground">
-                              New L:{alert.newLongTouch ? "yes" : "no"} S:
+                              First touch this update L:
+                              {alert.newLongTouch ? "yes" : "no"} S:
                               {alert.newShortTouch ? "yes" : "no"}
+                            </span>
+                          )}
+                          {alert.signalConflict && (
+                            <span className="block text-amber-300">
+                              Both long and short fired. Treat as skip evidence.
                             </span>
                           )}
                           {isLatestPlaybookAlert(alert) && (
