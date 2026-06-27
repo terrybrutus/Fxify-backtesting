@@ -78,12 +78,20 @@ const requiredSnippets = [
     text: "alert(message, alert.freq_all)",
   },
   {
-    label: "raw parity v8 payload",
-    text: '"playbookVersion":"raw-parity-v8"',
+    label: "raw parity v9 payload",
+    text: '"playbookVersion":"raw-parity-v9"',
   },
   {
     label: "raw signal JSON field",
     text: '"rawSignal":true',
+  },
+  {
+    label: "decision event JSON field",
+    text: '"decisionEvent":"',
+  },
+  {
+    label: "decision event calculation",
+    text: 'decisionEvent = confirmedCloseEvent ? "confirmed_close" : firstTouchNewSide ? "first_touch" : firstTouchDecisionChanged ? "decision_change" : "none"',
   },
   {
     label: "raw condition JSON fields",
@@ -214,8 +222,8 @@ const requiredSnippets = [
     text: "Because that formula uses candle color, an open candle can change until it closes.",
   },
   {
-    label: "v8 same candle decision-change instruction",
-    text: "The v8 script alerts",
+    label: "v9 same candle decision-change instruction",
+    text: "The v9 script alerts",
   },
 ];
 
@@ -353,8 +361,28 @@ const requiredCaptureSnippets = [
     text: "DO NOT ENTER. Price is still pushing through the band.",
   },
   {
-    label: "capture page v8 decision-change note",
-    text: "Latest Playbook v8 can produce more than one alert",
+    label: "capture page v9 decision-change note",
+    text: "Latest Playbook v9 can produce more than one alert",
+  },
+  {
+    label: "capture parses decision event",
+    text: "decisionEvent: asString(item.decisionEvent)",
+  },
+  {
+    label: "capture exports decision event",
+    text: "decision_event",
+  },
+  {
+    label: "capture displays decision event",
+    text: "event {alert.decisionEvent.replaceAll",
+  },
+  {
+    label: "capture summarizes alert event",
+    text: "Alert event",
+  },
+  {
+    label: "capture event breakdown",
+    text: "topEvents: topBreakdownRows(byEvent)",
   },
 ];
 

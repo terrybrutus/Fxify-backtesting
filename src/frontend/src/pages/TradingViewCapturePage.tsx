@@ -10,6 +10,7 @@ type TvAlert = {
   strategy?: string;
   playbookVersion?: string;
   rawSignal?: boolean;
+  decisionEvent?: string;
   rawLongSignal?: boolean;
   rawShortSignal?: boolean;
   rawLongCondition?: boolean;
@@ -114,8 +115,8 @@ type PaperOutcomeCounts = Record<PaperOutcome, number>;
 
 type EvidenceFilter = "latest" | "older" | "all";
 
-const LATEST_PLAYBOOK_VERSION = "raw-parity-v8";
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v8","rawSignal":true,"rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
+const LATEST_PLAYBOOK_VERSION = "raw-parity-v9";
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v9","rawSignal":true,"decisionEvent":"decision_change","rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
 
 const BRUTUS_STRATEGIES = new Set(["brutus_band", "brutus_playbook_v1"]);
 const BRUTUS_TIMEFRAMES = new Set([
@@ -264,6 +265,7 @@ function normalizePayload(raw: unknown): TvAlert {
     strategy: asString(item.strategy),
     playbookVersion: asString(item.playbookVersion),
     rawSignal: asBoolean(item.rawSignal),
+    decisionEvent: asString(item.decisionEvent),
     rawLongSignal: asBoolean(item.rawLongSignal),
     rawShortSignal: asBoolean(item.rawShortSignal),
     rawLongCondition: asBoolean(item.rawLongCondition),
@@ -651,6 +653,7 @@ function gateLabel(value?: boolean) {
 function missingPlaybookFields(alert: TvAlert) {
   const missing: string[] = [];
   if (alert.rawSignal !== true) missing.push("rawSignal");
+  if (!alert.decisionEvent) missing.push("decisionEvent");
   if (!actionFor(alert)) missing.push("action");
   if (!rawReasonFor(alert)) missing.push("reason");
   if (!alert.mode && !alert.alertMode) missing.push("mode");
@@ -1068,6 +1071,7 @@ function evidenceRowsToCsv(
     "mapped_symbol",
     "timeframe",
     "mode",
+    "decision_event",
     "confirmed",
     "direction",
     "pine_action",
@@ -1100,6 +1104,7 @@ function evidenceRowsToCsv(
       alert.mappedSymbol,
       alert.timeframe,
       alert.mode ?? alert.alertMode,
+      alert.decisionEvent,
       alert.confirmed,
       alert.direction,
       actionFor(alert),
@@ -1279,6 +1284,20 @@ export default function TradingViewCapturePage() {
     const byMode = latestReviewedRows.reduce<Record<string, ReviewCounts>>(
       (acc, row) => {
         const key = row.alert.mode ?? row.alert.alertMode ?? "unknown";
+        acc[key] ??= { enter: 0, wait: 0, skip: 0, doNotHold: 0 };
+        if (row.brutusReview.status === "ENTER") acc[key].enter += 1;
+        if (row.brutusReview.status === "WAIT") acc[key].wait += 1;
+        if (row.brutusReview.status === "SKIP") acc[key].skip += 1;
+        if (row.brutusReview.status === "DO_NOT_HOLD") {
+          acc[key].doNotHold += 1;
+        }
+        return acc;
+      },
+      {},
+    );
+    const byEvent = latestReviewedRows.reduce<Record<string, ReviewCounts>>(
+      (acc, row) => {
+        const key = row.alert.decisionEvent ?? "unknown";
         acc[key] ??= { enter: 0, wait: 0, skip: 0, doNotHold: 0 };
         if (row.brutusReview.status === "ENTER") acc[key].enter += 1;
         if (row.brutusReview.status === "WAIT") acc[key].wait += 1;
@@ -1705,6 +1724,7 @@ export default function TradingViewCapturePage() {
       topSymbols: topBreakdownRows(bySymbol),
       topTimeframes: topBreakdownRows(byTimeframe),
       topModes: topBreakdownRows(byMode),
+      topEvents: topBreakdownRows(byEvent),
       topPierce: topBreakdownRows(byPierce),
     };
   }, [latestReviewedRows, paperOutcomes, reviewCounts, reviewedRows]);
@@ -2014,7 +2034,7 @@ export default function TradingViewCapturePage() {
               the wick entry you were trying to study.
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Latest Playbook v8 can produce more than one alert on the same
+              Latest Playbook v9 can produce more than one alert on the same
               live candle when the decision changes, such as WAIT becoming
               ENTER or DO NOT HOLD.
             </p>
@@ -2284,7 +2304,7 @@ export default function TradingViewCapturePage() {
         </div>
       </section>
 
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         <div className="border border-border bg-card p-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             Symbols
@@ -2341,6 +2361,30 @@ export default function TradingViewCapturePage() {
                   key={row.label}
                 >
                   <span className="text-foreground">{row.label}</span>
+                  <span className="text-muted-foreground">
+                    {countsText(row.counts)}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground">No alerts imported.</p>
+            )}
+          </div>
+        </div>
+        <div className="border border-border bg-card p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Alert event
+          </p>
+          <div className="mt-3 space-y-2 font-mono text-xs">
+            {paperSummary.topEvents.length ? (
+              paperSummary.topEvents.map((row) => (
+                <div
+                  className="flex items-center justify-between gap-3"
+                  key={row.label}
+                >
+                  <span className="text-foreground">
+                    {row.label.replaceAll("_", " ")}
+                  </span>
                   <span className="text-muted-foreground">
                     {countsText(row.counts)}
                   </span>
@@ -2620,6 +2664,11 @@ export default function TradingViewCapturePage() {
                           {alert.playbookVersion && (
                             <span className="block text-muted-foreground">
                               {alert.playbookVersion}
+                            </span>
+                          )}
+                          {alert.decisionEvent && (
+                            <span className="block text-cyan-300">
+                              event {alert.decisionEvent.replaceAll("_", " ")}
                             </span>
                           )}
                           {isPlaybookAlert(alert) && (
