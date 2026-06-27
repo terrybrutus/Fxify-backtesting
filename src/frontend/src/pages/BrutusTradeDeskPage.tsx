@@ -98,6 +98,9 @@ type TvAlert = {
   close?: number;
   upper?: number;
   lower?: number;
+  bandWidth?: number;
+  touchDepth?: number;
+  touchDepthRatio?: number;
 };
 
 type AlertDecisionMatch = {
@@ -311,6 +314,9 @@ function normalizeAlertPayload(
     close: asNumber(item.close),
     upper: asNumber(item.upper),
     lower: asNumber(item.lower),
+    bandWidth: asNumber(item.bandWidth),
+    touchDepth: asNumber(item.touchDepth),
+    touchDepthRatio: asNumber(item.touchDepthRatio),
   };
 }
 
@@ -823,6 +829,10 @@ modeReady = signalMode == "Confirmed close" ? barstate.isconfirmed : true
 
 longTouch = rawLongSignal
 shortTouch = rawShortSignal
+longTouchDepth = longTouch ? math.max(0.0, lower - lowerSrc) : 0.0
+shortTouchDepth = shortTouch ? math.max(0.0, upperSrc - upper) : 0.0
+touchDepth = direction == "long" ? longTouchDepth : direction == "short" ? shortTouchDepth : math.max(longTouchDepth, shortTouchDepth)
+touchDepthRatio = touchDepth / bandWidth
 inSession = not useSessionFilter or not na(time(timeframe.period, activeSession))
 minutesIntoBar = math.max(0.0, (timenow - time) / 60000.0)
 notTooEarly = barstate.isconfirmed or minutesIntoBar >= minMinutesIntoBar
@@ -868,7 +878,7 @@ plotshape(conflictSkip, title="Conflict SKIP", location=location.top, color=colo
 firstTouchNewSide = signalMode == "First touch" and barstate.isrealtime and ((rawLongSignal and not alertedLongThisBar) or (rawShortSignal and not alertedShortThisBar))
 confirmedCloseEvent = signalMode == "Confirmed close" and rawSignal and barstate.isconfirmed
 shouldAlert = modeReady and (not liveAlertsOnly or barstate.isrealtime) and (firstTouchNewSide or confirmedCloseEvent)
-message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v5\\",\\"rawSignal\\":true,\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"rawLongCondition\\":" + str.tostring(rawLongCondition) + ",\\"rawShortCondition\\":" + str.tostring(rawShortCondition) + ",\\"newLongTouch\\":" + str.tostring(newLongTouch) + ",\\"newShortTouch\\":" + str.tostring(newShortTouch) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + direction + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"entry\\":" + entryJson + ",\\"stop\\":" + stopJson + ",\\"target\\":" + targetJson + ",\\"length\\":" + str.tostring(length) + ",\\"stdDev\\":" + str.tostring(mult) + ",\\"reason\\":\\"" + reason + "\\"}"
+message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v5\\",\\"rawSignal\\":true,\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"rawLongCondition\\":" + str.tostring(rawLongCondition) + ",\\"rawShortCondition\\":" + str.tostring(rawShortCondition) + ",\\"newLongTouch\\":" + str.tostring(newLongTouch) + ",\\"newShortTouch\\":" + str.tostring(newShortTouch) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + direction + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"bandWidth\\":" + str.tostring(bandWidth) + ",\\"touchDepth\\":" + str.tostring(touchDepth) + ",\\"touchDepthRatio\\":" + str.tostring(touchDepthRatio) + ",\\"entry\\":" + entryJson + ",\\"stop\\":" + stopJson + ",\\"target\\":" + targetJson + ",\\"length\\":" + str.tostring(length) + ",\\"stdDev\\":" + str.tostring(mult) + ",\\"reason\\":\\"" + reason + "\\"}"
 
 if shouldAlert
     alert(message, alert.freq_all)

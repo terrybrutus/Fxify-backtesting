@@ -69,6 +69,18 @@ const requiredSnippets = [
     text: '"alertTime":" + str.tostring(timenow)',
   },
   {
+    label: "touch depth calculation",
+    text: "touchDepth = direction == \"long\" ? longTouchDepth : direction == \"short\" ? shortTouchDepth : math.max(longTouchDepth, shortTouchDepth)",
+  },
+  {
+    label: "band width JSON field",
+    text: '"bandWidth":" + str.tostring(bandWidth)',
+  },
+  {
+    label: "touch depth ratio JSON field",
+    text: '"touchDepthRatio":" + str.tostring(touchDepthRatio)',
+  },
+  {
     label: "bar timestamp alias JSON field",
     text: '"timestamp":" + str.tostring(time)',
   },

@@ -33,6 +33,9 @@ type TvAlert = {
   close?: number;
   upper?: number;
   lower?: number;
+  bandWidth?: number;
+  touchDepth?: number;
+  touchDepthRatio?: number;
   entry?: number;
   stop?: number;
   target?: number;
@@ -77,7 +80,7 @@ type BreakdownRow = {
 type EvidenceFilter = "latest" | "older" | "all";
 
 const LATEST_PLAYBOOK_VERSION = "raw-parity-v5";
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v5","rawSignal":true,"rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v5","rawSignal":true,"rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"ENTER: paper trade candidate. Use the entry, stop, and target from this alert.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
 
 const BRUTUS_STRATEGIES = new Set(["brutus_band", "brutus_playbook_v1"]);
 const BRUTUS_TIMEFRAMES = new Set([
@@ -225,6 +228,9 @@ function normalizePayload(raw: unknown): TvAlert {
     close: asNumber(item.close),
     upper: asNumber(item.upper),
     lower: asNumber(item.lower),
+    bandWidth: asNumber(item.bandWidth),
+    touchDepth: asNumber(item.touchDepth),
+    touchDepthRatio: asNumber(item.touchDepthRatio),
     entry: asNumber(item.entry),
     stop: asNumber(item.stop),
     target: asNumber(item.target),
