@@ -325,6 +325,22 @@ const requiredCaptureSnippets = [
     text: '"event_key"',
   },
   {
+    label: "raw signal CSV export",
+    text: '"raw_signal"',
+  },
+  {
+    label: "raw long condition CSV export",
+    text: '"raw_long_condition"',
+  },
+  {
+    label: "new touch CSV export",
+    text: '"new_long_touch"',
+  },
+  {
+    label: "signal conflict CSV export",
+    text: '"signal_conflict"',
+  },
+  {
     label: "event key JSON export",
     text: "eventKey: paperOutcomeKey(row.alert)",
   },
