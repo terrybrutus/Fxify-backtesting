@@ -54,6 +54,8 @@ type BrutusReview = {
   stop?: number;
   target?: number;
   bandWidth?: number;
+  touchDepth?: number;
+  touchDepthRatio?: number;
   touchToClose?: number;
   adverse?: number;
 };
@@ -514,6 +516,23 @@ function formatAlertDelay(alert: TvAlert) {
   return `fired +${(minutes / 60).toFixed(1)}h`;
 }
 
+function pierceLabel(touchDepthRatio?: number) {
+  if (touchDepthRatio == null || !Number.isFinite(touchDepthRatio)) {
+    return "unknown pierce";
+  }
+  if (touchDepthRatio >= 0.15) return "deep stretch";
+  if (touchDepthRatio >= 0.04) return "moderate pierce";
+  if (touchDepthRatio > 0) return "shallow touch";
+  return "touch only";
+}
+
+function formatPierce(alert: TvAlert, review: BrutusReview) {
+  const depth = alert.touchDepth ?? review.touchDepth;
+  const ratio = alert.touchDepthRatio ?? review.touchDepthRatio;
+  if (depth == null && ratio == null) return "n/a";
+  return `${pierceLabel(ratio)} (${ratio == null ? "?" : `${(ratio * 100).toFixed(1)}%`} width, ${depth == null ? "?" : depth.toFixed(1)} pts)`;
+}
+
 function directionFor(alert: TvAlert): "long" | "short" | undefined {
   const direction = alert.direction?.toLowerCase();
   if (direction === "long" || direction === "buy") return "long";
@@ -610,6 +629,10 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
   }
 
   const bandWidth = Math.max(upper - lower, 0.0001);
+  const touchDepth =
+    alert.touchDepth ??
+    (direction === "long" ? Math.max(lower - low, 0) : Math.max(high - upper, 0));
+  const touchDepthRatio = alert.touchDepthRatio ?? touchDepth / bandWidth;
   const computedEntry = direction === "long" ? lower : upper;
   const entry = alert.entry ?? computedEntry;
   const stopDistance = bandWidth * 0.5;
@@ -637,6 +660,8 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
       stop,
       target,
       bandWidth,
+      touchDepth,
+      touchDepthRatio,
       touchToClose,
       adverse,
     };
@@ -650,6 +675,8 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
       stop,
       target,
       bandWidth,
+      touchDepth,
+      touchDepthRatio,
       touchToClose,
       adverse,
     };
@@ -664,6 +691,8 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
       stop,
       target,
       bandWidth,
+      touchDepth,
+      touchDepthRatio,
       touchToClose,
       adverse,
     };
@@ -676,6 +705,8 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
       stop,
       target,
       bandWidth,
+      touchDepth,
+      touchDepthRatio,
       touchToClose,
       adverse,
     };
@@ -689,6 +720,8 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
       stop,
       target,
       bandWidth,
+      touchDepth,
+      touchDepthRatio,
       touchToClose,
       adverse,
     };
@@ -701,6 +734,8 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
       stop,
       target,
       bandWidth,
+      touchDepth,
+      touchDepthRatio,
       touchToClose,
       adverse,
     };
@@ -713,6 +748,8 @@ function reviewBrutusAlert(alert: TvAlert): BrutusReview {
     stop,
     target,
     bandWidth,
+    touchDepth,
+    touchDepthRatio,
     touchToClose,
     adverse,
   };
@@ -1782,7 +1819,7 @@ export default function TradingViewCapturePage() {
           </div>
         </div>
         <div className="mt-3 overflow-x-auto">
-          <table className="w-full min-w-[980px] border-collapse font-mono text-xs">
+          <table className="w-full min-w-[1080px] border-collapse font-mono text-xs">
             <thead className="text-left text-muted-foreground">
               <tr className="border-b border-border">
                 <th className="px-2 py-2">Candle / alert time</th>
@@ -1796,6 +1833,7 @@ export default function TradingViewCapturePage() {
                 <th className="px-2 py-2">Rule</th>
                 <th className="px-2 py-2">OHLC</th>
                 <th className="px-2 py-2">Bands</th>
+                <th className="px-2 py-2">Pierce</th>
                 <th className="px-2 py-2">Plan</th>
                 <th className="px-2 py-2">Match</th>
               </tr>
@@ -1803,7 +1841,7 @@ export default function TradingViewCapturePage() {
             <tbody>
               {filteredReviewedRows.length === 0 ? (
                 <tr>
-                  <td className="px-2 py-6 text-muted-foreground" colSpan={13}>
+                  <td className="px-2 py-6 text-muted-foreground" colSpan={14}>
                     {reviewedRows.length === 0
                       ? "No TradingView alert events imported yet."
                       : "No alerts match this filter."}
@@ -1915,6 +1953,14 @@ export default function TradingViewCapturePage() {
                         <td className="px-2 py-2">
                           U:{alert.upper?.toFixed(2) ?? "?"} L:
                           {alert.lower?.toFixed(2) ?? "?"}
+                        </td>
+                        <td className="max-w-40 whitespace-normal px-2 py-2">
+                          {formatPierce(alert, brutusReview)}
+                          {brutusReview.bandWidth != null && (
+                            <span className="block text-muted-foreground">
+                              width {brutusReview.bandWidth.toFixed(1)}
+                            </span>
+                          )}
                         </td>
                         <td className="px-2 py-2">
                           E:{brutusReview.entry?.toFixed(2) ?? "?"} S:
