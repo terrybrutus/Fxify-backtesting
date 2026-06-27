@@ -397,6 +397,22 @@ const requiredCaptureSnippets = [
     text: "from ${alert.previousAction}",
   },
   {
+    label: "capture identity includes decision event",
+    text: "alert.decisionEvent ?? \"\"",
+  },
+  {
+    label: "capture identity includes previous action",
+    text: "alert.previousAction ?? \"\"",
+  },
+  {
+    label: "capture identity includes touch depth ratio",
+    text: "alert.touchDepthRatio ?? \"\"",
+  },
+  {
+    label: "capture identity includes execution target",
+    text: "alert.target ?? \"\"",
+  },
+  {
     label: "capture summarizes alert event",
     text: "Alert event",
   },
