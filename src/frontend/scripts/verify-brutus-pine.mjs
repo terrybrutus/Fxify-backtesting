@@ -37,8 +37,8 @@ const requiredSnippets = [
     text: "alert(message, alert.freq_all)",
   },
   {
-    label: "raw parity v4 payload",
-    text: '"playbookVersion":"raw-parity-v4"',
+    label: "raw parity v5 payload",
+    text: '"playbookVersion":"raw-parity-v5"',
   },
   {
     label: "raw signal JSON field",
@@ -67,6 +67,14 @@ const requiredSnippets = [
   {
     label: "alert fire timestamp JSON field",
     text: '"alertTime":" + str.tostring(timenow)',
+  },
+  {
+    label: "bar timestamp alias JSON field",
+    text: '"timestamp":" + str.tostring(time)',
+  },
+  {
+    label: "candleTime alias JSON field",
+    text: '"candleTime":" + str.tostring(time)',
   },
   {
     label: "paper-only warning",
