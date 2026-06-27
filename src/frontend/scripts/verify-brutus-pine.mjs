@@ -102,6 +102,14 @@ const requiredSnippets = [
     text: 'previousAction = direction == "long" ? lastLongAlertAction : direction == "short" ? lastShortAlertAction : signalConflict ? "both" : ""',
   },
   {
+    label: "conflict alerts keep importable side",
+    text: 'alertDirection = signalConflict ? (rawLongSignal ? "long" : "short") : direction',
+  },
+  {
+    label: "conflict alerts preserve original signal direction",
+    text: '"signalDirection"',
+  },
+  {
     label: "raw condition JSON fields",
     text: '"rawLongCondition":" + str.tostring(rawLongCondition)',
   },
