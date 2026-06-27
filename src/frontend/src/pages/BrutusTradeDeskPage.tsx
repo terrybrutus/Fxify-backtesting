@@ -686,8 +686,8 @@ function scoreTouch(
   if (blockers.some((blocker) => blocker.includes("Next 1m kept pushing"))) {
     decision = "DO_NOT_HOLD";
     reason = "Price kept moving against the setup.";
-    doNow = "Do not stay in this trade.";
-    plainExit = "Exit now if already in.";
+    doNow = "Do not open a new trade here.";
+    plainExit = "If already paper-tracking it, stop holding and reassess.";
   } else if (confidence >= 78 && blockers.length === 0) {
     decision = "ENTER";
     reason =
@@ -1040,7 +1040,7 @@ function TradeCard({ item }: { item: TradeDecision }) {
         </div>
         <div className="border border-border bg-background p-3">
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Exit rule
+            Hold rule
           </p>
           <p className="mt-2 text-sm text-foreground">{item.plainExit}</p>
         </div>
