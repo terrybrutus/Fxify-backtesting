@@ -96,6 +96,12 @@ type GateCount = {
   unknown: number;
 };
 
+type ReadinessCheck = {
+  label: string;
+  passed: boolean;
+  detail: string;
+};
+
 type EvidenceFilter = "latest" | "older" | "all";
 
 const LATEST_PLAYBOOK_VERSION = "raw-parity-v7";
@@ -1315,6 +1321,76 @@ export default function TradingViewCapturePage() {
         review.adverse >= Math.abs(review.entry - review.stop)
       );
     }).length;
+    const latestRawSignalAlerts = latestReviewedRows.filter(
+      (row) => row.alert.rawSignal === true,
+    ).length;
+    const latestMissingAlertTimeAlerts = latestReviewedRows.filter(
+      (row) => row.alert.rawSignal === true && !row.alert.alertTime,
+    ).length;
+    const failedEnterRate =
+      enterRows.length > 0 ? failedEnterRows / enterRows.length : undefined;
+    const readinessChecks: ReadinessCheck[] = [
+      {
+        label: "Latest Playbook sample",
+        passed: latestPlaybookAlerts >= 20,
+        detail: `${latestPlaybookAlerts}/20 latest rows`,
+      },
+      {
+        label: "ENTER sample",
+        passed: enterRows.length >= 5,
+        detail: `${enterRows.length}/5 ENTER rows`,
+      },
+      {
+        label: "ENTER failures controlled",
+        passed:
+          enterRows.length >= 5 &&
+          failedEnterRate != null &&
+          failedEnterRate <= 0.3,
+        detail:
+          enterRows.length > 0
+            ? `${failedEnterRows}/${enterRows.length} failed ENTER rows`
+            : "no ENTER rows yet",
+      },
+      {
+        label: "Exact Brutus settings",
+        passed: latestPlaybookAlerts > 0 && contractIssueAlerts === 0,
+        detail:
+          contractIssueAlerts === 0
+            ? "length 9, high/low sources, StdDev 2"
+            : `${contractIssueAlerts} settings mismatch`,
+      },
+      {
+        label: "Required alert fields",
+        passed: latestPlaybookAlerts > 0 && incompleteAlerts === 0,
+        detail:
+          incompleteAlerts === 0
+            ? "all required fields present"
+            : `${incompleteAlerts} incomplete rows`,
+      },
+      {
+        label: "Raw signal coverage",
+        passed:
+          latestPlaybookAlerts > 0 &&
+          latestRawSignalAlerts === latestPlaybookAlerts,
+        detail: `${latestRawSignalAlerts}/${latestPlaybookAlerts} latest rows are raw signals`,
+      },
+      {
+        label: "Alert timing evidence",
+        passed:
+          latestPlaybookAlerts > 0 && latestMissingAlertTimeAlerts === 0,
+        detail:
+          latestMissingAlertTimeAlerts === 0
+            ? "alertTime present"
+            : `${latestMissingAlertTimeAlerts} missing alertTime`,
+      },
+    ];
+    const readinessPassed = readinessChecks.filter((check) => check.passed).length;
+    const readinessStatus =
+      latestPlaybookAlerts === 0
+        ? "Not ready: no latest Playbook alerts."
+        : readinessPassed === readinessChecks.length
+          ? "Clean enough for paper-trade review. Still not real-money proof."
+          : "Still paper only: more or cleaner evidence is required.";
     const paperEvidenceStatus =
       latestPlaybookAlerts === 0
         ? "No Playbook evidence yet"
@@ -1475,7 +1551,11 @@ export default function TradingViewCapturePage() {
       contractIssueCounts,
       contractIssueSummary,
       failedEnterRows,
+      failedEnterRate,
       likelyUpgradeWaits,
+      readinessChecks,
+      readinessPassed,
+      readinessStatus,
       paperEvidenceStatus,
       evidenceNeed,
       reviewQueue,
@@ -1781,6 +1861,43 @@ export default function TradingViewCapturePage() {
             <p className="mt-2 text-xs text-muted-foreground">
               This is still paper-trading evidence. Do not treat any row as a
               real-money instruction until repeated live alerts prove it.
+            </p>
+          </div>
+          <div className="mt-3 border border-border bg-background/40 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Readiness gates
+              </p>
+              <span className="font-mono text-xs text-foreground">
+                {paperSummary.readinessPassed}/
+                {paperSummary.readinessChecks.length} passed
+              </span>
+            </div>
+            <p className="mt-1 text-sm text-foreground">
+              {paperSummary.readinessStatus}
+            </p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {paperSummary.readinessChecks.map((check) => (
+                <div
+                  className="border border-border/80 bg-background/50 p-2"
+                  key={check.label}
+                >
+                  <p
+                    className={`font-mono text-[10px] uppercase tracking-widest ${
+                      check.passed ? "text-lime-300" : "text-amber-300"
+                    }`}
+                  >
+                    {check.passed ? "PASS" : "WAIT"} - {check.label}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {check.detail}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Passing these gates only means the batch is clean enough to
+              review. It does not prove the strategy is profitable.
             </p>
           </div>
           <div className="mt-3 border border-border bg-background/40 p-3">
