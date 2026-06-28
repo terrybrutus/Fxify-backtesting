@@ -2233,6 +2233,40 @@ export default function TradingViewCapturePage() {
               the trap filter is doing useful work.
             </p>
           </div>
+          <div className="mt-3 border border-border bg-background/40 p-3">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              How to mark alerts
+            </p>
+            <div className="mt-2 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
+              <p>
+                <span className="font-mono text-lime-300">
+                  Paid = ENTER worked.
+                </span>{" "}
+                Use this when the ENTER alert would have paid if taken right
+                away.
+              </p>
+              <p>
+                <span className="font-mono text-red-300">
+                  Failed = ENTER failed.
+                </span>{" "}
+                Use this when the alert kept moving against the trade before it
+                paid.
+              </p>
+              <p>
+                <span className="font-mono text-amber-200">
+                  Wait paid = skipped move worked.
+                </span>{" "}
+                Use this when WAIT, SKIP, or DO NOT HOLD would have paid.
+              </p>
+              <p>
+                <span className="font-mono text-foreground">
+                  Leave blank = not checked.
+                </span>{" "}
+                Do not guess. Only mark rows you replayed or inspected on
+                TradingView.
+              </p>
+            </div>
+          </div>
           {paperSummary.reviewQueue.length > 0 && (
             <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
               {paperSummary.reviewQueue.slice(0, 5).map((item) => (

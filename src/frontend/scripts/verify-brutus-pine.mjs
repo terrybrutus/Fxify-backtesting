@@ -389,6 +389,22 @@ const requiredCaptureSnippets = [
     text: "Paper outcome scoreboard",
   },
   {
+    label: "capture paper marking guide",
+    text: "How to mark alerts",
+  },
+  {
+    label: "capture paid plain definition",
+    text: "Paid = ENTER worked.",
+  },
+  {
+    label: "capture failed plain definition",
+    text: "Failed = ENTER failed.",
+  },
+  {
+    label: "capture wait paid plain definition",
+    text: "Wait paid = skipped move worked.",
+  },
+  {
     label: "outcomes grouped by Playbook decision",
     text: "paperOutcomeByDecision",
   },

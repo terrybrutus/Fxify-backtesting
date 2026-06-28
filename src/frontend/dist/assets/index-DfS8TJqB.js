@@ -51451,6 +51451,31 @@ function TradingViewCapturePage() {
           ] }, status)) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-xs text-muted-foreground", children: "If ENTER fails often, tighten the rule. If WAIT is often missed, the rule may be too strict. If DO NOT HOLD avoids failed moves, the trap filter is doing useful work." })
         ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 border border-border bg-background/40 p-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: "How to mark alerts" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-2 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-lime-300", children: "Paid = ENTER worked." }),
+              " ",
+              "Use this when the ENTER alert would have paid if taken right away."
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-red-300", children: "Failed = ENTER failed." }),
+              " ",
+              "Use this when the alert kept moving against the trade before it paid."
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-amber-200", children: "Wait paid = skipped move worked." }),
+              " ",
+              "Use this when WAIT, SKIP, or DO NOT HOLD would have paid."
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-foreground", children: "Leave blank = not checked." }),
+              " ",
+              "Do not guess. Only mark rows you replayed or inspected on TradingView."
+            ] })
+          ] })
+        ] }),
         paperSummary.reviewQueue.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "mt-3 space-y-1 text-sm text-muted-foreground", children: paperSummary.reviewQueue.slice(0, 5).map((item) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: item }, item)) }),
         paperSummary.contractIssueAlerts > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 border border-amber-400/50 bg-amber-400/5 p-3", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-amber-300", children: "Brutus settings mismatch" }),
