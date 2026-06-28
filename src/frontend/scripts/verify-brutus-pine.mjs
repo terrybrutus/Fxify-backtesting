@@ -5,8 +5,12 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const sourcePath = resolve(here, "../src/pages/BrutusTradeDeskPage.tsx");
 const capturePath = resolve(here, "../src/pages/TradingViewCapturePage.tsx");
+const dataUploadPath = resolve(here, "../src/pages/DataUploadPage.tsx");
+const workspaceHookPath = resolve(here, "../src/hooks/useStrategyWorkspace.ts");
 const source = readFileSync(sourcePath, "utf8");
 const captureSource = readFileSync(capturePath, "utf8");
+const dataUploadSource = readFileSync(dataUploadPath, "utf8");
+const workspaceHookSource = readFileSync(workspaceHookPath, "utf8");
 const normalizedSource = source.replaceAll('\\\\"', '"').replaceAll('\\"', '"');
 const normalizedCaptureSource = captureSource
   .replaceAll('\\\\"', '"')
@@ -705,6 +709,36 @@ const missingTradeDesk = requiredTradeDeskSnippets.filter(
   (item) => !normalizedSource.includes(item.text),
 );
 
+const requiredDataSnippets = [
+  {
+    label: "data page says Yahoo is manual backup only",
+    text: "Yahoo proxy data is now manual backup only",
+  },
+  {
+    label: "data page marks backup button manual only",
+    text: "Manual backup only. Never auto-loaded.",
+  },
+  {
+    label: "data page backup load failure is not called auto-load",
+    text: "Yahoo backup load failed. No backup data was imported.",
+  },
+  {
+    label: "workspace clears bundled Yahoo proxy saved state",
+    text: "isBundledProxyWorkspace(indexedWorkspace)",
+  },
+  {
+    label: "workspace removes legacy bundled Yahoo proxy saved state",
+    text: "isBundledProxyWorkspace(legacyWorkspace)",
+  },
+];
+
+const missingData = requiredDataSnippets.filter((item) => {
+  const haystack = item.label.startsWith("workspace")
+    ? workspaceHookSource
+    : dataUploadSource;
+  return !haystack.includes(item.text);
+});
+
 const forbiddenSnippets = [
   {
     label: "editable upper source input",
@@ -732,6 +766,7 @@ if (
   missing.length > 0 ||
   missingCapture.length > 0 ||
   missingTradeDesk.length > 0 ||
+  missingData.length > 0 ||
   forbidden.length > 0
 ) {
   console.error("Brutus Pine export verifier failed.");
@@ -744,6 +779,9 @@ if (
   for (const item of missingTradeDesk) {
     console.error(`- Missing trade desk workflow: ${item.label}`);
   }
+  for (const item of missingData) {
+    console.error(`- Missing data-load guardrail: ${item.label}`);
+  }
   for (const item of forbidden) {
     console.error(`- Forbidden: ${item.label}`);
   }
@@ -751,5 +789,5 @@ if (
 }
 
 console.log(
-  `Brutus Pine export verifier passed (${requiredSnippets.length + requiredCaptureSnippets.length + requiredTradeDeskSnippets.length} invariants).`,
+  `Brutus Pine export verifier passed (${requiredSnippets.length + requiredCaptureSnippets.length + requiredTradeDeskSnippets.length + requiredDataSnippets.length} invariants).`,
 );
