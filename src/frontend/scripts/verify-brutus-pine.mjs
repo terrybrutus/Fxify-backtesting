@@ -760,6 +760,14 @@ const requiredTradeDeskSnippets = [
     text: "Next review step",
   },
   {
+    label: "trade desk gives plain evidence verdict",
+    text: "Plain Verdict:",
+  },
+  {
+    label: "trade desk explains next action plainly",
+    text: "Do this next",
+  },
+  {
     label: "trade desk isolates latest playbook alerts",
     text: "const latestAlertMatches = useMemo(",
   },

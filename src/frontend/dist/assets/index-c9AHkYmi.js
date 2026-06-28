@@ -43213,6 +43213,86 @@ function BrutusTradeDeskPage() {
     paperOutcomeCounts,
     latestAlertMatches.length
   ]);
+  const plainEvidenceVerdict = reactExports.useMemo(() => {
+    if (!alertMatches.length) {
+      return {
+        tone: "border-amber-300/50 bg-amber-300/5 text-amber-100",
+        title: "No alert evidence loaded",
+        body: "The Pine script may be ready, but this page cannot judge live behavior until you import the latest TradingView alert log.",
+        evidence: "Use TradingView alerts exported from the newest Brutus Playbook Pine.",
+        action: "Import the latest TradingView alert CSV, then read this verdict again."
+      };
+    }
+    if (!latestAlertMatches.length) {
+      return {
+        tone: "border-red-500/50 bg-red-500/5 text-red-100",
+        title: "Do not use this batch",
+        body: "The uploaded file has alerts, but none are from the current raw-parity-v10 Playbook.",
+        evidence: "Old rows can help with history, but they do not prove the current Brutus workflow.",
+        action: "Export the current Pine, recreate alerts with Any alert() function call, then import the new CSV."
+      };
+    }
+    if (alertVersionCounts.contractIssues > 0 || alertVersionCounts.incomplete > 0) {
+      return {
+        tone: "border-red-500/50 bg-red-500/5 text-red-100",
+        title: "Fix the alert setup first",
+        body: "Some current alerts are missing required fields or do not prove the locked Brutus settings.",
+        evidence: "A trustworthy row must show length 9, upper high, lower low, StdDev 2, rawSignal true, and the source fields.",
+        action: "Re-export the Pine and recreate the TradingView alerts before judging ENTER or WAIT."
+      };
+    }
+    if (agreementCounts.different > 0) {
+      return {
+        tone: "border-red-500/50 bg-red-500/5 text-red-100",
+        title: "Not tradeable evidence yet",
+        body: "Pine and the app disagree on at least one current alert row.",
+        evidence: "DIFFERENT rows mean the app cannot honestly say the decision logic is aligned.",
+        action: "Review DIFFERENT rows in TradingView first; do not paper-trade this batch until disagreement is explained."
+      };
+    }
+    if (alertSourceCounts.liveLatch > 0) {
+      return {
+        tone: "border-amber-300/50 bg-amber-300/5 text-amber-100",
+        title: "Review live-latch rows separately",
+        body: "This batch includes first-touch alerts that fired live after the old triangle formula was not true at the current chart state.",
+        evidence: "LIVE LATCH rows are useful for timing research, but they are not the same as old-triangle parity rows.",
+        action: "Judge ORIG rows first. Then compare LIVE LATCH rows only as timing evidence."
+      };
+    }
+    if (agreementCounts.pineOnly > 0 || agreementCounts.noData > 0) {
+      return {
+        tone: "border-amber-300/50 bg-amber-300/5 text-amber-100",
+        title: "Use TradingView as the truth for this batch",
+        body: "Some current alerts do not have matching imported candles in the app.",
+        evidence: "PINE ONLY and NO DATA rows can still be reviewed visually, but the app cannot fully score them yet.",
+        action: "Review matching ORIG rows first. Treat unmatched rows as visual review items, not final proof."
+      };
+    }
+    if (alertCounts.enter > 0) {
+      return {
+        tone: "border-lime-400/50 bg-lime-400/5 text-lime-100",
+        title: "Paper review only",
+        body: "This batch has ENTER candidates and no setup-blocking import problem.",
+        evidence: "That means the evidence loop is usable; it does not mean the strategy is profitable yet.",
+        action: "Replay ENTER rows first and mark Paid or Failed. Real money still waits."
+      };
+    }
+    return {
+      tone: "border-border bg-background text-foreground",
+      title: "No trade call in this batch",
+      body: "The current alerts did not produce an ENTER candidate.",
+      evidence: "That can be correct behavior if the move was late, noisy, or not enough like the tested buckets.",
+      action: "Keep collecting alerts and review WAIT rows only if they repeatedly would have paid."
+    };
+  }, [
+    agreementCounts,
+    alertCounts.enter,
+    alertMatches.length,
+    alertSourceCounts.liveLatch,
+    alertVersionCounts.contractIssues,
+    alertVersionCounts.incomplete,
+    latestAlertMatches.length
+  ]);
   function markPaperOutcome(alert, outcome) {
     const key = paperOutcomeKey$1(alert);
     setPaperOutcomes((current) => {
@@ -43728,6 +43808,33 @@ function BrutusTradeDeskPage() {
           ] })
         ] })
       ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: `mt-3 grid gap-3 border p-3 text-sm md:grid-cols-[1fr_1fr] ${plainEvidenceVerdict.tone}`,
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-display text-sm font-bold", children: [
+                "Plain Verdict: ",
+                plainEvidenceVerdict.title
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-muted-foreground", children: plainEvidenceVerdict.body })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: "What counts" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground", children: plainEvidenceVerdict.evidence })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: "Do this next" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground", children: plainEvidenceVerdict.action })
+              ] })
+            ] })
+          ]
+        }
+      ),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 grid gap-3 border border-border bg-background p-3 md:grid-cols-[1.25fr_2fr]", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-sm font-bold", children: "Paper outcome scoreboard" }),
