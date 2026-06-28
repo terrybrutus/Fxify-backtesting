@@ -844,6 +844,22 @@ const requiredTradeDeskSnippets = [
     text: "alertSummaryRows,",
   },
   {
+    label: "trade desk summary shows event mix",
+    text: "Event mix",
+  },
+  {
+    label: "trade desk summary counts original triangle events",
+    text: "originalTriangle",
+  },
+  {
+    label: "trade desk summary shows source mix",
+    text: "Source mix",
+  },
+  {
+    label: "trade desk summary counts live latch source",
+    text: "liveLatchSource",
+  },
+  {
     label: "trade desk paper outcome storage",
     text: "ict.brutus.trade-desk.paperOutcomes.v1",
   },

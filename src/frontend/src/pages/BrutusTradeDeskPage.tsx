@@ -182,6 +182,12 @@ type AlertGroupRow = {
   timeframe: string;
   action: Decision | "NO DATA";
   count: number;
+  firstTouch: number;
+  originalTriangle: number;
+  decisionChange: number;
+  confirmedClose: number;
+  origSource: number;
+  liveLatchSource: number;
   match: number;
   different: number;
   pineOnly: number;
@@ -1733,6 +1739,12 @@ export default function BrutusTradeDeskPage() {
           timeframe,
           action,
           count: 0,
+          firstTouch: 0,
+          originalTriangle: 0,
+          decisionChange: 0,
+          confirmedClose: 0,
+          origSource: 0,
+          liveLatchSource: 0,
           match: 0,
           different: 0,
           pineOnly: 0,
@@ -1744,6 +1756,15 @@ export default function BrutusTradeDeskPage() {
           latestAlertTime: 0,
         } satisfies AlertGroupRow);
       current.count += 1;
+      current.firstTouch += item.alert.decisionEvent === "first_touch" ? 1 : 0;
+      current.originalTriangle +=
+        item.alert.decisionEvent === "original_triangle" ? 1 : 0;
+      current.decisionChange +=
+        item.alert.decisionEvent === "decision_change" ? 1 : 0;
+      current.confirmedClose +=
+        item.alert.decisionEvent === "confirmed_close" ? 1 : 0;
+      current.origSource += item.alert.originalTriangleSignal === true ? 1 : 0;
+      current.liveLatchSource += item.alert.latchedSignal === true ? 1 : 0;
       current.match += item.agreement === "MATCH" ? 1 : 0;
       current.different += item.agreement === "DIFFERENT" ? 1 : 0;
       current.pineOnly += item.agreement === "PINE ONLY" ? 1 : 0;
@@ -2812,7 +2833,9 @@ export default function BrutusTradeDeskPage() {
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Current Playbook alerts only, grouped by symbol, timeframe,
-                  and Pine action.
+                  and Pine action. Event/source counts show whether the group
+                  came from first touch, old-triangle parity, decision changes,
+                  or confirmed close.
                 </p>
               </div>
               <p className="font-mono text-xs text-muted-foreground">
@@ -2826,6 +2849,8 @@ export default function BrutusTradeDeskPage() {
                     <th className="px-2 py-2">Symbol</th>
                     <th className="px-2 py-2">TF</th>
                     <th className="px-2 py-2">Action</th>
+                    <th className="px-2 py-2">Event mix</th>
+                    <th className="px-2 py-2">Source mix</th>
                     <th className="px-2 py-2">Alerts</th>
                     <th className="px-2 py-2">Clean matches</th>
                     <th className="px-2 py-2">Paper result</th>
@@ -2839,6 +2864,21 @@ export default function BrutusTradeDeskPage() {
                       <td className="px-2 py-2">{row.symbol}</td>
                       <td className="px-2 py-2">{row.timeframe}</td>
                       <td className="px-2 py-2">{displayDecision(row.action)}</td>
+                      <td className="px-2 py-2 text-muted-foreground">
+                        <span className="block">
+                          Touch {row.firstTouch} | Old {row.originalTriangle}
+                        </span>
+                        <span className="block">
+                          Change {row.decisionChange} | Close{" "}
+                          {row.confirmedClose}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-muted-foreground">
+                        <span className="block">ORIG {row.origSource}</span>
+                        <span className="block">
+                          LIVE LATCH {row.liveLatchSource}
+                        </span>
+                      </td>
                       <td className="px-2 py-2">{row.count}</td>
                       <td className="px-2 py-2 text-lime-300">{row.match}</td>
                       <td className="px-2 py-2">
