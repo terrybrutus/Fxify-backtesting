@@ -43530,6 +43530,31 @@ function BrutusTradeDeskPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-muted-foreground", children: "Wait paid" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg text-amber-200", children: paperOutcomeCounts.missed })
           ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "md:col-span-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-sm font-bold", children: "How to mark rows" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-2 grid gap-2 text-xs text-muted-foreground md:grid-cols-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-lime-300", children: "Paid = ENTER worked." }),
+              " ",
+              "Mark this only when an ENTER would have paid if taken right away."
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-red-300", children: "Failed = ENTER failed." }),
+              " ",
+              "Mark this when an ENTER kept going against the trade before it paid."
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-amber-200", children: "Wait paid = skipped move worked." }),
+              " ",
+              "Mark this when WAIT/SKIP/DO NOT HOLD still would have paid."
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-foreground", children: "Unreviewed = not checked yet." }),
+              " ",
+              "Leave it alone until you replay or inspect it on TradingView."
+            ] })
+          ] })
         ] })
       ] }),
       paperReviewQueue.some((group) => group.rows.length > 0) && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 border border-border bg-background p-3", children: [
