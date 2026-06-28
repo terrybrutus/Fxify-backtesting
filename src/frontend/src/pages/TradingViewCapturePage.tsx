@@ -1254,6 +1254,21 @@ function exportableReviewedRow({
   };
 }
 
+function alertEventExplanation(event?: string) {
+  switch (event) {
+    case "first_touch":
+      return "first live band touch";
+    case "original_triangle":
+      return "old Brutus triangle appeared";
+    case "decision_change":
+      return "same candle changed decision";
+    case "confirmed_close":
+      return "confirmed candle-close signal";
+    default:
+      return "alert event";
+  }
+}
+
 export default function TradingViewCapturePage() {
   const { candles } = useStrategyWorkspace();
   const [payloadText, setPayloadText] = useState("");
@@ -2860,6 +2875,9 @@ export default function TradingViewCapturePage() {
                               {alert.previousAction
                                 ? ` from ${alert.previousAction}`
                                 : ""}
+                              <span className="block">
+                                {alertEventExplanation(alert.decisionEvent)}
+                              </span>
                             </span>
                           )}
                           {isPlaybookAlert(alert) && (

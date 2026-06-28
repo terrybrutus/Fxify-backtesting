@@ -780,6 +780,10 @@ const requiredTradeDeskSnippets = [
     text: "Do this next",
   },
   {
+    label: "trade desk explains original triangle event",
+    text: "old Brutus triangle appeared",
+  },
+  {
     label: "trade desk isolates latest playbook alerts",
     text: "const latestAlertMatches = useMemo(",
   },
