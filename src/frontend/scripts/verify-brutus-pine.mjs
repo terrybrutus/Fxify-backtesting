@@ -94,8 +94,8 @@ const requiredSnippets = [
     text: "alert(message, alert.freq_all)",
   },
   {
-    label: "raw parity v10 payload",
-    text: '"playbookVersion":"raw-parity-v10"',
+    label: "raw parity v11 payload",
+    text: '"playbookVersion":"raw-parity-v11"',
   },
   {
     label: "raw signal JSON field",
