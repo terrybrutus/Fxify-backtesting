@@ -258,6 +258,18 @@ const requiredSnippets = [
     text: "This is a paper-test alert bridge. It does not prove the strategy is live-trade ready by itself.",
   },
   {
+    label: "pine script says use one Any alert call",
+    text: 'create exactly one alert per symbol/timeframe using "Any alert() function call"',
+  },
+  {
+    label: "pine script warns named alertconditions lack JSON",
+    text: "those are only visual fallback labels and will not carry the full JSON audit packet.",
+  },
+  {
+    label: "named alertconditions warn wrong alert type",
+    text: "Wrong alert type for evidence loop. Use Any alert() function call for full JSON.",
+  },
+  {
     label: "original-marker parity warning",
     text: "ORIG markers must match the old Brutus triangles before trusting ENTER, WAIT, SKIP, or DO NOT HOLD labels.",
   },
@@ -658,6 +670,14 @@ const requiredTradeDeskSnippets = [
   {
     label: "trade desk Any alert setup step",
     text: "Choose Any alert() function call so the JSON payload is captured.",
+  },
+  {
+    label: "trade desk warns not to choose named conditions",
+    text: "Do not choose the named ENTER/WAIT/SKIP conditions.",
+  },
+  {
+    label: "trade desk says named alert labels lack full JSON",
+    text: "full JSON packet.",
   },
   {
     label: "trade desk import logs setup step",
