@@ -42251,6 +42251,46 @@ function playbookContractIssues$1(alert) {
   if (alert.stdDev !== 2) issues.push("stdDev");
   return issues;
 }
+function missingPlaybookFields$1(alert) {
+  const missing = [];
+  if (!isLatestPlaybookAlert$1(alert)) return missing;
+  if (alert.rawSignal !== true) missing.push("rawSignal");
+  if (!alert.decisionEvent) missing.push("decisionEvent");
+  if (alert.decisionEvent === "decision_change" && !alert.previousAction) {
+    missing.push("previousAction");
+  }
+  if (!alert.action) missing.push("action");
+  if (!alert.reason && !alert.plainAction) missing.push("reason");
+  if (!alert.mode && !alert.alertMode) missing.push("mode");
+  if (alert.confirmed == null) missing.push("confirmed");
+  if (alert.modeReady == null) missing.push("modeReady");
+  if (alert.inSession == null) missing.push("inSession");
+  if (alert.minutesIntoBar == null) missing.push("minutesIntoBar");
+  if (alert.notTooEarly == null) missing.push("notTooEarly");
+  if (alert.longSnapback == null) missing.push("longSnapback");
+  if (alert.shortSnapback == null) missing.push("shortSnapback");
+  if (alert.longPushThrough == null) missing.push("longPushThrough");
+  if (alert.shortPushThrough == null) missing.push("shortPushThrough");
+  if (!alert.brokerSymbol && !alert.symbol) missing.push("symbol");
+  if (!alert.timeframe) missing.push("timeframe");
+  if (!alert.direction) missing.push("direction");
+  if (alert.candleTime == null) missing.push("timestamp");
+  if (alert.alertTime == null) missing.push("alertTime");
+  if (alert.open == null) missing.push("open");
+  if (alert.high == null) missing.push("high");
+  if (alert.low == null) missing.push("low");
+  if (alert.close == null) missing.push("close");
+  if (alert.upper == null) missing.push("upper");
+  if (alert.lower == null) missing.push("lower");
+  if (alert.entry == null) missing.push("entry");
+  if (alert.stop == null) missing.push("stop");
+  if (alert.target == null) missing.push("target");
+  if (alert.length !== 9) missing.push("length=9");
+  if (alert.upperSource !== "high") missing.push("upperSource=high");
+  if (alert.lowerSource !== "low") missing.push("lowerSource=low");
+  if (alert.stdDev !== 2) missing.push("stdDev=2");
+  return missing;
+}
 function sideWord(direction) {
   return direction === "long" ? "LONG" : "SHORT";
 }
@@ -42943,6 +42983,9 @@ function BrutusTradeDeskPage() {
         (item) => isPlaybookAlert$1(item.alert) && !isLatestPlaybookAlert$1(item.alert)
       ).length,
       legacy: alertMatches.filter((item) => !isPlaybookAlert$1(item.alert)).length,
+      incomplete: alertMatches.filter(
+        (item) => missingPlaybookFields$1(item.alert).length > 0
+      ).length,
       contractIssues: alertMatches.filter(
         (item) => playbookContractIssues$1(item.alert).length > 0
       ).length
@@ -43106,6 +43149,9 @@ function BrutusTradeDeskPage() {
     if (alertVersionCounts.contractIssues > 0) {
       return "Some current Playbook alerts failed the locked-parameter check. Re-export the Pine script before trusting this batch.";
     }
+    if (alertVersionCounts.incomplete > 0) {
+      return "Some current Playbook alerts are missing required JSON fields. Recreate the alerts with Any alert() function call before trusting this batch.";
+    }
     if (agreementCounts.different > 0) {
       return "Stop and review DIFFERENT rows first. Pine and the app disagree, so those rows are not tradeable evidence yet.";
     }
@@ -43187,6 +43233,9 @@ function BrutusTradeDeskPage() {
           (alert) => isPlaybookAlert$1(alert) && !isLatestPlaybookAlert$1(alert)
         ).length,
         legacy: parsed.filter((alert) => !isPlaybookAlert$1(alert)).length,
+        incomplete: parsed.filter(
+          (alert) => missingPlaybookFields$1(alert).length > 0
+        ).length,
         contractIssues: parsed.filter(
           (alert) => playbookContractIssues$1(alert).length > 0
         ).length
@@ -43300,7 +43349,7 @@ function BrutusTradeDeskPage() {
       ] })
     ] }),
     error && /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-destructive bg-destructive/10 p-4 text-sm text-destructive", children: error }),
-    alertImportResult && !error && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-2 border border-cyan-500/40 bg-cyan-500/5 p-3 font-mono text-xs md:grid-cols-4", children: [
+    alertImportResult && !error && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-2 border border-cyan-500/40 bg-cyan-500/5 p-3 font-mono text-xs md:grid-cols-5", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
         "Alert files:",
         " ",
@@ -43335,6 +43384,16 @@ function BrutusTradeDeskPage() {
           children: [
             "Settings issues: ",
             alertImportResult.contractIssues
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "span",
+        {
+          className: alertImportResult.incomplete > 0 ? "text-red-300" : "text-muted-foreground",
+          children: [
+            "Incomplete: ",
+            alertImportResult.incomplete
           ]
         }
       )
@@ -43566,6 +43625,10 @@ function BrutusTradeDeskPage() {
           alertVersionCounts.contractIssues > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "border border-red-500/50 px-2 py-1 text-red-300", children: [
             "PARAMETER ISSUE ",
             alertVersionCounts.contractIssues
+          ] }),
+          alertVersionCounts.incomplete > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "border border-red-500/50 px-2 py-1 text-red-300", children: [
+            "INCOMPLETE ",
+            alertVersionCounts.incomplete
           ] })
         ] })
       ] }),
@@ -43795,6 +43858,11 @@ function BrutusTradeDeskPage() {
                     "Fix",
                     " ",
                     playbookContractIssues$1(item.alert).join(", ")
+                  ] }),
+                  missingPlaybookFields$1(item.alert).length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-red-300", children: [
+                    "Missing",
+                    " ",
+                    missingPlaybookFields$1(item.alert).slice(0, 4).join(", ")
                   ] })
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-2 py-2", children: item.alert.symbol ?? "n/a" }),
