@@ -1925,6 +1925,42 @@ export default function BrutusTradeDeskPage() {
         </div>
       </section>
 
+      <section className="border border-cyan-500/40 bg-cyan-500/5 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="font-display text-sm font-bold">
+              TradingView Setup Checklist
+            </p>
+            <p className="mt-1 max-w-4xl text-sm text-muted-foreground">
+              Use this every time you refresh the Pine script. The goal is raw
+              triangle parity first, then paper alerts. Do not trade from it
+              until the paper evidence says the labels deserve trust.
+            </p>
+          </div>
+          <span className="border border-cyan-400/60 px-2 py-1 font-mono text-xs text-cyan-200">
+            paper workflow
+          </span>
+        </div>
+        <div className="mt-3 grid gap-2 text-xs text-muted-foreground md:grid-cols-4">
+          <p>
+            <span className="font-mono text-cyan-200">1. Export Pine.</span>{" "}
+            Use Export Brutus Playbook Pine and paste it into TradingView.
+          </p>
+          <p>
+            <span className="font-mono text-cyan-200">2. Check ORIG.</span>{" "}
+            Grey ORIG markers should line up with the old Brutus triangles.
+          </p>
+          <p>
+            <span className="font-mono text-cyan-200">3. Create alert.</span>{" "}
+            Choose Any alert() function call so the JSON payload is captured.
+          </p>
+          <p>
+            <span className="font-mono text-cyan-200">4. Import logs.</span>{" "}
+            Bring the TradingView alert CSV back here and mark paper outcomes.
+          </p>
+        </div>
+      </section>
+
       {report && (
         <section className="space-y-3 border border-primary/40 bg-primary/5 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">

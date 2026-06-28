@@ -43321,6 +43321,37 @@ function BrutusTradeDeskPage() {
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "Do not trade from old screenshots, unmatched alerts, or rows where the candle batch is stale. Those are research clues, not live decisions." })
       ] })
     ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-cyan-500/40 bg-cyan-500/5 p-4", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-sm font-bold", children: "TradingView Setup Checklist" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-sm text-muted-foreground", children: "Use this every time you refresh the Pine script. The goal is raw triangle parity first, then paper alerts. Do not trade from it until the paper evidence says the labels deserve trust." })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "border border-cyan-400/60 px-2 py-1 font-mono text-xs text-cyan-200", children: "paper workflow" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 grid gap-2 text-xs text-muted-foreground md:grid-cols-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-cyan-200", children: "1. Export Pine." }),
+          " ",
+          "Use Export Brutus Playbook Pine and paste it into TradingView."
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-cyan-200", children: "2. Check ORIG." }),
+          " ",
+          "Grey ORIG markers should line up with the old Brutus triangles."
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-cyan-200", children: "3. Create alert." }),
+          " ",
+          "Choose Any alert() function call so the JSON payload is captured."
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-cyan-200", children: "4. Import logs." }),
+          " ",
+          "Bring the TradingView alert CSV back here and mark paper outcomes."
+        ] })
+      ] })
+    ] }),
     report && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "space-y-3 border border-primary/40 bg-primary/5 p-4", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [

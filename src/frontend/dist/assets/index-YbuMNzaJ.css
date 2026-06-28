@@ -1524,6 +1524,9 @@ video {
 .border-cyan-400\/50 {
   border-color: rgb(34 211 238 / 0.5);
 }
+.border-cyan-400\/60 {
+  border-color: rgb(34 211 238 / 0.6);
+}
 .border-cyan-400\/70 {
   border-color: rgb(34 211 238 / 0.7);
 }

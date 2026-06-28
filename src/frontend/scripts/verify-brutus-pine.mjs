@@ -556,6 +556,22 @@ const requiredTradeDeskSnippets = [
     text: "Current Playbook",
   },
   {
+    label: "trade desk TradingView setup checklist",
+    text: "TradingView Setup Checklist",
+  },
+  {
+    label: "trade desk ORIG parity setup step",
+    text: "Grey ORIG markers should line up with the old Brutus triangles.",
+  },
+  {
+    label: "trade desk Any alert setup step",
+    text: "Choose Any alert() function call so the JSON payload is captured.",
+  },
+  {
+    label: "trade desk import logs setup step",
+    text: "Bring the TradingView alert CSV back here and mark paper outcomes.",
+  },
+  {
     label: "trade desk summarizes alerts by symbol timeframe action",
     text: "Current Alert Summary",
   },
