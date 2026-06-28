@@ -501,8 +501,8 @@ const requiredCaptureSnippets = [
     text: "Paper result",
   },
   {
-    label: "paid outcome button",
-    text: '(["paid", "failed", "missed"] as const)',
+    label: "plain paper outcome buttons",
+    text: '"worked",\n                                "failed",\n                                "would_have_worked",\n                                "avoided_loss",\n                                "unclear"',
   },
   {
     label: "paper outcome scoreboard",
@@ -513,28 +513,52 @@ const requiredCaptureSnippets = [
     text: "How to mark alerts",
   },
   {
-    label: "capture paid plain definition",
-    text: "Paid = ENTER worked.",
+    label: "capture worked plain definition",
+    text: "Worked = the alert did what it was supposed to do.",
   },
   {
     label: "capture failed plain definition",
-    text: "Failed = ENTER failed.",
+    text: "Failed = the alert was wrong.",
   },
   {
-    label: "capture would-have-paid plain definition",
-    text: "Would have paid = skipped move worked.",
+    label: "capture would-have-worked plain definition",
+    text: "Would have worked = WAIT/SKIP missed a good move.",
+  },
+  {
+    label: "capture avoided-loss plain definition",
+    text: "Avoided loss = skipping saved you.",
   },
   {
     label: "outcomes grouped by Playbook decision",
     text: "paperOutcomeByDecision",
   },
   {
-    label: "WAIT would-have-paid guidance",
-    text: "If WAIT would have paid",
+    label: "outcomes grouped by direction",
+    text: "outcomeByDirection",
+  },
+  {
+    label: "outcomes grouped by event type",
+    text: "outcomeByEvent",
+  },
+  {
+    label: "WAIT would-have-worked queue",
+    text: "WAITs that would have worked",
+  },
+  {
+    label: "SKIP avoided-loss queue",
+    text: "SKIPs that avoided losses",
+  },
+  {
+    label: "SKIP missed-trade queue",
+    text: "SKIPs that missed good trades",
+  },
+  {
+    label: "WAIT would-have-worked guidance",
+    text: "If WAIT would have worked",
   },
   {
     label: "DO NOT HOLD trap filter guidance",
-    text: "the trap filter is doing useful work",
+    text: "DO NOT HOLD avoids losses",
   },
   {
     label: "outcome recommendation export",
@@ -542,15 +566,19 @@ const requiredCaptureSnippets = [
   },
   {
     label: "tighten ENTER recommendation",
-    text: "Tighten ENTER. Marked ENTER rows are failing too often.",
+    text: "tighten ENTER:",
   },
   {
     label: "loosen ENTER recommendation",
-    text: "Test a looser ENTER rule. WAIT rows are being marked as would-have-paid opportunities.",
+    text: "loosen ENTER:",
   },
   {
-    label: "not enough outcomes recommendation",
-    text: "Mark at least 10 latest rows before changing the rule.",
+    label: "keep collecting recommendation",
+    text: "keep collecting:",
+  },
+  {
+    label: "rule currently not useful recommendation",
+    text: "rule currently not useful:",
   },
   {
     label: "capture page decision-change note",

@@ -103,6 +103,12 @@ type BreakdownRow = {
   total: number;
 };
 
+type OutcomeBreakdownRow = {
+  label: string;
+  counts: PaperOutcomeCounts;
+  total: number;
+};
+
 type GateCount = {
   yes: number;
   no: number;
@@ -115,7 +121,13 @@ type ReadinessCheck = {
   detail: string;
 };
 
-type PaperOutcome = "unreviewed" | "paid" | "failed" | "missed";
+type PaperOutcome =
+  | "unreviewed"
+  | "worked"
+  | "failed"
+  | "would_have_worked"
+  | "avoided_loss"
+  | "unclear";
 
 type PaperOutcomeCounts = Record<PaperOutcome, number>;
 
@@ -180,11 +192,27 @@ function loadPaperOutcomes(): Record<string, PaperOutcome> {
       return {};
     }
     return Object.fromEntries(
-      Object.entries(parsed).filter((entry): entry is [string, PaperOutcome] =>
-        ["unreviewed", "paid", "failed", "missed"].includes(
-          String(entry[1]),
+      Object.entries(parsed)
+        .map(([key, value]) => {
+          const stored = String(value);
+          const normalized =
+            stored === "paid"
+              ? "worked"
+              : stored === "missed"
+                ? "would_have_worked"
+                : stored;
+          return [key, normalized] as const;
+        })
+        .filter((entry): entry is [string, PaperOutcome] =>
+          [
+            "unreviewed",
+            "worked",
+            "failed",
+            "would_have_worked",
+            "avoided_loss",
+            "unclear",
+          ].includes(entry[1]),
         ),
-      ),
     );
   } catch {
     return {};
@@ -1063,6 +1091,31 @@ function topBreakdownRows(
     .slice(0, limit);
 }
 
+function totalOutcomes(counts: PaperOutcomeCounts) {
+  return (
+    counts.worked +
+    counts.failed +
+    counts.would_have_worked +
+    counts.avoided_loss +
+    counts.unclear +
+    counts.unreviewed
+  );
+}
+
+function topOutcomeBreakdownRows(
+  rows: Record<string, PaperOutcomeCounts>,
+  limit = 5,
+): OutcomeBreakdownRow[] {
+  return Object.entries(rows)
+    .map(([label, counts]) => ({
+      label,
+      counts,
+      total: totalOutcomes(counts),
+    }))
+    .sort((a, b) => b.total - a.total || a.label.localeCompare(b.label))
+    .slice(0, limit);
+}
+
 function countsText(counts: ReviewCounts) {
   return `E ${counts.enter} / W ${counts.wait} / NO ${counts.doNotHold} / S ${counts.skip}`;
 }
@@ -1072,11 +1125,18 @@ function gateCountText(counts: GateCount) {
 }
 
 function paperOutcomeCountsText(counts: PaperOutcomeCounts) {
-  return `Paid ${counts.paid} / Failed ${counts.failed} / Would have paid ${counts.missed} / Open ${counts.unreviewed}`;
+  return `Worked ${counts.worked} / Failed ${counts.failed} / Would have worked ${counts.would_have_worked} / Avoided loss ${counts.avoided_loss} / Unclear ${counts.unclear} / Open ${counts.unreviewed}`;
 }
 
 function emptyPaperOutcomeCounts(): PaperOutcomeCounts {
-  return { unreviewed: 0, paid: 0, failed: 0, missed: 0 };
+  return {
+    unreviewed: 0,
+    worked: 0,
+    failed: 0,
+    would_have_worked: 0,
+    avoided_loss: 0,
+    unclear: 0,
+  };
 }
 
 function plainRowInstruction(alert: TvAlert, review: BrutusReview) {
@@ -1087,28 +1147,31 @@ function plainRowInstruction(alert: TvAlert, review: BrutusReview) {
         ? "SHORT"
         : "TRADE";
   if (review.status === "ENTER") {
-    return `PAPER ENTER ${side}. Use the listed stop and target. Mark Paid or Failed after the move resolves.`;
+    return `PAPER ENTER ${side}. Use the listed stop and target. Mark Worked, Failed, or Unclear after the move resolves.`;
   }
   if (review.status === "WAIT") {
-    return "WAIT. Do nothing now. Mark Would have paid only if it clearly paid without giving an ENTER.";
+    return "WAIT. Do nothing now. Mark Would have worked only if it clearly paid without giving an ENTER.";
   }
   if (review.status === "DO_NOT_HOLD") {
-    return "DO NOT ENTER. Price is still pushing through the band. If paper-tracking, exit the idea.";
+    return "DO NOT ENTER. Price is still pushing through the band. Mark Avoided loss if skipping saved you.";
   }
   return "SKIP. Ignore this alert and wait for the next one.";
 }
 
 function paperOutcomeLabel(outcome: PaperOutcome) {
-  if (outcome === "paid") return "Paid";
+  if (outcome === "worked") return "Worked";
   if (outcome === "failed") return "Failed";
-  if (outcome === "missed") return "Would have paid";
+  if (outcome === "would_have_worked") return "Would have worked";
+  if (outcome === "avoided_loss") return "Avoided loss";
+  if (outcome === "unclear") return "Unclear";
   return "Unreviewed";
 }
 
 function paperOutcomeClass(outcome: PaperOutcome) {
-  if (outcome === "paid") return "text-lime-300";
+  if (outcome === "worked") return "text-lime-300";
   if (outcome === "failed") return "text-destructive";
-  if (outcome === "missed") return "text-amber-300";
+  if (outcome === "would_have_worked") return "text-amber-300";
+  if (outcome === "avoided_loss") return "text-cyan-300";
   return "text-muted-foreground";
 }
 
@@ -1556,19 +1619,17 @@ export default function TradingViewCapturePage() {
     const latestMissingAlertTimeAlerts = latestReviewedRows.filter(
       (row) => row.alert.rawSignal === true && !row.alert.alertTime,
     ).length;
-    const paperOutcomeCounts = latestReviewedRows.reduce(
+    const paperOutcomeCounts = latestReviewedRows.reduce<PaperOutcomeCounts>(
       (acc, row) => {
         const outcome =
           paperOutcomes[paperOutcomeKey(row.alert)] ?? "unreviewed";
         acc[outcome] += 1;
         return acc;
       },
-      { unreviewed: 0, paid: 0, failed: 0, missed: 0 },
+      emptyPaperOutcomeCounts(),
     );
     const reviewedOutcomeRows =
-      paperOutcomeCounts.paid +
-      paperOutcomeCounts.failed +
-      paperOutcomeCounts.missed;
+      totalOutcomes(paperOutcomeCounts) - paperOutcomeCounts.unreviewed;
     const paperOutcomeByDecision = latestReviewedRows.reduce<
       Record<BrutusReviewStatus, PaperOutcomeCounts>
     >(
@@ -1585,6 +1646,39 @@ export default function TradingViewCapturePage() {
         DO_NOT_HOLD: emptyPaperOutcomeCounts(),
       },
     );
+    const addOutcome = (
+      acc: Record<string, PaperOutcomeCounts>,
+      key: string,
+      row: (typeof latestReviewedRows)[number],
+    ) => {
+      acc[key] ??= emptyPaperOutcomeCounts();
+      const outcome = paperOutcomes[paperOutcomeKey(row.alert)] ?? "unreviewed";
+      acc[key][outcome] += 1;
+      return acc;
+    };
+    const outcomeBySymbol = latestReviewedRows.reduce<
+      Record<string, PaperOutcomeCounts>
+    >(
+      (acc, row) =>
+        addOutcome(
+          acc,
+          row.alert.mappedSymbol ?? row.alert.brokerSymbol ?? "unknown",
+          row,
+        ),
+      {},
+    );
+    const outcomeByTimeframe = latestReviewedRows.reduce<
+      Record<string, PaperOutcomeCounts>
+    >((acc, row) => addOutcome(acc, row.alert.timeframe ?? "unknown", row), {});
+    const outcomeByAction = latestReviewedRows.reduce<
+      Record<string, PaperOutcomeCounts>
+    >((acc, row) => addOutcome(acc, row.brutusReview.status, row), {});
+    const outcomeByDirection = latestReviewedRows.reduce<
+      Record<string, PaperOutcomeCounts>
+    >((acc, row) => addOutcome(acc, directionFor(row.alert) ?? "unknown", row), {});
+    const outcomeByEvent = latestReviewedRows.reduce<
+      Record<string, PaperOutcomeCounts>
+    >((acc, row) => addOutcome(acc, row.alert.decisionEvent ?? "unknown", row), {});
     const failedEnterRate =
       enterRows.length > 0 ? failedEnterRows / enterRows.length : undefined;
     const readinessChecks: ReadinessCheck[] = [
@@ -1644,7 +1738,7 @@ export default function TradingViewCapturePage() {
       {
         label: "Manual paper outcomes",
         passed: latestPlaybookAlerts >= 20 && reviewedOutcomeRows >= 10,
-        detail: `${reviewedOutcomeRows}/10 latest rows marked paid, failed, or would have paid`,
+        detail: `${reviewedOutcomeRows}/10 latest rows marked worked, failed, would-have-worked, avoided-loss, or unclear`,
       },
     ];
     const readinessPassed = readinessChecks.filter((check) => check.passed).length;
@@ -1859,21 +1953,31 @@ export default function TradingViewCapturePage() {
                         : "No trade candidate yet. Keep collecting live Playbook alerts.";
     const enterOutcomes = paperOutcomeByDecision.ENTER;
     const waitOutcomes = paperOutcomeByDecision.WAIT;
+    const skipOutcomes = paperOutcomeByDecision.SKIP;
     const trapOutcomes = paperOutcomeByDecision.DO_NOT_HOLD;
     const outcomeRead =
       reviewedOutcomeRows < 10
-        ? "Not enough marked outcomes yet. Mark at least 10 latest rows before changing the rule."
+        ? "keep collecting: mark at least 10 latest rows before changing the rule."
         : enterOutcomes.failed >= 2 &&
-            enterOutcomes.failed >= enterOutcomes.paid
-          ? "Tighten ENTER. Marked ENTER rows are failing too often."
-          : waitOutcomes.missed >= 2 && waitOutcomes.missed > waitOutcomes.failed
-            ? "Test a looser ENTER rule. WAIT rows are being marked as would-have-paid opportunities."
-            : trapOutcomes.paid >= 2 && trapOutcomes.paid > trapOutcomes.failed
-              ? "Keep the DO NOT HOLD filter. Marked trap rows are helping avoid bad holds."
-              : enterOutcomes.paid >= 5 &&
-                  enterOutcomes.paid > enterOutcomes.failed * 2
-                ? "Current ENTER rule is worth continued paper testing. Do not use real money yet."
-                : "No rule change yet. Keep marking outcomes until one pattern is obvious.";
+            enterOutcomes.failed >= enterOutcomes.worked
+          ? "tighten ENTER: marked ENTER rows are failing too often."
+          : waitOutcomes.would_have_worked + skipOutcomes.would_have_worked >=
+                2 &&
+              waitOutcomes.would_have_worked + skipOutcomes.would_have_worked >
+                enterOutcomes.failed
+            ? "loosen ENTER: WAIT/SKIP rows are being marked as would-have-worked opportunities."
+            : paperOutcomeCounts.failed >=
+                  paperOutcomeCounts.worked +
+                    paperOutcomeCounts.would_have_worked +
+                    paperOutcomeCounts.avoided_loss &&
+                reviewedOutcomeRows >= 10
+              ? "rule currently not useful: marked rows are not showing enough useful behavior."
+              : trapOutcomes.avoided_loss + skipOutcomes.avoided_loss >= 2
+                ? "keep collecting: SKIP/DO NOT HOLD is avoiding some losses, but this is still paper evidence."
+                : enterOutcomes.worked >= 5 &&
+                    enterOutcomes.worked > enterOutcomes.failed * 2
+                  ? "keep collecting: ENTER is worth continued paper review, not real money yet."
+                  : "keep collecting: no obvious rule change yet.";
     return {
       generatedAt: new Date().toISOString(),
       totalAlerts: reviewedRows.length,
@@ -1896,6 +2000,11 @@ export default function TradingViewCapturePage() {
       likelyUpgradeWaits,
       paperOutcomeCounts,
       paperOutcomeByDecision,
+      outcomeBySymbol,
+      outcomeByTimeframe,
+      outcomeByAction,
+      outcomeByDirection,
+      outcomeByEvent,
       outcomeRead,
       reviewedOutcomeRows,
       readinessChecks,
@@ -1922,6 +2031,11 @@ export default function TradingViewCapturePage() {
       topModes: topBreakdownRows(byMode),
       topEvents: topBreakdownRows(byEvent),
       topPierce: topBreakdownRows(byPierce),
+      topOutcomeSymbols: topOutcomeBreakdownRows(outcomeBySymbol),
+      topOutcomeTimeframes: topOutcomeBreakdownRows(outcomeByTimeframe),
+      topOutcomeActions: topOutcomeBreakdownRows(outcomeByAction),
+      topOutcomeDirections: topOutcomeBreakdownRows(outcomeByDirection),
+      topOutcomeEvents: topOutcomeBreakdownRows(outcomeByEvent),
     };
   }, [importResult, latestReviewedRows, paperOutcomes, reviewCounts, reviewedRows]);
   const reviewQueues = useMemo(() => {
@@ -1939,8 +2053,40 @@ export default function TradingViewCapturePage() {
       cleanEntries: withTags
         .filter((row) => row.reviewTag === "Review first")
         .slice(0, 6),
+      failedEnterOutcomes: withTags
+        .filter(
+          (row) =>
+            row.brutusReview.status === "ENTER" &&
+            (paperOutcomes[paperOutcomeKey(row.alert)] ?? "unreviewed") ===
+              "failed",
+        )
+        .slice(0, 6),
+      waitWouldHaveWorked: withTags
+        .filter(
+          (row) =>
+            row.brutusReview.status === "WAIT" &&
+            (paperOutcomes[paperOutcomeKey(row.alert)] ?? "unreviewed") ===
+              "would_have_worked",
+        )
+        .slice(0, 6),
+      skipAvoidedLoss: withTags
+        .filter(
+          (row) =>
+            row.brutusReview.status === "SKIP" &&
+            (paperOutcomes[paperOutcomeKey(row.alert)] ?? "unreviewed") ===
+              "avoided_loss",
+        )
+        .slice(0, 6),
+      skipMissedGoodTrades: withTags
+        .filter(
+          (row) =>
+            row.brutusReview.status === "SKIP" &&
+            (paperOutcomes[paperOutcomeKey(row.alert)] ?? "unreviewed") ===
+              "would_have_worked",
+        )
+        .slice(0, 6),
     };
-  }, [latestReviewedRows]);
+  }, [latestReviewedRows, paperOutcomes]);
 
   function addPayloads(text: string) {
     try {
@@ -2433,9 +2579,9 @@ export default function TradingViewCapturePage() {
               ))}
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              If ENTER fails often, tighten the rule. If WAIT would have paid
-              often, the rule may be too strict. If DO NOT HOLD avoids failed
-              moves, the trap filter is doing useful work.
+              If ENTER fails often, tighten ENTER. If WAIT would have worked
+              often, loosen ENTER may be the next paper hypothesis. If SKIP or
+              DO NOT HOLD avoids losses, the filter is doing useful work.
             </p>
           </div>
           <div className="mt-3 border border-border bg-background/40 p-3">
@@ -2445,30 +2591,37 @@ export default function TradingViewCapturePage() {
             <div className="mt-2 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
               <p>
                 <span className="font-mono text-lime-300">
-                  Paid = ENTER worked.
+                  Worked = the alert did what it was supposed to do.
                 </span>{" "}
-                Use this when the ENTER alert would have paid if taken right
-                away.
+                Use this when an ENTER paid or when a SKIP/DO NOT HOLD avoided
+                the bad move it warned about.
               </p>
               <p>
                 <span className="font-mono text-red-300">
-                  Failed = ENTER failed.
+                  Failed = the alert was wrong.
                 </span>{" "}
-                Use this when the alert kept moving against the trade before it
-                paid.
+                Use this when ENTER moved against the trade or a SKIP kept you
+                out of a good trade.
               </p>
               <p>
                 <span className="font-mono text-amber-200">
-                  Would have paid = skipped move worked.
+                  Would have worked = WAIT/SKIP missed a good move.
                 </span>{" "}
-                Use this when WAIT, SKIP, or DO NOT HOLD would have paid.
+                Use this when the app did not say ENTER, but the trade clearly
+                would have worked.
+              </p>
+              <p>
+                <span className="font-mono text-cyan-300">
+                  Avoided loss = skipping saved you.
+                </span>{" "}
+                Use this when SKIP or DO NOT HOLD kept you out of a bad move.
               </p>
               <p>
                 <span className="font-mono text-foreground">
-                  Leave blank = not checked.
+                  Unclear = not enough evidence.
                 </span>{" "}
-                Do not guess. Only mark rows you replayed or inspected on
-                TradingView.
+                Use this when the replay is messy. Leave blank when you have
+                not checked the row.
               </p>
             </div>
           </div>
@@ -2574,9 +2727,9 @@ export default function TradingViewCapturePage() {
             </span>
           </p>
           <p>
-            Paid / failed / would have paid:{" "}
+            Worked / failed / would-have-worked / avoided-loss / unclear:{" "}
             <span className="text-lime-300">
-              {paperSummary.paperOutcomeCounts.paid}
+              {paperSummary.paperOutcomeCounts.worked}
             </span>{" "}
             /{" "}
             <span className="text-destructive">
@@ -2584,7 +2737,15 @@ export default function TradingViewCapturePage() {
             </span>{" "}
             /{" "}
             <span className="text-amber-300">
-              {paperSummary.paperOutcomeCounts.missed}
+              {paperSummary.paperOutcomeCounts.would_have_worked}
+            </span>{" "}
+            /{" "}
+            <span className="text-cyan-300">
+              {paperSummary.paperOutcomeCounts.avoided_loss}
+            </span>{" "}
+            /{" "}
+            <span className="text-muted-foreground">
+              {paperSummary.paperOutcomeCounts.unclear}
             </span>
           </p>
           <p>
@@ -2729,6 +2890,42 @@ export default function TradingViewCapturePage() {
         </div>
       </section>
 
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        {(
+          [
+            ["Outcome by symbol", paperSummary.topOutcomeSymbols],
+            ["Outcome by timeframe", paperSummary.topOutcomeTimeframes],
+            ["Outcome by action", paperSummary.topOutcomeActions],
+            ["Outcome by direction", paperSummary.topOutcomeDirections],
+            ["Outcome by event type", paperSummary.topOutcomeEvents],
+          ] as const
+        ).map(([title, rows]) => (
+          <div className="border border-border bg-card p-4" key={title}>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              {title}
+            </p>
+            <div className="mt-3 space-y-2 font-mono text-xs">
+              {rows.length ? (
+                rows.map((row) => (
+                  <div className="space-y-1" key={row.label}>
+                    <p className="text-foreground">
+                      {row.label.replaceAll("_", " ")}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {paperOutcomeCountsText(row.counts)}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground">
+                  Mark paper outcomes to fill this in.
+                </p>
+              )}
+            </div>
+          </div>
+        ))}
+      </section>
+
       <section className="grid gap-3 xl:grid-cols-3">
         <div className="border border-destructive/50 bg-card p-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-destructive">
@@ -2831,6 +3028,70 @@ export default function TradingViewCapturePage() {
             )}
           </div>
         </div>
+      </section>
+
+      <section className="grid gap-3 xl:grid-cols-4">
+        {(
+          [
+            [
+              "ENTERs that failed",
+              "text-destructive",
+              reviewQueues.failedEnterOutcomes,
+              "These are marked failed. Replay them first before trusting ENTER.",
+            ],
+            [
+              "WAITs that would have worked",
+              "text-amber-300",
+              reviewQueues.waitWouldHaveWorked,
+              "These are marked would-have-worked. They are loosen-ENTER clues.",
+            ],
+            [
+              "SKIPs that avoided losses",
+              "text-cyan-300",
+              reviewQueues.skipAvoidedLoss,
+              "These are marked avoided-loss. They are evidence the filter helped.",
+            ],
+            [
+              "SKIPs that missed good trades",
+              "text-amber-300",
+              reviewQueues.skipMissedGoodTrades,
+              "These are marked would-have-worked. They are missed-trade clues.",
+            ],
+          ] as const
+        ).map(([title, colorClass, rows, emptyText]) => (
+          <div className="border border-border bg-card p-4" key={title}>
+            <p
+              className={`font-mono text-[10px] uppercase tracking-widest ${colorClass}`}
+            >
+              {title}
+            </p>
+            <div className="mt-3 space-y-2">
+              {rows.length ? (
+                rows.map((row) => (
+                  <div
+                    className="border border-border bg-background/40 p-2 font-mono text-xs"
+                    key={row.alert.id}
+                  >
+                    <p className="text-foreground">
+                      {row.alert.mappedSymbol ?? row.alert.brokerSymbol}{" "}
+                      {row.alert.timeframe} {row.alert.direction}{" "}
+                      {formatTime(row.alert.time)}
+                    </p>
+                    <p className="mt-1 text-muted-foreground">
+                      {paperOutcomeLabel(
+                        paperOutcomes[paperOutcomeKey(row.alert)] ??
+                          "unreviewed",
+                      )}{" "}
+                      - {row.brutusReview.status.replaceAll("_", " ")}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">{emptyText}</p>
+              )}
+            </div>
+          </div>
+        ))}
       </section>
 
       <section className="grid gap-3 md:grid-cols-5">
@@ -3090,24 +3351,28 @@ export default function TradingViewCapturePage() {
                             {paperOutcomeLabel(paperOutcome)}
                           </span>
                           <div className="mt-1 flex flex-wrap gap-1">
-                            {(["paid", "failed", "missed"] as const).map(
-                              (outcome) => (
-                                <button
-                                  className={`border px-2 py-1 text-[10px] ${
-                                    paperOutcome === outcome
-                                      ? "border-primary bg-primary text-primary-foreground"
-                                      : "border-border bg-background text-muted-foreground hover:border-primary"
-                                  }`}
-                                  key={outcome}
-                                  onClick={() =>
-                                    markPaperOutcome(alert, outcome)
-                                  }
-                                  type="button"
-                                >
-                                  {paperOutcomeLabel(outcome)}
-                                </button>
-                              ),
-                            )}
+                            {(
+                              [
+                                "worked",
+                                "failed",
+                                "would_have_worked",
+                                "avoided_loss",
+                                "unclear",
+                              ] as const
+                            ).map((outcome) => (
+                              <button
+                                className={`border px-2 py-1 text-[10px] ${
+                                  paperOutcome === outcome
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "border-border bg-background text-muted-foreground hover:border-primary"
+                                }`}
+                                key={outcome}
+                                onClick={() => markPaperOutcome(alert, outcome)}
+                                type="button"
+                              >
+                                {paperOutcomeLabel(outcome)}
+                              </button>
+                            ))}
                             {paperOutcome !== "unreviewed" && (
                               <button
                                 className="border border-border bg-background px-2 py-1 text-[10px] text-muted-foreground hover:border-primary"

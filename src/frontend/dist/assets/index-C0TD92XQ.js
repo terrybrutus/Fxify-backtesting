@@ -50220,10 +50220,19 @@ function loadPaperOutcomes() {
       return {};
     }
     return Object.fromEntries(
-      Object.entries(parsed).filter(
-        (entry) => ["unreviewed", "paid", "failed", "missed"].includes(
-          String(entry[1])
-        )
+      Object.entries(parsed).map(([key, value]) => {
+        const stored = String(value);
+        const normalized = stored === "paid" ? "worked" : stored === "missed" ? "would_have_worked" : stored;
+        return [key, normalized];
+      }).filter(
+        (entry) => [
+          "unreviewed",
+          "worked",
+          "failed",
+          "would_have_worked",
+          "avoided_loss",
+          "unclear"
+        ].includes(entry[1])
       )
     );
   } catch {
@@ -50928,6 +50937,16 @@ function topBreakdownRows(rows, limit = 5) {
     total: totalReviews(counts)
   })).sort((a2, b2) => b2.total - a2.total || a2.label.localeCompare(b2.label)).slice(0, limit);
 }
+function totalOutcomes(counts) {
+  return counts.worked + counts.failed + counts.would_have_worked + counts.avoided_loss + counts.unclear + counts.unreviewed;
+}
+function topOutcomeBreakdownRows(rows, limit = 5) {
+  return Object.entries(rows).map(([label, counts]) => ({
+    label,
+    counts,
+    total: totalOutcomes(counts)
+  })).sort((a2, b2) => b2.total - a2.total || a2.label.localeCompare(b2.label)).slice(0, limit);
+}
 function countsText(counts) {
   return `E ${counts.enter} / W ${counts.wait} / NO ${counts.doNotHold} / S ${counts.skip}`;
 }
@@ -50935,34 +50954,44 @@ function gateCountText(counts) {
   return `yes ${counts.yes} / no ${counts.no} / ? ${counts.unknown}`;
 }
 function paperOutcomeCountsText(counts) {
-  return `Paid ${counts.paid} / Failed ${counts.failed} / Would have paid ${counts.missed} / Open ${counts.unreviewed}`;
+  return `Worked ${counts.worked} / Failed ${counts.failed} / Would have worked ${counts.would_have_worked} / Avoided loss ${counts.avoided_loss} / Unclear ${counts.unclear} / Open ${counts.unreviewed}`;
 }
 function emptyPaperOutcomeCounts() {
-  return { unreviewed: 0, paid: 0, failed: 0, missed: 0 };
+  return {
+    unreviewed: 0,
+    worked: 0,
+    failed: 0,
+    would_have_worked: 0,
+    avoided_loss: 0,
+    unclear: 0
+  };
 }
 function plainRowInstruction(alert, review) {
   const side = directionFor(alert) === "long" ? "LONG" : directionFor(alert) === "short" ? "SHORT" : "TRADE";
   if (review.status === "ENTER") {
-    return `PAPER ENTER ${side}. Use the listed stop and target. Mark Paid or Failed after the move resolves.`;
+    return `PAPER ENTER ${side}. Use the listed stop and target. Mark Worked, Failed, or Unclear after the move resolves.`;
   }
   if (review.status === "WAIT") {
-    return "WAIT. Do nothing now. Mark Would have paid only if it clearly paid without giving an ENTER.";
+    return "WAIT. Do nothing now. Mark Would have worked only if it clearly paid without giving an ENTER.";
   }
   if (review.status === "DO_NOT_HOLD") {
-    return "DO NOT ENTER. Price is still pushing through the band. If paper-tracking, exit the idea.";
+    return "DO NOT ENTER. Price is still pushing through the band. Mark Avoided loss if skipping saved you.";
   }
   return "SKIP. Ignore this alert and wait for the next one.";
 }
 function paperOutcomeLabel(outcome) {
-  if (outcome === "paid") return "Paid";
+  if (outcome === "worked") return "Worked";
   if (outcome === "failed") return "Failed";
-  if (outcome === "missed") return "Would have paid";
+  if (outcome === "would_have_worked") return "Would have worked";
+  if (outcome === "avoided_loss") return "Avoided loss";
+  if (outcome === "unclear") return "Unclear";
   return "Unreviewed";
 }
 function paperOutcomeClass(outcome) {
-  if (outcome === "paid") return "text-lime-300";
+  if (outcome === "worked") return "text-lime-300";
   if (outcome === "failed") return "text-destructive";
-  if (outcome === "missed") return "text-amber-300";
+  if (outcome === "would_have_worked") return "text-amber-300";
+  if (outcome === "avoided_loss") return "text-cyan-300";
   return "text-muted-foreground";
 }
 function downloadText(filename, content) {
@@ -51351,9 +51380,9 @@ function TradingViewCapturePage() {
         acc[outcome] += 1;
         return acc;
       },
-      { unreviewed: 0, paid: 0, failed: 0, missed: 0 }
+      emptyPaperOutcomeCounts()
     );
-    const reviewedOutcomeRows = paperOutcomeCounts.paid + paperOutcomeCounts.failed + paperOutcomeCounts.missed;
+    const reviewedOutcomeRows = totalOutcomes(paperOutcomeCounts) - paperOutcomeCounts.unreviewed;
     const paperOutcomeByDecision = latestReviewedRows.reduce(
       (acc, row) => {
         const outcome = paperOutcomes[paperOutcomeKey(row.alert)] ?? "unreviewed";
@@ -51367,6 +51396,24 @@ function TradingViewCapturePage() {
         DO_NOT_HOLD: emptyPaperOutcomeCounts()
       }
     );
+    const addOutcome = (acc, key, row) => {
+      acc[key] ?? (acc[key] = emptyPaperOutcomeCounts());
+      const outcome = paperOutcomes[paperOutcomeKey(row.alert)] ?? "unreviewed";
+      acc[key][outcome] += 1;
+      return acc;
+    };
+    const outcomeBySymbol = latestReviewedRows.reduce(
+      (acc, row) => addOutcome(
+        acc,
+        row.alert.mappedSymbol ?? row.alert.brokerSymbol ?? "unknown",
+        row
+      ),
+      {}
+    );
+    const outcomeByTimeframe = latestReviewedRows.reduce((acc, row) => addOutcome(acc, row.alert.timeframe ?? "unknown", row), {});
+    const outcomeByAction = latestReviewedRows.reduce((acc, row) => addOutcome(acc, row.brutusReview.status, row), {});
+    const outcomeByDirection = latestReviewedRows.reduce((acc, row) => addOutcome(acc, directionFor(row.alert) ?? "unknown", row), {});
+    const outcomeByEvent = latestReviewedRows.reduce((acc, row) => addOutcome(acc, row.alert.decisionEvent ?? "unknown", row), {});
     const failedEnterRate = enterRows.length > 0 ? failedEnterRows / enterRows.length : void 0;
     const readinessChecks = [
       {
@@ -51407,7 +51454,7 @@ function TradingViewCapturePage() {
       {
         label: "Manual paper outcomes",
         passed: latestPlaybookAlerts >= 20 && reviewedOutcomeRows >= 10,
-        detail: `${reviewedOutcomeRows}/10 latest rows marked paid, failed, or would have paid`
+        detail: `${reviewedOutcomeRows}/10 latest rows marked worked, failed, would-have-worked, avoided-loss, or unclear`
       }
     ];
     const readinessPassed = readinessChecks.filter((check) => check.passed).length;
@@ -51495,8 +51542,9 @@ function TradingViewCapturePage() {
     const nextAction = reviewedRows.length === 0 ? "Import the latest TradingView alert CSV from the Alerts Log." : playbookAlerts === 0 ? "Replace the old TradingView alerts with alerts created from the latest Playbook Pine export." : latestPlaybookAlerts === 0 ? "Create fresh alerts from the latest exported Pine, then import that new CSV." : stalePlaybookAlerts > 0 ? `Filter to ${LATEST_PLAYBOOK_VERSION} rows or recreate the older alerts before using this batch.` : contractIssueAlerts > 0 ? "Export the newest Pine and recreate the TradingView alerts. The batch must prove length 9, upper high, lower low, and StdDev 2." : incompleteAlerts > 0 ? "Fix the alert source first. Missing fields make the batch unreliable." : failedEnterRows > 0 ? "Replay the failed ENTER rows first. If they really failed on TradingView, tighten the rule before paper-trading more." : enterRows.length > 0 ? "Replay ENTER rows on TradingView. Mark whether snapback happened quickly; do not use real money yet." : likelyUpgradeWaits > 0 ? "Replay the Maybe loosen WAIT rows. These are possible future ENTER-rule candidates." : "No trade candidate yet. Keep collecting live Playbook alerts.";
     const enterOutcomes = paperOutcomeByDecision.ENTER;
     const waitOutcomes = paperOutcomeByDecision.WAIT;
+    const skipOutcomes = paperOutcomeByDecision.SKIP;
     const trapOutcomes = paperOutcomeByDecision.DO_NOT_HOLD;
-    const outcomeRead = reviewedOutcomeRows < 10 ? "Not enough marked outcomes yet. Mark at least 10 latest rows before changing the rule." : enterOutcomes.failed >= 2 && enterOutcomes.failed >= enterOutcomes.paid ? "Tighten ENTER. Marked ENTER rows are failing too often." : waitOutcomes.missed >= 2 && waitOutcomes.missed > waitOutcomes.failed ? "Test a looser ENTER rule. WAIT rows are being marked as would-have-paid opportunities." : trapOutcomes.paid >= 2 && trapOutcomes.paid > trapOutcomes.failed ? "Keep the DO NOT HOLD filter. Marked trap rows are helping avoid bad holds." : enterOutcomes.paid >= 5 && enterOutcomes.paid > enterOutcomes.failed * 2 ? "Current ENTER rule is worth continued paper testing. Do not use real money yet." : "No rule change yet. Keep marking outcomes until one pattern is obvious.";
+    const outcomeRead = reviewedOutcomeRows < 10 ? "keep collecting: mark at least 10 latest rows before changing the rule." : enterOutcomes.failed >= 2 && enterOutcomes.failed >= enterOutcomes.worked ? "tighten ENTER: marked ENTER rows are failing too often." : waitOutcomes.would_have_worked + skipOutcomes.would_have_worked >= 2 && waitOutcomes.would_have_worked + skipOutcomes.would_have_worked > enterOutcomes.failed ? "loosen ENTER: WAIT/SKIP rows are being marked as would-have-worked opportunities." : paperOutcomeCounts.failed >= paperOutcomeCounts.worked + paperOutcomeCounts.would_have_worked + paperOutcomeCounts.avoided_loss && reviewedOutcomeRows >= 10 ? "rule currently not useful: marked rows are not showing enough useful behavior." : trapOutcomes.avoided_loss + skipOutcomes.avoided_loss >= 2 ? "keep collecting: SKIP/DO NOT HOLD is avoiding some losses, but this is still paper evidence." : enterOutcomes.worked >= 5 && enterOutcomes.worked > enterOutcomes.failed * 2 ? "keep collecting: ENTER is worth continued paper review, not real money yet." : "keep collecting: no obvious rule change yet.";
     return {
       generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
       totalAlerts: reviewedRows.length,
@@ -51519,6 +51567,11 @@ function TradingViewCapturePage() {
       likelyUpgradeWaits,
       paperOutcomeCounts,
       paperOutcomeByDecision,
+      outcomeBySymbol,
+      outcomeByTimeframe,
+      outcomeByAction,
+      outcomeByDirection,
+      outcomeByEvent,
       outcomeRead,
       reviewedOutcomeRows,
       readinessChecks,
@@ -51544,7 +51597,12 @@ function TradingViewCapturePage() {
       topTimeframes: topBreakdownRows(byTimeframe2),
       topModes: topBreakdownRows(byMode),
       topEvents: topBreakdownRows(byEvent),
-      topPierce: topBreakdownRows(byPierce)
+      topPierce: topBreakdownRows(byPierce),
+      topOutcomeSymbols: topOutcomeBreakdownRows(outcomeBySymbol),
+      topOutcomeTimeframes: topOutcomeBreakdownRows(outcomeByTimeframe),
+      topOutcomeActions: topOutcomeBreakdownRows(outcomeByAction),
+      topOutcomeDirections: topOutcomeBreakdownRows(outcomeByDirection),
+      topOutcomeEvents: topOutcomeBreakdownRows(outcomeByEvent)
     };
   }, [importResult, latestReviewedRows, paperOutcomes, reviewCounts, reviewedRows]);
   const reviewQueues = reactExports.useMemo(() => {
@@ -51555,9 +51613,21 @@ function TradingViewCapturePage() {
     return {
       failedEntries: withTags.filter((row) => row.reviewTag === "Failed entry").slice(0, 6),
       maybeLoosenWaits: withTags.filter((row) => row.reviewTag === "Maybe loosen").slice(0, 6),
-      cleanEntries: withTags.filter((row) => row.reviewTag === "Review first").slice(0, 6)
+      cleanEntries: withTags.filter((row) => row.reviewTag === "Review first").slice(0, 6),
+      failedEnterOutcomes: withTags.filter(
+        (row) => row.brutusReview.status === "ENTER" && (paperOutcomes[paperOutcomeKey(row.alert)] ?? "unreviewed") === "failed"
+      ).slice(0, 6),
+      waitWouldHaveWorked: withTags.filter(
+        (row) => row.brutusReview.status === "WAIT" && (paperOutcomes[paperOutcomeKey(row.alert)] ?? "unreviewed") === "would_have_worked"
+      ).slice(0, 6),
+      skipAvoidedLoss: withTags.filter(
+        (row) => row.brutusReview.status === "SKIP" && (paperOutcomes[paperOutcomeKey(row.alert)] ?? "unreviewed") === "avoided_loss"
+      ).slice(0, 6),
+      skipMissedGoodTrades: withTags.filter(
+        (row) => row.brutusReview.status === "SKIP" && (paperOutcomes[paperOutcomeKey(row.alert)] ?? "unreviewed") === "would_have_worked"
+      ).slice(0, 6)
     };
-  }, [latestReviewedRows]);
+  }, [latestReviewedRows, paperOutcomes]);
   function addPayloads(text) {
     try {
       const parsed = parsePayloadText(text);
@@ -51955,30 +52025,35 @@ function TradingViewCapturePage() {
               paperSummary.paperOutcomeByDecision[status]
             ) })
           ] }, status)) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-xs text-muted-foreground", children: "If ENTER fails often, tighten the rule. If WAIT would have paid often, the rule may be too strict. If DO NOT HOLD avoids failed moves, the trap filter is doing useful work." })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-xs text-muted-foreground", children: "If ENTER fails often, tighten ENTER. If WAIT would have worked often, loosen ENTER may be the next paper hypothesis. If SKIP or DO NOT HOLD avoids losses, the filter is doing useful work." })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 border border-border bg-background/40 p-3", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: "How to mark alerts" }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-2 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-lime-300", children: "Paid = ENTER worked." }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-lime-300", children: "Worked = the alert did what it was supposed to do." }),
               " ",
-              "Use this when the ENTER alert would have paid if taken right away."
+              "Use this when an ENTER paid or when a SKIP/DO NOT HOLD avoided the bad move it warned about."
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-red-300", children: "Failed = ENTER failed." }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-red-300", children: "Failed = the alert was wrong." }),
               " ",
-              "Use this when the alert kept moving against the trade before it paid."
+              "Use this when ENTER moved against the trade or a SKIP kept you out of a good trade."
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-amber-200", children: "Would have paid = skipped move worked." }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-amber-200", children: "Would have worked = WAIT/SKIP missed a good move." }),
               " ",
-              "Use this when WAIT, SKIP, or DO NOT HOLD would have paid."
+              "Use this when the app did not say ENTER, but the trade clearly would have worked."
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-foreground", children: "Leave blank = not checked." }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-cyan-300", children: "Avoided loss = skipping saved you." }),
               " ",
-              "Do not guess. Only mark rows you replayed or inspected on TradingView."
+              "Use this when SKIP or DO NOT HOLD kept you out of a bad move."
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-foreground", children: "Unclear = not enough evidence." }),
+              " ",
+              "Use this when the replay is messy. Leave blank when you have not checked the row."
             ] })
           ] })
         ] }),
@@ -52062,9 +52137,9 @@ function TradingViewCapturePage() {
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground", children: paperSummary.reviewedOutcomeRows })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-          "Paid / failed / would have paid:",
+          "Worked / failed / would-have-worked / avoided-loss / unclear:",
           " ",
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lime-300", children: paperSummary.paperOutcomeCounts.paid }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lime-300", children: paperSummary.paperOutcomeCounts.worked }),
           " ",
           "/",
           " ",
@@ -52072,7 +52147,15 @@ function TradingViewCapturePage() {
           " ",
           "/",
           " ",
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-amber-300", children: paperSummary.paperOutcomeCounts.missed })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-amber-300", children: paperSummary.paperOutcomeCounts.would_have_worked }),
+          " ",
+          "/",
+          " ",
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-cyan-300", children: paperSummary.paperOutcomeCounts.avoided_loss }),
+          " ",
+          "/",
+          " ",
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground", children: paperSummary.paperOutcomeCounts.unclear })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
           "Confirmed:",
@@ -52168,6 +52251,19 @@ function TradingViewCapturePage() {
         )) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground", children: "No alerts imported." }) })
       ] })
     ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "grid gap-3 md:grid-cols-2 xl:grid-cols-5", children: [
+      ["Outcome by symbol", paperSummary.topOutcomeSymbols],
+      ["Outcome by timeframe", paperSummary.topOutcomeTimeframes],
+      ["Outcome by action", paperSummary.topOutcomeActions],
+      ["Outcome by direction", paperSummary.topOutcomeDirections],
+      ["Outcome by event type", paperSummary.topOutcomeEvents]
+    ].map(([title, rows2]) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: title }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 space-y-2 font-mono text-xs", children: rows2.length ? rows2.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground", children: row.label.replaceAll("_", " ") }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground", children: paperOutcomeCountsText(row.counts) })
+      ] }, row.label)) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground", children: "Mark paper outcomes to fill this in." }) })
+    ] }, title)) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 xl:grid-cols-3", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-destructive/50 bg-card p-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-destructive", children: "Failed ENTERs to replay first" }),
@@ -52239,6 +52335,66 @@ function TradingViewCapturePage() {
         )) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-3 text-sm text-muted-foreground", children: "No clean latest ENTER rows in this batch." }) })
       ] })
     ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "grid gap-3 xl:grid-cols-4", children: [
+      [
+        "ENTERs that failed",
+        "text-destructive",
+        reviewQueues.failedEnterOutcomes,
+        "These are marked failed. Replay them first before trusting ENTER."
+      ],
+      [
+        "WAITs that would have worked",
+        "text-amber-300",
+        reviewQueues.waitWouldHaveWorked,
+        "These are marked would-have-worked. They are loosen-ENTER clues."
+      ],
+      [
+        "SKIPs that avoided losses",
+        "text-cyan-300",
+        reviewQueues.skipAvoidedLoss,
+        "These are marked avoided-loss. They are evidence the filter helped."
+      ],
+      [
+        "SKIPs that missed good trades",
+        "text-amber-300",
+        reviewQueues.skipMissedGoodTrades,
+        "These are marked would-have-worked. They are missed-trade clues."
+      ]
+    ].map(([title, colorClass, rows2, emptyText]) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "p",
+        {
+          className: `font-mono text-[10px] uppercase tracking-widest ${colorClass}`,
+          children: title
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 space-y-2", children: rows2.length ? rows2.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "border border-border bg-background/40 p-2 font-mono text-xs",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-foreground", children: [
+              row.alert.mappedSymbol ?? row.alert.brokerSymbol,
+              " ",
+              row.alert.timeframe,
+              " ",
+              row.alert.direction,
+              " ",
+              formatTime(row.alert.time)
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-1 text-muted-foreground", children: [
+              paperOutcomeLabel(
+                paperOutcomes[paperOutcomeKey(row.alert)] ?? "unreviewed"
+              ),
+              " ",
+              "- ",
+              row.brutusReview.status.replaceAll("_", " ")
+            ] })
+          ]
+        },
+        row.alert.id
+      )) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground", children: emptyText }) })
+    ] }, title)) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 md:grid-cols-5", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-primary/50 bg-card p-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-primary", children: "Draft rule counts" }),
@@ -52408,18 +52564,22 @@ function TradingViewCapturePage() {
               /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2", children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: paperOutcomeClass(paperOutcome), children: paperOutcomeLabel(paperOutcome) }),
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-1 flex flex-wrap gap-1", children: [
-                  ["paid", "failed", "missed"].map(
-                    (outcome) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-                      "button",
-                      {
-                        className: `border px-2 py-1 text-[10px] ${paperOutcome === outcome ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground hover:border-primary"}`,
-                        onClick: () => markPaperOutcome(alert, outcome),
-                        type: "button",
-                        children: paperOutcomeLabel(outcome)
-                      },
-                      outcome
-                    )
-                  ),
+                  [
+                    "worked",
+                    "failed",
+                    "would_have_worked",
+                    "avoided_loss",
+                    "unclear"
+                  ].map((outcome) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      className: `border px-2 py-1 text-[10px] ${paperOutcome === outcome ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground hover:border-primary"}`,
+                      onClick: () => markPaperOutcome(alert, outcome),
+                      type: "button",
+                      children: paperOutcomeLabel(outcome)
+                    },
+                    outcome
+                  )),
                   paperOutcome !== "unreviewed" && /* @__PURE__ */ jsxRuntimeExports.jsx(
                     "button",
                     {
