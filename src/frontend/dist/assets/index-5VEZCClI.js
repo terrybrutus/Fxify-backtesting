@@ -42867,6 +42867,20 @@ function alertGateSummary(alert) {
   const minutes = alert.minutesIntoBar != null && Number.isFinite(alert.minutesIntoBar) ? `${alert.minutesIntoBar.toFixed(1)}m` : "?m";
   return `${source} | original ${boolWord(original)} | live ${boolWord(liveTouch)} | session ${boolWord(alert.inSession)} | time ${boolWord(alert.notTooEarly)} (${minutes}) | snapback ${boolWord(snapback)} | push-through ${boolWord(push2)}`;
 }
+function alertEventExplanation$1(event) {
+  switch (event) {
+    case "first_touch":
+      return "first live band touch";
+    case "original_triangle":
+      return "old Brutus triangle appeared";
+    case "decision_change":
+      return "same candle changed decision";
+    case "confirmed_close":
+      return "confirmed candle-close signal";
+    default:
+      return "alert event";
+  }
+}
 function VerdictPill({ verdict }) {
   const colors = {
     TEST: "border-lime-400 bg-lime-400/10 text-lime-300",
@@ -44073,7 +44087,8 @@ function BrutusTradeDeskPage() {
                   isLatestPlaybookAlert$1(item.alert) && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "mt-1 block text-muted-foreground", children: [
                     item.alert.decisionEvent ?? "event",
                     " ",
-                    item.alert.previousAction ? `from ${item.alert.previousAction}` : ""
+                    item.alert.previousAction ? `from ${item.alert.previousAction}` : "",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block", children: alertEventExplanation$1(item.alert.decisionEvent) })
                   ] }),
                   isLatestPlaybookAlert$1(item.alert) && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "mt-1 block text-muted-foreground", children: alertGateSummary(item.alert) })
                 ] }),
@@ -51035,6 +51050,20 @@ function exportableReviewedRow({
     brutusReview
   };
 }
+function alertEventExplanation(event) {
+  switch (event) {
+    case "first_touch":
+      return "first live band touch";
+    case "original_triangle":
+      return "old Brutus triangle appeared";
+    case "decision_change":
+      return "same candle changed decision";
+    case "confirmed_close":
+      return "confirmed candle-close signal";
+    default:
+      return "alert event";
+  }
+}
 function TradingViewCapturePage() {
   const { candles } = useStrategyWorkspace();
   const [payloadText, setPayloadText] = reactExports.useState("");
@@ -52206,7 +52235,8 @@ function TradingViewCapturePage() {
                 alert.decisionEvent && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-cyan-300", children: [
                   "event ",
                   alert.decisionEvent.replaceAll("_", " "),
-                  alert.previousAction ? ` from ${alert.previousAction}` : ""
+                  alert.previousAction ? ` from ${alert.previousAction}` : "",
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block", children: alertEventExplanation(alert.decisionEvent) })
                 ] }),
                 isPlaybookAlert(alert) && /* @__PURE__ */ jsxRuntimeExports.jsxs(
                   "span",

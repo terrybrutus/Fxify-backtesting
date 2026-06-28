@@ -1404,6 +1404,21 @@ function alertGateSummary(alert: TvAlert) {
   return `${source} | original ${boolWord(original)} | live ${boolWord(liveTouch)} | session ${boolWord(alert.inSession)} | time ${boolWord(alert.notTooEarly)} (${minutes}) | snapback ${boolWord(snapback)} | push-through ${boolWord(push)}`;
 }
 
+function alertEventExplanation(event?: string) {
+  switch (event) {
+    case "first_touch":
+      return "first live band touch";
+    case "original_triangle":
+      return "old Brutus triangle appeared";
+    case "decision_change":
+      return "same candle changed decision";
+    case "confirmed_close":
+      return "confirmed candle-close signal";
+    default:
+      return "alert event";
+  }
+}
+
 function VerdictPill({ verdict }: { verdict: PlaybookVerdict }) {
   const colors: Record<PlaybookVerdict, string> = {
     TEST: "border-lime-400 bg-lime-400/10 text-lime-300",
@@ -2978,6 +2993,9 @@ export default function BrutusTradeDeskPage() {
                           {item.alert.previousAction
                             ? `from ${item.alert.previousAction}`
                             : ""}
+                          <span className="block">
+                            {alertEventExplanation(item.alert.decisionEvent)}
+                          </span>
                         </span>
                       )}
                       {isLatestPlaybookAlert(item.alert) && (
