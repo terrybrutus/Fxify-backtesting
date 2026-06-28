@@ -1997,9 +1997,9 @@ export default function BrutusTradeDeskPage() {
         <div>
           <p className="font-display text-sm font-bold">Use This In Order</p>
           <p className="mt-2 text-sm text-muted-foreground">
-            First import the Brutus Intrabar JSON. Then import the newest
-            TradingView alert CSV. Then review Live Alert Match from top to
-            bottom.
+            Setting up TradingView: export the Pine script first. Reviewing
+            evidence: import the Brutus Intrabar JSON, then import the newest
+            TradingView alert CSV.
           </p>
         </div>
         <div>
@@ -2758,8 +2758,9 @@ export default function BrutusTradeDeskPage() {
             Import the Brutus Intrabar export
           </h2>
           <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground">
-            Use the export from Brutus Intrabar Lab. This page will turn those
-            touches into plain trade decisions.
+            You can still export the Pine script from the top of this page to
+            set up TradingView alerts. Import the Brutus Intrabar Lab export
+            when you are ready to score those alerts against candle evidence.
           </p>
         </section>
       ) : (

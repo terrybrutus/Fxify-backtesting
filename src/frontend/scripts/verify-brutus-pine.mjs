@@ -660,6 +660,14 @@ const requiredTradeDeskSnippets = [
     text: "TradingView Setup Checklist",
   },
   {
+    label: "trade desk setup path starts with Pine export",
+    text: "Setting up TradingView: export the Pine script first.",
+  },
+  {
+    label: "trade desk review path starts with intrabar import",
+    text: "evidence: import the Brutus Intrabar JSON,",
+  },
+  {
     label: "trade desk ORIG parity setup step",
     text: "Grey ORIG markers should line up with the old Brutus triangles.",
   },
@@ -794,6 +802,10 @@ const requiredTradeDeskSnippets = [
   {
     label: "trade desk label map explains immediate enter",
     text: "Paper trade candidate. Take it immediately or skip it.",
+  },
+  {
+    label: "trade desk no-report state still allows Pine export",
+    text: "You can still export the Pine script from the top of this page",
   },
 ];
 
