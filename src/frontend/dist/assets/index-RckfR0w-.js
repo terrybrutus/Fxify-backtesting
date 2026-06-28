@@ -51115,6 +51115,19 @@ function TradingViewCapturePage() {
     const latestRawSignalAlerts = latestReviewedRows.filter(
       (row) => row.alert.rawSignal === true
     ).length;
+    const sourceCounts = latestReviewedRows.reduce(
+      (acc, row) => {
+        if (row.alert.originalTriangleSignal === true) {
+          acc.original += 1;
+        } else if (row.alert.latchedSignal === true) {
+          acc.liveLatch += 1;
+        } else {
+          acc.unknown += 1;
+        }
+        return acc;
+      },
+      { original: 0, liveLatch: 0, unknown: 0 }
+    );
     const latestMissingAlertTimeAlerts = latestReviewedRows.filter(
       (row) => row.alert.rawSignal === true && !row.alert.alertTime
     ).length;
@@ -51218,6 +51231,9 @@ function TradingViewCapturePage() {
       ] : [],
       ...incompleteAlerts ? [
         `${incompleteAlerts} latest Playbook alert(s) are missing required JSON fields: ${missingFieldSummary.join(", ")}.`
+      ] : [],
+      ...sourceCounts.liveLatch ? [
+        `${sourceCounts.liveLatch} latest alert(s) were live-latch only. Review these separately from old-triangle matches because historical replay cannot prove the exact first-touch moment.`
       ] : []
     ];
     const dataQuality = reviewedRows.length === 0 ? "empty" : playbookAlerts === 0 ? "legacy-only" : stalePlaybookAlerts > 0 ? "mixed-playbook-versions" : latestPlaybookAlerts === 0 ? "no-latest-playbook" : contractIssueAlerts > 0 ? "wrong-brutus-settings" : incompleteAlerts > 0 ? "incomplete" : matchCounts["no-data"] > reviewedRows.length / 2 ? "needs-candles" : "usable-paper-log";
@@ -51275,6 +51291,7 @@ function TradingViewCapturePage() {
       reviewQueue,
       dataQuality,
       rawSignalAlerts,
+      sourceCounts,
       confirmedAlerts,
       missingAlertTimeAlerts,
       lateAlertTimeAlerts,
@@ -51747,6 +51764,19 @@ function TradingViewCapturePage() {
           "Raw signals:",
           " ",
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground", children: paperSummary.rawSignalAlerts })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+          "Orig / live latch / unknown:",
+          " ",
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-cyan-300", children: paperSummary.sourceCounts.original }),
+          " ",
+          "/",
+          " ",
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-amber-300", children: paperSummary.sourceCounts.liveLatch }),
+          " ",
+          "/",
+          " ",
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground", children: paperSummary.sourceCounts.unknown })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
           "Paper marked:",
