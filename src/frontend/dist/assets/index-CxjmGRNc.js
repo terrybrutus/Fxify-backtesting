@@ -42277,7 +42277,7 @@ function displayDecision(decision) {
 function paperOutcomeLabel$1(outcome) {
   if (outcome === "paid") return "Paid";
   if (outcome === "failed") return "Failed";
-  if (outcome === "missed") return "Wait paid";
+  if (outcome === "missed") return "Would have paid";
   return "Unreviewed";
 }
 function paperOutcomeClass$1(outcome) {
@@ -42995,7 +42995,7 @@ function BrutusTradeDeskPage() {
       return "Tighten ENTER. Marked ENTER rows are failing too often.";
     }
     if (wait.missed >= 3 && wait.missed > enter.paid) {
-      return "Test a looser ENTER rule. WAIT rows are being marked as missed opportunities.";
+      return "Test a looser ENTER rule. WAIT rows are being marked as would-have-paid opportunities.";
     }
     if (enter.paid >= 5 && enter.paid > enter.failed) {
       return "Current ENTER rule is worth continued paper testing. Do not use real money yet.";
@@ -43071,7 +43071,7 @@ function BrutusTradeDeskPage() {
         ).slice(0, 5)
       },
       {
-        title: "WAIT rows that paid",
+        title: "WAIT rows that would have paid",
         tone: "text-amber-200",
         why: "If these keep working, ENTER is too strict.",
         rows: withOutcome.filter(
@@ -43087,7 +43087,7 @@ function BrutusTradeDeskPage() {
         ).slice(0, 5)
       },
       {
-        title: "DO NOT HOLD rows that paid",
+        title: "DO NOT HOLD rows that would have paid",
         tone: "text-fuchsia-200",
         why: "If these paid, the trap filter may be too harsh.",
         rows: withOutcome.filter(
@@ -43116,7 +43116,7 @@ function BrutusTradeDeskPage() {
       return "Replay failed ENTER rows first. If they really failed on TradingView, tighten the rule before paper-trading more.";
     }
     if (paperOutcomeCounts.byDecision.WAIT.missed > 0) {
-      return "Review WAIT rows marked Wait paid. If these keep working, the ENTER rule is too strict.";
+      return "Review WAIT rows marked Would have paid. If these keep working, the ENTER rule is too strict.";
     }
     if (alertCounts.enter > 0) {
       return "Paper-review ENTER rows next. The question is simple: did this work if taken immediately, or was it already too late?";
@@ -43612,7 +43612,7 @@ function BrutusTradeDeskPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg text-red-300", children: paperOutcomeCounts.failed })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-amber-300/40 p-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-muted-foreground", children: "Wait paid" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-muted-foreground", children: "Would have paid" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg text-amber-200", children: paperOutcomeCounts.missed })
           ] })
         ] }),
@@ -43630,7 +43630,7 @@ function BrutusTradeDeskPage() {
               "Mark this when an ENTER kept going against the trade before it paid."
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-amber-200", children: "Wait paid = skipped move worked." }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-amber-200", children: "Would have paid = skipped move worked." }),
               " ",
               "Mark this when WAIT/SKIP/DO NOT HOLD still would have paid."
             ] }),
@@ -43734,7 +43734,7 @@ function BrutusTradeDeskPage() {
               ] }),
               /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-amber-200", children: [
                 row.missed,
-                " wait paid"
+                " would have paid"
               ] })
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -50614,7 +50614,7 @@ function gateCountText(counts) {
   return `yes ${counts.yes} / no ${counts.no} / ? ${counts.unknown}`;
 }
 function paperOutcomeCountsText(counts) {
-  return `Paid ${counts.paid} / Failed ${counts.failed} / Missed ${counts.missed} / Open ${counts.unreviewed}`;
+  return `Paid ${counts.paid} / Failed ${counts.failed} / Would have paid ${counts.missed} / Open ${counts.unreviewed}`;
 }
 function emptyPaperOutcomeCounts() {
   return { unreviewed: 0, paid: 0, failed: 0, missed: 0 };
@@ -50625,7 +50625,7 @@ function plainRowInstruction(alert, review) {
     return `PAPER ENTER ${side}. Use the listed stop and target. Mark Paid or Failed after the move resolves.`;
   }
   if (review.status === "WAIT") {
-    return "WAIT. Do nothing now. Mark Missed only if it clearly paid without giving an ENTER.";
+    return "WAIT. Do nothing now. Mark Would have paid only if it clearly paid without giving an ENTER.";
   }
   if (review.status === "DO_NOT_HOLD") {
     return "DO NOT ENTER. Price is still pushing through the band. If paper-tracking, exit the idea.";
@@ -50635,7 +50635,7 @@ function plainRowInstruction(alert, review) {
 function paperOutcomeLabel(outcome) {
   if (outcome === "paid") return "Paid";
   if (outcome === "failed") return "Failed";
-  if (outcome === "missed") return "Missed";
+  if (outcome === "missed") return "Would have paid";
   return "Unreviewed";
 }
 function paperOutcomeClass(outcome) {
@@ -51055,7 +51055,7 @@ function TradingViewCapturePage() {
       {
         label: "Manual paper outcomes",
         passed: latestPlaybookAlerts >= 20 && reviewedOutcomeRows >= 10,
-        detail: `${reviewedOutcomeRows}/10 latest rows marked paid, failed, or missed`
+        detail: `${reviewedOutcomeRows}/10 latest rows marked paid, failed, or would have paid`
       }
     ];
     const readinessPassed = readinessChecks.filter((check) => check.passed).length;
@@ -51117,7 +51117,7 @@ function TradingViewCapturePage() {
     const enterOutcomes = paperOutcomeByDecision.ENTER;
     const waitOutcomes = paperOutcomeByDecision.WAIT;
     const trapOutcomes = paperOutcomeByDecision.DO_NOT_HOLD;
-    const outcomeRead = reviewedOutcomeRows < 10 ? "Not enough marked outcomes yet. Mark at least 10 latest rows before changing the rule." : enterOutcomes.failed >= 2 && enterOutcomes.failed >= enterOutcomes.paid ? "Tighten ENTER. Marked ENTER rows are failing too often." : waitOutcomes.missed >= 2 && waitOutcomes.missed > waitOutcomes.failed ? "Test a looser ENTER rule. WAIT rows are being marked as missed opportunities." : trapOutcomes.paid >= 2 && trapOutcomes.paid > trapOutcomes.failed ? "Keep the DO NOT HOLD filter. Marked trap rows are helping avoid bad holds." : enterOutcomes.paid >= 5 && enterOutcomes.paid > enterOutcomes.failed * 2 ? "Current ENTER rule is worth continued paper testing. Do not use real money yet." : "No rule change yet. Keep marking outcomes until one pattern is obvious.";
+    const outcomeRead = reviewedOutcomeRows < 10 ? "Not enough marked outcomes yet. Mark at least 10 latest rows before changing the rule." : enterOutcomes.failed >= 2 && enterOutcomes.failed >= enterOutcomes.paid ? "Tighten ENTER. Marked ENTER rows are failing too often." : waitOutcomes.missed >= 2 && waitOutcomes.missed > waitOutcomes.failed ? "Test a looser ENTER rule. WAIT rows are being marked as would-have-paid opportunities." : trapOutcomes.paid >= 2 && trapOutcomes.paid > trapOutcomes.failed ? "Keep the DO NOT HOLD filter. Marked trap rows are helping avoid bad holds." : enterOutcomes.paid >= 5 && enterOutcomes.paid > enterOutcomes.failed * 2 ? "Current ENTER rule is worth continued paper testing. Do not use real money yet." : "No rule change yet. Keep marking outcomes until one pattern is obvious.";
     return {
       generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
       totalAlerts: reviewedRows.length,
@@ -51521,7 +51521,7 @@ function TradingViewCapturePage() {
               paperSummary.paperOutcomeByDecision[status]
             ) })
           ] }, status)) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-xs text-muted-foreground", children: "If ENTER fails often, tighten the rule. If WAIT is often missed, the rule may be too strict. If DO NOT HOLD avoids failed moves, the trap filter is doing useful work." })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-xs text-muted-foreground", children: "If ENTER fails often, tighten the rule. If WAIT would have paid often, the rule may be too strict. If DO NOT HOLD avoids failed moves, the trap filter is doing useful work." })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 border border-border bg-background/40 p-3", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: "How to mark alerts" }),
@@ -51537,7 +51537,7 @@ function TradingViewCapturePage() {
               "Use this when the alert kept moving against the trade before it paid."
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-amber-200", children: "Wait paid = skipped move worked." }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-amber-200", children: "Would have paid = skipped move worked." }),
               " ",
               "Use this when WAIT, SKIP, or DO NOT HOLD would have paid."
             ] }),
@@ -51615,7 +51615,7 @@ function TradingViewCapturePage() {
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground", children: paperSummary.reviewedOutcomeRows })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-          "Paid / failed / missed:",
+          "Paid / failed / would have paid:",
           " ",
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lime-300", children: paperSummary.paperOutcomeCounts.paid }),
           " ",

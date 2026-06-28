@@ -1041,7 +1041,7 @@ function gateCountText(counts: GateCount) {
 }
 
 function paperOutcomeCountsText(counts: PaperOutcomeCounts) {
-  return `Paid ${counts.paid} / Failed ${counts.failed} / Missed ${counts.missed} / Open ${counts.unreviewed}`;
+  return `Paid ${counts.paid} / Failed ${counts.failed} / Would have paid ${counts.missed} / Open ${counts.unreviewed}`;
 }
 
 function emptyPaperOutcomeCounts(): PaperOutcomeCounts {
@@ -1059,7 +1059,7 @@ function plainRowInstruction(alert: TvAlert, review: BrutusReview) {
     return `PAPER ENTER ${side}. Use the listed stop and target. Mark Paid or Failed after the move resolves.`;
   }
   if (review.status === "WAIT") {
-    return "WAIT. Do nothing now. Mark Missed only if it clearly paid without giving an ENTER.";
+    return "WAIT. Do nothing now. Mark Would have paid only if it clearly paid without giving an ENTER.";
   }
   if (review.status === "DO_NOT_HOLD") {
     return "DO NOT ENTER. Price is still pushing through the band. If paper-tracking, exit the idea.";
@@ -1070,7 +1070,7 @@ function plainRowInstruction(alert: TvAlert, review: BrutusReview) {
 function paperOutcomeLabel(outcome: PaperOutcome) {
   if (outcome === "paid") return "Paid";
   if (outcome === "failed") return "Failed";
-  if (outcome === "missed") return "Missed";
+  if (outcome === "missed") return "Would have paid";
   return "Unreviewed";
 }
 
@@ -1581,7 +1581,7 @@ export default function TradingViewCapturePage() {
       {
         label: "Manual paper outcomes",
         passed: latestPlaybookAlerts >= 20 && reviewedOutcomeRows >= 10,
-        detail: `${reviewedOutcomeRows}/10 latest rows marked paid, failed, or missed`,
+        detail: `${reviewedOutcomeRows}/10 latest rows marked paid, failed, or would have paid`,
       },
     ];
     const readinessPassed = readinessChecks.filter((check) => check.passed).length;
@@ -1743,7 +1743,7 @@ export default function TradingViewCapturePage() {
             enterOutcomes.failed >= enterOutcomes.paid
           ? "Tighten ENTER. Marked ENTER rows are failing too often."
           : waitOutcomes.missed >= 2 && waitOutcomes.missed > waitOutcomes.failed
-            ? "Test a looser ENTER rule. WAIT rows are being marked as missed opportunities."
+            ? "Test a looser ENTER rule. WAIT rows are being marked as would-have-paid opportunities."
             : trapOutcomes.paid >= 2 && trapOutcomes.paid > trapOutcomes.failed
               ? "Keep the DO NOT HOLD filter. Marked trap rows are helping avoid bad holds."
               : enterOutcomes.paid >= 5 &&
@@ -2241,9 +2241,9 @@ export default function TradingViewCapturePage() {
               ))}
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              If ENTER fails often, tighten the rule. If WAIT is often missed,
-              the rule may be too strict. If DO NOT HOLD avoids failed moves,
-              the trap filter is doing useful work.
+              If ENTER fails often, tighten the rule. If WAIT would have paid
+              often, the rule may be too strict. If DO NOT HOLD avoids failed
+              moves, the trap filter is doing useful work.
             </p>
           </div>
           <div className="mt-3 border border-border bg-background/40 p-3">
@@ -2267,7 +2267,7 @@ export default function TradingViewCapturePage() {
               </p>
               <p>
                 <span className="font-mono text-amber-200">
-                  Wait paid = skipped move worked.
+                  Would have paid = skipped move worked.
                 </span>{" "}
                 Use this when WAIT, SKIP, or DO NOT HOLD would have paid.
               </p>
@@ -2368,7 +2368,7 @@ export default function TradingViewCapturePage() {
             </span>
           </p>
           <p>
-            Paid / failed / missed:{" "}
+            Paid / failed / would have paid:{" "}
             <span className="text-lime-300">
               {paperSummary.paperOutcomeCounts.paid}
             </span>{" "}
