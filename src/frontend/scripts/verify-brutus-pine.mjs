@@ -102,6 +102,22 @@ const requiredSnippets = [
     text: '"rawSignal":true',
   },
   {
+    label: "original triangle signal calculation",
+    text: "originalTriangleSignal = rawLongCondition or rawShortCondition",
+  },
+  {
+    label: "live latch signal calculation",
+    text: "latchedSignal = rawSignal and not originalTriangleSignal",
+  },
+  {
+    label: "original triangle signal JSON field",
+    text: '"originalTriangleSignal":" + str.tostring(originalTriangleSignal)',
+  },
+  {
+    label: "live latch signal JSON field",
+    text: '"latchedSignal":" + str.tostring(latchedSignal)',
+  },
+  {
     label: "decision event JSON field",
     text: '"decisionEvent":"',
   },
@@ -401,6 +417,14 @@ const requiredCaptureSnippets = [
     text: '"raw_long_condition"',
   },
   {
+    label: "original triangle signal CSV export",
+    text: '"original_triangle_signal"',
+  },
+  {
+    label: "latched signal CSV export",
+    text: '"latched_signal"',
+  },
+  {
     label: "new touch CSV export",
     text: '"new_long_touch"',
   },
@@ -576,6 +600,14 @@ const requiredCaptureSnippets = [
     label: "capture example uses current plain action",
     text: "PAPER BUY NOW. Skip if you are late.",
   },
+  {
+    label: "capture example includes original triangle signal",
+    text: '"originalTriangleSignal":true',
+  },
+  {
+    label: "capture table shows original signal source",
+    text: "orig formula now",
+  },
 ];
 
 const missingCapture = requiredCaptureSnippets.filter(
@@ -644,6 +676,14 @@ const requiredTradeDeskSnippets = [
     text: "rawShortCondition:",
   },
   {
+    label: "trade desk parses original triangle signal",
+    text: "originalTriangleSignal:",
+  },
+  {
+    label: "trade desk parses live latch signal",
+    text: "latchedSignal:",
+  },
+  {
     label: "trade desk parses first touch long",
     text: "newLongTouch:",
   },
@@ -677,7 +717,7 @@ const requiredTradeDeskSnippets = [
   },
   {
     label: "trade desk shows original/live gate summary",
-    text: "original ${boolWord(original)} | live ${boolWord(liveTouch)}",
+    text: "orig formula now",
   },
   {
     label: "trade desk compares Pine versus app decision",

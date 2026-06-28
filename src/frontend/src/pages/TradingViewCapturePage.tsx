@@ -16,6 +16,8 @@ type TvAlert = {
   rawShortSignal?: boolean;
   rawLongCondition?: boolean;
   rawShortCondition?: boolean;
+  originalTriangleSignal?: boolean;
+  latchedSignal?: boolean;
   newLongTouch?: boolean;
   newShortTouch?: boolean;
   signalConflict?: boolean;
@@ -120,7 +122,7 @@ type PaperOutcomeCounts = Record<PaperOutcome, number>;
 type EvidenceFilter = "latest" | "older" | "all";
 
 const LATEST_PLAYBOOK_VERSION = "raw-parity-v10";
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v10","rawSignal":true,"decisionEvent":"decision_change","previousAction":"WAIT","rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"PAPER BUY NOW. Skip if you are late.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v10","rawSignal":true,"originalTriangleSignal":true,"latchedSignal":false,"decisionEvent":"decision_change","previousAction":"WAIT","rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"PAPER BUY NOW. Skip if you are late.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
 
 const BRUTUS_STRATEGIES = new Set(["brutus_band", "brutus_playbook_v1"]);
 const BRUTUS_TIMEFRAMES = new Set([
@@ -275,6 +277,8 @@ function normalizePayload(raw: unknown): TvAlert {
     rawShortSignal: asBoolean(item.rawShortSignal),
     rawLongCondition: asBoolean(item.rawLongCondition),
     rawShortCondition: asBoolean(item.rawShortCondition),
+    originalTriangleSignal: asBoolean(item.originalTriangleSignal),
+    latchedSignal: asBoolean(item.latchedSignal),
     newLongTouch: asBoolean(item.newLongTouch),
     newShortTouch: asBoolean(item.newShortTouch),
     signalConflict: asBoolean(item.signalConflict),
@@ -373,6 +377,8 @@ function alertIdentity(alert: TvAlert) {
     alert.rawShortSignal ?? "",
     alert.rawLongCondition ?? "",
     alert.rawShortCondition ?? "",
+    alert.originalTriangleSignal ?? "",
+    alert.latchedSignal ?? "",
     alert.newLongTouch ?? "",
     alert.newShortTouch ?? "",
     alert.signalConflict ?? "",
@@ -1146,6 +1152,8 @@ function evidenceRowsToCsv(
     "raw_short_signal",
     "raw_long_condition",
     "raw_short_condition",
+    "original_triangle_signal",
+    "latched_signal",
     "new_long_touch",
     "new_short_touch",
     "signal_conflict",
@@ -1191,6 +1199,8 @@ function evidenceRowsToCsv(
       alert.rawShortSignal,
       alert.rawLongCondition,
       alert.rawShortCondition,
+      alert.originalTriangleSignal,
+      alert.latchedSignal,
       alert.newLongTouch,
       alert.newShortTouch,
       alert.signalConflict,
@@ -2798,6 +2808,17 @@ export default function TradingViewCapturePage() {
                           {alert.playbookVersion && (
                             <span className="block text-muted-foreground">
                               {alert.playbookVersion}
+                            </span>
+                          )}
+                          {(alert.originalTriangleSignal != null ||
+                            alert.latchedSignal != null) && (
+                            <span className="block text-cyan-300">
+                              source{" "}
+                              {alert.originalTriangleSignal
+                                ? "orig formula now"
+                                : alert.latchedSignal
+                                  ? "live latch"
+                                  : "not current orig"}
                             </span>
                           )}
                           {alert.decisionEvent && (

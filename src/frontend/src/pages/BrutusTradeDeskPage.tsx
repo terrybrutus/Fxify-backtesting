@@ -96,6 +96,8 @@ type TvAlert = {
   rawShortSignal?: boolean;
   rawLongCondition?: boolean;
   rawShortCondition?: boolean;
+  originalTriangleSignal?: boolean;
+  latchedSignal?: boolean;
   newLongTouch?: boolean;
   newShortTouch?: boolean;
   signalConflict?: boolean;
@@ -463,6 +465,12 @@ function normalizeAlertPayload(
       typeof item.rawShortCondition === "boolean"
         ? item.rawShortCondition
         : undefined,
+    originalTriangleSignal:
+      typeof item.originalTriangleSignal === "boolean"
+        ? item.originalTriangleSignal
+        : undefined,
+    latchedSignal:
+      typeof item.latchedSignal === "boolean" ? item.latchedSignal : undefined,
     newLongTouch:
       typeof item.newLongTouch === "boolean" ? item.newLongTouch : undefined,
     newShortTouch:
@@ -1179,6 +1187,8 @@ if rawShortCondition
 rawLongSignal = signalMode == "First touch" and barstate.isrealtime ? rawLongLatched : rawLongCondition
 rawShortSignal = signalMode == "First touch" and barstate.isrealtime ? rawShortLatched : rawShortCondition
 rawSignal = rawLongSignal or rawShortSignal
+originalTriangleSignal = rawLongCondition or rawShortCondition
+latchedSignal = rawSignal and not originalTriangleSignal
 signalConflict = rawLongSignal and rawShortSignal
 direction = signalConflict ? "both" : rawLongSignal ? "long" : rawShortSignal ? "short" : "none"
 mode = signalMode == "Confirmed close" ? "bar_close" : "first_touch"
@@ -1258,7 +1268,7 @@ if showAuditPanel and barstate.islast
     table.cell(auditPanel, 0, 5, "Check ORIG markers against old triangles first", text_color=color.yellow, bgcolor=color.new(color.black, 15))
     table.cell(auditPanel, 0, 6, "Open-bar ORIG can change until candle close", text_color=color.yellow, bgcolor=color.new(color.black, 15))
     table.cell(auditPanel, 0, 7, "Paper evidence only - not live-trade approval", text_color=color.orange, bgcolor=color.new(color.black, 15))
-message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v10\\",\\"rawSignal\\":true,\\"decisionEvent\\":\\"" + decisionEvent + "\\",\\"previousAction\\":\\"" + previousAction + "\\",\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"rawLongCondition\\":" + str.tostring(rawLongCondition) + ",\\"rawShortCondition\\":" + str.tostring(rawShortCondition) + ",\\"newLongTouch\\":" + str.tostring(newLongTouch) + ",\\"newShortTouch\\":" + str.tostring(newShortTouch) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"signalDirection\\":\\"" + direction + "\\",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"modeReady\\":" + str.tostring(modeReady) + ",\\"inSession\\":" + str.tostring(inSession) + ",\\"minutesIntoBar\\":" + str.tostring(minutesIntoBar) + ",\\"notTooEarly\\":" + str.tostring(notTooEarly) + ",\\"longSnapback\\":" + str.tostring(longSnapback) + ",\\"shortSnapback\\":" + str.tostring(shortSnapback) + ",\\"longPushThrough\\":" + str.tostring(longPushThrough) + ",\\"shortPushThrough\\":" + str.tostring(shortPushThrough) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + alertDirection + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"bandWidth\\":" + str.tostring(bandWidth) + ",\\"touchDepth\\":" + str.tostring(touchDepth) + ",\\"touchDepthRatio\\":" + str.tostring(touchDepthRatio) + ",\\"entry\\":" + entryJson + ",\\"stop\\":" + stopJson + ",\\"target\\":" + targetJson + ",\\"length\\":" + str.tostring(length) + ",\\"upperSource\\":\\"high\\",\\"lowerSource\\":\\"low\\",\\"stdDev\\":" + str.tostring(mult) + ",\\"reason\\":\\"" + reason + "\\"}"
+message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v10\\",\\"rawSignal\\":true,\\"originalTriangleSignal\\":" + str.tostring(originalTriangleSignal) + ",\\"latchedSignal\\":" + str.tostring(latchedSignal) + ",\\"decisionEvent\\":\\"" + decisionEvent + "\\",\\"previousAction\\":\\"" + previousAction + "\\",\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"rawLongCondition\\":" + str.tostring(rawLongCondition) + ",\\"rawShortCondition\\":" + str.tostring(rawShortCondition) + ",\\"newLongTouch\\":" + str.tostring(newLongTouch) + ",\\"newShortTouch\\":" + str.tostring(newShortTouch) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"signalDirection\\":\\"" + direction + "\\",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"modeReady\\":" + str.tostring(modeReady) + ",\\"inSession\\":" + str.tostring(inSession) + ",\\"minutesIntoBar\\":" + str.tostring(minutesIntoBar) + ",\\"notTooEarly\\":" + str.tostring(notTooEarly) + ",\\"longSnapback\\":" + str.tostring(longSnapback) + ",\\"shortSnapback\\":" + str.tostring(shortSnapback) + ",\\"longPushThrough\\":" + str.tostring(longPushThrough) + ",\\"shortPushThrough\\":" + str.tostring(shortPushThrough) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + alertDirection + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"bandWidth\\":" + str.tostring(bandWidth) + ",\\"touchDepth\\":" + str.tostring(touchDepth) + ",\\"touchDepthRatio\\":" + str.tostring(touchDepthRatio) + ",\\"entry\\":" + entryJson + ",\\"stop\\":" + stopJson + ",\\"target\\":" + targetJson + ",\\"length\\":" + str.tostring(length) + ",\\"upperSource\\":\\"high\\",\\"lowerSource\\":\\"low\\",\\"stdDev\\":" + str.tostring(mult) + ",\\"reason\\":\\"" + reason + "\\"}"
 
 if shouldAlert
     alert(message, alert.freq_all)
@@ -1376,11 +1386,17 @@ function alertGateSummary(alert: TvAlert) {
   const liveTouch = sideGateValue(alert, alert.rawLongSignal, alert.rawShortSignal);
   const snapback = sideGateValue(alert, alert.longSnapback, alert.shortSnapback);
   const push = sideGateValue(alert, alert.longPushThrough, alert.shortPushThrough);
+  const source =
+    alert.originalTriangleSignal === true
+      ? "orig formula now"
+      : alert.latchedSignal === true
+        ? "live latch"
+        : "unknown source";
   const minutes =
     alert.minutesIntoBar != null && Number.isFinite(alert.minutesIntoBar)
       ? `${alert.minutesIntoBar.toFixed(1)}m`
       : "?m";
-  return `original ${boolWord(original)} | live ${boolWord(liveTouch)} | session ${boolWord(alert.inSession)} | time ${boolWord(alert.notTooEarly)} (${minutes}) | snapback ${boolWord(snapback)} | push-through ${boolWord(push)}`;
+  return `${source} | original ${boolWord(original)} | live ${boolWord(liveTouch)} | session ${boolWord(alert.inSession)} | time ${boolWord(alert.notTooEarly)} (${minutes}) | snapback ${boolWord(snapback)} | push-through ${boolWord(push)}`;
 }
 
 function VerdictPill({ verdict }: { verdict: PlaybookVerdict }) {
