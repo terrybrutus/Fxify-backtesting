@@ -11,6 +11,7 @@ const BUNDLED_PROXY_FILE_NAMES = new Set([
   "yahoo_futures_proxy_latest.csv",
   "yahoo_futures_proxy_master.csv",
 ]);
+const BUNDLED_PROXY_NAME_PATTERN = /yahoo[_-]futures[_-]proxy/i;
 
 type StoredWorkspace = {
   candles: Array<Omit<Candle, "timestamp"> & { timestamp?: string }>;
@@ -77,8 +78,10 @@ function normalizeWorkspace(value: unknown): StoredWorkspace {
 }
 
 function isBundledProxyWorkspace(workspace: StoredWorkspace | null) {
-  return Boolean(
-    workspace?.fileName && BUNDLED_PROXY_FILE_NAMES.has(workspace.fileName),
+  if (!workspace?.fileName) return false;
+  return (
+    BUNDLED_PROXY_FILE_NAMES.has(workspace.fileName) ||
+    BUNDLED_PROXY_NAME_PATTERN.test(workspace.fileName)
   );
 }
 
