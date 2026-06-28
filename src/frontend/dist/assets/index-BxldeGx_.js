@@ -41963,8 +41963,19 @@ function loadPaperOutcomes$1() {
       return {};
     }
     return Object.fromEntries(
-      Object.entries(parsed).filter(
-        (entry) => ["unreviewed", "paid", "failed", "missed"].includes(String(entry[1]))
+      Object.entries(parsed).map(([key, value]) => {
+        const stored = String(value);
+        const normalized = stored === "paid" ? "worked" : stored === "missed" ? "would_have_worked" : stored;
+        return [key, normalized];
+      }).filter(
+        (entry) => [
+          "unreviewed",
+          "worked",
+          "failed",
+          "would_have_worked",
+          "avoided_loss",
+          "unclear"
+        ].includes(entry[1])
       )
     );
   } catch {
@@ -42325,15 +42336,18 @@ function displayDecision(decision) {
   return decision.replaceAll("_", " ");
 }
 function paperOutcomeLabel$1(outcome) {
-  if (outcome === "paid") return "Paid";
+  if (outcome === "worked") return "Worked";
   if (outcome === "failed") return "Failed";
-  if (outcome === "missed") return "Would have paid";
+  if (outcome === "would_have_worked") return "Would have worked";
+  if (outcome === "avoided_loss") return "Avoided loss";
+  if (outcome === "unclear") return "Unclear";
   return "Unreviewed";
 }
 function paperOutcomeClass$1(outcome) {
-  if (outcome === "paid") return "text-lime-300";
+  if (outcome === "worked") return "text-lime-300";
   if (outcome === "failed") return "text-red-300";
-  if (outcome === "missed") return "text-amber-200";
+  if (outcome === "would_have_worked") return "text-amber-200";
+  if (outcome === "avoided_loss") return "text-cyan-200";
   return "text-muted-foreground";
 }
 function timingLabelFor(touch) {
@@ -43053,20 +43067,28 @@ function BrutusTradeDeskPage() {
     [latestAlertMatches]
   );
   const paperOutcomeCounts = reactExports.useMemo(() => {
+    const emptyCounts = () => ({
+      unreviewed: 0,
+      worked: 0,
+      failed: 0,
+      would_have_worked: 0,
+      avoided_loss: 0,
+      unclear: 0
+    });
     const countsByDecision = {
-      ENTER: { unreviewed: 0, paid: 0, failed: 0, missed: 0 },
-      WAIT: { unreviewed: 0, paid: 0, failed: 0, missed: 0 },
-      SKIP: { unreviewed: 0, paid: 0, failed: 0, missed: 0 },
-      DO_NOT_HOLD: { unreviewed: 0, paid: 0, failed: 0, missed: 0 },
-      "NO DATA": { unreviewed: 0, paid: 0, failed: 0, missed: 0 }
+      ENTER: emptyCounts(),
+      WAIT: emptyCounts(),
+      SKIP: emptyCounts(),
+      DO_NOT_HOLD: emptyCounts(),
+      "NO DATA": emptyCounts()
     };
-    const totals = { unreviewed: 0, paid: 0, failed: 0, missed: 0 };
+    const totals = emptyCounts();
     for (const item of latestAlertMatches) {
       const outcome = paperOutcomes[paperOutcomeKey$1(item.alert)] ?? "unreviewed";
       totals[outcome] += 1;
       countsByDecision[item.status][outcome] += 1;
     }
-    const reviewed = totals.paid + totals.failed + totals.missed;
+    const reviewed = totals.worked + totals.failed + totals.would_have_worked + totals.avoided_loss + totals.unclear;
     return {
       ...totals,
       reviewed,
@@ -43078,20 +43100,28 @@ function BrutusTradeDeskPage() {
       return "No current Playbook alerts imported yet.";
     }
     if (paperOutcomeCounts.reviewed < 10) {
-      return "Mark at least 10 current alerts before changing the rule.";
+      return "keep collecting: mark at least 10 current alerts before changing the rule.";
     }
     const enter = paperOutcomeCounts.byDecision.ENTER;
     const wait = paperOutcomeCounts.byDecision.WAIT;
-    if (enter.failed > enter.paid && enter.failed >= 3) {
-      return "Tighten ENTER. Marked ENTER rows are failing too often.";
+    const skip = paperOutcomeCounts.byDecision.SKIP;
+    const doNotHold = paperOutcomeCounts.byDecision.DO_NOT_HOLD;
+    if (enter.failed > enter.worked && enter.failed >= 3) {
+      return "tighten ENTER: marked ENTER rows are failing too often.";
     }
-    if (wait.missed >= 3 && wait.missed > enter.paid) {
-      return "Test a looser ENTER rule. WAIT rows are being marked as would-have-paid opportunities.";
+    if (wait.would_have_worked + skip.would_have_worked >= 3 && wait.would_have_worked + skip.would_have_worked > enter.worked) {
+      return "loosen ENTER: WAIT/SKIP rows are being marked as would-have-worked opportunities.";
     }
-    if (enter.paid >= 5 && enter.paid > enter.failed) {
-      return "Current ENTER rule is worth continued paper testing. Do not use real money yet.";
+    if (enter.worked >= 5 && enter.worked > enter.failed) {
+      return "keep collecting: ENTER is worth continued paper review, not real money yet.";
     }
-    return "No rule change yet. Keep marking outcomes until one pattern is obvious.";
+    if (paperOutcomeCounts.failed >= paperOutcomeCounts.worked + paperOutcomeCounts.would_have_worked + paperOutcomeCounts.avoided_loss) {
+      return "rule currently not useful: marked rows are not showing enough useful behavior.";
+    }
+    if (skip.avoided_loss + doNotHold.avoided_loss >= 3) {
+      return "keep collecting: SKIP/DO NOT HOLD is avoiding some losses, but this is still paper evidence.";
+    }
+    return "keep collecting: no obvious rule change yet.";
   }, [latestAlertMatches.length, paperOutcomeCounts]);
   const agreementCounts = reactExports.useMemo(
     () => ({
@@ -43129,9 +43159,11 @@ function BrutusTradeDeskPage() {
         different: 0,
         pineOnly: 0,
         noData: 0,
-        paid: 0,
+        worked: 0,
         failed: 0,
-        missed: 0,
+        wouldHaveWorked: 0,
+        avoidedLoss: 0,
+        unclear: 0,
         reviewed: 0,
         latestAlertTime: 0
       };
@@ -43147,9 +43179,11 @@ function BrutusTradeDeskPage() {
       current.pineOnly += item.agreement === "PINE ONLY" ? 1 : 0;
       current.noData += item.agreement === "NO DATA" ? 1 : 0;
       const outcome = paperOutcomes[paperOutcomeKey$1(item.alert)] ?? "unreviewed";
-      current.paid += outcome === "paid" ? 1 : 0;
+      current.worked += outcome === "worked" ? 1 : 0;
       current.failed += outcome === "failed" ? 1 : 0;
-      current.missed += outcome === "missed" ? 1 : 0;
+      current.wouldHaveWorked += outcome === "would_have_worked" ? 1 : 0;
+      current.avoidedLoss += outcome === "avoided_loss" ? 1 : 0;
+      current.unclear += outcome === "unclear" ? 1 : 0;
       current.reviewed += outcome !== "unreviewed" ? 1 : 0;
       const alertTime = typeof item.alert.alertTime === "number" ? item.alert.alertTime : item.alert.candleTime ?? 0;
       current.latestAlertTime = Math.max(current.latestAlertTime, alertTime);
@@ -43174,11 +43208,11 @@ function BrutusTradeDeskPage() {
         ).slice(0, 5)
       },
       {
-        title: "WAIT rows that would have paid",
+        title: "WAIT rows that would have worked",
         tone: "text-amber-200",
         why: "If these keep working, ENTER is too strict.",
         rows: withOutcome.filter(
-          ({ item, outcome }) => item.status === "WAIT" && outcome === "missed"
+          ({ item, outcome }) => item.status === "WAIT" && outcome === "would_have_worked"
         ).slice(0, 5)
       },
       {
@@ -43190,11 +43224,19 @@ function BrutusTradeDeskPage() {
         ).slice(0, 5)
       },
       {
-        title: "DO NOT HOLD rows that would have paid",
-        tone: "text-fuchsia-200",
-        why: "If these paid, the trap filter may be too harsh.",
+        title: "SKIP rows that avoided losses",
+        tone: "text-cyan-200",
+        why: "If these avoided losses, the filter is doing useful work.",
         rows: withOutcome.filter(
-          ({ item, outcome }) => item.status === "DO_NOT_HOLD" && outcome === "paid"
+          ({ item, outcome }) => item.status === "SKIP" && outcome === "avoided_loss"
+        ).slice(0, 5)
+      },
+      {
+        title: "SKIP rows that missed good trades",
+        tone: "text-amber-200",
+        why: "If these would have worked, the filter may be too strict.",
+        rows: withOutcome.filter(
+          ({ item, outcome }) => item.status === "SKIP" && outcome === "would_have_worked"
         ).slice(0, 5)
       }
     ];
@@ -43224,14 +43266,14 @@ function BrutusTradeDeskPage() {
     if (paperOutcomeCounts.byDecision.ENTER.failed > 0) {
       return "Replay failed ENTER rows first. If they really failed on TradingView, tighten the rule before paper-trading more.";
     }
-    if (paperOutcomeCounts.byDecision.WAIT.missed > 0) {
-      return "Review WAIT rows marked Would have paid. If these keep working, the ENTER rule is too strict.";
+    if (paperOutcomeCounts.byDecision.WAIT.would_have_worked > 0) {
+      return "Review WAIT rows marked Would have worked. If these keep working, the ENTER rule is too strict.";
     }
     if (alertCounts.enter > 0) {
       return "Paper-review ENTER rows next. The question is simple: did this work if taken immediately, or was it already too late?";
     }
     if (alertCounts.wait > 0) {
-      return "Review WAIT rows that still paid. If too many WAIT rows work, the entry rule is too strict.";
+      return "Review WAIT rows that still worked. If too many WAIT rows work, the entry rule is too strict.";
     }
     return "No entry evidence yet. Keep collecting alerts; do not force a trade from this batch.";
   }, [
@@ -43305,7 +43347,7 @@ function BrutusTradeDeskPage() {
         title: "Paper review only",
         body: "This batch has ENTER candidates and no setup-blocking import problem.",
         evidence: "That means the evidence loop is usable; it does not mean the strategy is profitable yet.",
-        action: "Replay ENTER rows first and mark Paid or Failed. Real money still waits."
+        action: "Replay ENTER rows first and mark Worked, Failed, or Unclear. Real money still waits."
       };
     }
     return {
@@ -43313,7 +43355,7 @@ function BrutusTradeDeskPage() {
       title: "No trade call in this batch",
       body: "The current alerts did not produce an ENTER candidate.",
       evidence: "That can be correct behavior if the move was late, noisy, or not enough like the tested buckets.",
-      action: "Keep collecting alerts and review WAIT rows only if they repeatedly would have paid."
+      action: "Keep collecting alerts and review WAIT rows only if they repeatedly would have worked."
     };
   }, [
     agreementCounts,
@@ -43568,6 +43610,40 @@ function BrutusTradeDeskPage() {
           ]
         }
       )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 border border-primary/50 bg-primary/5 p-4 md:grid-cols-4", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-primary", children: "1. File Imported" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-foreground", children: alertImportResult ? `${alertImportResult.files} alert file(s), ${alertImportResult.current} current Playbook rows` : "No TradingView alert file imported in this session." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: "Old or legacy alerts stay visible, but they are not the main review set." })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-primary", children: "2. Alerts That Matter" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-2 text-sm text-foreground", children: [
+          "Review current Playbook rows first: ",
+          alertCounts.enter,
+          " ENTER,",
+          " ",
+          alertCounts.wait,
+          " WAIT, ",
+          alertCounts.skip,
+          " SKIP,",
+          " ",
+          alertCounts.doNotHold,
+          " DO NOT HOLD."
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: "MATCH rows are strongest. DIFFERENT, PINE ONLY, and NO DATA rows are visual review only." })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-primary", children: "3. Review Next" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-foreground", children: alertReviewInstruction }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: "Mark rows as Worked, Failed, Would have worked, Avoided loss, or Unclear." })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-primary", children: "4. Today's Status" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm font-bold text-foreground", children: plainEvidenceVerdict.title }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: paperOutcomeRead })
+      ] })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 md:grid-cols-5", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
@@ -43877,40 +43953,49 @@ function BrutusTradeDeskPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg text-foreground", children: paperOutcomeCounts.reviewed })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-lime-400/40 p-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-muted-foreground", children: "Paid" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg text-lime-300", children: paperOutcomeCounts.paid })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-muted-foreground", children: "Worked" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg text-lime-300", children: paperOutcomeCounts.worked })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-red-500/40 p-2", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-muted-foreground", children: "Failed" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg text-red-300", children: paperOutcomeCounts.failed })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-amber-300/40 p-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-muted-foreground", children: "Would have paid" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg text-amber-200", children: paperOutcomeCounts.missed })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-muted-foreground", children: "Would have worked" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg text-amber-200", children: paperOutcomeCounts.would_have_worked })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-cyan-300/40 p-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-muted-foreground", children: "Avoided loss" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg text-cyan-200", children: paperOutcomeCounts.avoided_loss })
           ] })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "md:col-span-2", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-sm font-bold", children: "How to mark rows" }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-2 grid gap-2 text-xs text-muted-foreground md:grid-cols-2", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-lime-300", children: "Paid = ENTER worked." }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-lime-300", children: "Worked = the alert did what it was supposed to do." }),
               " ",
-              "Mark this only when an ENTER would have paid if taken right away."
+              "Mark this when ENTER paid or when SKIP/DO NOT HOLD correctly avoided the bad move."
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-red-300", children: "Failed = ENTER failed." }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-red-300", children: "Failed = the alert was wrong." }),
               " ",
-              "Mark this when an ENTER kept going against the trade before it paid."
+              "Mark this when ENTER moved against the trade or a SKIP kept you out of a good trade."
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-amber-200", children: "Would have paid = skipped move worked." }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-amber-200", children: "Would have worked = WAIT/SKIP missed a good move." }),
               " ",
-              "Mark this when WAIT/SKIP/DO NOT HOLD still would have paid."
+              "Mark this when the app did not say ENTER, but the trade clearly would have worked."
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-foreground", children: "Unreviewed = not checked yet." }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-cyan-200", children: "Avoided loss = skipping saved you." }),
               " ",
-              "Leave it alone until you replay or inspect it on TradingView."
+              "Mark this when SKIP or DO NOT HOLD kept you out of a bad move."
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-muted-foreground", children: "Unclear = not enough evidence." }),
+              " ",
+              "Use this when replay is messy. Leave blank when unchecked."
             ] })
           ] })
         ] })
@@ -43919,7 +44004,7 @@ function BrutusTradeDeskPage() {
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-start justify-between gap-2", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-sm font-bold", children: "Paper review queue" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: "This is where the rule improves: failed ENTERs tighten the rule, paid WAITs loosen it, and unreviewed ENTERs get checked before anything else." })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: "This is where the rule improves: failed ENTERs tighten the rule, would-have-worked WAITs loosen it, and unreviewed ENTERs get checked before anything else." })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs text-muted-foreground", children: "Current Playbook only" })
         ] }),
@@ -44025,16 +44110,20 @@ function BrutusTradeDeskPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-2 py-2 text-lime-300", children: row.match }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-lime-300", children: [
-                row.paid,
-                " paid"
+                row.worked,
+                " worked"
               ] }),
               /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-red-300", children: [
                 row.failed,
                 " failed"
               ] }),
               /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-amber-200", children: [
-                row.missed,
-                " would have paid"
+                row.wouldHaveWorked,
+                " would have worked"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-cyan-200", children: [
+                row.avoidedLoss,
+                " avoided loss"
               ] })
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -44142,18 +44231,22 @@ function BrutusTradeDeskPage() {
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2", children: [
                   /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: paperOutcomeClass$1(outcome), children: paperOutcomeLabel$1(outcome) }),
                   canMark ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-2 flex flex-wrap gap-1", children: [
-                    ["paid", "failed", "missed"].map(
-                      (nextOutcome) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "button",
-                        {
-                          className: outcome === nextOutcome ? "border border-primary bg-primary px-2 py-1 text-primary-foreground" : "border border-border px-2 py-1 text-muted-foreground hover:border-primary hover:text-foreground",
-                          onClick: () => markPaperOutcome(item.alert, nextOutcome),
-                          type: "button",
-                          children: paperOutcomeLabel$1(nextOutcome)
-                        },
-                        nextOutcome
-                      )
-                    ),
+                    [
+                      "worked",
+                      "failed",
+                      "would_have_worked",
+                      "avoided_loss",
+                      "unclear"
+                    ].map((nextOutcome) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "button",
+                      {
+                        className: outcome === nextOutcome ? "border border-primary bg-primary px-2 py-1 text-primary-foreground" : "border border-border px-2 py-1 text-muted-foreground hover:border-primary hover:text-foreground",
+                        onClick: () => markPaperOutcome(item.alert, nextOutcome),
+                        type: "button",
+                        children: paperOutcomeLabel$1(nextOutcome)
+                      },
+                      nextOutcome
+                    )),
                     outcome !== "unreviewed" && /* @__PURE__ */ jsxRuntimeExports.jsx(
                       "button",
                       {
