@@ -78,6 +78,9 @@ type ImportResult = {
   added: number;
   duplicates: number;
   total: number;
+  sourceRows: number;
+  usableAlerts: number;
+  ignoredRows: number;
   latestPlaybook: number;
   oldPlaybook: number;
   legacy: number;
@@ -412,7 +415,11 @@ function paperOutcomeKey(alert: TvAlert) {
   ].join("|");
 }
 
-function mergeAlerts(incoming: TvAlert[], current: TvAlert[]) {
+function mergeAlerts(
+  incoming: TvAlert[],
+  current: TvAlert[],
+  importSourceRows = incoming.length,
+) {
   const seen = new Set(current.map(alertIdentity));
   const uniqueIncoming: TvAlert[] = [];
   let duplicates = 0;
@@ -431,6 +438,9 @@ function mergeAlerts(incoming: TvAlert[], current: TvAlert[]) {
       added: uniqueIncoming.length,
       duplicates,
       total: current.length + uniqueIncoming.length,
+      sourceRows: importSourceRows,
+      usableAlerts: incoming.length,
+      ignoredRows: Math.max(0, importSourceRows - incoming.length),
       latestPlaybook: uniqueIncoming.filter(isLatestPlaybookAlert).length,
       oldPlaybook: uniqueIncoming.filter(
         (alert) => isPlaybookAlert(alert) && !isLatestPlaybookAlert(alert),
@@ -483,6 +493,17 @@ function parseCsvRecords(text: string) {
   row.push(current);
   if (row.some((cell) => cell.trim() !== "")) records.push(row);
   return records;
+}
+
+function countSourceRows(text: string) {
+  const trimmed = text.trim();
+  if (!trimmed) return 0;
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) return 1;
+
+  const records = parseCsvRecords(trimmed);
+  if (records.length > 1) return records.length - 1;
+
+  return trimmed.split(/\r?\n/).filter((line) => line.trim()).length;
 }
 
 function possibleJsonFragments(value: string) {
@@ -1818,7 +1839,7 @@ export default function TradingViewCapturePage() {
   function addPayloads(text: string) {
     try {
       const parsed = parsePayloadText(text);
-      const merged = mergeAlerts(parsed, alerts);
+      const merged = mergeAlerts(parsed, alerts, countSourceRows(text));
       setAlerts(merged.alerts);
       saveAlerts(merged.alerts);
       setImportResult(merged.result);
@@ -1838,7 +1859,11 @@ export default function TradingViewCapturePage() {
         Array.from(files).map((file) => file.text()),
       );
       const parsed = texts.flatMap((text) => parsePayloadText(text));
-      const merged = mergeAlerts(parsed, alerts);
+      const sourceRows = texts.reduce(
+        (total, text) => total + countSourceRows(text),
+        0,
+      );
+      const merged = mergeAlerts(parsed, alerts, sourceRows);
       setAlerts(merged.alerts);
       saveAlerts(merged.alerts);
       setImportResult(merged.result);
@@ -1924,6 +1949,11 @@ export default function TradingViewCapturePage() {
                   {alerts.length}
                 </span>
                 .
+              </p>
+              <p className="mt-1 font-mono text-xs">
+                Source rows {importResult.sourceRows} | Usable alert JSON{" "}
+                {importResult.usableAlerts} | Ignored rows{" "}
+                {importResult.ignoredRows}
               </p>
               <p className="mt-1 font-mono text-xs">
                 Latest Playbook {importResult.latestPlaybook} | Old Playbook{" "}

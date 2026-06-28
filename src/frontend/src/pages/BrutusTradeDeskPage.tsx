@@ -147,7 +147,9 @@ type AlertDecisionMatch = {
 
 type AlertImportResult = {
   files: number;
+  sourceRows: number;
   parsed: number;
+  ignoredRows: number;
   added: number;
   duplicates: number;
   current: number;
@@ -341,6 +343,17 @@ function parseCsvRecords(text: string) {
   row.push(current);
   if (row.some((cell) => cell.trim() !== "")) records.push(row);
   return records;
+}
+
+function countSourceRows(text: string) {
+  const trimmed = text.trim();
+  if (!trimmed) return 0;
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) return 1;
+
+  const records = parseCsvRecords(trimmed);
+  if (records.length > 1) return records.length - 1;
+
+  return trimmed.split(/\r?\n/).filter((line) => line.trim()).length;
 }
 
 function normalizeTimeframe(value?: string) {
@@ -1830,6 +1843,10 @@ export default function BrutusTradeDeskPage() {
         selectedFiles.map(async (file) => file.text()),
       );
       const parsed = texts.flatMap((text) => parseAlertLog(text));
+      const sourceRows = texts.reduce(
+        (total, text) => total + countSourceRows(text),
+        0,
+      );
       if (!parsed.length) {
         if (texts.some(isNamedAlertConditionExport)) {
           throw new Error(WRONG_TRADINGVIEW_ALERT_TYPE_MESSAGE);
@@ -1845,7 +1862,9 @@ export default function BrutusTradeDeskPage() {
       const duplicates = Math.max(0, parsed.length - added);
       const result: AlertImportResult = {
         files: selectedFiles.length,
+        sourceRows,
         parsed: parsed.length,
+        ignoredRows: Math.max(0, sourceRows - parsed.length),
         added,
         duplicates,
         current: parsed.filter(isLatestPlaybookAlert).length,
@@ -1971,11 +1990,31 @@ export default function BrutusTradeDeskPage() {
       )}
 
       {alertImportResult && !error && (
-        <section className="grid gap-2 border border-cyan-500/40 bg-cyan-500/5 p-3 font-mono text-xs md:grid-cols-5">
+        <section className="grid gap-2 border border-cyan-500/40 bg-cyan-500/5 p-3 font-mono text-xs md:grid-cols-6">
           <span>
             Alert files:{" "}
             <strong className="text-foreground">
               {alertImportResult.files}
+            </strong>
+          </span>
+          <span>
+            Source / usable / ignored:{" "}
+            <strong className="text-foreground">
+              {alertImportResult.sourceRows}
+            </strong>{" "}
+            /{" "}
+            <strong className="text-cyan-200">
+              {alertImportResult.parsed}
+            </strong>{" "}
+            /{" "}
+            <strong
+              className={
+                alertImportResult.ignoredRows > 0
+                  ? "text-amber-200"
+                  : "text-muted-foreground"
+              }
+            >
+              {alertImportResult.ignoredRows}
             </strong>
           </span>
           <span>

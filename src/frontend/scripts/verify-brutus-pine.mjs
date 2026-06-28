@@ -357,6 +357,14 @@ const requiredCaptureSnippets = [
     text: "{importResult.contractIssues}",
   },
   {
+    label: "TradingView source row import count",
+    text: "Source rows {importResult.sourceRows}",
+  },
+  {
+    label: "TradingView ignored row import count",
+    text: "{importResult.ignoredRows}",
+  },
+  {
     label: "multiple file input",
     text: "multiple",
   },
@@ -578,6 +586,14 @@ const requiredTradeDeskSnippets = [
   {
     label: "trade desk parses embedded JSON fragments",
     text: "function possibleJsonFragments(value: string)",
+  },
+  {
+    label: "Trade Desk alert source row import count",
+    text: "{alertImportResult.sourceRows}",
+  },
+  {
+    label: "Trade Desk alert ignored row import count",
+    text: "{alertImportResult.ignoredRows}",
   },
   {
     label: "trade desk tolerant CSV header normalization",
