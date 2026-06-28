@@ -50,6 +50,38 @@ const requiredSnippets = [
     text: "lowerSrc = low",
   },
   {
+    label: "original upper EMA basis",
+    text: "upperBasis = ta.ema(upperSrc, length)",
+  },
+  {
+    label: "original lower EMA basis",
+    text: "lowerBasis = ta.ema(lowerSrc, length)",
+  },
+  {
+    label: "original upper standard deviation",
+    text: "upperDev = mult * ta.stdev(upperSrc, length)",
+  },
+  {
+    label: "original lower standard deviation",
+    text: "lowerDev = mult * ta.stdev(lowerSrc, length)",
+  },
+  {
+    label: "original upper band formula",
+    text: "upper = upperBasis + upperDev",
+  },
+  {
+    label: "original lower band formula",
+    text: "lower = lowerBasis - lowerDev",
+  },
+  {
+    label: "original upper band plot",
+    text: 'plot(upper, "Upper", color=color.gray, linewidth=1)',
+  },
+  {
+    label: "original lower band plot",
+    text: 'plot(lower, "Lower", color=color.gray, linewidth=1)',
+  },
+  {
     label: "per-side alert latch",
     text: "varip bool alertedShortThisBar = false",
   },
