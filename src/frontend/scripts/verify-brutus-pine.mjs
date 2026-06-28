@@ -445,16 +445,16 @@ const requiredCaptureSnippets = [
     text: "Failed = ENTER failed.",
   },
   {
-    label: "capture wait paid plain definition",
-    text: "Wait paid = skipped move worked.",
+    label: "capture would-have-paid plain definition",
+    text: "Would have paid = skipped move worked.",
   },
   {
     label: "outcomes grouped by Playbook decision",
     text: "paperOutcomeByDecision",
   },
   {
-    label: "WAIT missed guidance",
-    text: "If WAIT is often missed",
+    label: "WAIT would-have-paid guidance",
+    text: "If WAIT would have paid",
   },
   {
     label: "DO NOT HOLD trap filter guidance",
@@ -470,7 +470,7 @@ const requiredCaptureSnippets = [
   },
   {
     label: "loosen ENTER recommendation",
-    text: "Test a looser ENTER rule. WAIT rows are being marked as missed opportunities.",
+    text: "Test a looser ENTER rule. WAIT rows are being marked as would-have-paid opportunities.",
   },
   {
     label: "not enough outcomes recommendation",
@@ -748,8 +748,8 @@ const requiredTradeDeskSnippets = [
     text: "Failed = ENTER failed.",
   },
   {
-    label: "trade desk wait paid plain definition",
-    text: "Wait paid = skipped move worked.",
+    label: "trade desk would-have-paid plain definition",
+    text: "Would have paid = skipped move worked.",
   },
   {
     label: "trade desk paper review queue",
@@ -760,16 +760,16 @@ const requiredTradeDeskSnippets = [
     text: "Failed ENTER rows",
   },
   {
-    label: "trade desk paid wait queue",
-    text: "WAIT rows that paid",
+    label: "trade desk would-have-paid wait queue",
+    text: "WAIT rows that would have paid",
   },
   {
     label: "trade desk unreviewed enter queue",
     text: "Unreviewed ENTER rows",
   },
   {
-    label: "trade desk wait paid outcome",
-    text: "Wait paid",
+    label: "trade desk would-have-paid outcome",
+    text: "Would have paid",
   },
   {
     label: "trade desk exports paper outcome read",

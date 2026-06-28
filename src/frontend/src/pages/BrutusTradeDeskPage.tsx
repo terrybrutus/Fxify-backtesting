@@ -687,7 +687,7 @@ function displayDecision(decision: Decision | "NO DATA") {
 function paperOutcomeLabel(outcome: PaperOutcome) {
   if (outcome === "paid") return "Paid";
   if (outcome === "failed") return "Failed";
-  if (outcome === "missed") return "Wait paid";
+  if (outcome === "missed") return "Would have paid";
   return "Unreviewed";
 }
 
@@ -1580,7 +1580,7 @@ export default function BrutusTradeDeskPage() {
       return "Tighten ENTER. Marked ENTER rows are failing too often.";
     }
     if (wait.missed >= 3 && wait.missed > enter.paid) {
-      return "Test a looser ENTER rule. WAIT rows are being marked as missed opportunities.";
+      return "Test a looser ENTER rule. WAIT rows are being marked as would-have-paid opportunities.";
     }
     if (enter.paid >= 5 && enter.paid > enter.failed) {
       return "Current ENTER rule is worth continued paper testing. Do not use real money yet.";
@@ -1676,7 +1676,7 @@ export default function BrutusTradeDeskPage() {
           .slice(0, 5),
       },
       {
-        title: "WAIT rows that paid",
+        title: "WAIT rows that would have paid",
         tone: "text-amber-200",
         why: "If these keep working, ENTER is too strict.",
         rows: withOutcome
@@ -1698,7 +1698,7 @@ export default function BrutusTradeDeskPage() {
           .slice(0, 5),
       },
       {
-        title: "DO NOT HOLD rows that paid",
+        title: "DO NOT HOLD rows that would have paid",
         tone: "text-fuchsia-200",
         why: "If these paid, the trap filter may be too harsh.",
         rows: withOutcome
@@ -1731,7 +1731,7 @@ export default function BrutusTradeDeskPage() {
       return "Replay failed ENTER rows first. If they really failed on TradingView, tighten the rule before paper-trading more.";
     }
     if (paperOutcomeCounts.byDecision.WAIT.missed > 0) {
-      return "Review WAIT rows marked Wait paid. If these keep working, the ENTER rule is too strict.";
+      return "Review WAIT rows marked Would have paid. If these keep working, the ENTER rule is too strict.";
     }
     if (alertCounts.enter > 0) {
       return "Paper-review ENTER rows next. The question is simple: did this work if taken immediately, or was it already too late?";
@@ -2383,7 +2383,7 @@ export default function BrutusTradeDeskPage() {
               </span>
             </div>
             <div className="border border-amber-300/40 p-2">
-              <span className="block text-muted-foreground">Wait paid</span>
+              <span className="block text-muted-foreground">Would have paid</span>
               <span className="text-lg text-amber-200">
                 {paperOutcomeCounts.missed}
               </span>
@@ -2408,7 +2408,7 @@ export default function BrutusTradeDeskPage() {
               </p>
               <p>
                 <span className="font-mono text-amber-200">
-                  Wait paid = skipped move worked.
+                  Would have paid = skipped move worked.
                 </span>{" "}
                 Mark this when WAIT/SKIP/DO NOT HOLD still would have paid.
               </p>
@@ -2543,7 +2543,7 @@ export default function BrutusTradeDeskPage() {
                           {row.failed} failed
                         </span>
                         <span className="block text-amber-200">
-                          {row.missed} wait paid
+                          {row.missed} would have paid
                         </span>
                       </td>
                       <td
