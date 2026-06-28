@@ -557,6 +557,34 @@ const requiredCaptureSnippets = [
     text: "Latest Playbook can produce more than one alert",
   },
   {
+    label: "capture import usability type",
+    text: "type ImportUsabilityVerdict",
+  },
+  {
+    label: "capture exact usable verdict",
+    text: '"usable for paper review"',
+  },
+  {
+    label: "capture exact partially usable verdict",
+    text: '"partially usable"',
+  },
+  {
+    label: "capture exact not usable verdict",
+    text: '"not usable"',
+  },
+  {
+    label: "capture import usability panel",
+    text: "Import usability",
+  },
+  {
+    label: "capture import usability reasons",
+    text: "importUsabilityReasons",
+  },
+  {
+    label: "capture import verdict avoids profit claim",
+    text: "This verdict only judges whether the uploaded alert file is clean",
+  },
+  {
     label: "capture detects named alertcondition exports",
     text: "function isNamedAlertConditionExport(text: string)",
   },

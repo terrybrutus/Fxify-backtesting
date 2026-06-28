@@ -120,6 +120,10 @@ type PaperOutcome = "unreviewed" | "paid" | "failed" | "missed";
 type PaperOutcomeCounts = Record<PaperOutcome, number>;
 
 type EvidenceFilter = "latest" | "older" | "all";
+type ImportUsabilityVerdict =
+  | "usable for paper review"
+  | "partially usable"
+  | "not usable";
 
 const LATEST_PLAYBOOK_VERSION = "raw-parity-v11";
 const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v11","rawSignal":true,"originalTriangleSignal":true,"latchedSignal":false,"decisionEvent":"decision_change","previousAction":"WAIT","rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"PAPER BUY NOW. Skip if you are late.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
@@ -1743,6 +1747,62 @@ export default function TradingViewCapturePage() {
                   : matchCounts["no-data"] > reviewedRows.length / 2
                     ? "needs-candles"
                     : "usable-paper-log";
+    const importUsability: ImportUsabilityVerdict =
+      reviewedRows.length === 0 ||
+      playbookAlerts === 0 ||
+      latestPlaybookAlerts === 0 ||
+      contractIssueAlerts > 0 ||
+      incompleteAlerts > 0
+        ? "not usable"
+        : stalePlaybookAlerts > 0 ||
+            legacyAlerts > 0 ||
+            matchCounts["no-data"] > reviewedRows.length / 2
+          ? "partially usable"
+          : "usable for paper review";
+    const importUsabilityReasons = [
+      ...(reviewedRows.length === 0
+        ? ["No alerts are imported yet."]
+        : []),
+      ...(playbookAlerts === 0 && reviewedRows.length > 0
+        ? ["No current Playbook JSON alerts were found."]
+        : []),
+      ...(latestPlaybookAlerts === 0 && playbookAlerts > 0
+        ? [`No ${LATEST_PLAYBOOK_VERSION} alerts were found.`]
+        : []),
+      ...(stalePlaybookAlerts > 0
+        ? [`${stalePlaybookAlerts} older Playbook alert(s) are ignored.`]
+        : []),
+      ...(legacyAlerts > 0
+        ? [`${legacyAlerts} legacy/non-Playbook alert(s) are ignored.`]
+        : []),
+      ...(contractIssueAlerts > 0
+        ? [
+            `${contractIssueAlerts} latest alert(s) do not prove length 9, high/low sources, and StdDev 2.`,
+          ]
+        : []),
+      ...(incompleteAlerts > 0
+        ? [`${incompleteAlerts} latest alert(s) are missing required fields.`]
+        : []),
+      ...(matchCounts["no-data"] > reviewedRows.length / 2 &&
+      reviewedRows.length > 0
+        ? [
+            "Most rows have no matching app candle. Use TradingView as truth for those rows.",
+          ]
+        : []),
+      ...(importResult?.duplicates
+        ? [`${importResult.duplicates} duplicate row(s) were skipped.`]
+        : []),
+      ...(importResult?.ignoredRows
+        ? [
+            `${importResult.ignoredRows} source row(s) did not contain usable Playbook JSON.`,
+          ]
+        : []),
+    ];
+    if (importUsabilityReasons.length === 0) {
+      importUsabilityReasons.push(
+        "Latest Playbook JSON rows are clean enough for paper review.",
+      );
+    }
     const rawSignalAlerts = reviewedRows.filter(
       (row) => row.alert.rawSignal === true,
     ).length;
@@ -1845,6 +1905,8 @@ export default function TradingViewCapturePage() {
       evidenceNeed,
       reviewQueue,
       dataQuality,
+      importUsability,
+      importUsabilityReasons,
       rawSignalAlerts,
       sourceCounts,
       confirmedAlerts,
@@ -1861,7 +1923,7 @@ export default function TradingViewCapturePage() {
       topEvents: topBreakdownRows(byEvent),
       topPierce: topBreakdownRows(byPierce),
     };
-  }, [latestReviewedRows, paperOutcomes, reviewCounts, reviewedRows]);
+  }, [importResult, latestReviewedRows, paperOutcomes, reviewCounts, reviewedRows]);
   const reviewQueues = useMemo(() => {
     const withTags = latestReviewedRows.map((row) => ({
       ...row,
@@ -2184,6 +2246,62 @@ export default function TradingViewCapturePage() {
             </p>
           </div>
         </aside>
+      </section>
+
+      <section
+        className={`border p-4 ${
+          paperSummary.importUsability === "usable for paper review"
+            ? "border-lime-500/50 bg-lime-500/5"
+            : paperSummary.importUsability === "partially usable"
+              ? "border-amber-500/50 bg-amber-500/5"
+              : "border-destructive/50 bg-destructive/5"
+        }`}
+      >
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              Import usability
+            </p>
+            <h2 className="mt-1 font-display text-xl font-bold">
+              {paperSummary.importUsability}
+            </h2>
+            <p className="mt-2 max-w-4xl text-sm text-muted-foreground">
+              This verdict only judges whether the uploaded alert file is clean
+              enough for paper review. It does not judge profitability.
+            </p>
+          </div>
+          <div className="grid min-w-72 gap-2 font-mono text-xs sm:grid-cols-2">
+            <p>
+              Latest:{" "}
+              <span className="text-lime-300">
+                {paperSummary.latestPlaybookAlerts}
+              </span>
+            </p>
+            <p>
+              Old/ignored:{" "}
+              <span className="text-amber-300">
+                {paperSummary.stalePlaybookAlerts + paperSummary.legacyAlerts}
+              </span>
+            </p>
+            <p>
+              Missing fields:{" "}
+              <span className="text-destructive">
+                {paperSummary.incompleteAlerts}
+              </span>
+            </p>
+            <p>
+              Settings mismatch:{" "}
+              <span className="text-destructive">
+                {paperSummary.contractIssueAlerts}
+              </span>
+            </p>
+          </div>
+        </div>
+        <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
+          {paperSummary.importUsabilityReasons.slice(0, 5).map((reason) => (
+            <li key={reason}>{reason}</li>
+          ))}
+        </ul>
       </section>
 
       <section className="grid gap-3 border border-cyan-500/40 bg-cyan-500/5 p-4 md:grid-cols-[minmax(0,1fr)_220px]">
