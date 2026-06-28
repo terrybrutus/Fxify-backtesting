@@ -1521,6 +1521,19 @@ export default function TradingViewCapturePage() {
     const latestRawSignalAlerts = latestReviewedRows.filter(
       (row) => row.alert.rawSignal === true,
     ).length;
+    const sourceCounts = latestReviewedRows.reduce(
+      (acc, row) => {
+        if (row.alert.originalTriangleSignal === true) {
+          acc.original += 1;
+        } else if (row.alert.latchedSignal === true) {
+          acc.liveLatch += 1;
+        } else {
+          acc.unknown += 1;
+        }
+        return acc;
+      },
+      { original: 0, liveLatch: 0, unknown: 0 },
+    );
     const latestMissingAlertTimeAlerts = latestReviewedRows.filter(
       (row) => row.alert.rawSignal === true && !row.alert.alertTime,
     ).length;
@@ -1693,6 +1706,11 @@ export default function TradingViewCapturePage() {
             `${incompleteAlerts} latest Playbook alert(s) are missing required JSON fields: ${missingFieldSummary.join(", ")}.`,
           ]
         : []),
+      ...(sourceCounts.liveLatch
+        ? [
+            `${sourceCounts.liveLatch} latest alert(s) were live-latch only. Review these separately from old-triangle matches because historical replay cannot prove the exact first-touch moment.`,
+          ]
+        : []),
     ];
     const dataQuality =
       reviewedRows.length === 0
@@ -1813,6 +1831,7 @@ export default function TradingViewCapturePage() {
       reviewQueue,
       dataQuality,
       rawSignalAlerts,
+      sourceCounts,
       confirmedAlerts,
       missingAlertTimeAlerts,
       lateAlertTimeAlerts,
@@ -2399,6 +2418,20 @@ export default function TradingViewCapturePage() {
             Raw signals:{" "}
             <span className="text-foreground">
               {paperSummary.rawSignalAlerts}
+            </span>
+          </p>
+          <p>
+            Orig / live latch / unknown:{" "}
+            <span className="text-cyan-300">
+              {paperSummary.sourceCounts.original}
+            </span>{" "}
+            /{" "}
+            <span className="text-amber-300">
+              {paperSummary.sourceCounts.liveLatch}
+            </span>{" "}
+            /{" "}
+            <span className="text-muted-foreground">
+              {paperSummary.sourceCounts.unknown}
             </span>
           </p>
           <p>

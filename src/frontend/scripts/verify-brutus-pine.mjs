@@ -608,6 +608,14 @@ const requiredCaptureSnippets = [
     label: "capture table shows original signal source",
     text: "orig formula now",
   },
+  {
+    label: "capture summarizes alert source counts",
+    text: "sourceCounts",
+  },
+  {
+    label: "capture shows live latch count",
+    text: "paperSummary.sourceCounts.liveLatch",
+  },
 ];
 
 const missingCapture = requiredCaptureSnippets.filter(
