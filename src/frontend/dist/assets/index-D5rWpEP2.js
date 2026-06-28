@@ -42568,6 +42568,7 @@ indicator("Brutus Playbook Alerts", overlay=true)
 // This is a paper-test alert bridge. It does not prove the strategy is live-trade ready by itself.
 // Alert setup: create exactly one alert per symbol/timeframe using "Any alert() function call".
 // Do not choose the named Brutus ENTER/WAIT/SKIP alertconditions for the evidence loop; those are only visual fallback labels and will not carry the full JSON audit packet.
+// Alert coverage: confirmed-close mode sends one JSON packet for every confirmed raw signal. First-touch mode sends a JSON packet on the first live side touch and again if that same live candle changes action.
 // Sanity check: keep Show Original Triangle Matches on first. ORIG markers must match the old Brutus triangles before trusting ENTER, WAIT, SKIP, or DO NOT HOLD labels.
 // Timing truth: ORIG matches the old triangle formula. Because that formula uses candle color, an open candle can change until it closes. First-touch alerts are live evidence, not perfect historical replay.
 ${testRows || "// No TEST rows were available when this script was exported. Keep this in paper-test mode."}

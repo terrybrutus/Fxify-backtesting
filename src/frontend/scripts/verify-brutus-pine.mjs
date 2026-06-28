@@ -66,6 +66,18 @@ const requiredSnippets = [
     text: "firstTouchNewSide or firstTouchDecisionChanged or confirmedCloseEvent",
   },
   {
+    label: "plain alert coverage documentation",
+    text: "Alert coverage: confirmed-close mode sends one JSON packet for every confirmed raw signal.",
+  },
+  {
+    label: "confirmed close raw signal event",
+    text: 'confirmedCloseEvent = signalMode == "Confirmed close" and rawSignal and barstate.isconfirmed',
+  },
+  {
+    label: "first touch sends first live side touch",
+    text: "First-touch mode sends a JSON packet on the first live side touch",
+  },
+  {
     label: "long action memory update",
     text: "lastLongAlertAction := action",
   },
