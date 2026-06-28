@@ -179,7 +179,19 @@ const requiredSnippets = [
   },
   {
     label: "visible audit panel",
-    text: "var table auditPanel = table.new(position.top_right, 1, 6, border_width=1)",
+    text: "var table auditPanel = table.new(position.top_right, 1, 8, border_width=1)",
+  },
+  {
+    label: "audit panel shows confirmation state",
+    text: 'confirmText = barstate.isconfirmed ? "confirmed close" : "open candle"',
+  },
+  {
+    label: "audit panel shows mode and confirmation",
+    text: 'modeText = mode + " | " + confirmText',
+  },
+  {
+    label: "audit panel shows side and pierce depth",
+    text: '"Side " + direction + " | depth "',
   },
   {
     label: "audit panel locked settings warning",
