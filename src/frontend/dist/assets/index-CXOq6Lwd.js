@@ -43119,6 +43119,12 @@ function BrutusTradeDeskPage() {
         timeframe,
         action,
         count: 0,
+        firstTouch: 0,
+        originalTriangle: 0,
+        decisionChange: 0,
+        confirmedClose: 0,
+        origSource: 0,
+        liveLatchSource: 0,
         match: 0,
         different: 0,
         pineOnly: 0,
@@ -43130,6 +43136,12 @@ function BrutusTradeDeskPage() {
         latestAlertTime: 0
       };
       current.count += 1;
+      current.firstTouch += item.alert.decisionEvent === "first_touch" ? 1 : 0;
+      current.originalTriangle += item.alert.decisionEvent === "original_triangle" ? 1 : 0;
+      current.decisionChange += item.alert.decisionEvent === "decision_change" ? 1 : 0;
+      current.confirmedClose += item.alert.decisionEvent === "confirmed_close" ? 1 : 0;
+      current.origSource += item.alert.originalTriangleSignal === true ? 1 : 0;
+      current.liveLatchSource += item.alert.latchedSignal === true ? 1 : 0;
       current.match += item.agreement === "MATCH" ? 1 : 0;
       current.different += item.agreement === "DIFFERENT" ? 1 : 0;
       current.pineOnly += item.agreement === "PINE ONLY" ? 1 : 0;
@@ -43960,7 +43972,7 @@ function BrutusTradeDeskPage() {
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-start justify-between gap-2", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-sm font-bold", children: "Current Alert Summary" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: "Current Playbook alerts only, grouped by symbol, timeframe, and Pine action." })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: "Current Playbook alerts only, grouped by symbol, timeframe, and Pine action. Event/source counts show whether the group came from first touch, old-triangle parity, decision changes, or confirmed close." })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-mono text-xs text-muted-foreground", children: [
             alertSummaryRows.length,
@@ -43972,6 +43984,8 @@ function BrutusTradeDeskPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Symbol" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "TF" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Action" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Event mix" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Source mix" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Alerts" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Clean matches" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Paper result" }),
@@ -43982,6 +43996,31 @@ function BrutusTradeDeskPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-2 py-2", children: row.symbol }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-2 py-2", children: row.timeframe }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-2 py-2", children: displayDecision(row.action) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2 text-muted-foreground", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block", children: [
+                "Touch ",
+                row.firstTouch,
+                " | Old ",
+                row.originalTriangle
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block", children: [
+                "Change ",
+                row.decisionChange,
+                " | Close",
+                " ",
+                row.confirmedClose
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2 text-muted-foreground", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block", children: [
+                "ORIG ",
+                row.origSource
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block", children: [
+                "LIVE LATCH ",
+                row.liveLatchSource
+              ] })
+            ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-2 py-2", children: row.count }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-2 py-2 text-lime-300", children: row.match }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2", children: [
