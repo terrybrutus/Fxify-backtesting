@@ -570,10 +570,23 @@ function parsePayloadText(text: string) {
     if (parsedLines.length > 0) return parsedLines;
     const parsedCsv = parseCsvText(trimmed, normalizeMany);
     if (parsedCsv.length > 0) return parsedCsv;
+    if (isNamedAlertConditionExport(trimmed)) {
+      throw new Error(WRONG_TRADINGVIEW_ALERT_TYPE_MESSAGE);
+    }
     throw new Error(
       "No TradingView alert JSON found. Paste the request body JSON, a JSON export, or a Webhook.site CSV export.",
     );
   }
+}
+
+const WRONG_TRADINGVIEW_ALERT_TYPE_MESSAGE =
+  "This TradingView export came from a named Brutus alertcondition. Recreate the alert with Any alert() function call so the full JSON audit packet is captured.";
+
+function isNamedAlertConditionExport(text: string) {
+  return (
+    text.includes("Wrong alert type for evidence loop") ||
+    text.includes("Use Any alert() function call for full JSON")
+  );
 }
 
 function mapBrokerSymbol(symbol?: string) {
