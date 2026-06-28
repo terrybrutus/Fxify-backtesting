@@ -1623,6 +1623,9 @@ video {
 .bg-amber-300\/10 {
   background-color: rgb(252 211 77 / 0.1);
 }
+.bg-amber-300\/5 {
+  background-color: rgb(252 211 77 / 0.05);
+}
 .bg-amber-400\/5 {
   background-color: rgb(251 191 36 / 0.05);
 }
@@ -1668,6 +1671,9 @@ video {
 }
 .bg-lime-400\/10 {
   background-color: rgb(163 230 53 / 0.1);
+}
+.bg-lime-400\/5 {
+  background-color: rgb(163 230 53 / 0.05);
 }
 .bg-muted {
   --tw-bg-opacity: 1;
@@ -1985,6 +1991,10 @@ video {
 .text-accent-foreground {
   color: oklch(var(--accent-foreground));
 }
+.text-amber-100 {
+  --tw-text-opacity: 1;
+  color: rgb(254 243 199 / var(--tw-text-opacity, 1));
+}
 .text-amber-200 {
   --tw-text-opacity: 1;
   color: rgb(253 230 138 / var(--tw-text-opacity, 1));
@@ -2024,6 +2034,10 @@ video {
   --tw-text-opacity: 1;
   color: rgb(245 208 254 / var(--tw-text-opacity, 1));
 }
+.text-lime-100 {
+  --tw-text-opacity: 1;
+  color: rgb(236 252 203 / var(--tw-text-opacity, 1));
+}
 .text-lime-300 {
   --tw-text-opacity: 1;
   color: rgb(190 242 100 / var(--tw-text-opacity, 1));
@@ -2048,6 +2062,10 @@ video {
 }
 .text-primary-foreground {
   color: oklch(var(--primary-foreground));
+}
+.text-red-100 {
+  --tw-text-opacity: 1;
+  color: rgb(254 226 226 / var(--tw-text-opacity, 1));
 }
 .text-red-200 {
   --tw-text-opacity: 1;
@@ -3817,6 +3835,10 @@ video {
 
   .md\:grid-cols-\[1fr_160px_140px\] {
     grid-template-columns: 1fr 160px 140px;
+  }
+
+  .md\:grid-cols-\[1fr_1fr\] {
+    grid-template-columns: 1fr 1fr;
   }
 
   .md\:grid-cols-\[minmax\(0\2c 1fr\)_220px\] {
