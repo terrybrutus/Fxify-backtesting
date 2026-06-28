@@ -56,6 +56,7 @@
         <span>Target</span>
         <strong data-field="alert-target">none</strong>
       </div>
+      <div class="ict-tv-hint" data-field="manual-step">Start the batch, then change symbol/timeframe inside TradingView without refreshing the page.</div>
       <button type="button" data-action="save-log">Save helper log</button>
       <div class="ict-tv-status" data-field="status">Ready.</div>
     </div>
@@ -244,14 +245,7 @@
       : "Use with Brutus Playbook Alerts on chart.";
   };
 
-  const chartUrlForAlertTarget = (target) => {
-    const url = new URL(window.location.href);
-    url.searchParams.set("symbol", `ALCHEMY:${target.symbol}`);
-    url.searchParams.set("interval", target.interval);
-    return url.toString();
-  };
-
-  const navigateToAlertTarget = (target) => {
+  const showAlertTarget = (target) => {
     if (!target) {
       updateAlertProgress();
       setStatus("Alert batch is finished.", "ok");
@@ -259,8 +253,9 @@
     }
     saveAlertQueue();
     updateAlertProgress();
-    setStatus(`Opening ${target.symbol} ${target.label}.`, "info");
-    window.location.assign(chartUrlForAlertTarget(target));
+    panel.querySelector('[data-field="manual-step"]').textContent =
+      `No refresh: switch TradingView to ALCHEMY:${target.symbol} on ${target.label}, then open/create the alert.`;
+    setStatus(`Next: set chart to ${target.symbol} ${target.label}. No page refresh was used.`, "info");
   };
 
   const startAlertBatch = () => {
@@ -275,7 +270,7 @@
       queue: state.alertQueue
     });
     saveLogToStorage();
-    navigateToAlertTarget(currentAlertTarget());
+    showAlertTarget(currentAlertTarget());
   };
 
   const clearAlertBatch = () => {
@@ -312,7 +307,7 @@
       setStatus("Alert batch finished. Verify TradingView Alerts list.", "ok");
       return;
     }
-    navigateToAlertTarget(currentAlertTarget());
+    showAlertTarget(currentAlertTarget());
   };
 
   const openAlertDialog = async () => {

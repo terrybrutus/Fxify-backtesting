@@ -27,9 +27,9 @@ It does not bypass TradingView, pull hidden data, avoid paid-plan limits, or pla
 
 Before starting, make sure the latest **Brutus Playbook Alerts** Pine script is saved in TradingView and added to your chart layout.
 
-1. Open any TradingView Alchemy chart.
+1. Open your saved TradingView Alchemy layout.
 2. Click **Start alert batch** in the helper panel.
-3. The helper opens each target chart:
+3. The helper tells you the next target:
 
    ```text
    DJ30.R, USTEC.R, US500.R, JPN225.R, RUS2000.R
@@ -41,19 +41,22 @@ Before starting, make sure the latest **Brutus Playbook Alerts** Pine script is 
    1m, 3m, 5m, 15m, 30m, 45m, 1H
    ```
 
-4. Click **Open alert dialog**.
-5. In TradingView, set:
+4. Change the symbol/timeframe inside TradingView without refreshing the page.
+5. Click **Open alert dialog**.
+6. In TradingView, set:
 
    ```text
    Condition: Brutus Playbook Alerts
    Option: Any alert() function call
    ```
 
-6. Choose your notifications/webhook settings.
-7. Click TradingView **Create**.
-8. Click **Created, go next** in the helper.
+7. Choose your notifications/webhook settings.
+8. Click TradingView **Create**.
+9. Click **Created, go next** in the helper.
 
 Use **Skip, go next** if you do not want one target. Use **Clear alert batch** to restart.
+
+The helper no longer reloads TradingView or changes the URL. That avoids signing you out of Alchemy or reverting your indicators/layout.
 
 ## What Was Removed
 
