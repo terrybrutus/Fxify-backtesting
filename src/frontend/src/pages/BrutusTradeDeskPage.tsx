@@ -595,6 +595,16 @@ function parseAlertLog(text: string): TvAlert[] {
   });
 }
 
+const WRONG_TRADINGVIEW_ALERT_TYPE_MESSAGE =
+  "This TradingView export came from a named Brutus alertcondition. Recreate the alert with Any alert() function call so the full JSON audit packet is captured.";
+
+function isNamedAlertConditionExport(text: string) {
+  return (
+    text.includes("Wrong alert type for evidence loop") ||
+    text.includes("Use Any alert() function call for full JSON")
+  );
+}
+
 function mergeAlerts(current: TvAlert[], incoming: TvAlert[]) {
   const seen = new Set(current.map((alert) => alert.id));
   const added: TvAlert[] = [];
@@ -1767,12 +1777,14 @@ export default function BrutusTradeDeskPage() {
     const selectedFiles = [...(files ?? [])];
     if (!selectedFiles.length) return;
     try {
-      const parsed = (
-        await Promise.all(
-          selectedFiles.map(async (file) => parseAlertLog(await file.text())),
-        )
-      ).flat();
+      const texts = await Promise.all(
+        selectedFiles.map(async (file) => file.text()),
+      );
+      const parsed = texts.flatMap((text) => parseAlertLog(text));
       if (!parsed.length) {
+        if (texts.some(isNamedAlertConditionExport)) {
+          throw new Error(WRONG_TRADINGVIEW_ALERT_TYPE_MESSAGE);
+        }
         throw new Error(
           "No Brutus TradingView alerts found. Upload the TradingView alerts CSV or JSON export.",
         );

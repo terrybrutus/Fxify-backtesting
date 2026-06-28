@@ -469,6 +469,14 @@ const requiredCaptureSnippets = [
     text: "Latest Playbook v10 can produce more than one alert",
   },
   {
+    label: "capture detects named alertcondition exports",
+    text: "function isNamedAlertConditionExport(text: string)",
+  },
+  {
+    label: "capture explains wrong TradingView alert type",
+    text: "This TradingView export came from a named Brutus alertcondition.",
+  },
+  {
     label: "capture parses decision event",
     text: "decisionEvent: asString(item.decisionEvent)",
   },
@@ -774,6 +782,14 @@ const requiredTradeDeskSnippets = [
   {
     label: "trade desk alert import result",
     text: "Alert files:",
+  },
+  {
+    label: "trade desk detects named alertcondition exports",
+    text: "function isNamedAlertConditionExport(text: string)",
+  },
+  {
+    label: "trade desk explains wrong TradingView alert type",
+    text: "This TradingView export came from a named Brutus alertcondition.",
   },
   {
     label: "trade desk clear stale alerts",
