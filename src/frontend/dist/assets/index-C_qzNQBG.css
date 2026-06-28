@@ -1524,6 +1524,9 @@ video {
 .border-border {
   border-color: oklch(var(--border));
 }
+.border-cyan-300\/40 {
+  border-color: rgb(103 232 249 / 0.4);
+}
 .border-cyan-400\/50 {
   border-color: rgb(34 211 238 / 0.5);
 }

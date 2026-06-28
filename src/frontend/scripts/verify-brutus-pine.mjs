@@ -501,8 +501,20 @@ const requiredCaptureSnippets = [
     text: "Paper result",
   },
   {
-    label: "plain paper outcome buttons",
-    text: '"worked",\n                                "failed",\n                                "would_have_worked",\n                                "avoided_loss",\n                                "unclear"',
+    label: "worked paper outcome button",
+    text: '"worked"',
+  },
+  {
+    label: "would-have-worked paper outcome button",
+    text: '"would_have_worked"',
+  },
+  {
+    label: "avoided-loss paper outcome button",
+    text: '"avoided_loss"',
+  },
+  {
+    label: "unclear paper outcome button",
+    text: '"unclear"',
   },
   {
     label: "paper outcome scoreboard",
@@ -964,16 +976,20 @@ const requiredTradeDeskSnippets = [
     text: "How to mark rows",
   },
   {
-    label: "trade desk paid plain definition",
-    text: "Paid = ENTER worked.",
+    label: "trade desk worked plain definition",
+    text: "Worked = the alert did what it was supposed to do.",
   },
   {
     label: "trade desk failed plain definition",
-    text: "Failed = ENTER failed.",
+    text: "Failed = the alert was wrong.",
   },
   {
-    label: "trade desk would-have-paid plain definition",
-    text: "Would have paid = skipped move worked.",
+    label: "trade desk would-have-worked plain definition",
+    text: "Would have worked = WAIT/SKIP missed a good move.",
+  },
+  {
+    label: "trade desk avoided-loss plain definition",
+    text: "Avoided loss = skipping saved you.",
   },
   {
     label: "trade desk paper review queue",
@@ -984,16 +1000,28 @@ const requiredTradeDeskSnippets = [
     text: "Failed ENTER rows",
   },
   {
-    label: "trade desk would-have-paid wait queue",
-    text: "WAIT rows that would have paid",
+    label: "trade desk would-have-worked wait queue",
+    text: "WAIT rows that would have worked",
+  },
+  {
+    label: "trade desk avoided-loss skip queue",
+    text: "SKIP rows that avoided losses",
+  },
+  {
+    label: "trade desk missed-good-trade skip queue",
+    text: "SKIP rows that missed good trades",
   },
   {
     label: "trade desk unreviewed enter queue",
     text: "Unreviewed ENTER rows",
   },
   {
-    label: "trade desk would-have-paid outcome",
-    text: "Would have paid",
+    label: "trade desk would-have-worked outcome",
+    text: "Would have worked",
+  },
+  {
+    label: "trade desk avoided-loss outcome",
+    text: "Avoided loss",
   },
   {
     label: "trade desk exports paper outcome read",
