@@ -37329,6 +37329,7 @@ const BUNDLED_PROXY_FILE_NAMES = /* @__PURE__ */ new Set([
   "yahoo_futures_proxy_latest.csv",
   "yahoo_futures_proxy_master.csv"
 ]);
+const BUNDLED_PROXY_NAME_PATTERN = /yahoo[_-]futures[_-]proxy/i;
 const emptyWorkspace = {
   candles: [],
   invalidRows: 0,
@@ -37375,9 +37376,8 @@ function normalizeWorkspace(value) {
   };
 }
 function isBundledProxyWorkspace(workspace) {
-  return Boolean(
-    (workspace == null ? void 0 : workspace.fileName) && BUNDLED_PROXY_FILE_NAMES.has(workspace.fileName)
-  );
+  if (!(workspace == null ? void 0 : workspace.fileName)) return false;
+  return BUNDLED_PROXY_FILE_NAMES.has(workspace.fileName) || BUNDLED_PROXY_NAME_PATTERN.test(workspace.fileName);
 }
 function openWorkspaceDb() {
   return new Promise((resolve, reject) => {
