@@ -43006,6 +43006,46 @@ function BrutusTradeDeskPage() {
       (a2, b2) => b2.count - a2.count || b2.match - a2.match || b2.reviewed - a2.reviewed || b2.latestAlertTime - a2.latestAlertTime
     );
   }, [latestAlertMatches, paperOutcomes]);
+  const paperReviewQueue = reactExports.useMemo(() => {
+    const withOutcome = latestAlertMatches.map((item) => ({
+      item,
+      outcome: paperOutcomes[paperOutcomeKey$1(item.alert)] ?? "unreviewed"
+    }));
+    return [
+      {
+        title: "Failed ENTER rows",
+        tone: "text-red-300",
+        why: "If these really failed on TradingView, ENTER is too loose.",
+        rows: withOutcome.filter(
+          ({ item, outcome }) => item.status === "ENTER" && outcome === "failed"
+        ).slice(0, 5)
+      },
+      {
+        title: "WAIT rows that paid",
+        tone: "text-amber-200",
+        why: "If these keep working, ENTER is too strict.",
+        rows: withOutcome.filter(
+          ({ item, outcome }) => item.status === "WAIT" && outcome === "missed"
+        ).slice(0, 5)
+      },
+      {
+        title: "Unreviewed ENTER rows",
+        tone: "text-lime-300",
+        why: "These are the next paper-trade rows to judge first.",
+        rows: withOutcome.filter(
+          ({ item, outcome }) => item.status === "ENTER" && outcome === "unreviewed"
+        ).slice(0, 5)
+      },
+      {
+        title: "DO NOT HOLD rows that paid",
+        tone: "text-fuchsia-200",
+        why: "If these paid, the trap filter may be too harsh.",
+        rows: withOutcome.filter(
+          ({ item, outcome }) => item.status === "DO_NOT_HOLD" && outcome === "paid"
+        ).slice(0, 5)
+      }
+    ];
+  }, [latestAlertMatches, paperOutcomes]);
   const alertReviewInstruction = reactExports.useMemo(() => {
     if (!alertMatches.length) {
       return "Import the latest TradingView Playbook alert CSV. Do not judge live alerts from screenshots alone.";
@@ -43491,6 +43531,59 @@ function BrutusTradeDeskPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg text-amber-200", children: paperOutcomeCounts.missed })
           ] })
         ] })
+      ] }),
+      paperReviewQueue.some((group) => group.rows.length > 0) && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 border border-border bg-background p-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-start justify-between gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-sm font-bold", children: "Paper review queue" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: "This is where the rule improves: failed ENTERs tighten the rule, paid WAITs loosen it, and unreviewed ENTERs get checked before anything else." })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs text-muted-foreground", children: "Current Playbook only" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 grid gap-3 lg:grid-cols-2", children: paperReviewQueue.map((group) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border p-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "p",
+                {
+                  className: `font-mono text-xs font-bold ${group.tone}`,
+                  children: group.title
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: group.why })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-xs text-muted-foreground", children: group.rows.length })
+          ] }),
+          group.rows.length ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 space-y-2", children: group.rows.map(({ item, outcome }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "div",
+            {
+              className: "border border-border/70 bg-card p-2 font-mono text-xs",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap justify-between gap-2", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+                    item.alert.symbol ?? "unknown",
+                    " ",
+                    item.alert.timeframe ?? "n/a",
+                    " ",
+                    item.alert.direction ?? "n/a"
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: paperOutcomeClass$1(outcome), children: paperOutcomeLabel$1(outcome) })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-1 text-muted-foreground", children: [
+                  fmtDate$3(
+                    typeof item.alert.alertTime === "number" ? item.alert.alertTime : item.alert.candleTime
+                  ),
+                  " ",
+                  "|",
+                  " ",
+                  item.alert.plainAction ?? displayDecision(item.status)
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-muted-foreground", children: item.alert.reason ?? item.note })
+              ]
+            },
+            `${group.title}-${item.alert.id}`
+          )) }) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-3 text-xs text-muted-foreground", children: "No rows in this bucket yet." })
+        ] }, group.title)) })
       ] }),
       alertSummaryRows.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 border border-border bg-background p-3", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-start justify-between gap-2", children: [

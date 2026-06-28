@@ -580,6 +580,22 @@ const requiredTradeDeskSnippets = [
     text: "Paper outcome scoreboard",
   },
   {
+    label: "trade desk paper review queue",
+    text: "Paper review queue",
+  },
+  {
+    label: "trade desk failed enter queue",
+    text: "Failed ENTER rows",
+  },
+  {
+    label: "trade desk paid wait queue",
+    text: "WAIT rows that paid",
+  },
+  {
+    label: "trade desk unreviewed enter queue",
+    text: "Unreviewed ENTER rows",
+  },
+  {
     label: "trade desk wait paid outcome",
     text: "Wait paid",
   },
