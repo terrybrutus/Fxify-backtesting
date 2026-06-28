@@ -150,7 +150,7 @@ function loadAlerts(): TvAlert[] {
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed)
       ? parsed
-          .map((alert) => normalizePayload(alert.raw ?? alert))
+          .map((alert) => normalizePayload(alert))
           .filter(isImportableAlert)
       : [];
   } catch {
@@ -261,8 +261,8 @@ function normalizePayload(raw: unknown): TvAlert {
   const brokerSymbol =
     asString(item.symbol) ?? asString(item.ticker) ?? asString(item.tickerid);
   return {
-    id: crypto.randomUUID(),
-    importedAt: Date.now(),
+    id: asString(item.id) ?? crypto.randomUUID(),
+    importedAt: asNumber(item.importedAt) ?? Date.now(),
     strategy: asString(item.strategy),
     playbookVersion: asString(item.playbookVersion),
     rawSignal: asBoolean(item.rawSignal),

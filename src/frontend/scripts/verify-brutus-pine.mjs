@@ -545,6 +545,18 @@ const requiredCaptureSnippets = [
     text: "alert.target ?? \"\"",
   },
   {
+    label: "capture reload preserves saved row identity",
+    text: ".map((alert) => normalizePayload(alert))",
+  },
+  {
+    label: "capture preserves saved alert id",
+    text: "id: asString(item.id) ?? crypto.randomUUID()",
+  },
+  {
+    label: "capture preserves saved import timestamp",
+    text: "importedAt: asNumber(item.importedAt) ?? Date.now()",
+  },
+  {
     label: "capture summarizes alert event",
     text: "Alert event",
   },

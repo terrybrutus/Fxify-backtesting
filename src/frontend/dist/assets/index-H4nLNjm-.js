@@ -49897,7 +49897,7 @@ function loadAlerts() {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map((alert) => normalizePayload(alert.raw ?? alert)).filter(isImportableAlert) : [];
+    return Array.isArray(parsed) ? parsed.map((alert) => normalizePayload(alert)).filter(isImportableAlert) : [];
   } catch {
     return [];
   }
@@ -49978,8 +49978,8 @@ function normalizePayload(raw) {
   const alertTimestamp = asNumber(item.alertTime) ?? asNumber(item.timenow) ?? asNumber(item.receivedAt) ?? (typeof item.alertTime === "string" ? Date.parse(item.alertTime) : void 0);
   const brokerSymbol = asString(item.symbol) ?? asString(item.ticker) ?? asString(item.tickerid);
   return {
-    id: crypto.randomUUID(),
-    importedAt: Date.now(),
+    id: asString(item.id) ?? crypto.randomUUID(),
+    importedAt: asNumber(item.importedAt) ?? Date.now(),
     strategy: asString(item.strategy),
     playbookVersion: asString(item.playbookVersion),
     rawSignal: asBoolean(item.rawSignal),
