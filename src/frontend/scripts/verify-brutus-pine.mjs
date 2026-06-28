@@ -178,6 +178,10 @@ const requiredSnippets = [
     text: 'plotshape(showLiveLatchSignals and rawLongSignal and not rawLongCondition, title="Live Latched Long Touch"',
   },
   {
+    label: "live latch marker defaults on",
+    text: 'showLiveLatchSignals = input.bool(true, title="Show Live First-Touch Latches")',
+  },
+  {
     label: "visible audit panel",
     text: "var table auditPanel = table.new(position.top_right, 1, 8, border_width=1)",
   },
@@ -594,6 +598,10 @@ const requiredTradeDeskSnippets = [
   {
     label: "trade desk ORIG parity setup step",
     text: "Grey ORIG markers should line up with the old Brutus triangles.",
+  },
+  {
+    label: "trade desk LIVE latch setup step",
+    text: "Keep LIVE markers on to catch open-candle first touches.",
   },
   {
     label: "trade desk Any alert setup step",

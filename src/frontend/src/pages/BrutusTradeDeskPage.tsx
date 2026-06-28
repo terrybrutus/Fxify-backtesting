@@ -1012,7 +1012,7 @@ stopBandFraction = input.float(0.35, minval=0.05, maxval=2.0, title="Stop Distan
 targetR = input.float(1.2, minval=0.25, maxval=5.0, title="Target R")
 liveAlertsOnly = input.bool(true, title="Only Fire Alerts On Live Bars")
 showOriginalSignals = input.bool(true, title="Show Original Triangle Matches")
-showLiveLatchSignals = input.bool(false, title="Show Live First-Touch Latches")
+showLiveLatchSignals = input.bool(true, title="Show Live First-Touch Latches")
 showAuditPanel = input.bool(true, title="Show Brutus Audit Panel")
 
 upperBasis = ta.ema(upperSrc, length)
@@ -1954,6 +1954,7 @@ export default function BrutusTradeDeskPage() {
           <p>
             <span className="font-mono text-cyan-200">2. Check ORIG.</span>{" "}
             Grey ORIG markers should line up with the old Brutus triangles.
+            Keep LIVE markers on to catch open-candle first touches.
           </p>
           <p>
             <span className="font-mono text-cyan-200">3. Create alert.</span>{" "}
