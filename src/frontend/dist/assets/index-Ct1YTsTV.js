@@ -43170,7 +43170,7 @@ function BrutusTradeDeskPage() {
               "text/plain"
             ),
             type: "button",
-            children: "Export Pine Script"
+            children: "Export Brutus Playbook Pine"
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -43298,7 +43298,7 @@ function BrutusTradeDeskPage() {
                 "text/plain"
               ),
               type: "button",
-              children: "Export Pine Script"
+              children: "Export Brutus Playbook Pine"
             }
           ),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -43338,7 +43338,7 @@ function BrutusTradeDeskPage() {
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-3 border border-cyan-500/40 bg-cyan-500/5 p-4 text-sm md:grid-cols-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-cyan-300", children: "1. Export" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-muted-foreground", children: "Download the Pine script from this page. It starts from the original Brutus triangle logic with length 9, upper high, lower low, and standard deviation 2 locked in, then adds a paper-test decision layer. First check that ORIG markers match your old triangles. If they do not, stop and fix parity before reading ENTER/WAIT." })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-muted-foreground", children: "Download the Pine script from this page. It starts from the original Brutus triangle logic with length 9, upper high, lower low, and standard deviation 2 locked in, then adds a paper-test decision layer. Use the button named Export Brutus Playbook Pine. First check that ORIG markers match your old triangles. If they do not, stop and fix parity before reading ENTER/WAIT." })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-cyan-300", children: "2. Paste in TradingView" }),

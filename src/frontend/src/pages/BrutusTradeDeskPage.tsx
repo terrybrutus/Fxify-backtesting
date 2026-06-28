@@ -1718,7 +1718,7 @@ export default function BrutusTradeDeskPage() {
             }
             type="button"
           >
-            Export Pine Script
+            Export Brutus Playbook Pine
           </button>
           <button
             className="inline-flex items-center gap-2 border border-border bg-card px-4 py-2 font-mono text-xs hover:border-primary disabled:opacity-40"
@@ -1898,7 +1898,7 @@ export default function BrutusTradeDeskPage() {
                 }
                 type="button"
               >
-                Export Pine Script
+                Export Brutus Playbook Pine
               </button>
               <button
                 className="border border-border bg-background px-4 py-2 font-mono text-xs hover:border-primary"
@@ -1953,9 +1953,10 @@ export default function BrutusTradeDeskPage() {
                 Download the Pine script from this page. It starts from the
                 original Brutus triangle logic with length 9, upper high,
                 lower low, and standard deviation 2 locked in, then adds a
-                paper-test decision layer. First check that ORIG markers match
-                your old triangles. If they do not, stop and fix parity before
-                reading ENTER/WAIT.
+                paper-test decision layer. Use the button named Export Brutus
+                Playbook Pine. First check that ORIG markers match your old
+                triangles. If they do not, stop and fix parity before reading
+                ENTER/WAIT.
               </p>
             </div>
             <div>
