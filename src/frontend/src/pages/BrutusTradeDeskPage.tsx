@@ -1616,6 +1616,24 @@ export default function BrutusTradeDeskPage() {
     [latestAlertMatches],
   );
 
+  const alertSourceCounts = useMemo(
+    () =>
+      latestAlertMatches.reduce(
+        (acc, item) => {
+          if (item.alert.originalTriangleSignal === true) {
+            acc.original += 1;
+          } else if (item.alert.latchedSignal === true) {
+            acc.liveLatch += 1;
+          } else {
+            acc.unknown += 1;
+          }
+          return acc;
+        },
+        { original: 0, liveLatch: 0, unknown: 0 },
+      ),
+    [latestAlertMatches],
+  );
+
   const paperOutcomeCounts = useMemo(() => {
     const countsByDecision = {
       ENTER: { unreviewed: 0, paid: 0, failed: 0, missed: 0 },
@@ -1798,6 +1816,9 @@ export default function BrutusTradeDeskPage() {
     if (alertVersionCounts.incomplete > 0) {
       return "Some current Playbook alerts are missing required JSON fields. Recreate the alerts with Any alert() function call before trusting this batch.";
     }
+    if (alertSourceCounts.liveLatch > 0) {
+      return "Review LIVE LATCH rows separately. They prove a live first-touch alert fired, but they are not the same evidence as a current old-triangle match.";
+    }
     if (agreementCounts.different > 0) {
       return "Stop and review DIFFERENT rows first. Pine and the app disagree, so those rows are not tradeable evidence yet.";
     }
@@ -1821,7 +1842,9 @@ export default function BrutusTradeDeskPage() {
     agreementCounts,
     alertCounts,
     alertMatches.length,
+    alertSourceCounts.liveLatch,
     alertVersionCounts.contractIssues,
+    alertVersionCounts.incomplete,
     paperOutcomeCounts,
     latestAlertMatches.length,
   ]);
@@ -1982,6 +2005,7 @@ export default function BrutusTradeDeskPage() {
                 counts,
                 alertVersionCounts,
                 alertCounts,
+                alertSourceCounts,
                 paperOutcomeCounts,
                 paperOutcomeRead,
                 paperOutcomes,
@@ -2424,6 +2448,15 @@ export default function BrutusTradeDeskPage() {
             </span>
             <span className="border border-border px-2 py-1 text-muted-foreground">
               LEGACY {alertVersionCounts.legacy}
+            </span>
+            <span className="border border-cyan-400/50 px-2 py-1 text-cyan-200">
+              ORIG {alertSourceCounts.original}
+            </span>
+            <span className="border border-amber-300/50 px-2 py-1 text-amber-200">
+              LIVE LATCH {alertSourceCounts.liveLatch}
+            </span>
+            <span className="border border-border px-2 py-1 text-muted-foreground">
+              UNKNOWN SOURCE {alertSourceCounts.unknown}
             </span>
             <span className="border border-lime-400/50 px-2 py-1 text-lime-300">
               ENTER {alertCounts.enter}

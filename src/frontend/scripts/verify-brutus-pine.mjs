@@ -728,6 +728,26 @@ const requiredTradeDeskSnippets = [
     text: "orig formula now",
   },
   {
+    label: "trade desk summarizes alert source counts",
+    text: "alertSourceCounts",
+  },
+  {
+    label: "trade desk shows original alert source count",
+    text: "ORIG {alertSourceCounts.original}",
+  },
+  {
+    label: "trade desk shows live latch alert source count",
+    text: "LIVE LATCH {alertSourceCounts.liveLatch}",
+  },
+  {
+    label: "trade desk exports alert source counts",
+    text: "alertSourceCounts,",
+  },
+  {
+    label: "trade desk separates live latch review",
+    text: "Review LIVE LATCH rows separately.",
+  },
+  {
     label: "trade desk compares Pine versus app decision",
     text: "Pine vs app",
   },
