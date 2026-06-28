@@ -1552,6 +1552,59 @@ export default function BrutusTradeDeskPage() {
     );
   }, [latestAlertMatches, paperOutcomes]);
 
+  const paperReviewQueue = useMemo(() => {
+    const withOutcome = latestAlertMatches.map((item) => ({
+      item,
+      outcome: paperOutcomes[paperOutcomeKey(item.alert)] ?? "unreviewed",
+    }));
+    return [
+      {
+        title: "Failed ENTER rows",
+        tone: "text-red-300",
+        why: "If these really failed on TradingView, ENTER is too loose.",
+        rows: withOutcome
+          .filter(
+            ({ item, outcome }) =>
+              item.status === "ENTER" && outcome === "failed",
+          )
+          .slice(0, 5),
+      },
+      {
+        title: "WAIT rows that paid",
+        tone: "text-amber-200",
+        why: "If these keep working, ENTER is too strict.",
+        rows: withOutcome
+          .filter(
+            ({ item, outcome }) =>
+              item.status === "WAIT" && outcome === "missed",
+          )
+          .slice(0, 5),
+      },
+      {
+        title: "Unreviewed ENTER rows",
+        tone: "text-lime-300",
+        why: "These are the next paper-trade rows to judge first.",
+        rows: withOutcome
+          .filter(
+            ({ item, outcome }) =>
+              item.status === "ENTER" && outcome === "unreviewed",
+          )
+          .slice(0, 5),
+      },
+      {
+        title: "DO NOT HOLD rows that paid",
+        tone: "text-fuchsia-200",
+        why: "If these paid, the trap filter may be too harsh.",
+        rows: withOutcome
+          .filter(
+            ({ item, outcome }) =>
+              item.status === "DO_NOT_HOLD" && outcome === "paid",
+          )
+          .slice(0, 5),
+      },
+    ];
+  }, [latestAlertMatches, paperOutcomes]);
+
   const alertReviewInstruction = useMemo(() => {
     if (!alertMatches.length) {
       return "Import the latest TradingView Playbook alert CSV. Do not judge live alerts from screenshots alone.";
@@ -2188,6 +2241,84 @@ export default function BrutusTradeDeskPage() {
             </div>
           </div>
         </div>
+        {paperReviewQueue.some((group) => group.rows.length > 0) && (
+          <div className="mt-3 border border-border bg-background p-3">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p className="font-display text-sm font-bold">
+                  Paper review queue
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  This is where the rule improves: failed ENTERs tighten the
+                  rule, paid WAITs loosen it, and unreviewed ENTERs get checked
+                  before anything else.
+                </p>
+              </div>
+              <p className="font-mono text-xs text-muted-foreground">
+                Current Playbook only
+              </p>
+            </div>
+            <div className="mt-3 grid gap-3 lg:grid-cols-2">
+              {paperReviewQueue.map((group) => (
+                <div className="border border-border p-3" key={group.title}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p
+                        className={`font-mono text-xs font-bold ${group.tone}`}
+                      >
+                        {group.title}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {group.why}
+                      </p>
+                    </div>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {group.rows.length}
+                    </span>
+                  </div>
+                  {group.rows.length ? (
+                    <div className="mt-3 space-y-2">
+                      {group.rows.map(({ item, outcome }) => (
+                        <div
+                          className="border border-border/70 bg-card p-2 font-mono text-xs"
+                          key={`${group.title}-${item.alert.id}`}
+                        >
+                          <div className="flex flex-wrap justify-between gap-2">
+                            <span>
+                              {item.alert.symbol ?? "unknown"}{" "}
+                              {item.alert.timeframe ?? "n/a"}{" "}
+                              {item.alert.direction ?? "n/a"}
+                            </span>
+                            <span className={paperOutcomeClass(outcome)}>
+                              {paperOutcomeLabel(outcome)}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-muted-foreground">
+                            {fmtDate(
+                              typeof item.alert.alertTime === "number"
+                                ? item.alert.alertTime
+                                : item.alert.candleTime,
+                            )}{" "}
+                            |{" "}
+                            {item.alert.plainAction ??
+                              displayDecision(item.status)}
+                          </p>
+                          <p className="mt-1 text-muted-foreground">
+                            {item.alert.reason ?? item.note}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      No rows in this bucket yet.
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {alertSummaryRows.length > 0 && (
           <div className="mt-3 border border-border bg-background p-3">
             <div className="flex flex-wrap items-start justify-between gap-2">
