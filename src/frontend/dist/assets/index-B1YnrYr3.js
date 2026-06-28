@@ -42089,6 +42089,14 @@ function normalizeAlertPayload(raw, alertTime) {
     rawSignal: typeof item.rawSignal === "boolean" ? item.rawSignal : void 0,
     decisionEvent: typeof item.decisionEvent === "string" ? item.decisionEvent : void 0,
     previousAction: typeof item.previousAction === "string" ? item.previousAction : void 0,
+    rawLongSignal: typeof item.rawLongSignal === "boolean" ? item.rawLongSignal : void 0,
+    rawShortSignal: typeof item.rawShortSignal === "boolean" ? item.rawShortSignal : void 0,
+    rawLongCondition: typeof item.rawLongCondition === "boolean" ? item.rawLongCondition : void 0,
+    rawShortCondition: typeof item.rawShortCondition === "boolean" ? item.rawShortCondition : void 0,
+    newLongTouch: typeof item.newLongTouch === "boolean" ? item.newLongTouch : void 0,
+    newShortTouch: typeof item.newShortTouch === "boolean" ? item.newShortTouch : void 0,
+    signalConflict: typeof item.signalConflict === "boolean" ? item.signalConflict : void 0,
+    signalDirection: typeof item.signalDirection === "string" ? item.signalDirection : void 0,
     action: decisionFrom(item.action),
     plainAction: typeof item.plainAction === "string" ? item.plainAction : void 0,
     reason: typeof item.reason === "string" ? item.reason : void 0,
@@ -42101,6 +42109,13 @@ function normalizeAlertPayload(raw, alertTime) {
     confirmed: typeof item.confirmed === "boolean" ? item.confirmed : void 0,
     mode: typeof item.mode === "string" ? item.mode : void 0,
     modeReady: typeof item.modeReady === "boolean" ? item.modeReady : void 0,
+    inSession: typeof item.inSession === "boolean" ? item.inSession : void 0,
+    minutesIntoBar: asNumber$1(item.minutesIntoBar),
+    notTooEarly: typeof item.notTooEarly === "boolean" ? item.notTooEarly : void 0,
+    longSnapback: typeof item.longSnapback === "boolean" ? item.longSnapback : void 0,
+    shortSnapback: typeof item.shortSnapback === "boolean" ? item.shortSnapback : void 0,
+    longPushThrough: typeof item.longPushThrough === "boolean" ? item.longPushThrough : void 0,
+    shortPushThrough: typeof item.shortPushThrough === "boolean" ? item.shortPushThrough : void 0,
     open: asNumber$1(item.open),
     high: asNumber$1(item.high),
     low: asNumber$1(item.low),
@@ -42763,6 +42778,28 @@ function DecisionPill({ decision }) {
       children: displayDecision(decision)
     }
   );
+}
+function boolWord(value) {
+  if (value == null) return "?";
+  return value ? "yes" : "no";
+}
+function sideGateValue(alert, longValue, shortValue) {
+  const direction = alert.signalDirection ?? alert.direction;
+  if (direction === "long") return longValue;
+  if (direction === "short") return shortValue;
+  return longValue ?? shortValue;
+}
+function alertGateSummary(alert) {
+  const original = sideGateValue(
+    alert,
+    alert.rawLongCondition,
+    alert.rawShortCondition
+  );
+  const liveTouch = sideGateValue(alert, alert.rawLongSignal, alert.rawShortSignal);
+  const snapback = sideGateValue(alert, alert.longSnapback, alert.shortSnapback);
+  const push2 = sideGateValue(alert, alert.longPushThrough, alert.shortPushThrough);
+  const minutes = alert.minutesIntoBar != null && Number.isFinite(alert.minutesIntoBar) ? `${alert.minutesIntoBar.toFixed(1)}m` : "?m";
+  return `original ${boolWord(original)} | live ${boolWord(liveTouch)} | session ${boolWord(alert.inSession)} | time ${boolWord(alert.notTooEarly)} (${minutes}) | snapback ${boolWord(snapback)} | push-through ${boolWord(push2)}`;
 }
 function VerdictPill({ verdict }) {
   const colors = {
@@ -43767,7 +43804,15 @@ function BrutusTradeDeskPage() {
                   ),
                   /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-muted-foreground", children: item.agreement.toLowerCase().replaceAll("_", " ") })
                 ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-2 py-2", children: item.alert.plainAction ?? ((_a2 = item.decision) == null ? void 0 : _a2.doNow) ?? "Do nothing." }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2", children: [
+                  item.alert.plainAction ?? ((_a2 = item.decision) == null ? void 0 : _a2.doNow) ?? "Do nothing.",
+                  isLatestPlaybookAlert$1(item.alert) && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "mt-1 block text-muted-foreground", children: [
+                    item.alert.decisionEvent ?? "event",
+                    " ",
+                    item.alert.previousAction ? `from ${item.alert.previousAction}` : ""
+                  ] }),
+                  isLatestPlaybookAlert$1(item.alert) && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "mt-1 block text-muted-foreground", children: alertGateSummary(item.alert) })
+                ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2", children: [
                   "E:",
                   fmtPrice$4(item.alert.entry ?? ((_b2 = item.decision) == null ? void 0 : _b2.entry)),

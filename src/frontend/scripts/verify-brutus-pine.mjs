@@ -568,6 +568,58 @@ const requiredTradeDeskSnippets = [
     text: "plainAction:",
   },
   {
+    label: "trade desk parses raw long signal",
+    text: "rawLongSignal:",
+  },
+  {
+    label: "trade desk parses raw short signal",
+    text: "rawShortSignal:",
+  },
+  {
+    label: "trade desk parses original long condition",
+    text: "rawLongCondition:",
+  },
+  {
+    label: "trade desk parses original short condition",
+    text: "rawShortCondition:",
+  },
+  {
+    label: "trade desk parses first touch long",
+    text: "newLongTouch:",
+  },
+  {
+    label: "trade desk parses signal conflict",
+    text: "signalConflict:",
+  },
+  {
+    label: "trade desk parses session gate",
+    text: "inSession:",
+  },
+  {
+    label: "trade desk parses timing gate",
+    text: "notTooEarly:",
+  },
+  {
+    label: "trade desk parses minutes into bar",
+    text: "minutesIntoBar: asNumber(item.minutesIntoBar)",
+  },
+  {
+    label: "trade desk parses snapback gates",
+    text: "longSnapback:",
+  },
+  {
+    label: "trade desk parses push-through gates",
+    text: "longPushThrough:",
+  },
+  {
+    label: "trade desk displays raw gate summary",
+    text: "function alertGateSummary(alert: TvAlert)",
+  },
+  {
+    label: "trade desk shows original/live gate summary",
+    text: "original ${boolWord(original)} | live ${boolWord(liveTouch)}",
+  },
+  {
     label: "trade desk compares Pine versus app decision",
     text: "Pine vs app",
   },

@@ -92,6 +92,14 @@ type TvAlert = {
   rawSignal?: boolean;
   decisionEvent?: string;
   previousAction?: string;
+  rawLongSignal?: boolean;
+  rawShortSignal?: boolean;
+  rawLongCondition?: boolean;
+  rawShortCondition?: boolean;
+  newLongTouch?: boolean;
+  newShortTouch?: boolean;
+  signalConflict?: boolean;
+  signalDirection?: string;
   action?: Decision;
   plainAction?: string;
   reason?: string;
@@ -104,6 +112,13 @@ type TvAlert = {
   confirmed?: boolean;
   mode?: string;
   modeReady?: boolean;
+  inSession?: boolean;
+  minutesIntoBar?: number;
+  notTooEarly?: boolean;
+  longSnapback?: boolean;
+  shortSnapback?: boolean;
+  longPushThrough?: boolean;
+  shortPushThrough?: boolean;
   open?: number;
   high?: number;
   low?: number;
@@ -422,6 +437,28 @@ function normalizeAlertPayload(
       typeof item.decisionEvent === "string" ? item.decisionEvent : undefined,
     previousAction:
       typeof item.previousAction === "string" ? item.previousAction : undefined,
+    rawLongSignal:
+      typeof item.rawLongSignal === "boolean" ? item.rawLongSignal : undefined,
+    rawShortSignal:
+      typeof item.rawShortSignal === "boolean" ? item.rawShortSignal : undefined,
+    rawLongCondition:
+      typeof item.rawLongCondition === "boolean"
+        ? item.rawLongCondition
+        : undefined,
+    rawShortCondition:
+      typeof item.rawShortCondition === "boolean"
+        ? item.rawShortCondition
+        : undefined,
+    newLongTouch:
+      typeof item.newLongTouch === "boolean" ? item.newLongTouch : undefined,
+    newShortTouch:
+      typeof item.newShortTouch === "boolean" ? item.newShortTouch : undefined,
+    signalConflict:
+      typeof item.signalConflict === "boolean" ? item.signalConflict : undefined,
+    signalDirection:
+      typeof item.signalDirection === "string"
+        ? item.signalDirection
+        : undefined,
     action: decisionFrom(item.action),
     plainAction:
       typeof item.plainAction === "string" ? item.plainAction : undefined,
@@ -437,6 +474,23 @@ function normalizeAlertPayload(
     mode: typeof item.mode === "string" ? item.mode : undefined,
     modeReady:
       typeof item.modeReady === "boolean" ? item.modeReady : undefined,
+    inSession:
+      typeof item.inSession === "boolean" ? item.inSession : undefined,
+    minutesIntoBar: asNumber(item.minutesIntoBar),
+    notTooEarly:
+      typeof item.notTooEarly === "boolean" ? item.notTooEarly : undefined,
+    longSnapback:
+      typeof item.longSnapback === "boolean" ? item.longSnapback : undefined,
+    shortSnapback:
+      typeof item.shortSnapback === "boolean" ? item.shortSnapback : undefined,
+    longPushThrough:
+      typeof item.longPushThrough === "boolean"
+        ? item.longPushThrough
+        : undefined,
+    shortPushThrough:
+      typeof item.shortPushThrough === "boolean"
+        ? item.shortPushThrough
+        : undefined,
     open: asNumber(item.open),
     high: asNumber(item.high),
     low: asNumber(item.low),
@@ -1227,6 +1281,39 @@ function DecisionPill({ decision }: { decision: Decision }) {
     </span>
   );
 }
+
+function boolWord(value?: boolean) {
+  if (value == null) return "?";
+  return value ? "yes" : "no";
+}
+
+function sideGateValue(
+  alert: TvAlert,
+  longValue?: boolean,
+  shortValue?: boolean,
+) {
+  const direction = alert.signalDirection ?? alert.direction;
+  if (direction === "long") return longValue;
+  if (direction === "short") return shortValue;
+  return longValue ?? shortValue;
+}
+
+function alertGateSummary(alert: TvAlert) {
+  const original = sideGateValue(
+    alert,
+    alert.rawLongCondition,
+    alert.rawShortCondition,
+  );
+  const liveTouch = sideGateValue(alert, alert.rawLongSignal, alert.rawShortSignal);
+  const snapback = sideGateValue(alert, alert.longSnapback, alert.shortSnapback);
+  const push = sideGateValue(alert, alert.longPushThrough, alert.shortPushThrough);
+  const minutes =
+    alert.minutesIntoBar != null && Number.isFinite(alert.minutesIntoBar)
+      ? `${alert.minutesIntoBar.toFixed(1)}m`
+      : "?m";
+  return `original ${boolWord(original)} | live ${boolWord(liveTouch)} | session ${boolWord(alert.inSession)} | time ${boolWord(alert.notTooEarly)} (${minutes}) | snapback ${boolWord(snapback)} | push-through ${boolWord(push)}`;
+}
+
 function VerdictPill({ verdict }: { verdict: PlaybookVerdict }) {
   const colors: Record<PlaybookVerdict, string> = {
     TEST: "border-lime-400 bg-lime-400/10 text-lime-300",
@@ -2568,6 +2655,19 @@ export default function BrutusTradeDeskPage() {
                       {item.alert.plainAction ??
                         item.decision?.doNow ??
                         "Do nothing."}
+                      {isLatestPlaybookAlert(item.alert) && (
+                        <span className="mt-1 block text-muted-foreground">
+                          {item.alert.decisionEvent ?? "event"}{" "}
+                          {item.alert.previousAction
+                            ? `from ${item.alert.previousAction}`
+                            : ""}
+                        </span>
+                      )}
+                      {isLatestPlaybookAlert(item.alert) && (
+                        <span className="mt-1 block text-muted-foreground">
+                          {alertGateSummary(item.alert)}
+                        </span>
+                      )}
                     </td>
                     <td className="px-2 py-2">
                       E:{fmtPrice(item.alert.entry ?? item.decision?.entry)} S:
