@@ -42662,6 +42662,7 @@ varip bool rawLongLatched = false
 varip bool rawShortLatched = false
 varip bool alertedLongThisBar = false
 varip bool alertedShortThisBar = false
+varip bool alertedOriginalThisBar = false
 varip string lastLongAlertAction = ""
 varip string lastShortAlertAction = ""
 if na(latchedBarTime) or time != latchedBarTime
@@ -42670,6 +42671,7 @@ if na(latchedBarTime) or time != latchedBarTime
     rawShortLatched := false
     alertedLongThisBar := false
     alertedShortThisBar := false
+    alertedOriginalThisBar := false
     lastLongAlertAction := ""
     lastShortAlertAction := ""
 newLongTouch = rawLongCondition and not rawLongLatched
@@ -42742,11 +42744,12 @@ plotshape(skipSignal and direction == "short", title="Short SKIP", location=loca
 plotshape(conflictSkip, title="Conflict SKIP", location=location.top, color=color.yellow, style=shape.diamond, text="BOTH")
 
 firstTouchNewSide = signalMode == "First touch" and barstate.isrealtime and ((rawLongSignal and not alertedLongThisBar) or (rawShortSignal and not alertedShortThisBar))
+firstTouchOriginalTriangle = signalMode == "First touch" and barstate.isrealtime and originalTriangleSignal and not alertedOriginalThisBar
 firstTouchDecisionChanged = signalMode == "First touch" and barstate.isrealtime and ((rawLongSignal and action != "NO_SIGNAL" and action != lastLongAlertAction) or (rawShortSignal and action != "NO_SIGNAL" and action != lastShortAlertAction))
 confirmedCloseEvent = signalMode == "Confirmed close" and rawSignal and barstate.isconfirmed
-decisionEvent = confirmedCloseEvent ? "confirmed_close" : firstTouchNewSide ? "first_touch" : firstTouchDecisionChanged ? "decision_change" : "none"
+decisionEvent = confirmedCloseEvent ? "confirmed_close" : firstTouchNewSide ? "first_touch" : firstTouchOriginalTriangle ? "original_triangle" : firstTouchDecisionChanged ? "decision_change" : "none"
 previousAction = direction == "long" ? lastLongAlertAction : direction == "short" ? lastShortAlertAction : signalConflict ? "both" : ""
-shouldAlert = modeReady and (not liveAlertsOnly or barstate.isrealtime) and (firstTouchNewSide or firstTouchDecisionChanged or confirmedCloseEvent)
+shouldAlert = modeReady and (not liveAlertsOnly or barstate.isrealtime) and (firstTouchNewSide or firstTouchOriginalTriangle or firstTouchDecisionChanged or confirmedCloseEvent)
 rawAuditText = rawSignal ? "Raw " + action + " | alert " + (shouldAlert ? "will fire" : "held") : "No raw Brutus signal now"
 alertDirection = signalConflict ? (rawLongSignal ? "long" : "short") : direction
 confirmText = barstate.isconfirmed ? "confirmed close" : "open candle"
@@ -42773,6 +42776,8 @@ if shouldAlert
     if rawShortSignal
         alertedShortThisBar := true
         lastShortAlertAction := action
+    if originalTriangleSignal
+        alertedOriginalThisBar := true
 
 // These named alertconditions are labels only. The paper evidence loop depends on the alert(message) JSON above, so TradingView alerts should use "Any alert() function call".
 alertcondition(longEnter or shortEnter, title="Brutus ENTER", message="Wrong alert type for evidence loop. Use Any alert() function call for full JSON.")
