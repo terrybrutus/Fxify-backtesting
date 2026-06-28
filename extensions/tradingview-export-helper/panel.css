@@ -1,4 +1,4 @@
-#ict-tv-export-helper {
+#ict-tv-brutus-alert-helper {
   position: fixed;
   right: 18px;
   bottom: 18px;
@@ -12,11 +12,11 @@
   font-size: 12px;
 }
 
-#ict-tv-export-helper * {
+#ict-tv-brutus-alert-helper * {
   box-sizing: border-box;
 }
 
-#ict-tv-export-helper .ict-tv-title {
+#ict-tv-brutus-alert-helper .ict-tv-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -26,37 +26,37 @@
   letter-spacing: 0.04em;
 }
 
-#ict-tv-export-helper .ict-tv-title button,
-#ict-tv-export-helper .ict-tv-body button {
+#ict-tv-brutus-alert-helper .ict-tv-title button,
+#ict-tv-brutus-alert-helper .ict-tv-body button {
   border: 1px solid rgba(0, 200, 200, 0.6);
   background: #101518;
   color: #f3f7f7;
   cursor: pointer;
 }
 
-#ict-tv-export-helper .ict-tv-title button {
+#ict-tv-brutus-alert-helper .ict-tv-title button {
   width: 24px;
   height: 24px;
 }
 
-#ict-tv-export-helper .ict-tv-body {
+#ict-tv-brutus-alert-helper .ict-tv-body {
   display: grid;
   gap: 8px;
   padding: 10px;
 }
 
-#ict-tv-export-helper.is-collapsed .ict-tv-body {
+#ict-tv-brutus-alert-helper.is-collapsed .ict-tv-body {
   display: none;
 }
 
-#ict-tv-export-helper .ict-tv-row {
+#ict-tv-brutus-alert-helper .ict-tv-row {
   display: flex;
   justify-content: space-between;
   gap: 8px;
   color: #94a3a8;
 }
 
-#ict-tv-export-helper .ict-tv-row strong {
+#ict-tv-brutus-alert-helper .ict-tv-row strong {
   max-width: 150px;
   color: #ffffff;
   overflow: hidden;
@@ -64,30 +64,30 @@
   white-space: nowrap;
 }
 
-#ict-tv-export-helper .ict-tv-body button {
+#ict-tv-brutus-alert-helper .ict-tv-body button {
   min-height: 32px;
   padding: 7px 8px;
   text-align: left;
 }
 
-#ict-tv-export-helper .ict-tv-body button:hover {
+#ict-tv-brutus-alert-helper .ict-tv-body button:hover {
   background: #062426;
 }
 
-#ict-tv-export-helper .ict-tv-divider {
+#ict-tv-brutus-alert-helper .ict-tv-divider {
   height: 1px;
   margin: 2px 0;
   background: rgba(255, 255, 255, 0.14);
 }
 
-#ict-tv-export-helper .ict-tv-section {
+#ict-tv-brutus-alert-helper .ict-tv-section {
   color: #9ffcff;
   font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-#ict-tv-export-helper .ict-tv-hint {
+#ict-tv-brutus-alert-helper .ict-tv-hint {
   padding: 7px;
   color: #cbd5d8;
   background: rgba(0, 200, 200, 0.08);
@@ -95,7 +95,7 @@
   line-height: 1.35;
 }
 
-#ict-tv-export-helper .ict-tv-status {
+#ict-tv-brutus-alert-helper .ict-tv-status {
   min-height: 44px;
   padding: 8px;
   color: #b7c0c4;
@@ -104,12 +104,12 @@
   line-height: 1.35;
 }
 
-#ict-tv-export-helper .ict-tv-status[data-kind="ok"] {
+#ict-tv-brutus-alert-helper .ict-tv-status[data-kind="ok"] {
   color: #b6f2be;
   border-color: rgba(116, 255, 144, 0.4);
 }
 
-#ict-tv-export-helper .ict-tv-status[data-kind="error"] {
+#ict-tv-brutus-alert-helper .ict-tv-status[data-kind="error"] {
   color: #ffb8b8;
   border-color: rgba(255, 75, 75, 0.55);
 }

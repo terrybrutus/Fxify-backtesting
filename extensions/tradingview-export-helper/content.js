@@ -1,29 +1,16 @@
 (() => {
-  const PANEL_ID = "ict-tv-export-helper";
-  const STORAGE_KEY = "ictTvExportHelperLog";
+  const PANEL_ID = "ict-tv-brutus-alert-helper";
+  const STORAGE_KEY = "ictTvBrutusAlertHelperLog";
   const ALERT_QUEUE_KEY = "ictTvBrutusAlertQueue";
 
   if (document.getElementById(PANEL_ID)) return;
 
   const state = {
-    log: [],
-    lastInfo: null,
-    batchRunning: false,
     alertQueue: [],
     alertQueueIndex: 0,
-    recording: false,
-    recordingStartedAt: null
+    lastInfo: null,
+    log: []
   };
-
-  const TIMEFRAMES = [
-    { label: "1m", aliases: ["1m", "1"] },
-    { label: "3m", aliases: ["3m", "3"] },
-    { label: "5m", aliases: ["5m", "5"] },
-    { label: "15m", aliases: ["15m", "15"] },
-    { label: "30m", aliases: ["30m", "30"] },
-    { label: "45m", aliases: ["45m", "45"] },
-    { label: "1H", aliases: ["1h", "1 h", "60"] }
-  ];
 
   const ALERT_SYMBOLS = ["DJ30.R", "USTEC.R", "US500.R", "JPN225.R", "RUS2000.R"];
   const ALERT_TIMEFRAMES = [
@@ -40,7 +27,7 @@
   panel.id = PANEL_ID;
   panel.innerHTML = `
     <div class="ict-tv-title">
-      <strong>ICT Export Helper</strong>
+      <strong>Brutus Alert Helper</strong>
       <button type="button" data-action="collapse" title="Collapse">-</button>
     </div>
     <div class="ict-tv-body">
@@ -52,19 +39,9 @@
         <span>Interval</span>
         <strong data-field="interval">unknown</strong>
       </div>
-      <div class="ict-tv-row">
-        <span>Source</span>
-        <strong data-field="source">TradingView tab</strong>
-      </div>
       <button type="button" data-action="refresh">Refresh chart info</button>
-      <button type="button" data-action="open-table">Open Table view</button>
-      <button type="button" data-action="download-table">Download table data</button>
-      <button type="button" data-action="back-chart">Back to chart</button>
-      <button type="button" data-action="batch-timeframes">Batch current symbol TFs</button>
-      <button type="button" data-action="open-export">Open export dialog</button>
-      <button type="button" data-action="click-download">Click modal Download</button>
       <div class="ict-tv-divider"></div>
-      <strong class="ict-tv-section">Brutus Alert Setup</strong>
+      <strong class="ict-tv-section">Alert Batch</strong>
       <button type="button" data-action="start-alert-batch">Start alert batch</button>
       <button type="button" data-action="open-alert-dialog">Open alert dialog</button>
       <button type="button" data-action="alert-created-next">Created, go next</button>
@@ -72,18 +49,15 @@
       <button type="button" data-action="clear-alert-batch">Clear alert batch</button>
       <div class="ict-tv-hint" data-field="alert-hint">Use with Brutus Playbook Alerts on chart.</div>
       <div class="ict-tv-row">
-        <span>Alert batch</span>
+        <span>Progress</span>
         <strong data-field="alert-progress">not started</strong>
       </div>
       <div class="ict-tv-row">
-        <span>Current target</span>
+        <span>Target</span>
         <strong data-field="alert-target">none</strong>
       </div>
-      <div class="ict-tv-divider"></div>
-      <button type="button" data-action="start-recorder">Start recorder</button>
-      <button type="button" data-action="stop-recorder">Stop + save recording</button>
       <button type="button" data-action="save-log">Save helper log</button>
-      <div class="ict-tv-status" data-field="status">Ready. Use one chart first.</div>
+      <div class="ict-tv-status" data-field="status">Ready.</div>
     </div>
   `;
 
@@ -99,10 +73,31 @@
     }
   };
 
+  const sendRuntimeMessage = (message, callback) => {
+    if (!extensionApiAvailable()) {
+      callback({
+        ok: false,
+        error: "Extension context was reloaded. Refresh the TradingView tab."
+      });
+      return;
+    }
+    try {
+      chrome.runtime.sendMessage(message, (response) => {
+        if (chrome.runtime?.lastError) {
+          callback({ ok: false, error: chrome.runtime.lastError.message });
+          return;
+        }
+        callback(response);
+      });
+    } catch (error) {
+      callback({ ok: false, error: error.message });
+    }
+  };
+
   const saveLogToStorage = () => {
     if (!extensionApiAvailable()) return;
     try {
-      chrome.storage?.local?.set?.({ [STORAGE_KEY]: state.log.slice(-1000) });
+      chrome.storage?.local?.set?.({ [STORAGE_KEY]: state.log.slice(-500) });
     } catch {
       // Chrome invalidates old content-script extension contexts after reloads.
     }
@@ -124,6 +119,90 @@
     } catch {
       callback([]);
     }
+  };
+
+  const setStatus = (message, kind = "info") => {
+    const status = panel.querySelector('[data-field="status"]');
+    status.textContent = message;
+    status.dataset.kind = kind;
+    state.log.push({
+      at: new Date().toISOString(),
+      kind,
+      message,
+      chart: state.lastInfo
+    });
+    saveLogToStorage();
+  };
+
+  const textOf = (node) =>
+    [
+      node?.innerText,
+      node?.textContent,
+      node?.getAttribute?.("aria-label"),
+      node?.getAttribute?.("title"),
+      node?.getAttribute?.("data-name"),
+      node?.getAttribute?.("data-symbol")
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const visibleNodes = () =>
+    Array.from(document.querySelectorAll("*")).filter((node) => {
+      const rect = node.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    });
+
+  const clickables = () =>
+    Array.from(
+      document.querySelectorAll(
+        'button, [role="button"], [data-role="button"], [aria-label], [data-name], [class*="button"]'
+      )
+    ).filter((node) => {
+      const rect = node.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    });
+
+  const clickNode = (node) => {
+    if (!node) return false;
+    node.scrollIntoView?.({ block: "center", inline: "center" });
+    node.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+    node.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    node.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+    node.click?.();
+    return true;
+  };
+
+  const visibleSymbolGuess = () => {
+    const header = visibleNodes()
+      .map((node) => ({ rect: node.getBoundingClientRect(), text: textOf(node) }))
+      .filter((item) => item.rect.top < 140 && item.rect.left < window.innerWidth * 0.5)
+      .find((item) => /[A-Z0-9]+\.R/.test(item.text));
+    return header?.text?.match(/[A-Z0-9]+\.R/)?.[0] ?? "";
+  };
+
+  const visibleIntervalGuess = () => {
+    const active = visibleNodes()
+      .map((node) => ({ rect: node.getBoundingClientRect(), text: textOf(node) }))
+      .filter((item) => item.rect.top < 130 && item.rect.left < window.innerWidth * 0.5)
+      .find((item) => /\b(1m|3m|5m|15m|30m|45m|1h)\b/i.test(item.text));
+    return active?.text?.match(/\b(1m|3m|5m|15m|30m|45m|1h)\b/i)?.[0] ?? "";
+  };
+
+  const chartInfo = () => {
+    const url = new URL(window.location.href);
+    const rawSymbol = decodeURIComponent(url.searchParams.get("symbol") ?? "");
+    const info = {
+      url: window.location.href,
+      symbol: rawSymbol || visibleSymbolGuess(),
+      interval: url.searchParams.get("interval") ?? visibleIntervalGuess() ?? "unknown",
+      capturedAt: new Date().toISOString()
+    };
+    state.lastInfo = info;
+    panel.querySelector('[data-field="symbol"]').textContent = info.symbol || "unknown";
+    panel.querySelector('[data-field="interval"]').textContent = info.interval || "unknown";
+    return info;
   };
 
   const saveAlertQueue = () => {
@@ -153,268 +232,16 @@
   const currentAlertTarget = () => state.alertQueue[state.alertQueueIndex] ?? null;
 
   const updateAlertProgress = () => {
-    const progress = panel.querySelector('[data-field="alert-progress"]');
-    const target = panel.querySelector('[data-field="alert-target"]');
-    const hint = panel.querySelector('[data-field="alert-hint"]');
     const current = currentAlertTarget();
-    progress.textContent = state.alertQueue.length
+    panel.querySelector('[data-field="alert-progress"]').textContent = state.alertQueue.length
       ? `${Math.min(state.alertQueueIndex + 1, state.alertQueue.length)} / ${state.alertQueue.length}`
       : "not started";
-    target.textContent = current ? `${current.symbol} ${current.label}` : "none";
-    hint.textContent = current
-      ? "Open alert dialog, set Brutus Playbook Alerts -> Any alert() function call, then click Create."
+    panel.querySelector('[data-field="alert-target"]').textContent = current
+      ? `${current.symbol} ${current.label}`
+      : "none";
+    panel.querySelector('[data-field="alert-hint"]').textContent = current
+      ? "Set Brutus Playbook Alerts -> Any alert() function call, create the alert, then click Created, go next."
       : "Use with Brutus Playbook Alerts on chart.";
-  };
-
-  const sendRuntimeMessage = (message, callback) => {
-    if (!extensionApiAvailable()) {
-      callback({ ok: false, error: "Extension context was reloaded. Refresh the TradingView tab." });
-      return;
-    }
-    try {
-      chrome.runtime.sendMessage(message, (response) => {
-        if (chrome.runtime?.lastError) {
-          callback({ ok: false, error: chrome.runtime.lastError.message });
-          return;
-        }
-        callback(response);
-      });
-    } catch (error) {
-      callback({ ok: false, error: error.message });
-    }
-  };
-
-  const setStatus = (message, kind = "info") => {
-    const status = panel.querySelector('[data-field="status"]');
-    status.textContent = message;
-    status.dataset.kind = kind;
-    state.log.push({
-      at: new Date().toISOString(),
-      kind,
-      message,
-      chart: state.lastInfo
-    });
-    saveLogToStorage();
-  };
-
-  const textOf = (node) =>
-    [
-      node.innerText,
-      node.textContent,
-      node.getAttribute?.("aria-label"),
-      node.getAttribute?.("title"),
-      node.getAttribute?.("data-name"),
-      node.getAttribute?.("data-symbol")
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .replace(/\s+/g, " ")
-      .trim();
-
-  const cssPath = (node) => {
-    if (!node || node.nodeType !== Node.ELEMENT_NODE) return "";
-    const parts = [];
-    let current = node;
-    while (current && current.nodeType === Node.ELEMENT_NODE && parts.length < 6) {
-      const tag = current.tagName.toLowerCase();
-      const id = current.id ? `#${current.id}` : "";
-      const classes = Array.from(current.classList ?? [])
-        .slice(0, 3)
-        .map((name) => `.${name}`)
-        .join("");
-      parts.unshift(`${tag}${id}${classes}`);
-      current = current.parentElement;
-    }
-    return parts.join(" > ");
-  };
-
-  const describeElement = (node) => {
-    const element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
-    if (!element) return null;
-    const rect = element.getBoundingClientRect();
-    const parentText = textOf(element.parentElement ?? element).slice(0, 300);
-    return {
-      tag: element.tagName.toLowerCase(),
-      role: element.getAttribute("role") ?? "",
-      id: element.id ?? "",
-      classes: Array.from(element.classList ?? []).slice(0, 12),
-      text: textOf(element).slice(0, 300),
-      ariaLabel: element.getAttribute("aria-label") ?? "",
-      title: element.getAttribute("title") ?? "",
-      dataName: element.getAttribute("data-name") ?? "",
-      href: element.getAttribute("href") ?? "",
-      rect: {
-        left: Math.round(rect.left),
-        top: Math.round(rect.top),
-        width: Math.round(rect.width),
-        height: Math.round(rect.height)
-      },
-      path: cssPath(element),
-      parentText
-    };
-  };
-
-  const visibleMenuSnapshot = () =>
-    visibleNodes()
-      .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
-      .filter((item) => item.text && item.text.length < 240)
-      .filter((item) => {
-        const role = item.node.getAttribute?.("role") ?? "";
-        const classes = Array.from(item.node.classList ?? []).join(" ").toLowerCase();
-        const nearPointerMenu = /menu|popup|dropdown|context|item/i.test(role) || /menu|popup|dropdown|context|item/.test(classes);
-        const likelyMenuText = /table view|download|export|add order|settings|copy|remove|chart/i.test(item.text);
-        return nearPointerMenu || likelyMenuText;
-      })
-      .slice(0, 80)
-      .map((item) => ({
-        text: item.text,
-        role: item.node.getAttribute?.("role") ?? "",
-        tag: item.node.tagName?.toLowerCase?.() ?? "",
-        classes: Array.from(item.node.classList ?? []).slice(0, 8),
-        rect: {
-          left: Math.round(item.rect.left),
-          top: Math.round(item.rect.top),
-          width: Math.round(item.rect.width),
-          height: Math.round(item.rect.height)
-        },
-        path: cssPath(item.node)
-      }));
-
-  const clickNode = (node) => {
-    if (!node) return false;
-    node.scrollIntoView?.({ block: "center", inline: "center" });
-    node.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
-    node.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-    node.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
-    node.click();
-    return true;
-  };
-
-  const recordEvent = (event, snapshotLabel = "") => {
-    if (!state.recording) return;
-    if (panel.contains(event.target)) return;
-    const pointNode = document.elementFromPoint(event.clientX, event.clientY);
-    const entry = {
-      at: new Date().toISOString(),
-      kind: "record",
-      eventType: event.type,
-      button: event.button,
-      key: event.key ?? "",
-      clientX: Math.round(event.clientX ?? 0),
-      clientY: Math.round(event.clientY ?? 0),
-      target: describeElement(event.target),
-      elementAtPoint: describeElement(pointNode),
-      snapshotLabel,
-      chart: state.lastInfo
-    };
-    state.log.push(entry);
-    saveLogToStorage();
-    setStatus(`Recorded ${event.type}. Keep going, then Stop + save recording.`, "ok");
-  };
-
-  const recordMenuSnapshot = (label) => {
-    if (!state.recording) return;
-    state.log.push({
-      at: new Date().toISOString(),
-      kind: "record-snapshot",
-      label,
-      menuItems: visibleMenuSnapshot(),
-      chart: state.lastInfo
-    });
-    saveLogToStorage();
-  };
-
-  const startRecorder = () => {
-    chartInfo();
-    state.recording = true;
-    state.recordingStartedAt = new Date().toISOString();
-    state.log.push({
-      at: state.recordingStartedAt,
-      kind: "record-start",
-      message: "Manual TradingView recorder started.",
-      chart: state.lastInfo
-    });
-    saveLogToStorage();
-    setStatus("Recorder ON. Manually open Table view/export once, then click Stop + save recording.", "ok");
-  };
-
-  const stopRecorder = () => {
-    state.recording = false;
-    state.log.push({
-      at: new Date().toISOString(),
-      kind: "record-stop",
-      startedAt: state.recordingStartedAt,
-      message: "Manual TradingView recorder stopped.",
-      chart: state.lastInfo
-    });
-    state.recordingStartedAt = null;
-    saveLog();
-  };
-
-  const clickAt = (x, y) => {
-    const node = document.elementFromPoint(x, y);
-    return clickNode(node?.closest?.('button, [role="button"], [data-role="button"], [aria-label], [data-name]') ?? node);
-  };
-
-  const clickRectCenter = (rect) => {
-    const x = Math.round(rect.left + rect.width / 2);
-    const y = Math.round(rect.top + rect.height / 2);
-    const node = document.elementFromPoint(x, y);
-    if (!node) return false;
-    const target = node.closest?.('button, [role="button"], [data-role="button"], [aria-label], [data-name], [class]') ?? node;
-    target.dispatchEvent(new MouseEvent("mouseover", { bubbles: true, clientX: x, clientY: y }));
-    target.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: x, clientY: y }));
-    target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 0, buttons: 1, clientX: x, clientY: y }));
-    target.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true, button: 0, buttons: 0, clientX: x, clientY: y }));
-    target.click?.();
-    return true;
-  };
-
-  const normalizedText = (value) => value.replace(/\s+/g, " ").trim().toLowerCase();
-
-  const exactTextElement = (label, selector = "*") => {
-    const wanted = normalizedText(label);
-    return Array.from(document.querySelectorAll(selector)).find((node) => normalizedText(textOf(node)) === wanted);
-  };
-
-  const exactButtonByText = (label) => {
-    const textNode = exactTextElement(label, "span, div, button");
-    return textNode?.closest?.('button, [role="button"]') ?? null;
-  };
-
-  const exactMenuRowByText = (label) => {
-    const textNode = exactTextElement(label, "span, div, td, tr");
-    return textNode?.closest?.('tr, [role="menuitem"], [data-role="menuitem"], button, [role="button"]') ?? null;
-  };
-
-  const visibleNodes = () =>
-    Array.from(document.querySelectorAll("*")).filter((node) => {
-      const rect = node.getBoundingClientRect();
-      return rect.width > 0 && rect.height > 0;
-    });
-
-  const clickables = () =>
-    Array.from(
-      document.querySelectorAll('button, [role="button"], [data-role="button"], [aria-label], [data-name], [class*="button"]')
-    ).filter((node) => {
-      const rect = node.getBoundingClientRect();
-      return rect.width > 0 && rect.height > 0;
-    });
-
-  const chartInfo = () => {
-    const url = new URL(window.location.href);
-    const rawSymbol = decodeURIComponent(url.searchParams.get("symbol") ?? "");
-    const interval = url.searchParams.get("interval") ?? visibleIntervalGuess();
-    const info = {
-      url: window.location.href,
-      symbol: rawSymbol || visibleSymbolGuess(),
-      interval: interval || "unknown",
-      capturedAt: new Date().toISOString()
-    };
-    state.lastInfo = info;
-    panel.querySelector('[data-field="symbol"]').textContent = info.symbol || "unknown";
-    panel.querySelector('[data-field="interval"]').textContent = info.interval || "unknown";
-    return info;
   };
 
   const chartUrlForAlertTarget = (target) => {
@@ -426,15 +253,14 @@
 
   const navigateToAlertTarget = (target) => {
     if (!target) {
-      setStatus("Alert batch is finished.", "ok");
       updateAlertProgress();
+      setStatus("Alert batch is finished.", "ok");
       return;
     }
     saveAlertQueue();
     updateAlertProgress();
-    const nextUrl = chartUrlForAlertTarget(target);
-    setStatus(`Opening ${target.symbol} ${target.label}. Wait for chart, then Open alert dialog.`, "info");
-    window.location.assign(nextUrl);
+    setStatus(`Opening ${target.symbol} ${target.label}.`, "info");
+    window.location.assign(chartUrlForAlertTarget(target));
   };
 
   const startAlertBatch = () => {
@@ -445,7 +271,6 @@
     state.log.push({
       at: new Date().toISOString(),
       kind: "alert-batch-start",
-      message: "Started Brutus alert batch.",
       total: state.alertQueue.length,
       queue: state.alertQueue
     });
@@ -468,8 +293,8 @@
   const advanceAlertBatch = (result) => {
     const completed = currentAlertTarget();
     if (!completed) {
-      setStatus("No active alert target.", "error");
       updateAlertProgress();
+      setStatus("No active alert target.", "error");
       return;
     }
     state.log.push({
@@ -484,7 +309,7 @@
     if (state.alertQueueIndex >= state.alertQueue.length) {
       saveAlertQueue();
       updateAlertProgress();
-      setStatus("Alert batch finished. Verify TradingView Alerts list before relying on it.", "ok");
+      setStatus("Alert batch finished. Verify TradingView Alerts list.", "ok");
       return;
     }
     navigateToAlertTarget(currentAlertTarget());
@@ -508,314 +333,24 @@
 
     const target = candidates[0];
     if (!target) {
-      setStatus("Could not find TradingView's Alert button. Press Alt+A or click Alert manually.", "error");
-      return { ok: false };
+      setStatus("Could not find TradingView's Alert button. Click Alert manually, then create it.", "error");
+      return;
     }
 
     clickNode(target.node);
     await sleep(900);
-    setStatus("Alert dialog should be open. Use Brutus Playbook Alerts -> Any alert() function call, then Create.", "ok");
-    return { ok: true };
-  };
-
-  const visibleSymbolGuess = () => {
-    const header = visibleNodes()
-      .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
-      .filter((item) => item.rect.top < 140 && item.rect.left < window.innerWidth * 0.45)
-      .find((item) => /[A-Z0-9]+\.R/.test(item.text));
-    return header?.text?.match(/[A-Z0-9]+\.R/)?.[0] ?? "";
-  };
-
-  const visibleIntervalGuess = () => {
-    const active = visibleNodes()
-      .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
-      .filter((item) => item.rect.top < 130 && item.rect.left < window.innerWidth * 0.45)
-      .find((item) => /\b(1m|3m|5m|15m|30m|45m|1h)\b/i.test(item.text));
-    return active?.text?.match(/\b(1m|3m|5m|15m|30m|45m|1h)\b/i)?.[0] ?? "";
-  };
-
-  const backToChart = async () => {
-    const button = visibleNodes().find((node) => /go back to chart|back to chart|chart view/i.test(textOf(node))) ??
-      clickables().find((node) => /go back to chart|back to chart|chart view/i.test(textOf(node)));
-
-    if (!button) {
-      return { ok: true, alreadyChart: true };
-    }
-
-    clickNode(button.node ?? button);
-    await sleep(1000);
-    return { ok: true };
-  };
-
-  const selectTimeframe = async (timeframe) => {
-    await backToChart();
-    chartInfo();
-
-    const aliases = timeframe.aliases.map((alias) => alias.toLowerCase());
-    const candidates = clickables()
-      .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node).toLowerCase() }))
-      .filter((item) => {
-        if (item.rect.top > 150) return false;
-        if (item.rect.left > window.innerWidth * 0.5) return false;
-        const normalized = item.text.replace(/\s+/g, " ").trim();
-        return aliases.some((alias) => normalized === alias || normalized.includes(` ${alias} `) || normalized.endsWith(` ${alias}`));
-      })
-      .sort((a, b) => a.rect.left - b.rect.left);
-
-    const target = candidates[0];
-    if (!target) return { ok: false, error: `Could not find timeframe button ${timeframe.label}.` };
-
-    clickNode(target.node);
-    await sleep(1400);
-    chartInfo();
-    return { ok: true, timeframe: timeframe.label };
-  };
-
-  const chartCanvasPoint = () => {
-    const canvases = Array.from(document.querySelectorAll("canvas"))
-      .map((node) => ({ node, rect: node.getBoundingClientRect() }))
-      .filter((item) =>
-        item.rect.width > window.innerWidth * 0.35 &&
-        item.rect.height > window.innerHeight * 0.25 &&
-        item.rect.top > 40 &&
-        item.rect.left < window.innerWidth * 0.75
-      )
-      .sort((a, b) => (b.rect.width * b.rect.height) - (a.rect.width * a.rect.height));
-
-    const rect = canvases[0]?.rect ?? {
-      left: window.innerWidth * 0.18,
-      top: window.innerHeight * 0.18,
-      width: window.innerWidth * 0.55,
-      height: window.innerHeight * 0.42
-    };
-
-    return {
-      x: Math.round(rect.left + rect.width * 0.52),
-      y: Math.round(rect.top + rect.height * 0.48)
-    };
-  };
-
-  const rightClickAt = (x, y) => {
-    const node = document.elementFromPoint(x, y);
-    if (!node) return false;
-    const target = node.closest?.("canvas, [class], [data-name]") ?? node;
-    const eventOptions = {
-      bubbles: true,
-      cancelable: true,
-      view: window,
-      button: 2,
-      buttons: 2,
-      clientX: x,
-      clientY: y
-    };
-    target.dispatchEvent(new PointerEvent("pointerdown", eventOptions));
-    target.dispatchEvent(new MouseEvent("mousedown", eventOptions));
-    target.dispatchEvent(new MouseEvent("contextmenu", eventOptions));
-    return true;
-  };
-
-  const openTableView = async () => {
-    chartInfo();
-    await backToChart();
-    const point = chartCanvasPoint();
-    setStatus(`Right-clicking chart near ${point.x}, ${point.y} for Table view...`, "info");
-
-    if (!rightClickAt(point.x, point.y)) {
-      setStatus("Could not right-click the chart canvas.", "error");
-      return { ok: false, error: "Could not right-click the chart canvas." };
-    }
-
-    await sleep(700);
-    const tableItem = exactMenuRowByText("Table view");
-
-    if (!tableItem) {
-      setStatus("Context menu opened, but I could not find Table view.", "error");
-      return { ok: false, error: "Context menu opened, but I could not find Table view." };
-    }
-
-    setStatus("Found Table view. Selecting it...", "info");
-    if (!clickRectCenter(tableItem.getBoundingClientRect())) {
-      setStatus("Found Table view, but could not click it.", "error");
-      return { ok: false, error: "Found Table view, but could not click it." };
-    }
-
-    await sleep(1200);
-    const tableOpened = visibleNodes().some((node) => /download table data|download data/i.test(textOf(node))) ||
-      visibleNodes().some((node) => /go back to chart|back to chart/i.test(textOf(node)));
-    if (!tableOpened) {
-      setStatus("Clicked Table view, but TradingView did not open the table panel.", "error");
-      return { ok: false, error: "Clicked Table view, but TradingView did not open the table panel." };
-    }
-
-    setStatus("Table view is open. Now click Download table data.", "ok");
-    return { ok: true };
-  };
-
-  const downloadTableData = async () => {
-    chartInfo();
-    const target = exactButtonByText("Download data");
-
-    if (!target) {
-      setStatus("Could not find a download button in Table view.", "error");
-      return { ok: false, error: "Could not find a download button in Table view." };
-    }
-
-    clickNode(target);
-    await sleep(1200);
-    setStatus("Clicked Table view download. Check Chrome downloads for the CSV.", "ok");
-    return { ok: true };
-  };
-
-  const batchCurrentSymbolTimeframes = async () => {
-    if (state.batchRunning) {
-      setStatus("Batch already running.", "error");
-      return;
-    }
-
-    state.batchRunning = true;
-    const started = chartInfo();
-    setStatus(`Starting Table view batch for ${started.symbol || "current symbol"}...`, "info");
-
-    try {
-      for (const timeframe of TIMEFRAMES) {
-        setStatus(`Batch: switching to ${timeframe.label}...`, "info");
-        const selected = await selectTimeframe(timeframe);
-        if (!selected.ok) {
-          setStatus(`Batch stopped: ${selected.error}`, "error");
-          break;
-        }
-
-        const opened = await openTableView();
-        if (!opened?.ok) {
-          setStatus(`Batch stopped on ${timeframe.label}: ${opened?.error ?? "Table view failed."}`, "error");
-          break;
-        }
-
-        const downloaded = await downloadTableData();
-        if (!downloaded?.ok) {
-          setStatus(`Batch stopped on ${timeframe.label}: ${downloaded?.error ?? "Download failed."}`, "error");
-          break;
-        }
-
-        await backToChart();
-        await sleep(1500);
-      }
-      setStatus("Batch finished or stopped. Check Chrome downloads.", "ok");
-    } finally {
-      state.batchRunning = false;
-    }
-  };
-
-  const openChartLayoutMenu = () => {
-    const topRightNodes = visibleNodes()
-      .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
-      .filter((item) => {
-        if (item.rect.top > 70) return false;
-        if (item.rect.left < window.innerWidth * 0.55) return false;
-        if (item.rect.right > window.innerWidth - 160) return false;
-        if (!item.text || item.text.length > 28) return false;
-        return true;
-      });
-
-    const layoutName = topRightNodes.find((item) => /^dca$/i.test(item.text)) ??
-      topRightNodes.find((item) => /layout|chart layout/i.test(item.text));
-
-    if (!layoutName) return { ok: false, error: "Could not find the top-right chart layout name, such as DCA." };
-
-    const y = layoutName.rect.top + layoutName.rect.height / 2;
-    const candidateXs = [
-      layoutName.rect.right + 18,
-      layoutName.rect.right + 10,
-      layoutName.rect.left + layoutName.rect.width / 2
-    ];
-
-    for (const x of candidateXs) {
-      if (clickAt(x, y)) return { ok: true, method: "layout-name-chevron", text: layoutName.text };
-    }
-
-    return { ok: false, error: "Found the chart layout name, but could not click its dropdown." };
-  };
-
-  const openExportDialog = async () => {
-    chartInfo();
-    setStatus("Looking for the chart layout menu...", "info");
-
-    const opened = openChartLayoutMenu();
-    if (!opened.ok) {
-      setStatus(opened.error, "error");
-      return;
-    }
-
-    await sleep(600);
-    const item = visibleNodes().find((node) => /download chart data|export chart data|export data/i.test(textOf(node)));
-    if (!item) {
-      setStatus("Menu opened, but I could not find Download chart data.", "error");
-      return;
-    }
-
-    clickNode(item);
-    await sleep(800);
-    setStatus("Export dialog should be open. Click modal Download or press it manually.", "ok");
-  };
-
-  const clickModalDownload = async () => {
-    chartInfo();
-    const nodes = visibleNodes().map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }));
-    const dialogHint = nodes.find((item) => /download chart data/i.test(item.text));
-    let dialogRect = null;
-
-    if (dialogHint) {
-      let node = dialogHint.node;
-      for (let depth = 0; node && depth < 8; depth += 1) {
-        const rect = node.getBoundingClientRect();
-        if (
-          rect.width >= 260 &&
-          rect.height >= 150 &&
-          rect.left > window.innerWidth * 0.15 &&
-          rect.right < window.innerWidth * 0.85 &&
-          rect.top > window.innerHeight * 0.1 &&
-          rect.bottom < window.innerHeight * 0.9
-        ) {
-          dialogRect = rect;
-          break;
-        }
-        node = node.parentElement;
-      }
-    }
-
-    const downloadButton = exactButtonByText("Download") ??
-      clickables()
-      .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
-      .filter((item) => /^download$/i.test(item.text))
-      .filter((item) => {
-        if (!dialogRect) return true;
-        return (
-          item.rect.left >= dialogRect.left - 20 &&
-          item.rect.right <= dialogRect.right + 20 &&
-          item.rect.top >= dialogRect.top - 20 &&
-          item.rect.bottom <= dialogRect.bottom + 80
-        );
-      })
-      .sort((a, b) => b.rect.top - a.rect.top || b.rect.left - a.rect.left)[0]?.node;
-
-    if (downloadButton) {
-      clickNode(downloadButton);
-      setStatus("Clicked modal Download. Watch Chrome downloads for the CSV.", "ok");
-      return;
-    }
-
-    if (dialogRect && clickAt(dialogRect.right - 45, dialogRect.bottom - 30)) {
-      setStatus("Clicked lower-right area of export dialog. Check if the CSV downloaded.", "ok");
-      return;
-    }
-
-    setStatus("Could not find the modal Download button.", "error");
+    setStatus("Alert dialog should be open. Choose Brutus Playbook Alerts -> Any alert() function call.", "ok");
   };
 
   const saveLog = () => {
     const payload = {
       exportedAt: new Date().toISOString(),
       currentChart: chartInfo(),
+      alertQueue: {
+        index: state.alertQueueIndex,
+        total: state.alertQueue.length,
+        current: currentAlertTarget()
+      },
       log: state.log
     };
     sendRuntimeMessage({ type: "ICT_EXPORT_HELPER_DOWNLOAD_LOG", payload }, (response) => {
@@ -832,57 +367,19 @@
       chartInfo();
       setStatus("Chart info refreshed.", "ok");
     }
-    if (action === "open-table") openTableView();
-    if (action === "download-table") downloadTableData();
-    if (action === "back-chart") backToChart().then(() => setStatus("Returned to chart view if Table view was open.", "ok"));
-    if (action === "batch-timeframes") batchCurrentSymbolTimeframes();
-    if (action === "open-export") openExportDialog();
-    if (action === "click-download") clickModalDownload();
     if (action === "start-alert-batch") startAlertBatch();
     if (action === "open-alert-dialog") openAlertDialog();
     if (action === "alert-created-next") advanceAlertBatch("created");
     if (action === "skip-alert-next") advanceAlertBatch("skipped");
     if (action === "clear-alert-batch") clearAlertBatch();
-    if (action === "start-recorder") startRecorder();
-    if (action === "stop-recorder") stopRecorder();
     if (action === "save-log") saveLog();
   });
-
-  document.addEventListener("click", (event) => {
-    recordEvent(event);
-    window.setTimeout(() => recordMenuSnapshot("after click"), 250);
-  }, true);
-
-  document.addEventListener("contextmenu", (event) => {
-    recordEvent(event);
-    window.setTimeout(() => recordMenuSnapshot("after contextmenu"), 350);
-  }, true);
-
-  document.addEventListener("keydown", (event) => {
-    if (!state.recording) return;
-    if (panel.contains(event.target)) return;
-    state.log.push({
-      at: new Date().toISOString(),
-      kind: "record",
-      eventType: "keydown",
-      key: event.key,
-      code: event.code,
-      ctrlKey: event.ctrlKey,
-      shiftKey: event.shiftKey,
-      altKey: event.altKey,
-      metaKey: event.metaKey,
-      target: describeElement(event.target),
-      chart: state.lastInfo
-    });
-    saveLogToStorage();
-    setStatus(`Recorded key ${event.key}.`, "ok");
-  }, true);
 
   loadLogFromStorage((log) => {
     state.log = log;
     loadAlertQueue();
     chartInfo();
     updateAlertProgress();
-    setStatus("Extension loaded on TradingView.", "ok");
+    setStatus("Brutus Alert Helper loaded.", "ok");
   });
 })();

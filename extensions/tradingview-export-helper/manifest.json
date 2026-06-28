@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "ICT TradingView Export Helper",
+  "name": "Brutus TradingView Alert Helper",
   "version": "0.1.0",
-  "description": "Manual-assisted TradingView chart export helper for Fxify/Alchemy research.",
+  "description": "Manual-assisted TradingView alert setup helper for Brutus Playbook Alerts.",
   "permissions": ["downloads", "storage"],
   "host_permissions": ["https://www.tradingview.com/chart/*"],
   "background": {
