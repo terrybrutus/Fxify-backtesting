@@ -62,8 +62,8 @@ const requiredSnippets = [
     text: "firstTouchDecisionChanged = signalMode == \"First touch\" and barstate.isrealtime",
   },
   {
-    label: "alert fires on first touch or decision change",
-    text: "firstTouchNewSide or firstTouchDecisionChanged or confirmedCloseEvent",
+    label: "alert fires on first touch, original triangle, or decision change",
+    text: "firstTouchNewSide or firstTouchOriginalTriangle or firstTouchDecisionChanged or confirmedCloseEvent",
   },
   {
     label: "plain alert coverage documentation",
@@ -127,7 +127,19 @@ const requiredSnippets = [
   },
   {
     label: "decision event calculation",
-    text: 'decisionEvent = confirmedCloseEvent ? "confirmed_close" : firstTouchNewSide ? "first_touch" : firstTouchDecisionChanged ? "decision_change" : "none"',
+    text: 'decisionEvent = confirmedCloseEvent ? "confirmed_close" : firstTouchNewSide ? "first_touch" : firstTouchOriginalTriangle ? "original_triangle" : firstTouchDecisionChanged ? "decision_change" : "none"',
+  },
+  {
+    label: "original triangle live event calculation",
+    text: 'firstTouchOriginalTriangle = signalMode == "First touch" and barstate.isrealtime and originalTriangleSignal and not alertedOriginalThisBar',
+  },
+  {
+    label: "alert gate includes original triangle event",
+    text: "firstTouchNewSide or firstTouchOriginalTriangle or firstTouchDecisionChanged or confirmedCloseEvent",
+  },
+  {
+    label: "original triangle alert latches per bar",
+    text: "alertedOriginalThisBar := true",
   },
   {
     label: "previous action calculation",
