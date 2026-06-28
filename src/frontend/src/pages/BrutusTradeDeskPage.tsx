@@ -153,6 +153,7 @@ type AlertImportResult = {
   current: number;
   old: number;
   legacy: number;
+  incomplete: number;
   contractIssues: number;
 };
 
@@ -651,6 +652,47 @@ function playbookContractIssues(alert: TvAlert) {
   if (alert.lowerSource !== "low") issues.push("lower source");
   if (alert.stdDev !== 2) issues.push("stdDev");
   return issues;
+}
+
+function missingPlaybookFields(alert: TvAlert) {
+  const missing: string[] = [];
+  if (!isLatestPlaybookAlert(alert)) return missing;
+  if (alert.rawSignal !== true) missing.push("rawSignal");
+  if (!alert.decisionEvent) missing.push("decisionEvent");
+  if (alert.decisionEvent === "decision_change" && !alert.previousAction) {
+    missing.push("previousAction");
+  }
+  if (!alert.action) missing.push("action");
+  if (!alert.reason && !alert.plainAction) missing.push("reason");
+  if (!alert.mode && !alert.alertMode) missing.push("mode");
+  if (alert.confirmed == null) missing.push("confirmed");
+  if (alert.modeReady == null) missing.push("modeReady");
+  if (alert.inSession == null) missing.push("inSession");
+  if (alert.minutesIntoBar == null) missing.push("minutesIntoBar");
+  if (alert.notTooEarly == null) missing.push("notTooEarly");
+  if (alert.longSnapback == null) missing.push("longSnapback");
+  if (alert.shortSnapback == null) missing.push("shortSnapback");
+  if (alert.longPushThrough == null) missing.push("longPushThrough");
+  if (alert.shortPushThrough == null) missing.push("shortPushThrough");
+  if (!alert.brokerSymbol && !alert.symbol) missing.push("symbol");
+  if (!alert.timeframe) missing.push("timeframe");
+  if (!alert.direction) missing.push("direction");
+  if (alert.candleTime == null) missing.push("timestamp");
+  if (alert.alertTime == null) missing.push("alertTime");
+  if (alert.open == null) missing.push("open");
+  if (alert.high == null) missing.push("high");
+  if (alert.low == null) missing.push("low");
+  if (alert.close == null) missing.push("close");
+  if (alert.upper == null) missing.push("upper");
+  if (alert.lower == null) missing.push("lower");
+  if (alert.entry == null) missing.push("entry");
+  if (alert.stop == null) missing.push("stop");
+  if (alert.target == null) missing.push("target");
+  if (alert.length !== 9) missing.push("length=9");
+  if (alert.upperSource !== "high") missing.push("upperSource=high");
+  if (alert.lowerSource !== "low") missing.push("lowerSource=low");
+  if (alert.stdDev !== 2) missing.push("stdDev=2");
+  return missing;
 }
 
 function sideWord(direction: Direction) {
@@ -1519,6 +1561,9 @@ export default function BrutusTradeDeskPage() {
       ).length,
       legacy: alertMatches.filter((item) => !isPlaybookAlert(item.alert))
         .length,
+      incomplete: alertMatches.filter(
+        (item) => missingPlaybookFields(item.alert).length > 0,
+      ).length,
       contractIssues: alertMatches.filter(
         (item) => playbookContractIssues(item.alert).length > 0,
       ).length,
@@ -1721,6 +1766,9 @@ export default function BrutusTradeDeskPage() {
     if (alertVersionCounts.contractIssues > 0) {
       return "Some current Playbook alerts failed the locked-parameter check. Re-export the Pine script before trusting this batch.";
     }
+    if (alertVersionCounts.incomplete > 0) {
+      return "Some current Playbook alerts are missing required JSON fields. Recreate the alerts with Any alert() function call before trusting this batch.";
+    }
     if (agreementCounts.different > 0) {
       return "Stop and review DIFFERENT rows first. Pine and the app disagree, so those rows are not tradeable evidence yet.";
     }
@@ -1805,6 +1853,9 @@ export default function BrutusTradeDeskPage() {
           (alert) => isPlaybookAlert(alert) && !isLatestPlaybookAlert(alert),
         ).length,
         legacy: parsed.filter((alert) => !isPlaybookAlert(alert)).length,
+        incomplete: parsed.filter(
+          (alert) => missingPlaybookFields(alert).length > 0,
+        ).length,
         contractIssues: parsed.filter(
           (alert) => playbookContractIssues(alert).length > 0,
         ).length,
@@ -1920,7 +1971,7 @@ export default function BrutusTradeDeskPage() {
       )}
 
       {alertImportResult && !error && (
-        <section className="grid gap-2 border border-cyan-500/40 bg-cyan-500/5 p-3 font-mono text-xs md:grid-cols-4">
+        <section className="grid gap-2 border border-cyan-500/40 bg-cyan-500/5 p-3 font-mono text-xs md:grid-cols-5">
           <span>
             Alert files:{" "}
             <strong className="text-foreground">
@@ -1959,6 +2010,15 @@ export default function BrutusTradeDeskPage() {
             }
           >
             Settings issues: {alertImportResult.contractIssues}
+          </span>
+          <span
+            className={
+              alertImportResult.incomplete > 0
+                ? "text-red-300"
+                : "text-muted-foreground"
+            }
+          >
+            Incomplete: {alertImportResult.incomplete}
           </span>
         </section>
       )}
@@ -2330,6 +2390,11 @@ export default function BrutusTradeDeskPage() {
                 PARAMETER ISSUE {alertVersionCounts.contractIssues}
               </span>
             )}
+            {alertVersionCounts.incomplete > 0 && (
+              <span className="border border-red-500/50 px-2 py-1 text-red-300">
+                INCOMPLETE {alertVersionCounts.incomplete}
+              </span>
+            )}
           </div>
         </div>
         <div className="mt-3 grid gap-2 border border-border bg-background p-3 text-sm md:grid-cols-[1.5fr_1fr]">
@@ -2635,6 +2700,14 @@ export default function BrutusTradeDeskPage() {
                         <span className="block text-red-300">
                           Fix{" "}
                           {playbookContractIssues(item.alert).join(", ")}
+                        </span>
+                      )}
+                      {missingPlaybookFields(item.alert).length > 0 && (
+                        <span className="block text-red-300">
+                          Missing{" "}
+                          {missingPlaybookFields(item.alert)
+                            .slice(0, 4)
+                            .join(", ")}
                         </span>
                       )}
                     </td>

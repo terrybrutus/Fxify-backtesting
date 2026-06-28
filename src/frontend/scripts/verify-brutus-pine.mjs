@@ -792,6 +792,22 @@ const requiredTradeDeskSnippets = [
     text: "Some current Playbook alerts failed the locked-parameter check.",
   },
   {
+    label: "trade desk detects incomplete latest playbook alerts",
+    text: "function missingPlaybookFields(alert: TvAlert)",
+  },
+  {
+    label: "trade desk blocks incomplete latest playbook alerts",
+    text: "Some current Playbook alerts are missing required JSON fields.",
+  },
+  {
+    label: "trade desk shows incomplete import count",
+    text: "Incomplete: {alertImportResult.incomplete}",
+  },
+  {
+    label: "trade desk shows incomplete live badge",
+    text: "INCOMPLETE {alertVersionCounts.incomplete}",
+  },
+  {
     label: "trade desk prioritizes decision disagreements",
     text: "Stop and review DIFFERENT rows first. Pine and the app disagree, so those rows are not tradeable evidence yet.",
   },
