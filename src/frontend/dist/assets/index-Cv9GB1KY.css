@@ -3803,6 +3803,10 @@ video {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
+  .md\:grid-cols-6 {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
   .md\:grid-cols-\[1\.25fr_2fr\] {
     grid-template-columns: 1.25fr 2fr;
   }

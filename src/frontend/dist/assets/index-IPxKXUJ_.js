@@ -42101,6 +42101,8 @@ function normalizeAlertPayload(raw, alertTime) {
     rawShortSignal: typeof item.rawShortSignal === "boolean" ? item.rawShortSignal : void 0,
     rawLongCondition: typeof item.rawLongCondition === "boolean" ? item.rawLongCondition : void 0,
     rawShortCondition: typeof item.rawShortCondition === "boolean" ? item.rawShortCondition : void 0,
+    originalTriangleSignal: typeof item.originalTriangleSignal === "boolean" ? item.originalTriangleSignal : void 0,
+    latchedSignal: typeof item.latchedSignal === "boolean" ? item.latchedSignal : void 0,
     newLongTouch: typeof item.newLongTouch === "boolean" ? item.newLongTouch : void 0,
     newShortTouch: typeof item.newShortTouch === "boolean" ? item.newShortTouch : void 0,
     signalConflict: typeof item.signalConflict === "boolean" ? item.signalConflict : void 0,
@@ -42680,6 +42682,8 @@ if rawShortCondition
 rawLongSignal = signalMode == "First touch" and barstate.isrealtime ? rawLongLatched : rawLongCondition
 rawShortSignal = signalMode == "First touch" and barstate.isrealtime ? rawShortLatched : rawShortCondition
 rawSignal = rawLongSignal or rawShortSignal
+originalTriangleSignal = rawLongCondition or rawShortCondition
+latchedSignal = rawSignal and not originalTriangleSignal
 signalConflict = rawLongSignal and rawShortSignal
 direction = signalConflict ? "both" : rawLongSignal ? "long" : rawShortSignal ? "short" : "none"
 mode = signalMode == "Confirmed close" ? "bar_close" : "first_touch"
@@ -42759,7 +42763,7 @@ if showAuditPanel and barstate.islast
     table.cell(auditPanel, 0, 5, "Check ORIG markers against old triangles first", text_color=color.yellow, bgcolor=color.new(color.black, 15))
     table.cell(auditPanel, 0, 6, "Open-bar ORIG can change until candle close", text_color=color.yellow, bgcolor=color.new(color.black, 15))
     table.cell(auditPanel, 0, 7, "Paper evidence only - not live-trade approval", text_color=color.orange, bgcolor=color.new(color.black, 15))
-message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v10\\",\\"rawSignal\\":true,\\"decisionEvent\\":\\"" + decisionEvent + "\\",\\"previousAction\\":\\"" + previousAction + "\\",\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"rawLongCondition\\":" + str.tostring(rawLongCondition) + ",\\"rawShortCondition\\":" + str.tostring(rawShortCondition) + ",\\"newLongTouch\\":" + str.tostring(newLongTouch) + ",\\"newShortTouch\\":" + str.tostring(newShortTouch) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"signalDirection\\":\\"" + direction + "\\",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"modeReady\\":" + str.tostring(modeReady) + ",\\"inSession\\":" + str.tostring(inSession) + ",\\"minutesIntoBar\\":" + str.tostring(minutesIntoBar) + ",\\"notTooEarly\\":" + str.tostring(notTooEarly) + ",\\"longSnapback\\":" + str.tostring(longSnapback) + ",\\"shortSnapback\\":" + str.tostring(shortSnapback) + ",\\"longPushThrough\\":" + str.tostring(longPushThrough) + ",\\"shortPushThrough\\":" + str.tostring(shortPushThrough) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + alertDirection + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"bandWidth\\":" + str.tostring(bandWidth) + ",\\"touchDepth\\":" + str.tostring(touchDepth) + ",\\"touchDepthRatio\\":" + str.tostring(touchDepthRatio) + ",\\"entry\\":" + entryJson + ",\\"stop\\":" + stopJson + ",\\"target\\":" + targetJson + ",\\"length\\":" + str.tostring(length) + ",\\"upperSource\\":\\"high\\",\\"lowerSource\\":\\"low\\",\\"stdDev\\":" + str.tostring(mult) + ",\\"reason\\":\\"" + reason + "\\"}"
+message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v10\\",\\"rawSignal\\":true,\\"originalTriangleSignal\\":" + str.tostring(originalTriangleSignal) + ",\\"latchedSignal\\":" + str.tostring(latchedSignal) + ",\\"decisionEvent\\":\\"" + decisionEvent + "\\",\\"previousAction\\":\\"" + previousAction + "\\",\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"rawLongCondition\\":" + str.tostring(rawLongCondition) + ",\\"rawShortCondition\\":" + str.tostring(rawShortCondition) + ",\\"newLongTouch\\":" + str.tostring(newLongTouch) + ",\\"newShortTouch\\":" + str.tostring(newShortTouch) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"signalDirection\\":\\"" + direction + "\\",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"modeReady\\":" + str.tostring(modeReady) + ",\\"inSession\\":" + str.tostring(inSession) + ",\\"minutesIntoBar\\":" + str.tostring(minutesIntoBar) + ",\\"notTooEarly\\":" + str.tostring(notTooEarly) + ",\\"longSnapback\\":" + str.tostring(longSnapback) + ",\\"shortSnapback\\":" + str.tostring(shortSnapback) + ",\\"longPushThrough\\":" + str.tostring(longPushThrough) + ",\\"shortPushThrough\\":" + str.tostring(shortPushThrough) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + alertDirection + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"bandWidth\\":" + str.tostring(bandWidth) + ",\\"touchDepth\\":" + str.tostring(touchDepth) + ",\\"touchDepthRatio\\":" + str.tostring(touchDepthRatio) + ",\\"entry\\":" + entryJson + ",\\"stop\\":" + stopJson + ",\\"target\\":" + targetJson + ",\\"length\\":" + str.tostring(length) + ",\\"upperSource\\":\\"high\\",\\"lowerSource\\":\\"low\\",\\"stdDev\\":" + str.tostring(mult) + ",\\"reason\\":\\"" + reason + "\\"}"
 
 if shouldAlert
     alert(message, alert.freq_all)
@@ -42854,8 +42858,9 @@ function alertGateSummary(alert) {
   const liveTouch = sideGateValue(alert, alert.rawLongSignal, alert.rawShortSignal);
   const snapback = sideGateValue(alert, alert.longSnapback, alert.shortSnapback);
   const push2 = sideGateValue(alert, alert.longPushThrough, alert.shortPushThrough);
+  const source = alert.originalTriangleSignal === true ? "orig formula now" : alert.latchedSignal === true ? "live latch" : "unknown source";
   const minutes = alert.minutesIntoBar != null && Number.isFinite(alert.minutesIntoBar) ? `${alert.minutesIntoBar.toFixed(1)}m` : "?m";
-  return `original ${boolWord(original)} | live ${boolWord(liveTouch)} | session ${boolWord(alert.inSession)} | time ${boolWord(alert.notTooEarly)} (${minutes}) | snapback ${boolWord(snapback)} | push-through ${boolWord(push2)}`;
+  return `${source} | original ${boolWord(original)} | live ${boolWord(liveTouch)} | session ${boolWord(alert.inSession)} | time ${boolWord(alert.notTooEarly)} (${minutes}) | snapback ${boolWord(snapback)} | push-through ${boolWord(push2)}`;
 }
 function VerdictPill({ verdict }) {
   const colors = {
@@ -49970,7 +49975,7 @@ function SetupDetectorPage() {
 const STORAGE_KEY = "ict.tradingview.alerts.v1";
 const PAPER_OUTCOME_STORAGE_KEY = "ict.tradingview.paperOutcomes.v1";
 const LATEST_PLAYBOOK_VERSION = "raw-parity-v10";
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v10","rawSignal":true,"decisionEvent":"decision_change","previousAction":"WAIT","rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"PAPER BUY NOW. Skip if you are late.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v10","rawSignal":true,"originalTriangleSignal":true,"latchedSignal":false,"decisionEvent":"decision_change","previousAction":"WAIT","rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"PAPER BUY NOW. Skip if you are late.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
 const BRUTUS_STRATEGIES = /* @__PURE__ */ new Set(["brutus_band", "brutus_playbook_v1"]);
 const BRUTUS_TIMEFRAMES = /* @__PURE__ */ new Set([
   "1m",
@@ -50090,6 +50095,8 @@ function normalizePayload(raw) {
     rawShortSignal: asBoolean(item.rawShortSignal),
     rawLongCondition: asBoolean(item.rawLongCondition),
     rawShortCondition: asBoolean(item.rawShortCondition),
+    originalTriangleSignal: asBoolean(item.originalTriangleSignal),
+    latchedSignal: asBoolean(item.latchedSignal),
     newLongTouch: asBoolean(item.newLongTouch),
     newShortTouch: asBoolean(item.newShortTouch),
     signalConflict: asBoolean(item.signalConflict),
@@ -50184,6 +50191,8 @@ function alertIdentity(alert) {
     alert.rawShortSignal ?? "",
     alert.rawLongCondition ?? "",
     alert.rawShortCondition ?? "",
+    alert.originalTriangleSignal ?? "",
+    alert.latchedSignal ?? "",
     alert.newLongTouch ?? "",
     alert.newShortTouch ?? "",
     alert.signalConflict ?? "",
@@ -50787,6 +50796,8 @@ function evidenceRowsToCsv(rows, paperOutcomes = {}) {
     "raw_short_signal",
     "raw_long_condition",
     "raw_short_condition",
+    "original_triangle_signal",
+    "latched_signal",
     "new_long_touch",
     "new_short_touch",
     "signal_conflict",
@@ -50832,6 +50843,8 @@ function evidenceRowsToCsv(rows, paperOutcomes = {}) {
       alert.rawShortSignal,
       alert.rawLongCondition,
       alert.rawShortCondition,
+      alert.originalTriangleSignal,
+      alert.latchedSignal,
       alert.newLongTouch,
       alert.newShortTouch,
       alert.signalConflict,
@@ -52009,6 +52022,11 @@ function TradingViewCapturePage() {
                   alert.confirmed ? "confirmed" : "live"
                 ] }),
                 alert.playbookVersion && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-muted-foreground", children: alert.playbookVersion }),
+                (alert.originalTriangleSignal != null || alert.latchedSignal != null) && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-cyan-300", children: [
+                  "source",
+                  " ",
+                  alert.originalTriangleSignal ? "orig formula now" : alert.latchedSignal ? "live latch" : "not current orig"
+                ] }),
                 alert.decisionEvent && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-cyan-300", children: [
                   "event ",
                   alert.decisionEvent.replaceAll("_", " "),
