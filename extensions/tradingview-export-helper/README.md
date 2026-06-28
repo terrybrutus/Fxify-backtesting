@@ -1,8 +1,8 @@
 # ICT TradingView Export Helper
 
-This is a local unpacked Chrome extension for manual-assisted TradingView chart exports.
+This is a local unpacked Chrome extension for manual-assisted TradingView chart exports and Brutus alert setup.
 
-It does not bypass TradingView, pull hidden market data, or avoid paid-plan limits. It only adds a small helper panel on TradingView chart pages and tries to click the same export controls you can click manually.
+It does not bypass TradingView, pull hidden market data, avoid paid-plan limits, or place trades. It only adds a small helper panel on TradingView chart pages and tries to click the same chart, export, and alert controls you can click manually.
 
 ## Install Like You Are New To Extensions
 
@@ -46,6 +46,42 @@ Start with one chart only.
 9. The older fallback is **Open export dialog**, then **Click modal Download**.
 10. Check your Chrome downloads for the CSVs.
 11. Click **Save helper log** if something goes wrong and send me that JSON.
+
+## Faster Brutus Alert Setup
+
+Use this after the latest `Brutus Playbook Alerts` Pine script has been saved in TradingView and added to your chart layout.
+
+1. Open a TradingView Alchemy chart.
+2. Confirm the chart has **Brutus Playbook Alerts** on it.
+3. In the helper panel, click **Start alert batch**.
+4. The helper opens each target in this order:
+
+   ```text
+   DJ30.R, USTEC.R, US500.R, JPN225.R, RUS2000.R
+   ```
+
+   across:
+
+   ```text
+   1m, 3m, 5m, 15m, 30m, 45m, 1H
+   ```
+
+5. When the chart loads, click **Open alert dialog**.
+6. In TradingView's alert dialog, set:
+
+   ```text
+   Condition: Brutus Playbook Alerts
+   Option: Any alert() function call
+   Notifications: whatever you want, including Webhook if you use it
+   ```
+
+7. Click TradingView's **Create** button.
+8. In the helper panel, click **Created, go next**.
+9. Repeat until the batch says finished.
+
+If a symbol/timeframe is wrong or you do not want it, click **Skip, go next**.
+
+This still requires you to confirm each alert because TradingView dialogs change often and blind auto-create would be too easy to get wrong.
 
 ## Manual Recorder
 

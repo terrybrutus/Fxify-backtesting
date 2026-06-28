@@ -1,6 +1,7 @@
 (() => {
   const PANEL_ID = "ict-tv-export-helper";
   const STORAGE_KEY = "ictTvExportHelperLog";
+  const ALERT_QUEUE_KEY = "ictTvBrutusAlertQueue";
 
   if (document.getElementById(PANEL_ID)) return;
 
@@ -8,6 +9,8 @@
     log: [],
     lastInfo: null,
     batchRunning: false,
+    alertQueue: [],
+    alertQueueIndex: 0,
     recording: false,
     recordingStartedAt: null
   };
@@ -20,6 +23,17 @@
     { label: "30m", aliases: ["30m", "30"] },
     { label: "45m", aliases: ["45m", "45"] },
     { label: "1H", aliases: ["1h", "1 h", "60"] }
+  ];
+
+  const ALERT_SYMBOLS = ["DJ30.R", "USTEC.R", "US500.R", "JPN225.R", "RUS2000.R"];
+  const ALERT_TIMEFRAMES = [
+    { label: "1m", interval: "1" },
+    { label: "3m", interval: "3" },
+    { label: "5m", interval: "5" },
+    { label: "15m", interval: "15" },
+    { label: "30m", interval: "30" },
+    { label: "45m", interval: "45" },
+    { label: "1H", interval: "60" }
   ];
 
   const panel = document.createElement("aside");
@@ -49,6 +63,23 @@
       <button type="button" data-action="batch-timeframes">Batch current symbol TFs</button>
       <button type="button" data-action="open-export">Open export dialog</button>
       <button type="button" data-action="click-download">Click modal Download</button>
+      <div class="ict-tv-divider"></div>
+      <strong class="ict-tv-section">Brutus Alert Setup</strong>
+      <button type="button" data-action="start-alert-batch">Start alert batch</button>
+      <button type="button" data-action="open-alert-dialog">Open alert dialog</button>
+      <button type="button" data-action="alert-created-next">Created, go next</button>
+      <button type="button" data-action="skip-alert-next">Skip, go next</button>
+      <button type="button" data-action="clear-alert-batch">Clear alert batch</button>
+      <div class="ict-tv-hint" data-field="alert-hint">Use with Brutus Playbook Alerts on chart.</div>
+      <div class="ict-tv-row">
+        <span>Alert batch</span>
+        <strong data-field="alert-progress">not started</strong>
+      </div>
+      <div class="ict-tv-row">
+        <span>Current target</span>
+        <strong data-field="alert-target">none</strong>
+      </div>
+      <div class="ict-tv-divider"></div>
       <button type="button" data-action="start-recorder">Start recorder</button>
       <button type="button" data-action="stop-recorder">Stop + save recording</button>
       <button type="button" data-action="save-log">Save helper log</button>
@@ -93,6 +124,46 @@
     } catch {
       callback([]);
     }
+  };
+
+  const saveAlertQueue = () => {
+    const payload = {
+      queue: state.alertQueue,
+      index: state.alertQueueIndex,
+      savedAt: new Date().toISOString()
+    };
+    try {
+      window.localStorage.setItem(ALERT_QUEUE_KEY, JSON.stringify(payload));
+    } catch {
+      // Keep the in-memory queue if localStorage is unavailable.
+    }
+  };
+
+  const loadAlertQueue = () => {
+    try {
+      const parsed = JSON.parse(window.localStorage.getItem(ALERT_QUEUE_KEY) ?? "{}");
+      state.alertQueue = Array.isArray(parsed.queue) ? parsed.queue : [];
+      state.alertQueueIndex = Number.isFinite(parsed.index) ? parsed.index : 0;
+    } catch {
+      state.alertQueue = [];
+      state.alertQueueIndex = 0;
+    }
+  };
+
+  const currentAlertTarget = () => state.alertQueue[state.alertQueueIndex] ?? null;
+
+  const updateAlertProgress = () => {
+    const progress = panel.querySelector('[data-field="alert-progress"]');
+    const target = panel.querySelector('[data-field="alert-target"]');
+    const hint = panel.querySelector('[data-field="alert-hint"]');
+    const current = currentAlertTarget();
+    progress.textContent = state.alertQueue.length
+      ? `${Math.min(state.alertQueueIndex + 1, state.alertQueue.length)} / ${state.alertQueue.length}`
+      : "not started";
+    target.textContent = current ? `${current.symbol} ${current.label}` : "none";
+    hint.textContent = current
+      ? "Open alert dialog, set Brutus Playbook Alerts -> Any alert() function call, then click Create."
+      : "Use with Brutus Playbook Alerts on chart.";
   };
 
   const sendRuntimeMessage = (message, callback) => {
@@ -344,6 +415,107 @@
     panel.querySelector('[data-field="symbol"]').textContent = info.symbol || "unknown";
     panel.querySelector('[data-field="interval"]').textContent = info.interval || "unknown";
     return info;
+  };
+
+  const chartUrlForAlertTarget = (target) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("symbol", `ALCHEMY:${target.symbol}`);
+    url.searchParams.set("interval", target.interval);
+    return url.toString();
+  };
+
+  const navigateToAlertTarget = (target) => {
+    if (!target) {
+      setStatus("Alert batch is finished.", "ok");
+      updateAlertProgress();
+      return;
+    }
+    saveAlertQueue();
+    updateAlertProgress();
+    const nextUrl = chartUrlForAlertTarget(target);
+    setStatus(`Opening ${target.symbol} ${target.label}. Wait for chart, then Open alert dialog.`, "info");
+    window.location.assign(nextUrl);
+  };
+
+  const startAlertBatch = () => {
+    state.alertQueue = ALERT_SYMBOLS.flatMap((symbol) =>
+      ALERT_TIMEFRAMES.map((timeframe) => ({ symbol, ...timeframe }))
+    );
+    state.alertQueueIndex = 0;
+    state.log.push({
+      at: new Date().toISOString(),
+      kind: "alert-batch-start",
+      message: "Started Brutus alert batch.",
+      total: state.alertQueue.length,
+      queue: state.alertQueue
+    });
+    saveLogToStorage();
+    navigateToAlertTarget(currentAlertTarget());
+  };
+
+  const clearAlertBatch = () => {
+    state.alertQueue = [];
+    state.alertQueueIndex = 0;
+    try {
+      window.localStorage.removeItem(ALERT_QUEUE_KEY);
+    } catch {
+      // Ignore storage failures.
+    }
+    updateAlertProgress();
+    setStatus("Alert batch cleared.", "ok");
+  };
+
+  const advanceAlertBatch = (result) => {
+    const completed = currentAlertTarget();
+    if (!completed) {
+      setStatus("No active alert target.", "error");
+      updateAlertProgress();
+      return;
+    }
+    state.log.push({
+      at: new Date().toISOString(),
+      kind: "alert-batch-step",
+      result,
+      completed,
+      chart: chartInfo()
+    });
+    state.alertQueueIndex += 1;
+    saveLogToStorage();
+    if (state.alertQueueIndex >= state.alertQueue.length) {
+      saveAlertQueue();
+      updateAlertProgress();
+      setStatus("Alert batch finished. Verify TradingView Alerts list before relying on it.", "ok");
+      return;
+    }
+    navigateToAlertTarget(currentAlertTarget());
+  };
+
+  const openAlertDialog = async () => {
+    chartInfo();
+    const candidates = clickables()
+      .map((node) => ({ node, rect: node.getBoundingClientRect(), text: textOf(node) }))
+      .filter((item) => {
+        if (item.rect.top > 150) return false;
+        if (!/alert/i.test(item.text)) return false;
+        if (/price alerts|technical alerts|alert log/i.test(item.text)) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        const aExact = /^alert$/i.test(a.text.trim()) ? 0 : 1;
+        const bExact = /^alert$/i.test(b.text.trim()) ? 0 : 1;
+        return aExact - bExact || b.rect.left - a.rect.left;
+      });
+
+    const target = candidates[0];
+    if (!target) {
+      setStatus("Could not find TradingView's Alert button. Press Alt+A or click Alert manually.", "error");
+      return { ok: false };
+    }
+
+    clickNode(target.node);
+    await sleep(900);
+    setStatus("Alert dialog should be open. Use Brutus Playbook Alerts -> Any alert() function call, then Create.", "ok");
+    return { ok: true };
   };
 
   const visibleSymbolGuess = () => {
@@ -666,6 +838,11 @@
     if (action === "batch-timeframes") batchCurrentSymbolTimeframes();
     if (action === "open-export") openExportDialog();
     if (action === "click-download") clickModalDownload();
+    if (action === "start-alert-batch") startAlertBatch();
+    if (action === "open-alert-dialog") openAlertDialog();
+    if (action === "alert-created-next") advanceAlertBatch("created");
+    if (action === "skip-alert-next") advanceAlertBatch("skipped");
+    if (action === "clear-alert-batch") clearAlertBatch();
     if (action === "start-recorder") startRecorder();
     if (action === "stop-recorder") stopRecorder();
     if (action === "save-log") saveLog();
@@ -703,7 +880,9 @@
 
   loadLogFromStorage((log) => {
     state.log = log;
+    loadAlertQueue();
     chartInfo();
+    updateAlertProgress();
     setStatus("Extension loaded on TradingView.", "ok");
   });
 })();

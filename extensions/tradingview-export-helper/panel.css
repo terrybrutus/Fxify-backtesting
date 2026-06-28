@@ -74,6 +74,27 @@
   background: #062426;
 }
 
+#ict-tv-export-helper .ict-tv-divider {
+  height: 1px;
+  margin: 2px 0;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+#ict-tv-export-helper .ict-tv-section {
+  color: #9ffcff;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+#ict-tv-export-helper .ict-tv-hint {
+  padding: 7px;
+  color: #cbd5d8;
+  background: rgba(0, 200, 200, 0.08);
+  border: 1px solid rgba(0, 200, 200, 0.22);
+  line-height: 1.35;
+}
+
 #ict-tv-export-helper .ict-tv-status {
   min-height: 44px;
   padding: 8px;
