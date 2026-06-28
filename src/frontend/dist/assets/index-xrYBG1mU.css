@@ -1061,6 +1061,9 @@ video {
 .min-w-5 {
   min-width: 1.25rem;
 }
+.min-w-72 {
+  min-width: 18rem;
+}
 .min-w-8 {
   min-width: 2rem;
 }
@@ -1674,6 +1677,9 @@ video {
 }
 .bg-lime-400\/5 {
   background-color: rgb(163 230 53 / 0.05);
+}
+.bg-lime-500\/5 {
+  background-color: rgb(132 204 22 / 0.05);
 }
 .bg-muted {
   --tw-bg-opacity: 1;
