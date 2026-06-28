@@ -43701,7 +43701,7 @@ function BrutusTradeDeskPage() {
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-cyan-300", children: "3. Create alert" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-muted-foreground", children: "Use Any alert() function call. First touch is live paper evidence, not perfect historical replay. The v10 script alerts again if that same live candle changes from WAIT to ENTER or DO NOT HOLD. Confirmed close waits for the candle to close. Because your original triangle formula uses candle color, open-bar ORIG markers can change until close. Do not select the named ENTER, WAIT, SKIP, or Raw Brutus alertconditions when creating the evidence-loop alert; those labels do not carry the full JSON packet." })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-muted-foreground", children: "Use Any alert() function call. First touch is live paper evidence, not perfect historical replay. The Playbook script alerts again if that same live candle changes from WAIT to ENTER or DO NOT HOLD. Confirmed close waits for the candle to close. Because your original triangle formula uses candle color, open-bar ORIG markers can change until close. Do not select the named ENTER, WAIT, SKIP, or Raw Brutus alertconditions when creating the evidence-loop alert; those labels do not carry the full JSON packet." })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-cyan-300", children: "4. Paper-test" }),
@@ -51797,7 +51797,7 @@ function TradingViewCapturePage() {
           /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-sm font-bold", children: "Match Status" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "Matched means the imported app candle is within one minute of the TradingView alert. Nearby means the instrument mapping is plausible but the feed/timeframe is not exact enough yet." }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "Timing truth: first-touch rows are live alert evidence. Confirmed close rows are cleaner historically, but they may be later than the wick entry you were trying to study." }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "Latest Playbook v10 can produce more than one alert on the same live candle when the decision changes, such as WAIT becoming ENTER or DO NOT HOLD." })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "Latest Playbook can produce more than one alert on the same live candle when the decision changes, such as WAIT becoming ENTER or DO NOT HOLD." })
         ] })
       ] })
     ] }),

@@ -318,8 +318,8 @@ const requiredSnippets = [
     text: "Because that formula uses candle color, an open candle can change until it closes.",
   },
   {
-    label: "v10 same candle decision-change instruction",
-    text: "The v10 script alerts",
+    label: "same candle decision-change instruction",
+    text: "The Playbook script alerts",
   },
 ];
 
@@ -521,8 +521,8 @@ const requiredCaptureSnippets = [
     text: "Mark at least 10 latest rows before changing the rule.",
   },
   {
-    label: "capture page v10 decision-change note",
-    text: "Latest Playbook v10 can produce more than one alert",
+    label: "capture page decision-change note",
+    text: "Latest Playbook can produce more than one alert",
   },
   {
     label: "capture detects named alertcondition exports",
@@ -1025,6 +1025,18 @@ const missingData = requiredDataSnippets.filter((item) => {
 
 const forbiddenSnippets = [
   {
+    label: "old raw-parity-v10 contract",
+    text: "raw-parity-v10",
+  },
+  {
+    label: "stale Playbook v10 copy",
+    text: "Playbook v10",
+  },
+  {
+    label: "stale v10 script copy",
+    text: "v10 script",
+  },
+  {
     label: "editable upper source input",
     text: "input.source(high",
   },
@@ -1042,9 +1054,15 @@ const forbiddenSnippets = [
   },
 ];
 
-const forbidden = forbiddenSnippets.filter((item) =>
-  normalizedSource.includes(item.text),
-);
+const forbidden = forbiddenSnippets.filter((item) => {
+  const haystacks = [
+    normalizedSource,
+    normalizedCaptureSource,
+    dataUploadSource,
+    workspaceHookSource,
+  ];
+  return haystacks.some((haystack) => haystack.includes(item.text));
+});
 
 if (
   missing.length > 0 ||

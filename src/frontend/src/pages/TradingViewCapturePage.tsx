@@ -2178,7 +2178,7 @@ export default function TradingViewCapturePage() {
               the wick entry you were trying to study.
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Latest Playbook v10 can produce more than one alert on the same
+              Latest Playbook can produce more than one alert on the same
               live candle when the decision changes, such as WAIT becoming
               ENTER or DO NOT HOLD.
             </p>
