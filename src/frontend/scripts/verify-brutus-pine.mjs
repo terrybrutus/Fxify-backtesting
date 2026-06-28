@@ -580,6 +580,22 @@ const requiredTradeDeskSnippets = [
     text: "Paper outcome scoreboard",
   },
   {
+    label: "trade desk paper marking guide",
+    text: "How to mark rows",
+  },
+  {
+    label: "trade desk paid plain definition",
+    text: "Paid = ENTER worked.",
+  },
+  {
+    label: "trade desk failed plain definition",
+    text: "Failed = ENTER failed.",
+  },
+  {
+    label: "trade desk wait paid plain definition",
+    text: "Wait paid = skipped move worked.",
+  },
+  {
     label: "trade desk paper review queue",
     text: "Paper review queue",
   },

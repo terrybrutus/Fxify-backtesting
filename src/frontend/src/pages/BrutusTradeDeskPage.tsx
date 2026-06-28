@@ -2240,6 +2240,37 @@ export default function BrutusTradeDeskPage() {
               </span>
             </div>
           </div>
+          <div className="md:col-span-2">
+            <p className="font-display text-sm font-bold">How to mark rows</p>
+            <div className="mt-2 grid gap-2 text-xs text-muted-foreground md:grid-cols-2">
+              <p>
+                <span className="font-mono text-lime-300">
+                  Paid = ENTER worked.
+                </span>{" "}
+                Mark this only when an ENTER would have paid if taken right
+                away.
+              </p>
+              <p>
+                <span className="font-mono text-red-300">
+                  Failed = ENTER failed.
+                </span>{" "}
+                Mark this when an ENTER kept going against the trade before it
+                paid.
+              </p>
+              <p>
+                <span className="font-mono text-amber-200">
+                  Wait paid = skipped move worked.
+                </span>{" "}
+                Mark this when WAIT/SKIP/DO NOT HOLD still would have paid.
+              </p>
+              <p>
+                <span className="font-mono text-foreground">
+                  Unreviewed = not checked yet.
+                </span>{" "}
+                Leave it alone until you replay or inspect it on TradingView.
+              </p>
+            </div>
+          </div>
         </div>
         {paperReviewQueue.some((group) => group.rows.length > 0) && (
           <div className="mt-3 border border-border bg-background p-3">
