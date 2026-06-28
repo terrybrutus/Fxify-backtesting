@@ -46450,7 +46450,7 @@ function DataUploadPage() {
       await importCsvText(text, YAHOO_PROXY_DATA_NAME);
     } catch (error) {
       ue.error(
-        "Auto-load failed. The app refused to import because the bundled real dataset could not be loaded."
+        "Yahoo backup load failed. No backup data was imported."
       );
       console.error(error);
     } finally {
@@ -46480,19 +46480,22 @@ function DataUploadPage() {
           /* @__PURE__ */ jsxRuntimeExports.jsx("code", { className: "mt-2 block whitespace-pre-wrap bg-background p-3 font-mono text-xs text-muted-foreground", children: "timestamp,open,high,low,close,volume,symbol,timeframe,timezone" })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            Button,
-            {
-              type: "button",
-              variant: "secondary",
-              disabled: isLoadingProxyData,
-              onClick: handleLoadYahooProxyData,
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "mr-2 h-4 w-4" }),
-                isLoadingProxyData ? "Loading..." : "Load Yahoo Proxy Backup"
-              ]
-            }
-          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              Button,
+              {
+                type: "button",
+                variant: "secondary",
+                disabled: isLoadingProxyData,
+                onClick: handleLoadYahooProxyData,
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "mr-2 h-4 w-4" }),
+                  isLoadingProxyData ? "Loading..." : "Load Yahoo Proxy Backup"
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-[220px] font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: "Manual backup only. Never auto-loaded." })
+          ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs(Button, { type: "button", onClick: () => {
             var _a2;
             return (_a2 = fileRef.current) == null ? void 0 : _a2.click();
