@@ -43355,7 +43355,7 @@ function BrutusTradeDeskPage() {
     /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 border border-border bg-card p-4 md:grid-cols-3", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-sm font-bold", children: "Use This In Order" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "First import the Brutus Intrabar JSON. Then import the newest TradingView alert CSV. Then review Live Alert Match from top to bottom." })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "Setting up TradingView: export the Pine script first. Reviewing evidence: import the Brutus Intrabar JSON, then import the newest TradingView alert CSV." })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-sm font-bold", children: "What Counts" }),
@@ -43868,7 +43868,7 @@ function BrutusTradeDeskPage() {
     !report ? /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-8 text-center", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(Target, { className: "mx-auto h-8 w-8 text-primary" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "mt-3 font-display text-xl font-bold", children: "Import the Brutus Intrabar export" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mx-auto mt-2 max-w-2xl text-sm text-muted-foreground", children: "Use the export from Brutus Intrabar Lab. This page will turn those touches into plain trade decisions." })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mx-auto mt-2 max-w-2xl text-sm text-muted-foreground", children: "You can still export the Pine script from the top of this page to set up TradingView alerts. Import the Brutus Intrabar Lab export when you are ready to score those alerts against candle evidence." })
     ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-primary/40 bg-primary/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(Waves, { className: "mt-0.5 h-4 w-4 text-primary" }),
