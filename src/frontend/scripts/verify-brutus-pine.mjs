@@ -710,7 +710,7 @@ const requiredCaptureSnippets = [
   },
   {
     label: "capture example uses current plain action",
-    text: "PAPER BUY NOW. Skip if you are late.",
+    text: "PAPER REVIEW: BUY setup now. Skip if you are late.",
   },
   {
     label: "capture example includes original triangle signal",
@@ -1081,7 +1081,7 @@ const requiredTradeDeskSnippets = [
   },
   {
     label: "trade desk plain paper trade instruction",
-    text: "PAPER ${plainTradeWord(touch.direction)} NOW. Skip if you are late.",
+    text: "PAPER REVIEW: ${plainTradeWord(touch.direction)} setup now. Skip if you are late.",
   },
   {
     label: "trade desk plain wait instruction",
@@ -1097,7 +1097,15 @@ const requiredTradeDeskSnippets = [
   },
   {
     label: "trade desk label map explains immediate enter",
-    text: "Paper trade candidate. Take it immediately or skip it.",
+    text: "Paper-review candidate only. Do not treat it as real-money",
+  },
+  {
+    label: "trade desk not trade ready guardrail",
+    text: "Not Trade-Ready",
+  },
+  {
+    label: "trade desk denies profit claim",
+    text: "This page is an evidence desk, not a profit claim.",
   },
   {
     label: "trade desk no-report state still allows Pine export",

@@ -42406,7 +42406,7 @@ function summarizePlaybookGroup(family, label, touches) {
   if (trades < 12) verdict = "TOO SMALL";
   else if (avgR15 >= 0.22 && stopRate <= 0.24 && score > 10) verdict = "TEST";
   else if (avgR15 >= 0.05 && score > 0) verdict = "WATCH";
-  const plainRule = verdict === "TEST" ? `This is a testable rule candidate: ${label}. It has enough sample to paper-trade and convert into a TradingView alert condition.` : verdict === "WATCH" ? `This is interesting but not clean enough yet: ${label}. Watch it, but do not make it a hard rule.` : verdict === "TOO SMALL" ? `Too few examples to trust yet: ${label}.` : `Avoid as a default rule: ${label}. The sample is not paying cleanly enough.`;
+  const plainRule = verdict === "TEST" ? `This is a testable paper-review candidate: ${label}. It has enough sample to keep studying, but it is not approval to trade real money.` : verdict === "WATCH" ? `This is interesting but not clean enough yet: ${label}. Watch it, but do not make it a hard rule.` : verdict === "TOO SMALL" ? `Too few examples to trust yet: ${label}.` : `Avoid as a default rule: ${label}. The sample is not paying cleanly enough.`;
   return {
     id: `${family}:${label}`,
     family,
@@ -42570,7 +42570,7 @@ function scoreTouch(touch, report) {
   } else if (confidence >= 78 && blockers.length === 0) {
     decision = "ENTER";
     reason = "Best current Brutus pattern: right session, right timing, and snapback started.";
-    doNow = `PAPER ${plainTradeWord(touch.direction)} NOW. Skip if you are late.`;
+    doNow = `PAPER REVIEW: ${plainTradeWord(touch.direction)} setup now. Skip if you are late.`;
     plainExit = targetText(touch.direction);
   } else if (confidence < 55 || blockers.length >= 2) {
     decision = "SKIP";
@@ -42738,7 +42738,7 @@ tradeWord = direction == "long" ? "BUY" : direction == "short" ? "SELL" : "TRADE
 waitReason = not notTooEarly ? "Original Brutus signal fired, but it is still too early in the live candle." : not snapbackOk ? "Original Brutus signal fired, but snapback is not clean yet." : "Original Brutus signal fired, but the playbook still says wait."
 skipReason = not inSession ? "Original Brutus signal fired outside the active session." : not modeReady ? "Original Brutus signal fired, but this mode waits for bar close." : "Original Brutus signal fired, but the playbook says skip."
 reason = signalConflict ? "Both original Brutus long and short signals fired on the same candle. Skip because direction is unclear." : action == "ENTER" ? "Original Brutus signal fired and price started snapping back." : action == "WAIT" ? waitReason : action == "DO_NOT_HOLD" ? "Original Brutus signal fired, but price is still pushing through the band." : skipReason
-plainAction = action == "ENTER" ? "PAPER " + tradeWord + " NOW. Skip if you are late." : action == "WAIT" ? "NO TRADE YET. Watch only." : action == "DO_NOT_HOLD" ? "NO TRADE. Do not fight this move." : "SKIP. No trade."
+plainAction = action == "ENTER" ? "PAPER REVIEW: " + tradeWord + " setup now. Skip if you are late." : action == "WAIT" ? "NO TRADE YET. Watch only." : action == "DO_NOT_HOLD" ? "NO TRADE. Do not fight this move." : "SKIP. No trade."
 entryJson = na(entry) ? "null" : str.tostring(entry)
 stopJson = na(stop) ? "null" : str.tostring(stop)
 targetJson = na(target) ? "null" : str.tostring(target)
@@ -43218,7 +43218,7 @@ function BrutusTradeDeskPage() {
       {
         title: "Unreviewed ENTER rows",
         tone: "text-lime-300",
-        why: "These are the next paper-trade rows to judge first.",
+        why: "These are the next paper-review rows to judge first.",
         rows: withOutcome.filter(
           ({ item, outcome }) => item.status === "ENTER" && outcome === "unreviewed"
         ).slice(0, 5)
@@ -43320,7 +43320,7 @@ function BrutusTradeDeskPage() {
         title: "Not tradeable evidence yet",
         body: "Pine and the app disagree on at least one current alert row.",
         evidence: "DIFFERENT rows mean the app cannot honestly say the decision logic is aligned.",
-        action: "Review DIFFERENT rows in TradingView first; do not paper-trade this batch until disagreement is explained."
+        action: "Review DIFFERENT rows in TradingView first; do not use this batch for trade decisions until disagreement is explained."
       };
     }
     if (alertSourceCounts.liveLatch > 0) {
@@ -43645,6 +43645,13 @@ function BrutusTradeDeskPage() {
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: paperOutcomeRead })
       ] })
     ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-red-500/50 bg-red-500/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ShieldAlert, { className: "mt-0.5 h-4 w-4 text-red-300" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-sm font-bold uppercase tracking-widest text-red-100", children: "Not Trade-Ready" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "This page is an evidence desk, not a profit claim. ENTER means paper-review candidate only. Real-money use requires marked outcomes, repeated fresh alerts, and a later tradeability verdict." })
+      ] })
+    ] }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 md:grid-cols-5", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: "Signals read" }),
@@ -43674,7 +43681,7 @@ function BrutusTradeDeskPage() {
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-sm font-bold", children: "What Counts" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "ENTER only means paper-trade candidate. MATCH means Pine and app agree. DIFFERENT or PINE ONLY means pause and verify before trusting the row." })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "ENTER only means paper-review candidate. MATCH means Pine and app agree. DIFFERENT or PINE ONLY means pause and verify before using the row as evidence." })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-sm font-bold", children: "What To Ignore" }),
@@ -43759,7 +43766,7 @@ function BrutusTradeDeskPage() {
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-bold text-lime-300", children: "ENTER" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-muted-foreground", children: "Paper trade candidate. Take it immediately or skip it." })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-muted-foreground", children: "Paper-review candidate only. Do not treat it as real-money approval." })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-bold text-red-300", children: "SKIP / NO" }),
@@ -43827,7 +43834,7 @@ function BrutusTradeDeskPage() {
       ] }) }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-border bg-card p-4 text-sm text-muted-foreground", children: "No matrix bucket is clean enough to promote yet. That means the correct output is restraint, not a forced trade rule." }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border bg-card p-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-display text-sm font-bold uppercase tracking-widest", children: "Current plain-language takeaway" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-foreground", children: "Use this research to build TradingView alerts around TEST rows only. A live alert should say ENTER only when the symbol, timeframe, session, candle timing, pierce depth, and snapback behavior match one of these rows. Everything else should say SKIP or WAIT." })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-foreground", children: "Use this research to build TradingView alerts around TEST rows only. A live alert should say ENTER only when the symbol, timeframe, session, candle timing, pierce depth, and snapback behavior match one of these rows. ENTER still means paper review, not permission to trade funded money." })
       ] })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-4", children: [
@@ -44270,7 +44277,7 @@ function BrutusTradeDeskPage() {
       /* @__PURE__ */ jsxRuntimeExports.jsx(ShieldAlert, { className: "mt-0.5 h-4 w-4 text-red-300" }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-display text-sm font-bold uppercase tracking-widest", children: "Do Not Overread This" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "This is a draft signal assistant. It is meant to compress research into fast decisions, not place funded trades. If it says ENTER, treat that as paper-trade quality until more alerts prove it live." })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "This is a draft signal assistant. It is meant to compress research into fast decisions, not place funded trades. If it says ENTER, treat that as paper-review evidence until marked outcomes and a later tradeability verdict prove otherwise." })
       ] })
     ] }) }),
     !report ? /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "border border-border bg-card p-8 text-center", children: [
@@ -50268,7 +50275,7 @@ function SetupDetectorPage() {
 const STORAGE_KEY = "ict.tradingview.alerts.v1";
 const PAPER_OUTCOME_STORAGE_KEY = "ict.tradingview.paperOutcomes.v1";
 const LATEST_PLAYBOOK_VERSION = "raw-parity-v11";
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v11","rawSignal":true,"originalTriangleSignal":true,"latchedSignal":false,"decisionEvent":"decision_change","previousAction":"WAIT","rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"PAPER BUY NOW. Skip if you are late.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v11","rawSignal":true,"originalTriangleSignal":true,"latchedSignal":false,"decisionEvent":"decision_change","previousAction":"WAIT","rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"PAPER REVIEW: BUY setup now. Skip if you are late.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
 const BRUTUS_STRATEGIES = /* @__PURE__ */ new Set(["brutus_band", "brutus_playbook_v1"]);
 const BRUTUS_TIMEFRAMES = /* @__PURE__ */ new Set([
   "1m",

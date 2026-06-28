@@ -882,7 +882,7 @@ function summarizePlaybookGroup(
 
   const plainRule =
     verdict === "TEST"
-      ? `This is a testable rule candidate: ${label}. It has enough sample to paper-trade and convert into a TradingView alert condition.`
+      ? `This is a testable paper-review candidate: ${label}. It has enough sample to keep studying, but it is not approval to trade real money.`
       : verdict === "WATCH"
         ? `This is interesting but not clean enough yet: ${label}. Watch it, but do not make it a hard rule.`
         : verdict === "TOO SMALL"
@@ -1082,7 +1082,7 @@ function scoreTouch(
     decision = "ENTER";
     reason =
       "Best current Brutus pattern: right session, right timing, and snapback started.";
-    doNow = `PAPER ${plainTradeWord(touch.direction)} NOW. Skip if you are late.`;
+    doNow = `PAPER REVIEW: ${plainTradeWord(touch.direction)} setup now. Skip if you are late.`;
     plainExit = targetText(touch.direction);
   } else if (confidence < 55 || blockers.length >= 2) {
     decision = "SKIP";
@@ -1264,7 +1264,7 @@ tradeWord = direction == "long" ? "BUY" : direction == "short" ? "SELL" : "TRADE
 waitReason = not notTooEarly ? "Original Brutus signal fired, but it is still too early in the live candle." : not snapbackOk ? "Original Brutus signal fired, but snapback is not clean yet." : "Original Brutus signal fired, but the playbook still says wait."
 skipReason = not inSession ? "Original Brutus signal fired outside the active session." : not modeReady ? "Original Brutus signal fired, but this mode waits for bar close." : "Original Brutus signal fired, but the playbook says skip."
 reason = signalConflict ? "Both original Brutus long and short signals fired on the same candle. Skip because direction is unclear." : action == "ENTER" ? "Original Brutus signal fired and price started snapping back." : action == "WAIT" ? waitReason : action == "DO_NOT_HOLD" ? "Original Brutus signal fired, but price is still pushing through the band." : skipReason
-plainAction = action == "ENTER" ? "PAPER " + tradeWord + " NOW. Skip if you are late." : action == "WAIT" ? "NO TRADE YET. Watch only." : action == "DO_NOT_HOLD" ? "NO TRADE. Do not fight this move." : "SKIP. No trade."
+plainAction = action == "ENTER" ? "PAPER REVIEW: " + tradeWord + " setup now. Skip if you are late." : action == "WAIT" ? "NO TRADE YET. Watch only." : action == "DO_NOT_HOLD" ? "NO TRADE. Do not fight this move." : "SKIP. No trade."
 entryJson = na(entry) ? "null" : str.tostring(entry)
 stopJson = na(stop) ? "null" : str.tostring(stop)
 targetJson = na(target) ? "null" : str.tostring(target)
@@ -1884,7 +1884,7 @@ export default function BrutusTradeDeskPage() {
       {
         title: "Unreviewed ENTER rows",
         tone: "text-lime-300",
-        why: "These are the next paper-trade rows to judge first.",
+        why: "These are the next paper-review rows to judge first.",
         rows: withOutcome
           .filter(
             ({ item, outcome }) =>
@@ -2007,7 +2007,7 @@ export default function BrutusTradeDeskPage() {
         evidence:
           "DIFFERENT rows mean the app cannot honestly say the decision logic is aligned.",
         action:
-          "Review DIFFERENT rows in TradingView first; do not paper-trade this batch until disagreement is explained.",
+          "Review DIFFERENT rows in TradingView first; do not use this batch for trade decisions until disagreement is explained.",
       };
     }
     if (alertSourceCounts.liveLatch > 0) {
@@ -2369,6 +2369,22 @@ export default function BrutusTradeDeskPage() {
         </div>
       </section>
 
+      <section className="border border-red-500/50 bg-red-500/5 p-4">
+        <div className="flex items-start gap-3">
+          <ShieldAlert className="mt-0.5 h-4 w-4 text-red-300" />
+          <div>
+            <h2 className="font-display text-sm font-bold uppercase tracking-widest text-red-100">
+              Not Trade-Ready
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              This page is an evidence desk, not a profit claim. ENTER means
+              paper-review candidate only. Real-money use requires marked
+              outcomes, repeated fresh alerts, and a later tradeability verdict.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className="grid gap-3 md:grid-cols-5">
         <div className="border border-border bg-card p-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -2424,9 +2440,9 @@ export default function BrutusTradeDeskPage() {
         <div>
           <p className="font-display text-sm font-bold">What Counts</p>
           <p className="mt-2 text-sm text-muted-foreground">
-            ENTER only means paper-trade candidate. MATCH means Pine and app
-            agree. DIFFERENT or PINE ONLY means pause and verify before trusting
-            the row.
+            ENTER only means paper-review candidate. MATCH means Pine and app
+            agree. DIFFERENT or PINE ONLY means pause and verify before using
+            the row as evidence.
           </p>
         </div>
         <div>
@@ -2538,7 +2554,8 @@ export default function BrutusTradeDeskPage() {
             <div>
               <p className="font-bold text-lime-300">ENTER</p>
               <p className="mt-1 text-muted-foreground">
-                Paper trade candidate. Take it immediately or skip it.
+                Paper-review candidate only. Do not treat it as real-money
+                approval.
               </p>
             </div>
             <div>
@@ -2687,8 +2704,8 @@ export default function BrutusTradeDeskPage() {
               Use this research to build TradingView alerts around TEST rows
               only. A live alert should say ENTER only when the symbol,
               timeframe, session, candle timing, pierce depth, and snapback
-              behavior match one of these rows. Everything else should say SKIP
-              or WAIT.
+              behavior match one of these rows. ENTER still means paper review,
+              not permission to trade funded money.
             </p>
           </div>
         </section>
@@ -3266,7 +3283,8 @@ export default function BrutusTradeDeskPage() {
             <p className="mt-2 text-sm text-muted-foreground">
               This is a draft signal assistant. It is meant to compress research
               into fast decisions, not place funded trades. If it says ENTER,
-              treat that as paper-trade quality until more alerts prove it live.
+              treat that as paper-review evidence until marked outcomes and a
+              later tradeability verdict prove otherwise.
             </p>
           </div>
         </div>
