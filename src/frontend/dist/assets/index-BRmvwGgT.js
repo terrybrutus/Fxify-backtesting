@@ -42026,6 +42026,14 @@ function parseCsvRecords$1(text) {
   if (row.some((cell) => cell.trim() !== "")) records.push(row);
   return records;
 }
+function countSourceRows$1(text) {
+  const trimmed = text.trim();
+  if (!trimmed) return 0;
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) return 1;
+  const records = parseCsvRecords$1(trimmed);
+  if (records.length > 1) return records.length - 1;
+  return trimmed.split(/\r?\n/).filter((line) => line.trim()).length;
+}
 function normalizeTimeframe$1(value) {
   const raw = value == null ? void 0 : value.trim();
   if (!raw) return void 0;
@@ -43210,6 +43218,10 @@ function BrutusTradeDeskPage() {
         selectedFiles.map(async (file) => file.text())
       );
       const parsed = texts.flatMap((text) => parseAlertLog(text));
+      const sourceRows = texts.reduce(
+        (total, text) => total + countSourceRows$1(text),
+        0
+      );
       if (!parsed.length) {
         if (texts.some(isNamedAlertConditionExport$1)) {
           throw new Error(WRONG_TRADINGVIEW_ALERT_TYPE_MESSAGE$1);
@@ -43225,7 +43237,9 @@ function BrutusTradeDeskPage() {
       const duplicates = Math.max(0, parsed.length - added);
       const result = {
         files: selectedFiles.length,
+        sourceRows,
         parsed: parsed.length,
+        ignoredRows: Math.max(0, sourceRows - parsed.length),
         added,
         duplicates,
         current: parsed.filter(isLatestPlaybookAlert$1).length,
@@ -43349,11 +43363,30 @@ function BrutusTradeDeskPage() {
       ] })
     ] }),
     error && /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-destructive bg-destructive/10 p-4 text-sm text-destructive", children: error }),
-    alertImportResult && !error && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-2 border border-cyan-500/40 bg-cyan-500/5 p-3 font-mono text-xs md:grid-cols-5", children: [
+    alertImportResult && !error && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-2 border border-cyan-500/40 bg-cyan-500/5 p-3 font-mono text-xs md:grid-cols-6", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
         "Alert files:",
         " ",
         /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "text-foreground", children: alertImportResult.files })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+        "Source / usable / ignored:",
+        " ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "text-foreground", children: alertImportResult.sourceRows }),
+        " ",
+        "/",
+        " ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "text-cyan-200", children: alertImportResult.parsed }),
+        " ",
+        "/",
+        " ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "strong",
+          {
+            className: alertImportResult.ignoredRows > 0 ? "text-amber-200" : "text-muted-foreground",
+            children: alertImportResult.ignoredRows
+          }
+        )
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
         "Added / duplicate:",
@@ -50191,7 +50224,7 @@ function paperOutcomeKey(alert) {
     alert.direction ?? ""
   ].join("|");
 }
-function mergeAlerts(incoming, current) {
+function mergeAlerts(incoming, current, importSourceRows = incoming.length) {
   const seen = new Set(current.map(alertIdentity));
   const uniqueIncoming = [];
   let duplicates = 0;
@@ -50210,6 +50243,9 @@ function mergeAlerts(incoming, current) {
       added: uniqueIncoming.length,
       duplicates,
       total: current.length + uniqueIncoming.length,
+      sourceRows: importSourceRows,
+      usableAlerts: incoming.length,
+      ignoredRows: Math.max(0, importSourceRows - incoming.length),
       latestPlaybook: uniqueIncoming.filter(isLatestPlaybookAlert).length,
       oldPlaybook: uniqueIncoming.filter(
         (alert) => isPlaybookAlert(alert) && !isLatestPlaybookAlert(alert)
@@ -50259,6 +50295,14 @@ function parseCsvRecords(text) {
   row.push(current);
   if (row.some((cell) => cell.trim() !== "")) records.push(row);
   return records;
+}
+function countSourceRows(text) {
+  const trimmed = text.trim();
+  if (!trimmed) return 0;
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) return 1;
+  const records = parseCsvRecords(trimmed);
+  if (records.length > 1) return records.length - 1;
+  return trimmed.split(/\r?\n/).filter((line) => line.trim()).length;
 }
 function possibleJsonFragments(value) {
   const trimmed = value.trim();
@@ -51247,7 +51291,7 @@ function TradingViewCapturePage() {
   function addPayloads(text) {
     try {
       const parsed = parsePayloadText(text);
-      const merged = mergeAlerts(parsed, alerts);
+      const merged = mergeAlerts(parsed, alerts, countSourceRows(text));
       setAlerts(merged.alerts);
       saveAlerts(merged.alerts);
       setImportResult(merged.result);
@@ -51266,7 +51310,11 @@ function TradingViewCapturePage() {
         Array.from(files).map((file) => file.text())
       );
       const parsed = texts.flatMap((text) => parsePayloadText(text));
-      const merged = mergeAlerts(parsed, alerts);
+      const sourceRows = texts.reduce(
+        (total, text) => total + countSourceRows(text),
+        0
+      );
+      const merged = mergeAlerts(parsed, alerts, sourceRows);
       setAlerts(merged.alerts);
       saveAlerts(merged.alerts);
       setImportResult(merged.result);
@@ -51338,6 +51386,16 @@ function TradingViewCapturePage() {
             " ",
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-foreground", children: alerts.length }),
             "."
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-1 font-mono text-xs", children: [
+            "Source rows ",
+            importResult.sourceRows,
+            " | Usable alert JSON",
+            " ",
+            importResult.usableAlerts,
+            " | Ignored rows",
+            " ",
+            importResult.ignoredRows
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-1 font-mono text-xs", children: [
             "Latest Playbook ",
