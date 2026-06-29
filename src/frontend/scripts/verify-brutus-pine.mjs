@@ -1108,6 +1108,30 @@ const requiredTradeDeskSnippets = [
     text: "This page is an evidence desk, not a profit claim.",
   },
   {
+    label: "trade desk explicit tradeability verdict panel",
+    text: "Tradeability Verdict",
+  },
+  {
+    label: "trade desk exports tradeability verdict",
+    text: "tradeabilityVerdict,",
+  },
+  {
+    label: "trade desk not enough evidence verdict",
+    text: '"not enough evidence"',
+  },
+  {
+    label: "trade desk paper-review only verdict",
+    text: '"paper-review only"',
+  },
+  {
+    label: "trade desk revise rules verdict",
+    text: '"revise rules"',
+  },
+  {
+    label: "trade desk cautiously continue collecting verdict",
+    text: '"cautiously continue collecting"',
+  },
+  {
     label: "trade desk no-report state still allows Pine export",
     text: "You can still export the Pine script from the top of this page",
   },

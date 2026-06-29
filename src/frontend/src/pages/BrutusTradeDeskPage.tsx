@@ -11,6 +11,11 @@ import { useMemo, useState } from "react";
 type Direction = "long" | "short";
 type Decision = "ENTER" | "WAIT" | "SKIP" | "DO_NOT_HOLD";
 type PlaybookVerdict = "TEST" | "WATCH" | "AVOID" | "TOO SMALL";
+type TradeabilityStatus =
+  | "not enough evidence"
+  | "paper-review only"
+  | "revise rules"
+  | "cautiously continue collecting";
 type PaperOutcome =
   | "unreviewed"
   | "worked"
@@ -2062,6 +2067,79 @@ export default function BrutusTradeDeskPage() {
     latestAlertMatches.length,
   ]);
 
+  const tradeabilityVerdict = useMemo(() => {
+    const enter = paperOutcomeCounts.byDecision.ENTER;
+    const wait = paperOutcomeCounts.byDecision.WAIT;
+    const skip = paperOutcomeCounts.byDecision.SKIP;
+    const doNotHold = paperOutcomeCounts.byDecision.DO_NOT_HOLD;
+    const setupBlocked =
+      !latestAlertMatches.length ||
+      alertVersionCounts.contractIssues > 0 ||
+      alertVersionCounts.incomplete > 0 ||
+      agreementCounts.different > 0;
+    const hasUnscoredRows = agreementCounts.pineOnly + agreementCounts.noData > 0;
+    let status: TradeabilityStatus = "not enough evidence";
+    let reason =
+      "There are not enough clean, marked current Playbook alerts to judge the rule.";
+    let next =
+      "Keep collecting current Playbook alerts and mark outcomes before changing rules.";
+
+    if (setupBlocked) {
+      status = "not enough evidence";
+      reason =
+        "The current evidence is missing, incomplete, old, or disagrees with the app.";
+      next =
+        "Fix the alert/candle evidence first. Do not use this batch for trade decisions.";
+    } else if (paperOutcomeCounts.reviewed < 10) {
+      status = "not enough evidence";
+      reason = `${paperOutcomeCounts.reviewed}/10 current alerts have marked outcomes.`;
+      next =
+        "Replay and mark at least 10 current alerts before judging the rule.";
+    } else if (enter.failed >= 3 && enter.failed > enter.worked) {
+      status = "revise rules";
+      reason =
+        "Marked ENTER rows are failing more often than they are working.";
+      next =
+        "Tighten ENTER before collecting more evidence. Do not add size or trust the current entry rule.";
+    } else if (
+      wait.would_have_worked + skip.would_have_worked >= 3 &&
+      wait.would_have_worked + skip.would_have_worked > enter.worked
+    ) {
+      status = "revise rules";
+      reason =
+        "Too many WAIT/SKIP rows are being marked as missed good trades.";
+      next =
+        "Loosen one entry condition as a paper hypothesis, then retest.";
+    } else if (
+      enter.worked >= 5 &&
+      enter.worked > enter.failed &&
+      !hasUnscoredRows
+    ) {
+      status = "cautiously continue collecting";
+      reason =
+        "ENTER has some marked positive evidence and the batch has no app/candle mismatch.";
+      next =
+        "Keep collecting and marking. This is still not real-money approval.";
+    } else if (
+      skip.avoided_loss + doNotHold.avoided_loss >= 3 ||
+      enter.worked > 0
+    ) {
+      status = "paper-review only";
+      reason =
+        "Some pieces look useful, but the evidence is not strong or clean enough yet.";
+      next =
+        "Continue paper review. Do not trade funded money from this verdict.";
+    }
+
+    return { status, reason, next };
+  }, [
+    agreementCounts,
+    alertVersionCounts.contractIssues,
+    alertVersionCounts.incomplete,
+    latestAlertMatches.length,
+    paperOutcomeCounts,
+  ]);
+
   function markPaperOutcome(alert: TvAlert, outcome: PaperOutcome) {
     const key = paperOutcomeKey(alert);
     setPaperOutcomes((current) => {
@@ -2221,6 +2299,7 @@ export default function BrutusTradeDeskPage() {
                 alertSourceCounts,
                 paperOutcomeCounts,
                 paperOutcomeRead,
+                tradeabilityVerdict,
                 paperOutcomes,
                 alertSummaryRows,
                 latestAlertMatches,
@@ -2361,10 +2440,37 @@ export default function BrutusTradeDeskPage() {
             4. Today&apos;s Status
           </p>
           <p className="mt-2 text-sm font-bold text-foreground">
-            {plainEvidenceVerdict.title}
+            {tradeabilityVerdict.status}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {paperOutcomeRead}
+            {tradeabilityVerdict.next}
+          </p>
+        </div>
+      </section>
+
+      <section className="grid gap-3 border border-cyan-500/50 bg-cyan-500/5 p-4 md:grid-cols-[0.8fr_1.2fr_1.2fr]">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">
+            Tradeability Verdict
+          </p>
+          <p className="mt-2 font-display text-xl font-bold capitalize text-foreground">
+            {tradeabilityVerdict.status}
+          </p>
+        </div>
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Why
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {tradeabilityVerdict.reason}
+          </p>
+        </div>
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Next
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {tradeabilityVerdict.next}
           </p>
         </div>
       </section>
