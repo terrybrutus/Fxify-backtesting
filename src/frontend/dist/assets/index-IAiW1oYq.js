@@ -42255,7 +42255,7 @@ function hasReviewablePlaybookPayload(alert) {
   return alert.rawSignal === true && Boolean(alert.action) && Boolean(alert.symbol ?? alert.brokerSymbol) && Boolean(alert.timeframe) && Boolean(alert.direction) && alert.candleTime != null && alert.alertTime != null && alert.open != null && alert.high != null && alert.low != null && alert.close != null && alert.upper != null && alert.lower != null && alert.entry != null && alert.stop != null && alert.target != null;
 }
 function isCompatiblePlaybookAlert(alert) {
-  return isPlaybookAlert$1(alert) && !alert.playbookVersion && hasLockedPlaybookSettings(alert) && hasReviewablePlaybookPayload(alert);
+  return isPlaybookAlert$1(alert) && alert.playbookVersion !== LATEST_PLAYBOOK_VERSION$1 && hasLockedPlaybookSettings(alert) && hasReviewablePlaybookPayload(alert);
 }
 function isLatestPlaybookAlert$1(alert) {
   return isExactLatestPlaybookAlert(alert) || isCompatiblePlaybookAlert(alert);
