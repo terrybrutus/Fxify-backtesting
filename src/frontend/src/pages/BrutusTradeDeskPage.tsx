@@ -742,9 +742,54 @@ function isPlaybookAlert(alert: TvAlert) {
   return alert.strategy === "brutus_playbook_v1" || alert.rawSignal === true;
 }
 
-function isLatestPlaybookAlert(alert: TvAlert) {
+function isExactLatestPlaybookAlert(alert: TvAlert) {
   return (
     isPlaybookAlert(alert) && alert.playbookVersion === LATEST_PLAYBOOK_VERSION
+  );
+}
+
+function hasLockedPlaybookSettings(alert: TvAlert) {
+  return (
+    alert.length === 9 &&
+    alert.upperSource === "high" &&
+    alert.lowerSource === "low" &&
+    alert.stdDev === 2
+  );
+}
+
+function hasReviewablePlaybookPayload(alert: TvAlert) {
+  return (
+    alert.rawSignal === true &&
+    Boolean(alert.action) &&
+    Boolean(alert.symbol ?? alert.brokerSymbol) &&
+    Boolean(alert.timeframe) &&
+    Boolean(alert.direction) &&
+    alert.candleTime != null &&
+    alert.alertTime != null &&
+    alert.open != null &&
+    alert.high != null &&
+    alert.low != null &&
+    alert.close != null &&
+    alert.upper != null &&
+    alert.lower != null &&
+    alert.entry != null &&
+    alert.stop != null &&
+    alert.target != null
+  );
+}
+
+function isCompatiblePlaybookAlert(alert: TvAlert) {
+  return (
+    isPlaybookAlert(alert) &&
+    !alert.playbookVersion &&
+    hasLockedPlaybookSettings(alert) &&
+    hasReviewablePlaybookPayload(alert)
+  );
+}
+
+function isLatestPlaybookAlert(alert: TvAlert) {
+  return (
+    isExactLatestPlaybookAlert(alert) || isCompatiblePlaybookAlert(alert)
   );
 }
 
@@ -760,7 +805,8 @@ function paperOutcomeKey(alert: TvAlert) {
 }
 
 function alertVersionLabel(alert: TvAlert) {
-  if (isLatestPlaybookAlert(alert)) return "Current Playbook";
+  if (isExactLatestPlaybookAlert(alert)) return "Current Playbook";
+  if (isCompatiblePlaybookAlert(alert)) return "Compatible Playbook";
   if (isPlaybookAlert(alert)) return "Old Playbook";
   return "Legacy / other";
 }
@@ -2125,10 +2171,10 @@ export default function BrutusTradeDeskPage() {
 
   const paperOutcomeRead = useMemo(() => {
     if (!latestAlertMatches.length) {
-      return "No current Playbook alerts imported yet.";
+      return "No current or compatible Playbook alerts imported yet.";
     }
     if (paperOutcomeCounts.reviewed < 10) {
-      return "keep collecting: mark at least 10 current alerts before changing the rule.";
+      return "keep collecting: mark at least 10 usable Playbook alerts before changing the rule.";
     }
     const enter = paperOutcomeCounts.byDecision.ENTER;
     const wait = paperOutcomeCounts.byDecision.WAIT;
@@ -2615,13 +2661,13 @@ export default function BrutusTradeDeskPage() {
       return "Import the latest TradingView Playbook alert CSV. Do not judge live alerts from screenshots alone.";
     }
     if (!latestAlertMatches.length) {
-      return "This file has no current raw-parity-v11 Playbook alerts. Keep it as history, but do not use it for this evidence loop.";
+      return "This file has no usable current or compatible Playbook alerts. Keep it as history, but do not use it for this evidence loop.";
     }
     if (alertVersionCounts.contractIssues > 0) {
-      return "Some current Playbook alerts failed the locked-parameter check. Re-export the Pine script before trusting this batch.";
+      return "Some usable Playbook alerts failed the locked-parameter check. Re-export the Pine script before trusting this batch.";
     }
     if (alertVersionCounts.incomplete > 0) {
-      return "Some current Playbook alerts are missing required JSON fields. Recreate the alerts with Any alert() function call before trusting this batch.";
+      return "Some usable Playbook alerts are missing required JSON fields. Recreate the alerts with Any alert() function call before trusting this batch.";
     }
     if (alertSourceCounts.liveLatch > 0) {
       return "Review LIVE LATCH rows separately. They prove a live first-touch alert fired, but they are not the same evidence as a current old-triangle match.";
@@ -2671,11 +2717,11 @@ export default function BrutusTradeDeskPage() {
       return {
         tone: "border-red-500/50 bg-red-500/5 text-red-100",
         title: "Do not use this batch",
-        body: "The uploaded file has alerts, but none are from the current raw-parity-v11 Playbook.",
+        body: "The uploaded file has alerts, but none are current or compatible with the locked Brutus Playbook.",
         evidence:
-          "Old rows can help with history, but they do not prove the current Brutus workflow.",
+          "Old rows can help with history, but they need locked settings and full JSON fields before this page treats them as usable evidence.",
         action:
-          "Export the current Pine, recreate alerts with Any alert() function call, then import the new CSV.",
+          "Import a Playbook CSV with rawSignal true, length 9, high/low sources, StdDev 2, OHLC, bands, entry, stop, and target.",
       };
     }
     if (
@@ -2685,7 +2731,7 @@ export default function BrutusTradeDeskPage() {
       return {
         tone: "border-red-500/50 bg-red-500/5 text-red-100",
         title: "Fix the alert setup first",
-        body: "Some current alerts are missing required fields or do not prove the locked Brutus settings.",
+        body: "Some usable alerts are missing required fields or do not prove the locked Brutus settings.",
         evidence:
           "A trustworthy row must show length 9, upper high, lower low, StdDev 2, rawSignal true, and the source fields.",
         action:
@@ -2718,7 +2764,7 @@ export default function BrutusTradeDeskPage() {
       return {
         tone: "border-amber-300/50 bg-amber-300/5 text-amber-100",
         title: "Use TradingView as the truth for this batch",
-        body: "Some current alerts do not have matching imported candles in the app.",
+        body: "Some usable alerts do not have matching imported candles in the app.",
         evidence:
           "PINE ONLY and NO DATA rows can still be reviewed visually, but the app cannot fully score them yet.",
         action:
@@ -2739,7 +2785,7 @@ export default function BrutusTradeDeskPage() {
     return {
       tone: "border-border bg-background text-foreground",
       title: "No trade call in this batch",
-      body: "The current alerts did not produce an ENTER candidate.",
+      body: "The usable alerts did not produce an ENTER candidate.",
       evidence:
         "That can be correct behavior if the move was late, noisy, or not enough like the tested buckets.",
       action:
@@ -2768,9 +2814,9 @@ export default function BrutusTradeDeskPage() {
     const hasUnscoredRows = agreementCounts.pineOnly + agreementCounts.noData > 0;
     let status: TradeabilityStatus = "not enough evidence";
     let reason =
-      "There are not enough clean, marked current Playbook alerts to judge the rule.";
+      "There are not enough clean, marked usable Playbook alerts to judge the rule.";
     let next =
-      "Keep collecting current Playbook alerts and mark outcomes before changing rules.";
+      "Keep collecting usable Playbook alerts and mark outcomes before changing rules.";
 
     if (setupBlocked) {
       status = "not enough evidence";
@@ -2780,9 +2826,9 @@ export default function BrutusTradeDeskPage() {
         "Fix the alert/candle evidence first. Do not use this batch for trade decisions.";
     } else if (paperOutcomeCounts.reviewed < 10) {
       status = "not enough evidence";
-      reason = `${paperOutcomeCounts.reviewed}/10 current alerts have marked outcomes.`;
+      reason = `${paperOutcomeCounts.reviewed}/10 usable alerts have marked outcomes.`;
       next =
-        "Replay and mark at least 10 current alerts before judging the rule.";
+        "Replay and mark at least 10 usable alerts before judging the rule.";
     } else if (enter.failed >= 3 && enter.failed > enter.worked) {
       status = "revise rules";
       reason =
@@ -3093,7 +3139,7 @@ export default function BrutusTradeDeskPage() {
           </p>
           <p className="mt-2 text-sm text-foreground">
             {alertImportResult
-              ? `${alertImportResult.files} alert file(s), ${alertImportResult.current} current Playbook rows`
+              ? `${alertImportResult.files} alert file(s), ${alertImportResult.current} usable Playbook rows`
               : "No TradingView alert file imported in this session."}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -3106,7 +3152,7 @@ export default function BrutusTradeDeskPage() {
             2. Alerts That Matter
           </p>
           <p className="mt-2 text-sm text-foreground">
-            Review current Playbook rows first: {alertCounts.enter} ENTER,{" "}
+            Review usable Playbook rows first: {alertCounts.enter} ENTER,{" "}
             {alertCounts.wait} WAIT, {alertCounts.skip} SKIP,{" "}
             {alertCounts.doNotHold} DO NOT HOLD.
           </p>
@@ -3717,7 +3763,7 @@ export default function BrutusTradeDeskPage() {
                 </p>
               </div>
               <p className="font-mono text-xs text-muted-foreground">
-                Current Playbook only
+                Usable Playbook only
               </p>
             </div>
             <div className="mt-3 grid gap-3 lg:grid-cols-2">
@@ -4028,7 +4074,7 @@ export default function BrutusTradeDeskPage() {
                   Current Alert Summary
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Current Playbook alerts only, grouped by symbol, timeframe,
+                  Usable Playbook alerts only, grouped by symbol, timeframe,
                   and Pine action. Event/source counts show whether the group
                   came from first touch, old-triangle parity, decision changes,
                   or confirmed close.
@@ -4294,7 +4340,7 @@ export default function BrutusTradeDeskPage() {
                         </div>
                       ) : (
                         <span className="mt-1 block text-muted-foreground">
-                          Current Playbook only
+                          Usable Playbook only
                         </span>
                       )}
                     </td>

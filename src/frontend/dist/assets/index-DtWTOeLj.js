@@ -42245,8 +42245,20 @@ function mergeAlerts$1(current, incoming) {
 function isPlaybookAlert$1(alert) {
   return alert.strategy === "brutus_playbook_v1" || alert.rawSignal === true;
 }
-function isLatestPlaybookAlert$1(alert) {
+function isExactLatestPlaybookAlert(alert) {
   return isPlaybookAlert$1(alert) && alert.playbookVersion === LATEST_PLAYBOOK_VERSION$1;
+}
+function hasLockedPlaybookSettings(alert) {
+  return alert.length === 9 && alert.upperSource === "high" && alert.lowerSource === "low" && alert.stdDev === 2;
+}
+function hasReviewablePlaybookPayload(alert) {
+  return alert.rawSignal === true && Boolean(alert.action) && Boolean(alert.symbol ?? alert.brokerSymbol) && Boolean(alert.timeframe) && Boolean(alert.direction) && alert.candleTime != null && alert.alertTime != null && alert.open != null && alert.high != null && alert.low != null && alert.close != null && alert.upper != null && alert.lower != null && alert.entry != null && alert.stop != null && alert.target != null;
+}
+function isCompatiblePlaybookAlert(alert) {
+  return isPlaybookAlert$1(alert) && !alert.playbookVersion && hasLockedPlaybookSettings(alert) && hasReviewablePlaybookPayload(alert);
+}
+function isLatestPlaybookAlert$1(alert) {
+  return isExactLatestPlaybookAlert(alert) || isCompatiblePlaybookAlert(alert);
 }
 function paperOutcomeKey$1(alert) {
   return [
@@ -42259,7 +42271,8 @@ function paperOutcomeKey$1(alert) {
   ].join("|");
 }
 function alertVersionLabel(alert) {
-  if (isLatestPlaybookAlert$1(alert)) return "Current Playbook";
+  if (isExactLatestPlaybookAlert(alert)) return "Current Playbook";
+  if (isCompatiblePlaybookAlert(alert)) return "Compatible Playbook";
   if (isPlaybookAlert$1(alert)) return "Old Playbook";
   return "Legacy / other";
 }
@@ -43328,10 +43341,10 @@ function BrutusTradeDeskPage() {
   }, [latestAlertMatches, paperOutcomes]);
   const paperOutcomeRead = reactExports.useMemo(() => {
     if (!latestAlertMatches.length) {
-      return "No current Playbook alerts imported yet.";
+      return "No current or compatible Playbook alerts imported yet.";
     }
     if (paperOutcomeCounts.reviewed < 10) {
-      return "keep collecting: mark at least 10 current alerts before changing the rule.";
+      return "keep collecting: mark at least 10 usable Playbook alerts before changing the rule.";
     }
     const enter = paperOutcomeCounts.byDecision.ENTER;
     const wait = paperOutcomeCounts.byDecision.WAIT;
@@ -43726,13 +43739,13 @@ function BrutusTradeDeskPage() {
       return "Import the latest TradingView Playbook alert CSV. Do not judge live alerts from screenshots alone.";
     }
     if (!latestAlertMatches.length) {
-      return "This file has no current raw-parity-v11 Playbook alerts. Keep it as history, but do not use it for this evidence loop.";
+      return "This file has no usable current or compatible Playbook alerts. Keep it as history, but do not use it for this evidence loop.";
     }
     if (alertVersionCounts.contractIssues > 0) {
-      return "Some current Playbook alerts failed the locked-parameter check. Re-export the Pine script before trusting this batch.";
+      return "Some usable Playbook alerts failed the locked-parameter check. Re-export the Pine script before trusting this batch.";
     }
     if (alertVersionCounts.incomplete > 0) {
-      return "Some current Playbook alerts are missing required JSON fields. Recreate the alerts with Any alert() function call before trusting this batch.";
+      return "Some usable Playbook alerts are missing required JSON fields. Recreate the alerts with Any alert() function call before trusting this batch.";
     }
     if (alertSourceCounts.liveLatch > 0) {
       return "Review LIVE LATCH rows separately. They prove a live first-touch alert fired, but they are not the same evidence as a current old-triangle match.";
@@ -43780,16 +43793,16 @@ function BrutusTradeDeskPage() {
       return {
         tone: "border-red-500/50 bg-red-500/5 text-red-100",
         title: "Do not use this batch",
-        body: "The uploaded file has alerts, but none are from the current raw-parity-v11 Playbook.",
-        evidence: "Old rows can help with history, but they do not prove the current Brutus workflow.",
-        action: "Export the current Pine, recreate alerts with Any alert() function call, then import the new CSV."
+        body: "The uploaded file has alerts, but none are current or compatible with the locked Brutus Playbook.",
+        evidence: "Old rows can help with history, but they need locked settings and full JSON fields before this page treats them as usable evidence.",
+        action: "Import a Playbook CSV with rawSignal true, length 9, high/low sources, StdDev 2, OHLC, bands, entry, stop, and target."
       };
     }
     if (alertVersionCounts.contractIssues > 0 || alertVersionCounts.incomplete > 0) {
       return {
         tone: "border-red-500/50 bg-red-500/5 text-red-100",
         title: "Fix the alert setup first",
-        body: "Some current alerts are missing required fields or do not prove the locked Brutus settings.",
+        body: "Some usable alerts are missing required fields or do not prove the locked Brutus settings.",
         evidence: "A trustworthy row must show length 9, upper high, lower low, StdDev 2, rawSignal true, and the source fields.",
         action: "Re-export the Pine and recreate the TradingView alerts before judging ENTER or WAIT."
       };
@@ -43816,7 +43829,7 @@ function BrutusTradeDeskPage() {
       return {
         tone: "border-amber-300/50 bg-amber-300/5 text-amber-100",
         title: "Use TradingView as the truth for this batch",
-        body: "Some current alerts do not have matching imported candles in the app.",
+        body: "Some usable alerts do not have matching imported candles in the app.",
         evidence: "PINE ONLY and NO DATA rows can still be reviewed visually, but the app cannot fully score them yet.",
         action: "Review matching ORIG rows first. Treat unmatched rows as visual review items, not final proof."
       };
@@ -43833,7 +43846,7 @@ function BrutusTradeDeskPage() {
     return {
       tone: "border-border bg-background text-foreground",
       title: "No trade call in this batch",
-      body: "The current alerts did not produce an ENTER candidate.",
+      body: "The usable alerts did not produce an ENTER candidate.",
       evidence: "That can be correct behavior if the move was late, noisy, or not enough like the tested buckets.",
       action: "Keep collecting alerts and review WAIT rows only if they repeatedly would have worked."
     };
@@ -43854,16 +43867,16 @@ function BrutusTradeDeskPage() {
     const setupBlocked = !latestAlertMatches.length || alertVersionCounts.contractIssues > 0 || alertVersionCounts.incomplete > 0 || agreementCounts.different > 0;
     const hasUnscoredRows = agreementCounts.pineOnly + agreementCounts.noData > 0;
     let status = "not enough evidence";
-    let reason = "There are not enough clean, marked current Playbook alerts to judge the rule.";
-    let next = "Keep collecting current Playbook alerts and mark outcomes before changing rules.";
+    let reason = "There are not enough clean, marked usable Playbook alerts to judge the rule.";
+    let next = "Keep collecting usable Playbook alerts and mark outcomes before changing rules.";
     if (setupBlocked) {
       status = "not enough evidence";
       reason = "The current evidence is missing, incomplete, old, or disagrees with the app.";
       next = "Fix the alert/candle evidence first. Do not use this batch for trade decisions.";
     } else if (paperOutcomeCounts.reviewed < 10) {
       status = "not enough evidence";
-      reason = `${paperOutcomeCounts.reviewed}/10 current alerts have marked outcomes.`;
-      next = "Replay and mark at least 10 current alerts before judging the rule.";
+      reason = `${paperOutcomeCounts.reviewed}/10 usable alerts have marked outcomes.`;
+      next = "Replay and mark at least 10 usable alerts before judging the rule.";
     } else if (enter.failed >= 3 && enter.failed > enter.worked) {
       status = "revise rules";
       reason = "Marked ENTER rows are failing more often than they are working.";
@@ -44142,13 +44155,13 @@ function BrutusTradeDeskPage() {
     /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 border border-primary/50 bg-primary/5 p-4 md:grid-cols-4", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-primary", children: "1. File Imported" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-foreground", children: alertImportResult ? `${alertImportResult.files} alert file(s), ${alertImportResult.current} current Playbook rows` : "No TradingView alert file imported in this session." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-foreground", children: alertImportResult ? `${alertImportResult.files} alert file(s), ${alertImportResult.current} usable Playbook rows` : "No TradingView alert file imported in this session." }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: "Old or legacy alerts stay visible, but they are not the main review set." })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-primary", children: "2. Alerts That Matter" }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-2 text-sm text-foreground", children: [
-          "Review current Playbook rows first: ",
+          "Review usable Playbook rows first: ",
           alertCounts.enter,
           " ENTER,",
           " ",
@@ -44555,7 +44568,7 @@ function BrutusTradeDeskPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-sm font-bold", children: "Paper review queue" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: "This is where the rule improves: failed ENTERs tighten the rule, would-have-worked WAITs loosen it, and unreviewed ENTERs get checked before anything else." })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs text-muted-foreground", children: "Current Playbook only" })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-xs text-muted-foreground", children: "Usable Playbook only" })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 grid gap-3 lg:grid-cols-2", children: paperReviewQueue.map((group) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-border p-3", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-2", children: [
@@ -44839,7 +44852,7 @@ function BrutusTradeDeskPage() {
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-start justify-between gap-2", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-sm font-bold", children: "Current Alert Summary" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: "Current Playbook alerts only, grouped by symbol, timeframe, and Pine action. Event/source counts show whether the group came from first touch, old-triangle parity, decision changes, or confirmed close." })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: "Usable Playbook alerts only, grouped by symbol, timeframe, and Pine action. Event/source counts show whether the group came from first touch, old-triangle parity, decision changes, or confirmed close." })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-mono text-xs text-muted-foreground", children: [
             alertSummaryRows.length,
@@ -45038,7 +45051,7 @@ function BrutusTradeDeskPage() {
                         children: "Clear"
                       }
                     )
-                  ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "mt-1 block text-muted-foreground", children: "Current Playbook only" })
+                  ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "mt-1 block text-muted-foreground", children: "Usable Playbook only" })
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "max-w-sm whitespace-normal px-2 py-2 text-muted-foreground", children: item.alert.reason ?? item.note })
               ]

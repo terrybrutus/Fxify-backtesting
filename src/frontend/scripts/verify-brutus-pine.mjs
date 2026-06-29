@@ -936,8 +936,8 @@ const requiredTradeDeskSnippets = [
     text: "Current Alert Summary",
   },
   {
-    label: "trade desk current summary excludes old alerts",
-    text: "Current Playbook alerts only, grouped by symbol, timeframe,",
+    label: "trade desk current summary excludes unusable old alerts",
+    text: "Usable Playbook alerts only, grouped by symbol, timeframe,",
   },
   {
     label: "trade desk exports grouped alert summary",
@@ -1029,15 +1029,27 @@ const requiredTradeDeskSnippets = [
   },
   {
     label: "trade desk warns when alert parameters drift",
-    text: "Some current Playbook alerts failed the locked-parameter check.",
+    text: "Some usable Playbook alerts failed the locked-parameter check.",
   },
   {
     label: "trade desk detects incomplete latest playbook alerts",
     text: "function missingPlaybookFields(alert: TvAlert)",
   },
   {
-    label: "trade desk blocks incomplete latest playbook alerts",
-    text: "Some current Playbook alerts are missing required JSON fields.",
+    label: "trade desk blocks incomplete usable playbook alerts",
+    text: "Some usable Playbook alerts are missing required JSON fields.",
+  },
+  {
+    label: "trade desk accepts compatible locked playbook alerts",
+    text: "function isCompatiblePlaybookAlert(alert: TvAlert)",
+  },
+  {
+    label: "trade desk requires locked settings for compatible alerts",
+    text: "function hasLockedPlaybookSettings(alert: TvAlert)",
+  },
+  {
+    label: "trade desk requires reviewable payload for compatible alerts",
+    text: "function hasReviewablePlaybookPayload(alert: TvAlert)",
   },
   {
     label: "trade desk shows incomplete import count",
