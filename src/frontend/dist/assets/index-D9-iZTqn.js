@@ -42895,6 +42895,123 @@ function alertEventExplanation$1(event) {
       return "alert event";
   }
 }
+function gateValueForDirection(alert, longValue, shortValue) {
+  const direction = alert.signalDirection ?? alert.direction;
+  if (direction === "long") return longValue;
+  if (direction === "short") return shortValue;
+  return longValue ?? shortValue;
+}
+function denialReasonFor(item) {
+  const alert = item.alert;
+  const action = alert.action ?? item.status;
+  const reason = String(alert.reason ?? item.note ?? "").toLowerCase();
+  const pushThrough = gateValueForDirection(
+    alert,
+    alert.longPushThrough,
+    alert.shortPushThrough
+  );
+  const snapback = gateValueForDirection(
+    alert,
+    alert.longSnapback,
+    alert.shortSnapback
+  );
+  if (item.status === "NO DATA") {
+    return {
+      key: "no-data",
+      label: "No matching candle data",
+      plainMeaning: "The alert fired, but the imported candle batch cannot score what happened next.",
+      action: "Do not judge the rule from this row. Import matching candles or treat it as live-only evidence."
+    };
+  }
+  if (alert.signalConflict === true) {
+    return {
+      key: "signal-conflict",
+      label: "Both sides fired",
+      plainMeaning: "The candle is messy enough that long and short logic are fighting each other.",
+      action: "Skip it unless a later clean alert resolves the side."
+    };
+  }
+  if (alert.inSession === false || reason.includes("outside")) {
+    return {
+      key: "session",
+      label: "Denied by session",
+      plainMeaning: "The raw Brutus touch fired, but the current 0300-1200 session gate blocked it.",
+      action: "This is the first suspect. Review these rows to decide whether Sunday/off-session moves need their own bucket instead of a hard block."
+    };
+  }
+  if (action === "DO_NOT_HOLD" || pushThrough === true || reason.includes("pushing through") || reason.includes("kept moving")) {
+    return {
+      key: "push-through",
+      label: "Denied by push-through",
+      plainMeaning: "Price kept driving through the band instead of rejecting it immediately.",
+      action: "Separate these into continuation versus failed-reversal. Do not automatically treat every strong pierce as bad."
+    };
+  }
+  if (alert.notTooEarly === false || reason.includes("too early")) {
+    return {
+      key: "timing",
+      label: "Denied by early timing",
+      plainMeaning: "The signal fired too early inside the candle, when the wick could still extend against you.",
+      action: "Check whether late-candle alerts outperform early first touches before tightening this further."
+    };
+  }
+  if (snapback === false || reason.includes("no snapback")) {
+    return {
+      key: "no-snapback",
+      label: "Denied by no snapback",
+      plainMeaning: "The band touch happened, but price had not started moving back toward the band/middle yet.",
+      action: "Use this as the clean WAIT bucket: no entry until a later alert proves the turn started."
+    };
+  }
+  if (action === "SKIP") {
+    return {
+      key: "other-skip",
+      label: "Denied by other rule",
+      plainMeaning: "The app skipped it, but the reason is not one of the main gates.",
+      action: "Inspect these manually. If many would have worked, the rule is hiding opportunity."
+    };
+  }
+  if (action === "WAIT") {
+    return {
+      key: "wait",
+      label: "Wait bucket",
+      plainMeaning: "The setup was close, but the current rule wanted more proof.",
+      action: "If these repeatedly work, loosen ENTER. If they fail, keep them as WAIT."
+    };
+  }
+  if (action === "ENTER") {
+    return {
+      key: "enter",
+      label: "Accepted candidate",
+      plainMeaning: "The alert passed the current rule. This is still paper-review only.",
+      action: "Replay these first. A failed ENTER is more important than a pretty winner."
+    };
+  }
+  return {
+    key: "unclassified",
+    label: "Unclassified",
+    plainMeaning: "The row has enough JSON to parse, but the denial reason is not explicit.",
+    action: "Treat this as a parser/rule clarity issue, not a trade signal."
+  };
+}
+function rsiReadForAlert(alert) {
+  const raw = alert;
+  const rsi2 = asNumber$1(raw.rsi);
+  const rsiMa = asNumber$1(raw.rsiMa);
+  const rsiUpper = asNumber$1(raw.rsiUpper);
+  const rsiLower = asNumber$1(raw.rsiLower);
+  const hasBands = rsi2 != null && rsiUpper != null && rsiLower != null;
+  const aligned = raw.alignedWithTouch === true || alert.direction === "short" && hasBands && rsi2 > rsiUpper || alert.direction === "long" && hasBands && rsi2 < rsiLower;
+  const opposed = alert.direction === "short" && hasBands && rsi2 < rsiLower || alert.direction === "long" && hasBands && rsi2 > rsiUpper;
+  return {
+    known: rsi2 != null || rsiMa != null || rsiUpper != null || rsiLower != null,
+    aligned,
+    opposed
+  };
+}
+function averageFromSum(sum, count) {
+  return count > 0 ? sum / count : 0;
+}
 function VerdictPill({ verdict }) {
   const colors = {
     TEST: "border-lime-400 bg-lime-400/10 text-lime-300",
@@ -43241,6 +43358,147 @@ function BrutusTradeDeskPage() {
       }
     ];
   }, [latestAlertMatches, paperOutcomes]);
+  const denialSourceMatches = reactExports.useMemo(() => {
+    if (latestAlertMatches.length) return latestAlertMatches;
+    return alertMatches.filter((item) => isPlaybookAlert$1(item.alert));
+  }, [alertMatches, latestAlertMatches]);
+  const denialMatrix = reactExports.useMemo(() => {
+    const buckets = /* @__PURE__ */ new Map();
+    for (const item of denialSourceMatches) {
+      const denial = denialReasonFor(item);
+      const current = buckets.get(denial.key) ?? {
+        key: denial.key,
+        label: denial.label,
+        plainMeaning: denial.plainMeaning,
+        action: denial.action,
+        count: 0,
+        enter: 0,
+        wait: 0,
+        skip: 0,
+        doNotHold: 0,
+        long: 0,
+        short: 0,
+        current: 0,
+        old: 0,
+        noData: 0,
+        averageTouchDepthRatio: 0,
+        averageBandWidth: 0,
+        early: 0,
+        late: 0,
+        snapback: 0,
+        pushThrough: 0,
+        rsiKnown: 0,
+        rsiAligned: 0,
+        rsiOpposed: 0,
+        worked: 0,
+        failed: 0,
+        wouldHaveWorked: 0,
+        avoidedLoss: 0,
+        unclear: 0,
+        reviewed: 0,
+        latestAlertTime: 0,
+        examples: [],
+        touchDepthRatioTotal: 0,
+        touchDepthRatioCount: 0,
+        bandWidthTotal: 0,
+        bandWidthCount: 0
+      };
+      current.count += 1;
+      if (item.status === "ENTER") current.enter += 1;
+      if (item.status === "WAIT") current.wait += 1;
+      if (item.status === "SKIP") current.skip += 1;
+      if (item.status === "DO_NOT_HOLD") current.doNotHold += 1;
+      if (item.status === "NO DATA") current.noData += 1;
+      if (item.alert.direction === "long") current.long += 1;
+      if (item.alert.direction === "short") current.short += 1;
+      if (isLatestPlaybookAlert$1(item.alert)) current.current += 1;
+      else current.old += 1;
+      if (item.alert.minutesIntoBar != null && item.alert.minutesIntoBar <= 1) {
+        current.early += 1;
+      }
+      const tf = normalizeTimeframe$1(item.alert.timeframe ?? "");
+      const tfMinutes = tf ? timeframeMinutes$1(tf) : 1;
+      if (item.alert.minutesIntoBar != null && item.alert.minutesIntoBar / Math.max(tfMinutes, 1) >= 0.85) {
+        current.late += 1;
+      }
+      if (gateValueForDirection(
+        item.alert,
+        item.alert.longSnapback,
+        item.alert.shortSnapback
+      ) === true) {
+        current.snapback += 1;
+      }
+      if (gateValueForDirection(
+        item.alert,
+        item.alert.longPushThrough,
+        item.alert.shortPushThrough
+      ) === true) {
+        current.pushThrough += 1;
+      }
+      if (Number.isFinite(item.alert.touchDepthRatio)) {
+        current.touchDepthRatioTotal += item.alert.touchDepthRatio ?? 0;
+        current.touchDepthRatioCount += 1;
+      }
+      if (Number.isFinite(item.alert.bandWidth)) {
+        current.bandWidthTotal += item.alert.bandWidth ?? 0;
+        current.bandWidthCount += 1;
+      }
+      const rsi2 = rsiReadForAlert(item.alert);
+      if (rsi2.known) current.rsiKnown += 1;
+      if (rsi2.aligned) current.rsiAligned += 1;
+      if (rsi2.opposed) current.rsiOpposed += 1;
+      const outcome = paperOutcomes[paperOutcomeKey$1(item.alert)] ?? "unreviewed";
+      current.worked += outcome === "worked" ? 1 : 0;
+      current.failed += outcome === "failed" ? 1 : 0;
+      current.wouldHaveWorked += outcome === "would_have_worked" ? 1 : 0;
+      current.avoidedLoss += outcome === "avoided_loss" ? 1 : 0;
+      current.unclear += outcome === "unclear" ? 1 : 0;
+      current.reviewed += outcome !== "unreviewed" ? 1 : 0;
+      const alertTime = typeof item.alert.alertTime === "number" ? item.alert.alertTime : item.alert.candleTime ?? 0;
+      current.latestAlertTime = Math.max(current.latestAlertTime, alertTime);
+      if (current.examples.length < 3) {
+        current.examples.push(
+          `${item.alert.symbol ?? "unknown"} ${item.alert.timeframe ?? "n/a"} ${item.alert.direction ?? "n/a"} | ${item.alert.reason ?? item.note}`
+        );
+      }
+      buckets.set(denial.key, current);
+    }
+    return [...buckets.values()].map(({ touchDepthRatioTotal, touchDepthRatioCount, bandWidthTotal, bandWidthCount, ...bucket }) => ({
+      ...bucket,
+      averageTouchDepthRatio: averageFromSum(
+        touchDepthRatioTotal,
+        touchDepthRatioCount
+      ),
+      averageBandWidth: averageFromSum(bandWidthTotal, bandWidthCount)
+    })).sort((a2, b2) => {
+      const rank = (row) => {
+        if (row.wouldHaveWorked > 0) return 0;
+        if (row.key === "session") return 1;
+        if (row.key === "push-through") return 2;
+        if (row.reviewed === 0) return 3;
+        return 4;
+      };
+      return rank(a2) - rank(b2) || b2.count - a2.count;
+    });
+  }, [denialSourceMatches, paperOutcomes]);
+  const denialMatrixRead = reactExports.useMemo(() => {
+    if (!denialSourceMatches.length) {
+      return "Import Playbook alerts first. No denial matrix can be built from screenshots.";
+    }
+    const session = denialMatrix.find((row) => row.key === "session");
+    const push2 = denialMatrix.find((row) => row.key === "push-through");
+    const missed = denialMatrix.filter((row) => row.wouldHaveWorked > 0);
+    if (missed.length) {
+      return "Likely over-filtering: some denied rows were marked Would have worked. Review those first before trusting SKIP.";
+    }
+    if (session && session.count >= Math.max(5, denialSourceMatches.length * 0.35)) {
+      return "First suspect: session filter. Too many raw Brutus signals are being denied by time-of-day before we know whether those sessions are bad.";
+    }
+    if (push2 && push2.count >= Math.max(5, denialSourceMatches.length * 0.25)) {
+      return "Second suspect: push-through filter. Strong pierces may be getting labeled danger before proving whether they reverse or continue.";
+    }
+    return "No single denial gate dominates yet. Mark paper outcomes so the matrix can say which rule is helping or hurting.";
+  }, [denialMatrix, denialSourceMatches.length]);
   const alertReviewInstruction = reactExports.useMemo(() => {
     if (!alertMatches.length) {
       return "Import the latest TradingView Playbook alert CSV. Do not judge live alerts from screenshots alone.";
@@ -43568,6 +43826,8 @@ function BrutusTradeDeskPage() {
               alertVersionCounts,
               alertCounts,
               alertSourceCounts,
+              denialMatrix,
+              denialMatrixRead,
               paperOutcomeCounts,
               paperOutcomeRead,
               tradeabilityVerdict,
@@ -44117,6 +44377,146 @@ function BrutusTradeDeskPage() {
             `${group.title}-${item.alert.id}`
           )) }) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-3 text-xs text-muted-foreground", children: "No rows in this bucket yet." })
         ] }, group.title)) })
+      ] }),
+      denialMatrix.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 border border-amber-300/50 bg-amber-300/5 p-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-start justify-between gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-sm font-bold", children: "Why Was This Denied?" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 max-w-4xl text-xs text-muted-foreground", children: "This checks every raw Playbook alert and separates the real blockers: session, push-through, early timing, no snapback, no candle data, and accepted candidates. It is designed to catch over-filtering instead of hiding good setups under SKIP." })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "border border-amber-300/60 px-2 py-1 font-mono text-xs text-amber-200", children: [
+            denialSourceMatches.length,
+            " alert(s)"
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 border border-border bg-background p-3 text-sm", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-display text-sm font-bold", children: "Plain read" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-muted-foreground", children: denialMatrixRead })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[1120px] border-collapse font-mono text-xs", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "text-left text-muted-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Gate" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Count" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "What it means" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Action mix" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Direction" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Timing" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Pierce / width" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Snap / push" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "RSI clue" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Paper result" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "px-2 py-2", children: "Do next" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: denialMatrix.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border/60", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2 text-foreground", children: [
+              row.label,
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-muted-foreground", children: [
+                row.current,
+                " current | ",
+                row.old,
+                " old"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-2 py-2 text-lg text-amber-200", children: row.count }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "max-w-sm whitespace-normal px-2 py-2 text-muted-foreground", children: row.plainMeaning }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2 text-muted-foreground", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-lime-300", children: [
+                "ENTER ",
+                row.enter
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-amber-200", children: [
+                "WAIT ",
+                row.wait
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-red-300", children: [
+                "SKIP ",
+                row.skip
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-fuchsia-200", children: [
+                "DO NOT HOLD ",
+                row.doNotHold
+              ] }),
+              row.noData > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block", children: [
+                "NO DATA ",
+                row.noData
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2 text-muted-foreground", children: [
+              "Long ",
+              row.long,
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block", children: [
+                "Short ",
+                row.short
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2 text-muted-foreground", children: [
+              "Early ",
+              row.early,
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block", children: [
+                "Late ",
+                row.late
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2 text-muted-foreground", children: [
+              "Depth ",
+              (row.averageTouchDepthRatio * 100).toFixed(1),
+              "%",
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block", children: [
+                "Width ",
+                fmtPrice$4(row.averageBandWidth)
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2 text-muted-foreground", children: [
+              "Snap ",
+              row.snapback,
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block", children: [
+                "Push ",
+                row.pushThrough
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2 text-muted-foreground", children: [
+              "Known ",
+              row.rsiKnown,
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-lime-300", children: [
+                "aligned ",
+                row.rsiAligned
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-red-300", children: [
+                "opposed ",
+                row.rsiOpposed
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "px-2 py-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-lime-300", children: [
+                row.worked,
+                " worked"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-red-300", children: [
+                row.failed,
+                " failed"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-amber-200", children: [
+                row.wouldHaveWorked,
+                " missed good"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-cyan-200", children: [
+                row.avoidedLoss,
+                " avoided loss"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "block text-muted-foreground", children: [
+                row.reviewed,
+                " reviewed"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "max-w-sm whitespace-normal px-2 py-2 text-muted-foreground", children: [
+              row.action,
+              row.examples.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "mt-1 block text-[10px] text-muted-foreground", children: [
+                "Example: ",
+                row.examples[0]
+              ] })
+            ] })
+          ] }, row.key)) })
+        ] }) })
       ] }),
       alertSummaryRows.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 border border-border bg-background p-3", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-start justify-between gap-2", children: [
