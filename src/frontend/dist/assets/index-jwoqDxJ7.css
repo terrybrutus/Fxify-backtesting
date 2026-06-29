@@ -1950,6 +1950,9 @@ video {
 .uppercase {
   text-transform: uppercase;
 }
+.capitalize {
+  text-transform: capitalize;
+}
 .tabular-nums {
   --tw-numeric-spacing: tabular-nums;
   font-variant-numeric: var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction);
@@ -3832,6 +3835,10 @@ video {
 
   .md\:grid-cols-6 {
     grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .md\:grid-cols-\[0\.8fr_1\.2fr_1\.2fr\] {
+    grid-template-columns: 0.8fr 1.2fr 1.2fr;
   }
 
   .md\:grid-cols-\[1\.25fr_2fr\] {

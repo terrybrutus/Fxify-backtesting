@@ -43366,6 +43366,49 @@ function BrutusTradeDeskPage() {
     alertVersionCounts.incomplete,
     latestAlertMatches.length
   ]);
+  const tradeabilityVerdict = reactExports.useMemo(() => {
+    const enter = paperOutcomeCounts.byDecision.ENTER;
+    const wait = paperOutcomeCounts.byDecision.WAIT;
+    const skip = paperOutcomeCounts.byDecision.SKIP;
+    const doNotHold = paperOutcomeCounts.byDecision.DO_NOT_HOLD;
+    const setupBlocked = !latestAlertMatches.length || alertVersionCounts.contractIssues > 0 || alertVersionCounts.incomplete > 0 || agreementCounts.different > 0;
+    const hasUnscoredRows = agreementCounts.pineOnly + agreementCounts.noData > 0;
+    let status = "not enough evidence";
+    let reason = "There are not enough clean, marked current Playbook alerts to judge the rule.";
+    let next = "Keep collecting current Playbook alerts and mark outcomes before changing rules.";
+    if (setupBlocked) {
+      status = "not enough evidence";
+      reason = "The current evidence is missing, incomplete, old, or disagrees with the app.";
+      next = "Fix the alert/candle evidence first. Do not use this batch for trade decisions.";
+    } else if (paperOutcomeCounts.reviewed < 10) {
+      status = "not enough evidence";
+      reason = `${paperOutcomeCounts.reviewed}/10 current alerts have marked outcomes.`;
+      next = "Replay and mark at least 10 current alerts before judging the rule.";
+    } else if (enter.failed >= 3 && enter.failed > enter.worked) {
+      status = "revise rules";
+      reason = "Marked ENTER rows are failing more often than they are working.";
+      next = "Tighten ENTER before collecting more evidence. Do not add size or trust the current entry rule.";
+    } else if (wait.would_have_worked + skip.would_have_worked >= 3 && wait.would_have_worked + skip.would_have_worked > enter.worked) {
+      status = "revise rules";
+      reason = "Too many WAIT/SKIP rows are being marked as missed good trades.";
+      next = "Loosen one entry condition as a paper hypothesis, then retest.";
+    } else if (enter.worked >= 5 && enter.worked > enter.failed && !hasUnscoredRows) {
+      status = "cautiously continue collecting";
+      reason = "ENTER has some marked positive evidence and the batch has no app/candle mismatch.";
+      next = "Keep collecting and marking. This is still not real-money approval.";
+    } else if (skip.avoided_loss + doNotHold.avoided_loss >= 3 || enter.worked > 0) {
+      status = "paper-review only";
+      reason = "Some pieces look useful, but the evidence is not strong or clean enough yet.";
+      next = "Continue paper review. Do not trade funded money from this verdict.";
+    }
+    return { status, reason, next };
+  }, [
+    agreementCounts,
+    alertVersionCounts.contractIssues,
+    alertVersionCounts.incomplete,
+    latestAlertMatches.length,
+    paperOutcomeCounts
+  ]);
   function markPaperOutcome(alert, outcome) {
     const key = paperOutcomeKey$1(alert);
     setPaperOutcomes((current) => {
@@ -43527,6 +43570,7 @@ function BrutusTradeDeskPage() {
               alertSourceCounts,
               paperOutcomeCounts,
               paperOutcomeRead,
+              tradeabilityVerdict,
               paperOutcomes,
               alertSummaryRows,
               latestAlertMatches,
@@ -43641,8 +43685,22 @@ function BrutusTradeDeskPage() {
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-primary", children: "4. Today's Status" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm font-bold text-foreground", children: plainEvidenceVerdict.title }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: paperOutcomeRead })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm font-bold text-foreground", children: tradeabilityVerdict.status }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: tradeabilityVerdict.next })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "grid gap-3 border border-cyan-500/50 bg-cyan-500/5 p-4 md:grid-cols-[0.8fr_1.2fr_1.2fr]", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-cyan-300", children: "Tradeability Verdict" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 font-display text-xl font-bold capitalize text-foreground", children: tradeabilityVerdict.status })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: "Why" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: tradeabilityVerdict.reason })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-muted-foreground", children: "Next" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: tradeabilityVerdict.next })
       ] })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "border border-red-500/50 bg-red-500/5 p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
