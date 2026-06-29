@@ -42856,6 +42856,9 @@ function matchAlertsToDecisions(alerts, decisions) {
     };
   });
 }
+function decisionFromAlertOrMatch(item) {
+  return item.alert.action ?? item.status;
+}
 function DecisionPill({ decision }) {
   const colors = {
     ENTER: "border-lime-400 bg-lime-400/10 text-lime-300",
@@ -43294,12 +43297,26 @@ function BrutusTradeDeskPage() {
     }),
     [latestAlertMatches]
   );
+  const pineActionCounts = reactExports.useMemo(
+    () => ({
+      enter: latestAlertMatches.filter((item) => item.alert.action === "ENTER").length,
+      wait: latestAlertMatches.filter((item) => item.alert.action === "WAIT").length,
+      skip: latestAlertMatches.filter((item) => item.alert.action === "SKIP").length,
+      doNotHold: latestAlertMatches.filter(
+        (item) => item.alert.action === "DO_NOT_HOLD"
+      ).length,
+      missing: latestAlertMatches.filter((item) => item.alert.action == null).length
+    }),
+    [latestAlertMatches]
+  );
   const alertSourceCounts = reactExports.useMemo(
     () => latestAlertMatches.reduce(
       (acc, item) => {
-        if (item.alert.originalTriangleSignal === true) {
+        const original = item.alert.originalTriangleSignal === true || item.alert.decisionEvent === "original_triangle";
+        const liveLatch = item.alert.latchedSignal === true || item.alert.decisionEvent === "first_touch";
+        if (original) {
           acc.original += 1;
-        } else if (item.alert.latchedSignal === true) {
+        } else if (liveLatch) {
           acc.liveLatch += 1;
         } else {
           acc.unknown += 1;
@@ -43329,8 +43346,9 @@ function BrutusTradeDeskPage() {
     const totals = emptyCounts();
     for (const item of latestAlertMatches) {
       const outcome = paperOutcomes[paperOutcomeKey$1(item.alert)] ?? "unreviewed";
+      const action = decisionFromAlertOrMatch(item);
       totals[outcome] += 1;
-      countsByDecision[item.status][outcome] += 1;
+      countsByDecision[action][outcome] += 1;
     }
     const reviewed = totals.worked + totals.failed + totals.would_have_worked + totals.avoided_loss + totals.unclear;
     return {
@@ -43448,7 +43466,7 @@ function BrutusTradeDeskPage() {
         tone: "text-red-300",
         why: "If these really failed on TradingView, ENTER is too loose.",
         rows: withOutcome.filter(
-          ({ item, outcome }) => item.status === "ENTER" && outcome === "failed"
+          ({ item, outcome }) => decisionFromAlertOrMatch(item) === "ENTER" && outcome === "failed"
         ).slice(0, 5)
       },
       {
@@ -43456,7 +43474,7 @@ function BrutusTradeDeskPage() {
         tone: "text-amber-200",
         why: "If these keep working, ENTER is too strict.",
         rows: withOutcome.filter(
-          ({ item, outcome }) => item.status === "WAIT" && outcome === "would_have_worked"
+          ({ item, outcome }) => decisionFromAlertOrMatch(item) === "WAIT" && outcome === "would_have_worked"
         ).slice(0, 5)
       },
       {
@@ -43464,7 +43482,7 @@ function BrutusTradeDeskPage() {
         tone: "text-lime-300",
         why: "These are the next paper-review rows to judge first.",
         rows: withOutcome.filter(
-          ({ item, outcome }) => item.status === "ENTER" && outcome === "unreviewed"
+          ({ item, outcome }) => decisionFromAlertOrMatch(item) === "ENTER" && outcome === "unreviewed"
         ).slice(0, 5)
       },
       {
@@ -43472,7 +43490,7 @@ function BrutusTradeDeskPage() {
         tone: "text-cyan-200",
         why: "If these avoided losses, the filter is doing useful work.",
         rows: withOutcome.filter(
-          ({ item, outcome }) => item.status === "SKIP" && outcome === "avoided_loss"
+          ({ item, outcome }) => decisionFromAlertOrMatch(item) === "SKIP" && outcome === "avoided_loss"
         ).slice(0, 5)
       },
       {
@@ -43480,7 +43498,7 @@ function BrutusTradeDeskPage() {
         tone: "text-amber-200",
         why: "If these would have worked, the filter may be too strict.",
         rows: withOutcome.filter(
-          ({ item, outcome }) => item.status === "SKIP" && outcome === "would_have_worked"
+          ({ item, outcome }) => decisionFromAlertOrMatch(item) === "SKIP" && outcome === "would_have_worked"
         ).slice(0, 5)
       }
     ];
@@ -43531,10 +43549,11 @@ function BrutusTradeDeskPage() {
         bandWidthCount: 0
       };
       current.count += 1;
-      if (item.status === "ENTER") current.enter += 1;
-      if (item.status === "WAIT") current.wait += 1;
-      if (item.status === "SKIP") current.skip += 1;
-      if (item.status === "DO_NOT_HOLD") current.doNotHold += 1;
+      const action = decisionFromAlertOrMatch(item);
+      if (action === "ENTER") current.enter += 1;
+      if (action === "WAIT") current.wait += 1;
+      if (action === "SKIP") current.skip += 1;
+      if (action === "DO_NOT_HOLD") current.doNotHold += 1;
       if (item.status === "NO DATA") current.noData += 1;
       if (item.alert.direction === "long") current.long += 1;
       if (item.alert.direction === "short") current.short += 1;
@@ -43754,7 +43773,7 @@ function BrutusTradeDeskPage() {
       return "Stop and review DIFFERENT rows first. Pine and the app disagree, so those rows are not tradeable evidence yet.";
     }
     if (agreementCounts.pineOnly > 0) {
-      return "Review PINE ONLY rows in TradingView. They are newer than your imported candle batch, so the app cannot score them yet.";
+      return "Review PINE ONLY rows in TradingView. The Pine action is usable, but the app has no matching candle outcome yet.";
     }
     if (paperOutcomeCounts.byDecision.ENTER.failed > 0) {
       return "Replay failed ENTER rows first. If they really failed on TradingView, tighten the rule before paper-trading more.";
@@ -43762,21 +43781,24 @@ function BrutusTradeDeskPage() {
     if (paperOutcomeCounts.byDecision.WAIT.would_have_worked > 0) {
       return "Review WAIT rows marked Would have worked. If these keep working, the ENTER rule is too strict.";
     }
-    if (alertCounts.enter > 0) {
+    if (pineActionCounts.enter > 0) {
       return "Paper-review ENTER rows next. The question is simple: did this work if taken immediately, or was it already too late?";
     }
-    if (alertCounts.wait > 0) {
+    if (pineActionCounts.wait > 0) {
       return "Review WAIT rows that still worked. If too many WAIT rows work, the entry rule is too strict.";
+    }
+    if (pineActionCounts.skip + pineActionCounts.doNotHold > 0) {
+      return "This batch is mostly denied. Review good-looking SKIP/DO NOT HOLD rows first to see which gate is too strict.";
     }
     return "No entry evidence yet. Keep collecting alerts; do not force a trade from this batch.";
   }, [
     agreementCounts,
-    alertCounts,
     alertMatches.length,
     alertSourceCounts.liveLatch,
     alertVersionCounts.contractIssues,
     alertVersionCounts.incomplete,
     paperOutcomeCounts,
+    pineActionCounts,
     latestAlertMatches.length
   ]);
   const plainEvidenceVerdict = reactExports.useMemo(() => {
@@ -43828,10 +43850,10 @@ function BrutusTradeDeskPage() {
     if (agreementCounts.pineOnly > 0 || agreementCounts.noData > 0) {
       return {
         tone: "border-amber-300/50 bg-amber-300/5 text-amber-100",
-        title: "Use TradingView as the truth for this batch",
-        body: "Some usable alerts do not have matching imported candles in the app.",
-        evidence: "PINE ONLY and NO DATA rows can still be reviewed visually, but the app cannot fully score them yet.",
-        action: "Review matching ORIG rows first. Treat unmatched rows as visual review items, not final proof."
+        title: "Live-alert review only",
+        body: "The app can read what Pine said, but it does not have matching candles to judge what happened after these alerts.",
+        evidence: `Pine classified this batch as ${pineActionCounts.enter} ENTER, ${pineActionCounts.wait} WAIT, ${pineActionCounts.skip} SKIP, and ${pineActionCounts.doNotHold} DO NOT HOLD.`,
+        action: "Use TradingView replay/visual review for these rows. Mark missed good trades and avoided losses so the app can expose over-filtering."
       };
     }
     if (alertCounts.enter > 0) {
@@ -43857,7 +43879,8 @@ function BrutusTradeDeskPage() {
     alertSourceCounts.liveLatch,
     alertVersionCounts.contractIssues,
     alertVersionCounts.incomplete,
-    latestAlertMatches.length
+    latestAlertMatches.length,
+    pineActionCounts
   ]);
   const tradeabilityVerdict = reactExports.useMemo(() => {
     const enter = paperOutcomeCounts.byDecision.ENTER;
@@ -44161,19 +44184,22 @@ function BrutusTradeDeskPage() {
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-primary", children: "2. Alerts That Matter" }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-2 text-sm text-foreground", children: [
-          "Review usable Playbook rows first: ",
-          alertCounts.enter,
-          " ENTER,",
+          "Pine said: ",
+          pineActionCounts.enter,
+          " ENTER, ",
+          pineActionCounts.wait,
           " ",
-          alertCounts.wait,
-          " WAIT, ",
-          alertCounts.skip,
-          " SKIP,",
-          " ",
-          alertCounts.doNotHold,
+          "WAIT, ",
+          pineActionCounts.skip,
+          " SKIP, ",
+          pineActionCounts.doNotHold,
           " DO NOT HOLD."
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-muted-foreground", children: "MATCH rows are strongest. DIFFERENT, PINE ONLY, and NO DATA rows are visual review only." })
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-1 text-xs text-muted-foreground", children: [
+          "App-scored rows: ",
+          alertCounts.enter + alertCounts.wait + alertCounts.skip + alertCounts.doNotHold,
+          ". PINE ONLY / NO DATA rows need TradingView visual review."
+        ] })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] uppercase tracking-widest text-primary", children: "3. Review Next" }),
@@ -44424,23 +44450,23 @@ function BrutusTradeDeskPage() {
             alertSourceCounts.unknown
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "border border-lime-400/50 px-2 py-1 text-lime-300", children: [
-            "ENTER ",
-            alertCounts.enter
+            "PINE ENTER ",
+            pineActionCounts.enter
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "border border-amber-300/50 px-2 py-1 text-amber-200", children: [
-            "WAIT ",
-            alertCounts.wait
+            "PINE WAIT ",
+            pineActionCounts.wait
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "border border-red-500/50 px-2 py-1 text-red-300", children: [
-            "SKIP ",
-            alertCounts.skip
+            "PINE SKIP ",
+            pineActionCounts.skip
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "border border-fuchsia-400/50 px-2 py-1 text-fuchsia-200", children: [
-            "DO NOT HOLD ",
-            alertCounts.doNotHold
+            "PINE DO NOT HOLD ",
+            pineActionCounts.doNotHold
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "border border-border px-2 py-1 text-muted-foreground", children: [
-            "NO DATA ",
+            "APP NO DATA ",
             alertCounts.noData
           ] }),
           alertVersionCounts.contractIssues > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "border border-red-500/50 px-2 py-1 text-red-300", children: [
