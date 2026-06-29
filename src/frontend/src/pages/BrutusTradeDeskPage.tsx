@@ -246,6 +246,35 @@ type DenialBucket = {
   examples: string[];
 };
 
+type StrategyDiagnosisRow = {
+  key: string;
+  family: string;
+  paperUse: "paper-test" | "review" | "avoid" | "needs data";
+  count: number;
+  enter: number;
+  wait: number;
+  skip: number;
+  doNotHold: number;
+  snapback: number;
+  pushThrough: number;
+  sessionBlocked: number;
+  early: number;
+  rsiKnown: number;
+  rsiAligned: number;
+  rsiOpposed: number;
+  worked: number;
+  failed: number;
+  wouldHaveWorked: number;
+  avoidedLoss: number;
+  plainFinding: string;
+  paperRule: string;
+  entryPlan: string;
+  exitPlan: string;
+  invalidation: string;
+  nextProof: string;
+  examples: string[];
+};
+
 const STORAGE_KEY = "ict.brutus.trade-desk.report.v1";
 const ALERT_STORAGE_KEY = "ict.brutus.trade-desk.alerts.v1";
 const PAPER_OUTCOME_STORAGE_KEY = "ict.brutus.trade-desk.paperOutcomes.v1";
@@ -1651,8 +1680,174 @@ function rsiReadForAlert(alert: TvAlert) {
   };
 }
 
+function strategyDiagnosisFor(item: AlertDecisionMatch) {
+  const alert = item.alert;
+  const denial = denialReasonFor(item);
+  const snapback =
+    gateValueForDirection(alert, alert.longSnapback, alert.shortSnapback) ===
+    true;
+  const pushThrough =
+    gateValueForDirection(
+      alert,
+      alert.longPushThrough,
+      alert.shortPushThrough,
+    ) === true;
+  const rsi = rsiReadForAlert(alert);
+  const depth = alert.touchDepthRatio ?? 0;
+  const early = alert.notTooEarly === false || (alert.minutesIntoBar ?? 99) <= 1;
+  const midBand =
+    alert.upper != null && alert.lower != null
+      ? (alert.upper + alert.lower) / 2
+      : undefined;
+  const oppositeBand =
+    alert.direction === "long" ? alert.upper : alert.lower;
+  const side = alert.direction === "short" ? "short" : "long";
+  const paperSide = side === "short" ? "paper short" : "paper long";
+  const midTarget = midBand != null ? fmtPrice(midBand) : "the band middle";
+  const runnerTarget =
+    oppositeBand != null ? fmtPrice(oppositeBand) : "the opposite band";
+
+  if (item.status === "NO DATA") {
+    return {
+      key: "needs-data",
+      family: "Needs matching candle data",
+      paperUse: "needs data" as const,
+      plainFinding:
+        "The alert exists, but the app cannot judge what happened after it.",
+      paperRule:
+        "Do not paper-trade this row from the app. Use it only as a live TradingView note.",
+      entryPlan: "No entry from this row.",
+      exitPlan: "No exit model until matching candle data exists.",
+      invalidation: "Missing candle data.",
+      nextProof: "Import matching Alchemy candles or review the alert directly in TradingView.",
+    };
+  }
+
+  if (pushThrough && !snapback) {
+    return {
+      key: "push-through-continuation",
+      family: "Push-through continuation",
+      paperUse: early ? ("review" as const) : ("paper-test" as const),
+      plainFinding:
+        "Price is not rejecting the band yet. This is probably momentum, not a clean reversal.",
+      paperRule:
+        "Do not fade this immediately. Paper-test continuation only if the next candle keeps moving the same way and the band keeps widening.",
+      entryPlan:
+        side === "short"
+          ? "If testing continuation, paper buy only after a pullback holds above the upper band area."
+          : "If testing continuation, paper sell only after a pullback holds below the lower band area.",
+      exitPlan:
+        "For reversal attempts, exit immediately. For continuation tests, trail behind the most recent small pullback.",
+      invalidation:
+        "If price snaps back through the touched band, the continuation idea failed.",
+      nextProof:
+        "Track whether these push-through rows later become big continuation moves or sharp snapbacks.",
+    };
+  }
+
+  if (snapback && depth >= 0.04) {
+    return {
+      key: "snapback-reversal",
+      family: "Snapback reversal",
+      paperUse:
+        denial.key === "session" || early ? ("review" as const) : ("paper-test" as const),
+      plainFinding:
+        "Price pierced the band and started coming back. This is the closest version of your original wick/snapback idea.",
+      paperRule:
+        "Paper-test only after the snapback starts. Do not chase if the move already reached the middle.",
+      entryPlan: `Watch for a ${paperSide} near the touched band after rejection starts.`,
+      exitPlan: `First target is ${midTarget}. If it keeps moving, runner target is ${runnerTarget}.`,
+      invalidation:
+        "If the next candle pushes back through the touched band, stop paper-tracking it.",
+      nextProof:
+        rsi.known
+          ? "Compare RSI-aligned snapbacks versus RSI-opposed snapbacks."
+          : "Add RSI fields later if you want to test whether momentum divergence improves this family.",
+    };
+  }
+
+  if (denial.key === "session") {
+    return {
+      key: "session-blocked-review",
+      family: "Session-blocked opportunity",
+      paperUse: "review" as const,
+      plainFinding:
+        "The raw Brutus touch was blocked mostly because of time of day, not because the setup itself was proven bad.",
+      paperRule:
+        "Do not hard-delete these. Split them into their own session bucket and see whether Sunday/Asia/off-hours behave differently.",
+      entryPlan:
+        "No automatic entry. Replay these first and mark Would have worked or Avoided loss.",
+      exitPlan:
+        "If reviewed as a snapback, use middle-band first target. If reviewed as continuation, trail behind pullbacks.",
+      invalidation:
+        "If this bucket mostly fails after review, keep the session filter. If it works, remove the hard block.",
+      nextProof:
+        "Mark at least 20 session-blocked rows before deciding whether to loosen the time filter.",
+    };
+  }
+
+  if (early) {
+    return {
+      key: "early-touch-risk",
+      family: "Early-touch wick risk",
+      paperUse: "review" as const,
+      plainFinding:
+        "The alert fired early in the candle. This can become a great wick entry or an immediate stop-out.",
+      paperRule:
+        "Do not enter on the first touch unless the next 1m candle confirms rejection.",
+      entryPlan:
+        "Wait one candle. Paper-enter only if price stops stretching and starts moving back inside the band.",
+      exitPlan: `First target is ${midTarget}; do not hold if price resumes pushing through.`,
+      invalidation:
+        "If the next 1m candle expands farther through the band, skip it.",
+      nextProof:
+        "Compare early first-touch alerts against late-candle alerts. This tells us whether your alert is too fast.",
+    };
+  }
+
+  if (rsi.known && rsi.aligned) {
+    return {
+      key: "rsi-aligned-reversal",
+      family: "RSI-aligned reversal",
+      paperUse: "review" as const,
+      plainFinding:
+        "RSI is stretched with the band touch. This may strengthen snapback candidates, but it needs proof.",
+      paperRule:
+        "Use RSI as a ranking clue, not a trade trigger. It should improve entries only if outcomes prove it.",
+      entryPlan: `Paper-test a ${paperSide} only when snapback also starts.`,
+      exitPlan: `First target is ${midTarget}; runner target is ${runnerTarget}.`,
+      invalidation:
+        "If RSI stays embedded and price rides the band, this becomes continuation risk.",
+      nextProof:
+        "Compare RSI-aligned rows against non-RSI rows before promoting it.",
+    };
+  }
+
+  return {
+    key: "unclear-research",
+    family: "Unclear research row",
+    paperUse: "avoid" as const,
+    plainFinding:
+      "This alert does not yet fit a clean snapback, continuation, or session-review family.",
+    paperRule:
+      "Do not use this as a paper entry until it has a repeatable family.",
+    entryPlan: "No entry.",
+    exitPlan: "No exit model.",
+    invalidation: "The setup has no clear thesis yet.",
+    nextProof:
+      "Only keep it if repeated examples show the same behavior after review.",
+  };
+}
+
 function averageFromSum(sum: number, count: number) {
   return count > 0 ? sum / count : 0;
+}
+
+function paperUseClass(use: StrategyDiagnosisRow["paperUse"]) {
+  if (use === "paper-test") return "border-lime-400/60 text-lime-300";
+  if (use === "review") return "border-amber-300/60 text-amber-200";
+  if (use === "needs data") return "border-cyan-300/60 text-cyan-200";
+  return "border-red-500/60 text-red-300";
 }
 
 function VerdictPill({ verdict }: { verdict: PlaybookVerdict }) {
@@ -2267,6 +2462,135 @@ export default function BrutusTradeDeskPage() {
       });
   }, [denialSourceMatches, paperOutcomes]);
 
+  const strategyDiagnosisMatrix = useMemo(() => {
+    type MutableDiagnosis = StrategyDiagnosisRow & {
+      proofRank: number;
+    };
+    const rows = new Map<string, MutableDiagnosis>();
+    const rank: Record<StrategyDiagnosisRow["paperUse"], number> = {
+      "paper-test": 0,
+      review: 1,
+      avoid: 2,
+      "needs data": 3,
+    };
+    for (const item of denialSourceMatches) {
+      const diagnosis = strategyDiagnosisFor(item);
+      const current =
+        rows.get(diagnosis.key) ??
+        ({
+          key: diagnosis.key,
+          family: diagnosis.family,
+          paperUse: diagnosis.paperUse,
+          count: 0,
+          enter: 0,
+          wait: 0,
+          skip: 0,
+          doNotHold: 0,
+          snapback: 0,
+          pushThrough: 0,
+          sessionBlocked: 0,
+          early: 0,
+          rsiKnown: 0,
+          rsiAligned: 0,
+          rsiOpposed: 0,
+          worked: 0,
+          failed: 0,
+          wouldHaveWorked: 0,
+          avoidedLoss: 0,
+          plainFinding: diagnosis.plainFinding,
+          paperRule: diagnosis.paperRule,
+          entryPlan: diagnosis.entryPlan,
+          exitPlan: diagnosis.exitPlan,
+          invalidation: diagnosis.invalidation,
+          nextProof: diagnosis.nextProof,
+          examples: [],
+          proofRank: rank[diagnosis.paperUse],
+        } satisfies MutableDiagnosis);
+      current.count += 1;
+      if (item.status === "ENTER") current.enter += 1;
+      if (item.status === "WAIT") current.wait += 1;
+      if (item.status === "SKIP") current.skip += 1;
+      if (item.status === "DO_NOT_HOLD") current.doNotHold += 1;
+      if (
+        gateValueForDirection(
+          item.alert,
+          item.alert.longSnapback,
+          item.alert.shortSnapback,
+        ) === true
+      ) {
+        current.snapback += 1;
+      }
+      if (
+        gateValueForDirection(
+          item.alert,
+          item.alert.longPushThrough,
+          item.alert.shortPushThrough,
+        ) === true
+      ) {
+        current.pushThrough += 1;
+      }
+      if (item.alert.inSession === false) current.sessionBlocked += 1;
+      if (
+        item.alert.notTooEarly === false ||
+        (item.alert.minutesIntoBar ?? 99) <= 1
+      ) {
+        current.early += 1;
+      }
+      const rsi = rsiReadForAlert(item.alert);
+      if (rsi.known) current.rsiKnown += 1;
+      if (rsi.aligned) current.rsiAligned += 1;
+      if (rsi.opposed) current.rsiOpposed += 1;
+      const outcome =
+        paperOutcomes[paperOutcomeKey(item.alert)] ?? "unreviewed";
+      current.worked += outcome === "worked" ? 1 : 0;
+      current.failed += outcome === "failed" ? 1 : 0;
+      current.wouldHaveWorked += outcome === "would_have_worked" ? 1 : 0;
+      current.avoidedLoss += outcome === "avoided_loss" ? 1 : 0;
+      if (current.examples.length < 3) {
+        current.examples.push(
+          `${item.alert.symbol ?? "unknown"} ${item.alert.timeframe ?? "n/a"} ${item.alert.direction ?? "n/a"} | ${item.alert.plainAction ?? item.alert.reason ?? item.note}`,
+        );
+      }
+      rows.set(diagnosis.key, current);
+    }
+    return [...rows.values()]
+      .map(({ proofRank, ...row }) => row)
+      .sort((a, b) => {
+        const rankA = rank[a.paperUse];
+        const rankB = rank[b.paperUse];
+        return (
+          rankA - rankB ||
+          b.wouldHaveWorked - a.wouldHaveWorked ||
+          b.count - a.count
+        );
+      });
+  }, [denialSourceMatches, paperOutcomes]);
+
+  const strategyDiagnosisRead = useMemo(() => {
+    if (!strategyDiagnosisMatrix.length) {
+      return "No Playbook alerts imported yet. Import alerts before looking for paper-trading families.";
+    }
+    const paperTests = strategyDiagnosisMatrix.filter(
+      (row) => row.paperUse === "paper-test",
+    );
+    const reviews = strategyDiagnosisMatrix.filter(
+      (row) => row.paperUse === "review",
+    );
+    const missed = strategyDiagnosisMatrix.filter(
+      (row) => row.wouldHaveWorked > 0,
+    );
+    if (missed.length) {
+      return "Most important: some blocked families were marked Would have worked. Those are the first candidates for loosening the rule.";
+    }
+    if (paperTests.length) {
+      return "There are paper-test families, but they still need marked outcomes before they deserve TradingView automation.";
+    }
+    if (reviews.length) {
+      return "The useful work is review, not entry yet. The app is seeing possible families, but not enough proof to paper-enter automatically.";
+    }
+    return "This alert batch does not contain a clean paper-test family yet.";
+  }, [strategyDiagnosisMatrix]);
+
   const denialMatrixRead = useMemo(() => {
     if (!denialSourceMatches.length) {
       return "Import Playbook alerts first. No denial matrix can be built from screenshots.";
@@ -2663,6 +2987,8 @@ export default function BrutusTradeDeskPage() {
                 alertSourceCounts,
                 denialMatrix,
                 denialMatrixRead,
+                strategyDiagnosisMatrix,
+                strategyDiagnosisRead,
                 paperOutcomeCounts,
                 paperOutcomeRead,
                 tradeabilityVerdict,
@@ -3572,6 +3898,115 @@ export default function BrutusTradeDeskPage() {
                       </td>
                       <td className="max-w-sm whitespace-normal px-2 py-2 text-muted-foreground">
                         {row.action}
+                        {row.examples.length > 0 && (
+                          <span className="mt-1 block text-[10px] text-muted-foreground">
+                            Example: {row.examples[0]}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        {strategyDiagnosisMatrix.length > 0 && (
+          <div className="mt-3 border border-lime-400/40 bg-lime-400/5 p-3">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p className="font-display text-sm font-bold">
+                  Strategy Diagnosis Matrix
+                </p>
+                <p className="mt-1 max-w-4xl text-xs text-muted-foreground">
+                  This turns the denied-alert evidence into paper-trading
+                  hypotheses. It separates snapback reversal, push-through
+                  continuation, session-blocked review, early-touch wick risk,
+                  RSI clues, and missing-data rows.
+                </p>
+              </div>
+              <span className="border border-lime-400/60 px-2 py-1 font-mono text-xs text-lime-300">
+                paper hypotheses
+              </span>
+            </div>
+            <div className="mt-3 border border-border bg-background p-3 text-sm">
+              <p className="font-display text-sm font-bold">
+                Closest practical read
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                {strategyDiagnosisRead}
+              </p>
+            </div>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[1240px] border-collapse font-mono text-xs">
+                <thead className="text-left text-muted-foreground">
+                  <tr className="border-b border-border">
+                    <th className="px-2 py-2">Family</th>
+                    <th className="px-2 py-2">Use</th>
+                    <th className="px-2 py-2">Count</th>
+                    <th className="px-2 py-2">Finding</th>
+                    <th className="px-2 py-2">Paper rule</th>
+                    <th className="px-2 py-2">Entry</th>
+                    <th className="px-2 py-2">Exit</th>
+                    <th className="px-2 py-2">Invalidation</th>
+                    <th className="px-2 py-2">Clues</th>
+                    <th className="px-2 py-2">Proof needed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {strategyDiagnosisMatrix.map((row) => (
+                    <tr className="border-b border-border/60" key={row.key}>
+                      <td className="px-2 py-2 text-foreground">
+                        {row.family}
+                        <span className="block text-muted-foreground">
+                          ENTER {row.enter} | WAIT {row.wait} | SKIP{" "}
+                          {row.skip} | DNH {row.doNotHold}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2">
+                        <span
+                          className={`border px-2 py-1 uppercase ${paperUseClass(row.paperUse)}`}
+                        >
+                          {row.paperUse}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-lg text-lime-300">
+                        {row.count}
+                      </td>
+                      <td className="max-w-xs whitespace-normal px-2 py-2 text-muted-foreground">
+                        {row.plainFinding}
+                      </td>
+                      <td className="max-w-xs whitespace-normal px-2 py-2 text-muted-foreground">
+                        {row.paperRule}
+                      </td>
+                      <td className="max-w-xs whitespace-normal px-2 py-2 text-muted-foreground">
+                        {row.entryPlan}
+                      </td>
+                      <td className="max-w-xs whitespace-normal px-2 py-2 text-muted-foreground">
+                        {row.exitPlan}
+                      </td>
+                      <td className="max-w-xs whitespace-normal px-2 py-2 text-muted-foreground">
+                        {row.invalidation}
+                      </td>
+                      <td className="px-2 py-2 text-muted-foreground">
+                        Snap {row.snapback} | Push {row.pushThrough}
+                        <span className="block">
+                          Session block {row.sessionBlocked} | Early{" "}
+                          {row.early}
+                        </span>
+                        <span className="block">
+                          RSI known {row.rsiKnown} | aligned{" "}
+                          {row.rsiAligned} | opposed {row.rsiOpposed}
+                        </span>
+                        <span className="block text-amber-200">
+                          missed good {row.wouldHaveWorked}
+                        </span>
+                        <span className="block text-cyan-200">
+                          avoided loss {row.avoidedLoss}
+                        </span>
+                      </td>
+                      <td className="max-w-sm whitespace-normal px-2 py-2 text-muted-foreground">
+                        {row.nextProof}
                         {row.examples.length > 0 && (
                           <span className="mt-1 block text-[10px] text-muted-foreground">
                             Example: {row.examples[0]}

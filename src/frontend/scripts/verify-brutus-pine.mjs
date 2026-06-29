@@ -1136,6 +1136,34 @@ const requiredTradeDeskSnippets = [
     text: "denialMatrixRead,",
   },
   {
+    label: "trade desk strategy diagnosis matrix panel",
+    text: "Strategy Diagnosis Matrix",
+  },
+  {
+    label: "trade desk strategy diagnosis snapback family",
+    text: "Snapback reversal",
+  },
+  {
+    label: "trade desk strategy diagnosis continuation family",
+    text: "Push-through continuation",
+  },
+  {
+    label: "trade desk strategy diagnosis session review family",
+    text: "Session-blocked opportunity",
+  },
+  {
+    label: "trade desk strategy diagnosis exports matrix",
+    text: "strategyDiagnosisMatrix,",
+  },
+  {
+    label: "trade desk strategy diagnosis exports read",
+    text: "strategyDiagnosisRead,",
+  },
+  {
+    label: "trade desk strategy diagnosis includes dynamic exits",
+    text: "First target is ${midTarget}",
+  },
+  {
     label: "trade desk tracks RSI clues without forcing RSI",
     text: "function rsiReadForAlert(alert: TvAlert)",
   },
