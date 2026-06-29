@@ -1112,6 +1112,34 @@ const requiredTradeDeskSnippets = [
     text: "Tradeability Verdict",
   },
   {
+    label: "trade desk denial matrix panel",
+    text: "Why Was This Denied?",
+  },
+  {
+    label: "trade desk denial matrix session gate",
+    text: "Denied by session",
+  },
+  {
+    label: "trade desk denial matrix push-through gate",
+    text: "Denied by push-through",
+  },
+  {
+    label: "trade desk denial matrix over-filtering read",
+    text: "Likely over-filtering",
+  },
+  {
+    label: "trade desk exports denial matrix",
+    text: "denialMatrix,",
+  },
+  {
+    label: "trade desk exports denial matrix read",
+    text: "denialMatrixRead,",
+  },
+  {
+    label: "trade desk tracks RSI clues without forcing RSI",
+    text: "function rsiReadForAlert(alert: TvAlert)",
+  },
+  {
     label: "trade desk exports tradeability verdict",
     text: "tradeabilityVerdict,",
   },

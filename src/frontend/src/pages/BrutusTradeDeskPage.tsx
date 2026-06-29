@@ -212,6 +212,40 @@ type AlertGroupRow = {
   latestAlertTime: number;
 };
 
+type DenialBucket = {
+  key: string;
+  label: string;
+  plainMeaning: string;
+  action: string;
+  count: number;
+  enter: number;
+  wait: number;
+  skip: number;
+  doNotHold: number;
+  long: number;
+  short: number;
+  current: number;
+  old: number;
+  noData: number;
+  averageTouchDepthRatio: number;
+  averageBandWidth: number;
+  early: number;
+  late: number;
+  snapback: number;
+  pushThrough: number;
+  rsiKnown: number;
+  rsiAligned: number;
+  rsiOpposed: number;
+  worked: number;
+  failed: number;
+  wouldHaveWorked: number;
+  avoidedLoss: number;
+  unclear: number;
+  reviewed: number;
+  latestAlertTime: number;
+  examples: string[];
+};
+
 const STORAGE_KEY = "ict.brutus.trade-desk.report.v1";
 const ALERT_STORAGE_KEY = "ict.brutus.trade-desk.alerts.v1";
 const PAPER_OUTCOME_STORAGE_KEY = "ict.brutus.trade-desk.paperOutcomes.v1";
@@ -1459,6 +1493,168 @@ function alertEventExplanation(event?: string) {
   }
 }
 
+function gateValueForDirection(
+  alert: TvAlert,
+  longValue?: boolean,
+  shortValue?: boolean,
+) {
+  const direction = alert.signalDirection ?? alert.direction;
+  if (direction === "long") return longValue;
+  if (direction === "short") return shortValue;
+  return longValue ?? shortValue;
+}
+
+function denialReasonFor(item: AlertDecisionMatch) {
+  const alert = item.alert;
+  const action = alert.action ?? item.status;
+  const reason = String(alert.reason ?? item.note ?? "").toLowerCase();
+  const pushThrough = gateValueForDirection(
+    alert,
+    alert.longPushThrough,
+    alert.shortPushThrough,
+  );
+  const snapback = gateValueForDirection(
+    alert,
+    alert.longSnapback,
+    alert.shortSnapback,
+  );
+
+  if (item.status === "NO DATA") {
+    return {
+      key: "no-data",
+      label: "No matching candle data",
+      plainMeaning:
+        "The alert fired, but the imported candle batch cannot score what happened next.",
+      action:
+        "Do not judge the rule from this row. Import matching candles or treat it as live-only evidence.",
+    };
+  }
+  if (alert.signalConflict === true) {
+    return {
+      key: "signal-conflict",
+      label: "Both sides fired",
+      plainMeaning:
+        "The candle is messy enough that long and short logic are fighting each other.",
+      action: "Skip it unless a later clean alert resolves the side.",
+    };
+  }
+  if (alert.inSession === false || reason.includes("outside")) {
+    return {
+      key: "session",
+      label: "Denied by session",
+      plainMeaning:
+        "The raw Brutus touch fired, but the current 0300-1200 session gate blocked it.",
+      action:
+        "This is the first suspect. Review these rows to decide whether Sunday/off-session moves need their own bucket instead of a hard block.",
+    };
+  }
+  if (
+    action === "DO_NOT_HOLD" ||
+    pushThrough === true ||
+    reason.includes("pushing through") ||
+    reason.includes("kept moving")
+  ) {
+    return {
+      key: "push-through",
+      label: "Denied by push-through",
+      plainMeaning:
+        "Price kept driving through the band instead of rejecting it immediately.",
+      action:
+        "Separate these into continuation versus failed-reversal. Do not automatically treat every strong pierce as bad.",
+    };
+  }
+  if (alert.notTooEarly === false || reason.includes("too early")) {
+    return {
+      key: "timing",
+      label: "Denied by early timing",
+      plainMeaning:
+        "The signal fired too early inside the candle, when the wick could still extend against you.",
+      action:
+        "Check whether late-candle alerts outperform early first touches before tightening this further.",
+    };
+  }
+  if (snapback === false || reason.includes("no snapback")) {
+    return {
+      key: "no-snapback",
+      label: "Denied by no snapback",
+      plainMeaning:
+        "The band touch happened, but price had not started moving back toward the band/middle yet.",
+      action:
+        "Use this as the clean WAIT bucket: no entry until a later alert proves the turn started.",
+    };
+  }
+  if (action === "SKIP") {
+    return {
+      key: "other-skip",
+      label: "Denied by other rule",
+      plainMeaning:
+        "The app skipped it, but the reason is not one of the main gates.",
+      action:
+        "Inspect these manually. If many would have worked, the rule is hiding opportunity.",
+    };
+  }
+  if (action === "WAIT") {
+    return {
+      key: "wait",
+      label: "Wait bucket",
+      plainMeaning:
+        "The setup was close, but the current rule wanted more proof.",
+      action:
+        "If these repeatedly work, loosen ENTER. If they fail, keep them as WAIT.",
+    };
+  }
+  if (action === "ENTER") {
+    return {
+      key: "enter",
+      label: "Accepted candidate",
+      plainMeaning:
+        "The alert passed the current rule. This is still paper-review only.",
+      action:
+        "Replay these first. A failed ENTER is more important than a pretty winner.",
+    };
+  }
+  return {
+    key: "unclassified",
+    label: "Unclassified",
+    plainMeaning:
+      "The row has enough JSON to parse, but the denial reason is not explicit.",
+    action: "Treat this as a parser/rule clarity issue, not a trade signal.",
+  };
+}
+
+function rsiReadForAlert(alert: TvAlert) {
+  const raw = alert as TvAlert & {
+    rsi?: number;
+    rsiMa?: number;
+    rsiUpper?: number;
+    rsiLower?: number;
+    rsiStretch?: string;
+    rsiPosition?: string;
+    alignedWithTouch?: boolean;
+  };
+  const rsi = asNumber(raw.rsi);
+  const rsiMa = asNumber(raw.rsiMa);
+  const rsiUpper = asNumber(raw.rsiUpper);
+  const rsiLower = asNumber(raw.rsiLower);
+  const hasBands = rsi != null && rsiUpper != null && rsiLower != null;
+  const aligned =
+    raw.alignedWithTouch === true ||
+    (alert.direction === "short" && hasBands && rsi > rsiUpper) ||
+    (alert.direction === "long" && hasBands && rsi < rsiLower);
+  const opposed =
+    (alert.direction === "short" && hasBands && rsi < rsiLower) ||
+    (alert.direction === "long" && hasBands && rsi > rsiUpper);
+  return {
+    known: rsi != null || rsiMa != null || rsiUpper != null || rsiLower != null,
+    aligned,
+    opposed,
+  };
+}
+
+function averageFromSum(sum: number, count: number) {
+  return count > 0 ? sum / count : 0;
+}
+
 function VerdictPill({ verdict }: { verdict: PlaybookVerdict }) {
   const colors: Record<PlaybookVerdict, string> = {
     TEST: "border-lime-400 bg-lime-400/10 text-lime-300",
@@ -1922,6 +2118,174 @@ export default function BrutusTradeDeskPage() {
     ];
   }, [latestAlertMatches, paperOutcomes]);
 
+  const denialSourceMatches = useMemo(() => {
+    if (latestAlertMatches.length) return latestAlertMatches;
+    return alertMatches.filter((item) => isPlaybookAlert(item.alert));
+  }, [alertMatches, latestAlertMatches]);
+
+  const denialMatrix = useMemo(() => {
+    type MutableBucket = DenialBucket & {
+      touchDepthRatioTotal: number;
+      touchDepthRatioCount: number;
+      bandWidthTotal: number;
+      bandWidthCount: number;
+    };
+    const buckets = new Map<string, MutableBucket>();
+    for (const item of denialSourceMatches) {
+      const denial = denialReasonFor(item);
+      const current =
+        buckets.get(denial.key) ??
+        ({
+          key: denial.key,
+          label: denial.label,
+          plainMeaning: denial.plainMeaning,
+          action: denial.action,
+          count: 0,
+          enter: 0,
+          wait: 0,
+          skip: 0,
+          doNotHold: 0,
+          long: 0,
+          short: 0,
+          current: 0,
+          old: 0,
+          noData: 0,
+          averageTouchDepthRatio: 0,
+          averageBandWidth: 0,
+          early: 0,
+          late: 0,
+          snapback: 0,
+          pushThrough: 0,
+          rsiKnown: 0,
+          rsiAligned: 0,
+          rsiOpposed: 0,
+          worked: 0,
+          failed: 0,
+          wouldHaveWorked: 0,
+          avoidedLoss: 0,
+          unclear: 0,
+          reviewed: 0,
+          latestAlertTime: 0,
+          examples: [],
+          touchDepthRatioTotal: 0,
+          touchDepthRatioCount: 0,
+          bandWidthTotal: 0,
+          bandWidthCount: 0,
+        } satisfies MutableBucket);
+      current.count += 1;
+      if (item.status === "ENTER") current.enter += 1;
+      if (item.status === "WAIT") current.wait += 1;
+      if (item.status === "SKIP") current.skip += 1;
+      if (item.status === "DO_NOT_HOLD") current.doNotHold += 1;
+      if (item.status === "NO DATA") current.noData += 1;
+      if (item.alert.direction === "long") current.long += 1;
+      if (item.alert.direction === "short") current.short += 1;
+      if (isLatestPlaybookAlert(item.alert)) current.current += 1;
+      else current.old += 1;
+      if (
+        item.alert.minutesIntoBar != null &&
+        item.alert.minutesIntoBar <= 1
+      ) {
+        current.early += 1;
+      }
+      const tf = normalizeTimeframe(item.alert.timeframe ?? "");
+      const tfMinutes = tf ? timeframeMinutes(tf) : 1;
+      if (
+        item.alert.minutesIntoBar != null &&
+        item.alert.minutesIntoBar / Math.max(tfMinutes, 1) >= 0.85
+      ) {
+        current.late += 1;
+      }
+      if (
+        gateValueForDirection(
+          item.alert,
+          item.alert.longSnapback,
+          item.alert.shortSnapback,
+        ) === true
+      ) {
+        current.snapback += 1;
+      }
+      if (
+        gateValueForDirection(
+          item.alert,
+          item.alert.longPushThrough,
+          item.alert.shortPushThrough,
+        ) === true
+      ) {
+        current.pushThrough += 1;
+      }
+      if (Number.isFinite(item.alert.touchDepthRatio)) {
+        current.touchDepthRatioTotal += item.alert.touchDepthRatio ?? 0;
+        current.touchDepthRatioCount += 1;
+      }
+      if (Number.isFinite(item.alert.bandWidth)) {
+        current.bandWidthTotal += item.alert.bandWidth ?? 0;
+        current.bandWidthCount += 1;
+      }
+      const rsi = rsiReadForAlert(item.alert);
+      if (rsi.known) current.rsiKnown += 1;
+      if (rsi.aligned) current.rsiAligned += 1;
+      if (rsi.opposed) current.rsiOpposed += 1;
+      const outcome =
+        paperOutcomes[paperOutcomeKey(item.alert)] ?? "unreviewed";
+      current.worked += outcome === "worked" ? 1 : 0;
+      current.failed += outcome === "failed" ? 1 : 0;
+      current.wouldHaveWorked += outcome === "would_have_worked" ? 1 : 0;
+      current.avoidedLoss += outcome === "avoided_loss" ? 1 : 0;
+      current.unclear += outcome === "unclear" ? 1 : 0;
+      current.reviewed += outcome !== "unreviewed" ? 1 : 0;
+      const alertTime =
+        typeof item.alert.alertTime === "number"
+          ? item.alert.alertTime
+          : item.alert.candleTime ?? 0;
+      current.latestAlertTime = Math.max(current.latestAlertTime, alertTime);
+      if (current.examples.length < 3) {
+        current.examples.push(
+          `${item.alert.symbol ?? "unknown"} ${item.alert.timeframe ?? "n/a"} ${item.alert.direction ?? "n/a"} | ${item.alert.reason ?? item.note}`,
+        );
+      }
+      buckets.set(denial.key, current);
+    }
+    return [...buckets.values()]
+      .map(({ touchDepthRatioTotal, touchDepthRatioCount, bandWidthTotal, bandWidthCount, ...bucket }) => ({
+        ...bucket,
+        averageTouchDepthRatio: averageFromSum(
+          touchDepthRatioTotal,
+          touchDepthRatioCount,
+        ),
+        averageBandWidth: averageFromSum(bandWidthTotal, bandWidthCount),
+      }))
+      .sort((a, b) => {
+        const rank = (row: DenialBucket) => {
+          if (row.wouldHaveWorked > 0) return 0;
+          if (row.key === "session") return 1;
+          if (row.key === "push-through") return 2;
+          if (row.reviewed === 0) return 3;
+          return 4;
+        };
+        return rank(a) - rank(b) || b.count - a.count;
+      });
+  }, [denialSourceMatches, paperOutcomes]);
+
+  const denialMatrixRead = useMemo(() => {
+    if (!denialSourceMatches.length) {
+      return "Import Playbook alerts first. No denial matrix can be built from screenshots.";
+    }
+    const session = denialMatrix.find((row) => row.key === "session");
+    const push = denialMatrix.find((row) => row.key === "push-through");
+    const missed = denialMatrix.filter((row) => row.wouldHaveWorked > 0);
+    if (missed.length) {
+      return "Likely over-filtering: some denied rows were marked Would have worked. Review those first before trusting SKIP.";
+    }
+    if (session && session.count >= Math.max(5, denialSourceMatches.length * 0.35)) {
+      return "First suspect: session filter. Too many raw Brutus signals are being denied by time-of-day before we know whether those sessions are bad.";
+    }
+    if (push && push.count >= Math.max(5, denialSourceMatches.length * 0.25)) {
+      return "Second suspect: push-through filter. Strong pierces may be getting labeled danger before proving whether they reverse or continue.";
+    }
+    return "No single denial gate dominates yet. Mark paper outcomes so the matrix can say which rule is helping or hurting.";
+  }, [denialMatrix, denialSourceMatches.length]);
+
   const alertReviewInstruction = useMemo(() => {
     if (!alertMatches.length) {
       return "Import the latest TradingView Playbook alert CSV. Do not judge live alerts from screenshots alone.";
@@ -2297,6 +2661,8 @@ export default function BrutusTradeDeskPage() {
                 alertVersionCounts,
                 alertCounts,
                 alertSourceCounts,
+                denialMatrix,
+                denialMatrixRead,
                 paperOutcomeCounts,
                 paperOutcomeRead,
                 tradeabilityVerdict,
@@ -3086,6 +3452,136 @@ export default function BrutusTradeDeskPage() {
                   )}
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+        {denialMatrix.length > 0 && (
+          <div className="mt-3 border border-amber-300/50 bg-amber-300/5 p-3">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p className="font-display text-sm font-bold">
+                  Why Was This Denied?
+                </p>
+                <p className="mt-1 max-w-4xl text-xs text-muted-foreground">
+                  This checks every raw Playbook alert and separates the real
+                  blockers: session, push-through, early timing, no snapback,
+                  no candle data, and accepted candidates. It is designed to
+                  catch over-filtering instead of hiding good setups under SKIP.
+                </p>
+              </div>
+              <span className="border border-amber-300/60 px-2 py-1 font-mono text-xs text-amber-200">
+                {denialSourceMatches.length} alert(s)
+              </span>
+            </div>
+            <div className="mt-3 border border-border bg-background p-3 text-sm">
+              <p className="font-display text-sm font-bold">Plain read</p>
+              <p className="mt-1 text-muted-foreground">{denialMatrixRead}</p>
+            </div>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[1120px] border-collapse font-mono text-xs">
+                <thead className="text-left text-muted-foreground">
+                  <tr className="border-b border-border">
+                    <th className="px-2 py-2">Gate</th>
+                    <th className="px-2 py-2">Count</th>
+                    <th className="px-2 py-2">What it means</th>
+                    <th className="px-2 py-2">Action mix</th>
+                    <th className="px-2 py-2">Direction</th>
+                    <th className="px-2 py-2">Timing</th>
+                    <th className="px-2 py-2">Pierce / width</th>
+                    <th className="px-2 py-2">Snap / push</th>
+                    <th className="px-2 py-2">RSI clue</th>
+                    <th className="px-2 py-2">Paper result</th>
+                    <th className="px-2 py-2">Do next</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {denialMatrix.map((row) => (
+                    <tr className="border-b border-border/60" key={row.key}>
+                      <td className="px-2 py-2 text-foreground">
+                        {row.label}
+                        <span className="block text-muted-foreground">
+                          {row.current} current | {row.old} old
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-lg text-amber-200">
+                        {row.count}
+                      </td>
+                      <td className="max-w-sm whitespace-normal px-2 py-2 text-muted-foreground">
+                        {row.plainMeaning}
+                      </td>
+                      <td className="px-2 py-2 text-muted-foreground">
+                        <span className="block text-lime-300">
+                          ENTER {row.enter}
+                        </span>
+                        <span className="block text-amber-200">
+                          WAIT {row.wait}
+                        </span>
+                        <span className="block text-red-300">
+                          SKIP {row.skip}
+                        </span>
+                        <span className="block text-fuchsia-200">
+                          DO NOT HOLD {row.doNotHold}
+                        </span>
+                        {row.noData > 0 && (
+                          <span className="block">NO DATA {row.noData}</span>
+                        )}
+                      </td>
+                      <td className="px-2 py-2 text-muted-foreground">
+                        Long {row.long}
+                        <span className="block">Short {row.short}</span>
+                      </td>
+                      <td className="px-2 py-2 text-muted-foreground">
+                        Early {row.early}
+                        <span className="block">Late {row.late}</span>
+                      </td>
+                      <td className="px-2 py-2 text-muted-foreground">
+                        Depth {(row.averageTouchDepthRatio * 100).toFixed(1)}%
+                        <span className="block">
+                          Width {fmtPrice(row.averageBandWidth)}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-muted-foreground">
+                        Snap {row.snapback}
+                        <span className="block">Push {row.pushThrough}</span>
+                      </td>
+                      <td className="px-2 py-2 text-muted-foreground">
+                        Known {row.rsiKnown}
+                        <span className="block text-lime-300">
+                          aligned {row.rsiAligned}
+                        </span>
+                        <span className="block text-red-300">
+                          opposed {row.rsiOpposed}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2">
+                        <span className="text-lime-300">
+                          {row.worked} worked
+                        </span>
+                        <span className="block text-red-300">
+                          {row.failed} failed
+                        </span>
+                        <span className="block text-amber-200">
+                          {row.wouldHaveWorked} missed good
+                        </span>
+                        <span className="block text-cyan-200">
+                          {row.avoidedLoss} avoided loss
+                        </span>
+                        <span className="block text-muted-foreground">
+                          {row.reviewed} reviewed
+                        </span>
+                      </td>
+                      <td className="max-w-sm whitespace-normal px-2 py-2 text-muted-foreground">
+                        {row.action}
+                        {row.examples.length > 0 && (
+                          <span className="mt-1 block text-[10px] text-muted-foreground">
+                            Example: {row.examples[0]}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
