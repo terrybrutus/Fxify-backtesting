@@ -781,7 +781,7 @@ function hasReviewablePlaybookPayload(alert: TvAlert) {
 function isCompatiblePlaybookAlert(alert: TvAlert) {
   return (
     isPlaybookAlert(alert) &&
-    !alert.playbookVersion &&
+    alert.playbookVersion !== LATEST_PLAYBOOK_VERSION &&
     hasLockedPlaybookSettings(alert) &&
     hasReviewablePlaybookPayload(alert)
   );
