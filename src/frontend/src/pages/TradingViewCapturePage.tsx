@@ -57,6 +57,30 @@ type TvAlert = {
   upperSource?: string;
   lowerSource?: string;
   stdDev?: number;
+  rsi?: number;
+  rsiMa?: number;
+  rsiUpper?: number;
+  rsiLower?: number;
+  rsiBbWidth?: number;
+  rsiStretch?: string;
+  rsiPosition?: string;
+  rsiAlignedWithTouch?: boolean;
+  alignedWithTouch?: boolean;
+  volumeValue?: number;
+  volumeMa?: number;
+  volumeRatio?: number;
+  volumeSpike?: boolean;
+  ma20?: number;
+  ma50?: number;
+  ma100?: number;
+  ma200?: number;
+  maTrend?: string;
+  maStackBullish?: boolean;
+  maStackBearish?: boolean;
+  priceAboveMa20?: boolean;
+  priceAboveMa50?: boolean;
+  priceAboveMa100?: boolean;
+  priceAboveMa200?: boolean;
   raw: unknown;
 };
 
@@ -137,8 +161,8 @@ type ImportUsabilityVerdict =
   | "partially usable"
   | "not usable";
 
-const LATEST_PLAYBOOK_VERSION = "raw-parity-v11";
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v11","rawSignal":true,"originalTriangleSignal":true,"latchedSignal":false,"decisionEvent":"decision_change","previousAction":"WAIT","rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"PAPER REVIEW: BUY setup now. Skip if you are late.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"reason":"Original Brutus signal fired and price started snapping back."}`;
+const LATEST_PLAYBOOK_VERSION = "raw-parity-v12";
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v12","rawSignal":true,"originalTriangleSignal":true,"latchedSignal":false,"decisionEvent":"decision_change","previousAction":"WAIT","rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"PAPER REVIEW: BUY setup now. Skip if you are late.","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51770.3,"stop":51685.2,"target":51872.4,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"rsi":38.4,"rsiMa":44.8,"rsiUpper":61.2,"rsiLower":28.4,"rsiBbWidth":32.8,"rsiStretch":"none","rsiPosition":"below-ma","rsiAlignedWithTouch":false,"alignedWithTouch":false,"volumeValue":142300,"volumeMa":105200,"volumeRatio":1.35,"volumeSpike":false,"ma20":51830.2,"ma50":51882.4,"ma100":51920.1,"ma200":51720.6,"maTrend":"above-200-mixed","maStackBullish":false,"maStackBearish":false,"priceAboveMa20":false,"priceAboveMa50":false,"priceAboveMa100":false,"priceAboveMa200":true,"reason":"Original Brutus signal fired and price started snapping back."}`;
 
 const BRUTUS_STRATEGIES = new Set(["brutus_band", "brutus_playbook_v1"]);
 const BRUTUS_TIMEFRAMES = new Set([
@@ -352,6 +376,30 @@ function normalizePayload(raw: unknown): TvAlert {
     upperSource: asString(item.upperSource),
     lowerSource: asString(item.lowerSource),
     stdDev: asNumber(item.stdDev) ?? asNumber(item.mult),
+    rsi: asNumber(item.rsi),
+    rsiMa: asNumber(item.rsiMa),
+    rsiUpper: asNumber(item.rsiUpper),
+    rsiLower: asNumber(item.rsiLower),
+    rsiBbWidth: asNumber(item.rsiBbWidth),
+    rsiStretch: asString(item.rsiStretch),
+    rsiPosition: asString(item.rsiPosition),
+    rsiAlignedWithTouch: asBoolean(item.rsiAlignedWithTouch),
+    alignedWithTouch: asBoolean(item.alignedWithTouch),
+    volumeValue: asNumber(item.volumeValue ?? item.volume),
+    volumeMa: asNumber(item.volumeMa),
+    volumeRatio: asNumber(item.volumeRatio),
+    volumeSpike: asBoolean(item.volumeSpike),
+    ma20: asNumber(item.ma20),
+    ma50: asNumber(item.ma50),
+    ma100: asNumber(item.ma100),
+    ma200: asNumber(item.ma200),
+    maTrend: asString(item.maTrend),
+    maStackBullish: asBoolean(item.maStackBullish),
+    maStackBearish: asBoolean(item.maStackBearish),
+    priceAboveMa20: asBoolean(item.priceAboveMa20),
+    priceAboveMa50: asBoolean(item.priceAboveMa50),
+    priceAboveMa100: asBoolean(item.priceAboveMa100),
+    priceAboveMa200: asBoolean(item.priceAboveMa200),
     raw: unwrapped,
   };
 }

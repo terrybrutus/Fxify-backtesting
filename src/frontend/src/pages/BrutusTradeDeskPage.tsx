@@ -148,6 +148,30 @@ type TvAlert = {
   upperSource?: string;
   lowerSource?: string;
   stdDev?: number;
+  rsi?: number;
+  rsiMa?: number;
+  rsiUpper?: number;
+  rsiLower?: number;
+  rsiBbWidth?: number;
+  rsiStretch?: string;
+  rsiPosition?: string;
+  rsiAlignedWithTouch?: boolean;
+  alignedWithTouch?: boolean;
+  volumeValue?: number;
+  volumeMa?: number;
+  volumeRatio?: number;
+  volumeSpike?: boolean;
+  ma20?: number;
+  ma50?: number;
+  ma100?: number;
+  ma200?: number;
+  maTrend?: string;
+  maStackBullish?: boolean;
+  maStackBearish?: boolean;
+  priceAboveMa20?: boolean;
+  priceAboveMa50?: boolean;
+  priceAboveMa100?: boolean;
+  priceAboveMa200?: boolean;
 };
 
 type AlertDecisionMatch = {
@@ -278,7 +302,7 @@ type StrategyDiagnosisRow = {
 const STORAGE_KEY = "ict.brutus.trade-desk.report.v1";
 const ALERT_STORAGE_KEY = "ict.brutus.trade-desk.alerts.v1";
 const PAPER_OUTCOME_STORAGE_KEY = "ict.brutus.trade-desk.paperOutcomes.v1";
-const LATEST_PLAYBOOK_VERSION = "raw-parity-v11";
+const LATEST_PLAYBOOK_VERSION = "raw-parity-v12";
 const POINT_VALUE = 10;
 
 function fmtDate(timestamp?: number) {
@@ -631,6 +655,57 @@ function normalizeAlertPayload(
     lowerSource:
       typeof item.lowerSource === "string" ? item.lowerSource : undefined,
     stdDev: asNumber(item.stdDev),
+    rsi: asNumber(item.rsi),
+    rsiMa: asNumber(item.rsiMa),
+    rsiUpper: asNumber(item.rsiUpper),
+    rsiLower: asNumber(item.rsiLower),
+    rsiBbWidth: asNumber(item.rsiBbWidth),
+    rsiStretch:
+      typeof item.rsiStretch === "string" ? item.rsiStretch : undefined,
+    rsiPosition:
+      typeof item.rsiPosition === "string" ? item.rsiPosition : undefined,
+    rsiAlignedWithTouch:
+      typeof item.rsiAlignedWithTouch === "boolean"
+        ? item.rsiAlignedWithTouch
+        : undefined,
+    alignedWithTouch:
+      typeof item.alignedWithTouch === "boolean"
+        ? item.alignedWithTouch
+        : undefined,
+    volumeValue: asNumber(item.volumeValue ?? item.volume),
+    volumeMa: asNumber(item.volumeMa),
+    volumeRatio: asNumber(item.volumeRatio),
+    volumeSpike:
+      typeof item.volumeSpike === "boolean" ? item.volumeSpike : undefined,
+    ma20: asNumber(item.ma20),
+    ma50: asNumber(item.ma50),
+    ma100: asNumber(item.ma100),
+    ma200: asNumber(item.ma200),
+    maTrend: typeof item.maTrend === "string" ? item.maTrend : undefined,
+    maStackBullish:
+      typeof item.maStackBullish === "boolean"
+        ? item.maStackBullish
+        : undefined,
+    maStackBearish:
+      typeof item.maStackBearish === "boolean"
+        ? item.maStackBearish
+        : undefined,
+    priceAboveMa20:
+      typeof item.priceAboveMa20 === "boolean"
+        ? item.priceAboveMa20
+        : undefined,
+    priceAboveMa50:
+      typeof item.priceAboveMa50 === "boolean"
+        ? item.priceAboveMa50
+        : undefined,
+    priceAboveMa100:
+      typeof item.priceAboveMa100 === "boolean"
+        ? item.priceAboveMa100
+        : undefined,
+    priceAboveMa200:
+      typeof item.priceAboveMa200 === "boolean"
+        ? item.priceAboveMa200
+        : undefined,
   };
 }
 
@@ -1305,6 +1380,51 @@ bandWidth = math.max(upper - lower, syminfo.mintick)
 plot(upper, "Upper", color=color.gray, linewidth=1)
 plot(lower, "Lower", color=color.gray, linewidth=1)
 
+// Discovery context is calculated inside this script because Pine alerts cannot read separate chart indicators.
+rsiLength = input.int(14, minval=1, title="RSI Length", group="Discovery Context")
+rsiSource = input.source(close, title="RSI Source", group="Discovery Context")
+rsiMaLength = input.int(14, minval=1, title="RSI SMA/BB Length", group="Discovery Context")
+rsiBbMult = input.float(2.0, minval=0.001, maxval=50, title="RSI BB StdDev", group="Discovery Context")
+volumeMaLength = input.int(20, minval=1, title="Volume MA Length", group="Discovery Context")
+maRibbonType = input.string("SMA", title="MA Ribbon Type", options=["SMA", "EMA", "SMMA (RMA)", "WMA", "VWMA"], group="Discovery Context")
+
+rsiChange = ta.change(rsiSource)
+rsiUp = ta.rma(math.max(rsiChange, 0), rsiLength)
+rsiDown = ta.rma(-math.min(rsiChange, 0), rsiLength)
+rsiValue = rsiDown == 0 ? 100 : rsiUp == 0 ? 0 : 100 - (100 / (1 + rsiUp / rsiDown))
+rsiMa = ta.sma(rsiValue, rsiMaLength)
+rsiDeviation = ta.stdev(rsiValue, rsiMaLength) * rsiBbMult
+rsiUpper = rsiMa + rsiDeviation
+rsiLower = rsiMa - rsiDeviation
+rsiBbWidth = rsiUpper - rsiLower
+rsiStretch = rsiValue > rsiUpper ? "upper" : rsiValue < rsiLower ? "lower" : "none"
+rsiPosition = rsiValue >= rsiMa ? "above-ma" : "below-ma"
+
+volumeMa = ta.sma(volume, volumeMaLength)
+volumeRatio = volumeMa == 0 ? 0 : volume / volumeMa
+volumeSpike = volumeRatio >= 1.5
+
+maRibbon(source, maLength, maType) =>
+    switch maType
+        "SMA" => ta.sma(source, maLength)
+        "EMA" => ta.ema(source, maLength)
+        "SMMA (RMA)" => ta.rma(source, maLength)
+        "WMA" => ta.wma(source, maLength)
+        "VWMA" => ta.vwma(source, maLength)
+        => na
+
+ma20 = maRibbon(close, 20, maRibbonType)
+ma50 = maRibbon(close, 50, maRibbonType)
+ma100 = maRibbon(close, 100, maRibbonType)
+ma200 = maRibbon(close, 200, maRibbonType)
+maStackBullish = ma20 > ma50 and ma50 > ma100 and ma100 > ma200
+maStackBearish = ma20 < ma50 and ma50 < ma100 and ma100 < ma200
+maTrend = maStackBullish ? "bullish-stack" : maStackBearish ? "bearish-stack" : close > ma200 ? "above-200-mixed" : close < ma200 ? "below-200-mixed" : "mixed"
+priceAboveMa20 = close > ma20
+priceAboveMa50 = close > ma50
+priceAboveMa100 = close > ma100
+priceAboveMa200 = close > ma200
+
 // Raw Brutus signal layer. These two conditions intentionally match the original indicator's triangle logic.
 rawLongCondition = (lowerSrc <= lower and close > open) or (lowerSrc[1] > lower[1] and lowerSrc <= lower)
 rawShortCondition = (upperSrc >= upper and close < open) or (upperSrc[1] < upper[1] and upperSrc >= upper)
@@ -1342,6 +1462,7 @@ originalTriangleSignal = rawLongCondition or rawShortCondition
 latchedSignal = rawSignal and not originalTriangleSignal
 signalConflict = rawLongSignal and rawShortSignal
 direction = signalConflict ? "both" : rawLongSignal ? "long" : rawShortSignal ? "short" : "none"
+rsiAlignedWithTouch = (direction == "short" and rsiValue > rsiUpper) or (direction == "long" and rsiValue < rsiLower)
 mode = signalMode == "Confirmed close" ? "bar_close" : "first_touch"
 modeReady = signalMode == "Confirmed close" ? barstate.isconfirmed : true
 
@@ -1409,18 +1530,20 @@ alertDirection = signalConflict ? (rawLongSignal ? "long" : "short") : direction
 confirmText = barstate.isconfirmed ? "confirmed close" : "open candle"
 modeText = mode + " | " + confirmText
 depthText = "Side " + direction + " | depth " + str.tostring(touchDepthRatio, "#.####") + " of band"
+contextText = "RSI " + str.tostring(rsiValue, "#.##") + " " + rsiStretch + " | Vol " + str.tostring(volumeRatio, "#.##") + "x | " + maTrend
 
-var table auditPanel = table.new(position.top_right, 1, 8, border_width=1)
+var table auditPanel = table.new(position.top_right, 1, 9, border_width=1)
 if showAuditPanel and barstate.islast
-    table.cell(auditPanel, 0, 0, "Brutus Playbook raw-parity-v11", text_color=color.white, bgcolor=color.new(color.black, 0))
+    table.cell(auditPanel, 0, 0, "Brutus Playbook raw-parity-v12", text_color=color.white, bgcolor=color.new(color.black, 0))
     table.cell(auditPanel, 0, 1, "Locked: length 9, high/low bands, StdDev 2", text_color=color.white, bgcolor=color.new(color.black, 15))
     table.cell(auditPanel, 0, 2, rawAuditText, text_color=rawSignal ? color.aqua : color.silver, bgcolor=color.new(color.black, 15))
     table.cell(auditPanel, 0, 3, modeText, text_color=barstate.isconfirmed ? color.lime : color.yellow, bgcolor=color.new(color.black, 15))
     table.cell(auditPanel, 0, 4, depthText, text_color=rawSignal ? color.aqua : color.silver, bgcolor=color.new(color.black, 15))
-    table.cell(auditPanel, 0, 5, "Check ORIG markers against old triangles first", text_color=color.yellow, bgcolor=color.new(color.black, 15))
-    table.cell(auditPanel, 0, 6, "Open-bar ORIG can change until candle close", text_color=color.yellow, bgcolor=color.new(color.black, 15))
-    table.cell(auditPanel, 0, 7, "Paper evidence only - not live-trade approval", text_color=color.orange, bgcolor=color.new(color.black, 15))
-message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v11\\",\\"rawSignal\\":true,\\"originalTriangleSignal\\":" + str.tostring(originalTriangleSignal) + ",\\"latchedSignal\\":" + str.tostring(latchedSignal) + ",\\"decisionEvent\\":\\"" + decisionEvent + "\\",\\"previousAction\\":\\"" + previousAction + "\\",\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"rawLongCondition\\":" + str.tostring(rawLongCondition) + ",\\"rawShortCondition\\":" + str.tostring(rawShortCondition) + ",\\"newLongTouch\\":" + str.tostring(newLongTouch) + ",\\"newShortTouch\\":" + str.tostring(newShortTouch) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"signalDirection\\":\\"" + direction + "\\",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"modeReady\\":" + str.tostring(modeReady) + ",\\"inSession\\":" + str.tostring(inSession) + ",\\"minutesIntoBar\\":" + str.tostring(minutesIntoBar) + ",\\"notTooEarly\\":" + str.tostring(notTooEarly) + ",\\"longSnapback\\":" + str.tostring(longSnapback) + ",\\"shortSnapback\\":" + str.tostring(shortSnapback) + ",\\"longPushThrough\\":" + str.tostring(longPushThrough) + ",\\"shortPushThrough\\":" + str.tostring(shortPushThrough) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + alertDirection + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"bandWidth\\":" + str.tostring(bandWidth) + ",\\"touchDepth\\":" + str.tostring(touchDepth) + ",\\"touchDepthRatio\\":" + str.tostring(touchDepthRatio) + ",\\"entry\\":" + entryJson + ",\\"stop\\":" + stopJson + ",\\"target\\":" + targetJson + ",\\"length\\":" + str.tostring(length) + ",\\"upperSource\\":\\"high\\",\\"lowerSource\\":\\"low\\",\\"stdDev\\":" + str.tostring(mult) + ",\\"reason\\":\\"" + reason + "\\"}"
+    table.cell(auditPanel, 0, 5, contextText, text_color=color.aqua, bgcolor=color.new(color.black, 15))
+    table.cell(auditPanel, 0, 6, "Check ORIG markers against old triangles first", text_color=color.yellow, bgcolor=color.new(color.black, 15))
+    table.cell(auditPanel, 0, 7, "Open-bar ORIG can change until candle close", text_color=color.yellow, bgcolor=color.new(color.black, 15))
+    table.cell(auditPanel, 0, 8, "Paper evidence only - not live-trade approval", text_color=color.orange, bgcolor=color.new(color.black, 15))
+message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v12\\",\\"rawSignal\\":true,\\"originalTriangleSignal\\":" + str.tostring(originalTriangleSignal) + ",\\"latchedSignal\\":" + str.tostring(latchedSignal) + ",\\"decisionEvent\\":\\"" + decisionEvent + "\\",\\"previousAction\\":\\"" + previousAction + "\\",\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"rawLongCondition\\":" + str.tostring(rawLongCondition) + ",\\"rawShortCondition\\":" + str.tostring(rawShortCondition) + ",\\"newLongTouch\\":" + str.tostring(newLongTouch) + ",\\"newShortTouch\\":" + str.tostring(newShortTouch) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"signalDirection\\":\\"" + direction + "\\",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"modeReady\\":" + str.tostring(modeReady) + ",\\"inSession\\":" + str.tostring(inSession) + ",\\"minutesIntoBar\\":" + str.tostring(minutesIntoBar) + ",\\"notTooEarly\\":" + str.tostring(notTooEarly) + ",\\"longSnapback\\":" + str.tostring(longSnapback) + ",\\"shortSnapback\\":" + str.tostring(shortSnapback) + ",\\"longPushThrough\\":" + str.tostring(longPushThrough) + ",\\"shortPushThrough\\":" + str.tostring(shortPushThrough) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + alertDirection + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"bandWidth\\":" + str.tostring(bandWidth) + ",\\"touchDepth\\":" + str.tostring(touchDepth) + ",\\"touchDepthRatio\\":" + str.tostring(touchDepthRatio) + ",\\"entry\\":" + entryJson + ",\\"stop\\":" + stopJson + ",\\"target\\":" + targetJson + ",\\"length\\":" + str.tostring(length) + ",\\"upperSource\\":\\"high\\",\\"lowerSource\\":\\"low\\",\\"stdDev\\":" + str.tostring(mult) + ",\\"rsi\\":" + str.tostring(rsiValue) + ",\\"rsiMa\\":" + str.tostring(rsiMa) + ",\\"rsiUpper\\":" + str.tostring(rsiUpper) + ",\\"rsiLower\\":" + str.tostring(rsiLower) + ",\\"rsiBbWidth\\":" + str.tostring(rsiBbWidth) + ",\\"rsiStretch\\":\\"" + rsiStretch + "\\",\\"rsiPosition\\":\\"" + rsiPosition + "\\",\\"rsiAlignedWithTouch\\":" + str.tostring(rsiAlignedWithTouch) + ",\\"alignedWithTouch\\":" + str.tostring(rsiAlignedWithTouch) + ",\\"volumeValue\\":" + str.tostring(volume) + ",\\"volumeMa\\":" + str.tostring(volumeMa) + ",\\"volumeRatio\\":" + str.tostring(volumeRatio) + ",\\"volumeSpike\\":" + str.tostring(volumeSpike) + ",\\"ma20\\":" + str.tostring(ma20) + ",\\"ma50\\":" + str.tostring(ma50) + ",\\"ma100\\":" + str.tostring(ma100) + ",\\"ma200\\":" + str.tostring(ma200) + ",\\"maTrend\\":\\"" + maTrend + "\\",\\"maStackBullish\\":" + str.tostring(maStackBullish) + ",\\"maStackBearish\\":" + str.tostring(maStackBearish) + ",\\"priceAboveMa20\\":" + str.tostring(priceAboveMa20) + ",\\"priceAboveMa50\\":" + str.tostring(priceAboveMa50) + ",\\"priceAboveMa100\\":" + str.tostring(priceAboveMa100) + ",\\"priceAboveMa200\\":" + str.tostring(priceAboveMa200) + ",\\"reason\\":\\"" + reason + "\\"}"
 
 if shouldAlert
     alert(message, alert.freq_all)
@@ -1702,22 +1825,14 @@ function denialReasonFor(item: AlertDecisionMatch) {
 }
 
 function rsiReadForAlert(alert: TvAlert) {
-  const raw = alert as TvAlert & {
-    rsi?: number;
-    rsiMa?: number;
-    rsiUpper?: number;
-    rsiLower?: number;
-    rsiStretch?: string;
-    rsiPosition?: string;
-    alignedWithTouch?: boolean;
-  };
-  const rsi = asNumber(raw.rsi);
-  const rsiMa = asNumber(raw.rsiMa);
-  const rsiUpper = asNumber(raw.rsiUpper);
-  const rsiLower = asNumber(raw.rsiLower);
+  const rsi = asNumber(alert.rsi);
+  const rsiMa = asNumber(alert.rsiMa);
+  const rsiUpper = asNumber(alert.rsiUpper);
+  const rsiLower = asNumber(alert.rsiLower);
   const hasBands = rsi != null && rsiUpper != null && rsiLower != null;
   const aligned =
-    raw.alignedWithTouch === true ||
+    alert.rsiAlignedWithTouch === true ||
+    alert.alignedWithTouch === true ||
     (alert.direction === "short" && hasBands && rsi > rsiUpper) ||
     (alert.direction === "long" && hasBands && rsi < rsiLower);
   const opposed =
@@ -4451,3 +4566,4 @@ export default function BrutusTradeDeskPage() {
     </div>
   );
 }
+

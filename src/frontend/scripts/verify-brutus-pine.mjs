@@ -126,12 +126,60 @@ const requiredSnippets = [
     text: "alert(message, alert.freq_all)",
   },
   {
-    label: "raw parity v11 payload",
-    text: '"playbookVersion":"raw-parity-v11"',
+    label: "raw parity v12 payload",
+    text: '"playbookVersion":"raw-parity-v12"',
   },
   {
     label: "raw signal JSON field",
     text: '"rawSignal":true',
+  },
+  {
+    label: "RSI default length",
+    text: 'rsiLength = input.int(14',
+  },
+  {
+    label: "RSI Bollinger default length",
+    text: 'rsiMaLength = input.int(14',
+  },
+  {
+    label: "RSI Bollinger default deviation",
+    text: 'rsiBbMult = input.float(2.0',
+  },
+  {
+    label: "volume MA default length",
+    text: 'volumeMaLength = input.int(20',
+  },
+  {
+    label: "MA ribbon default type",
+    text: 'maRibbonType = input.string("SMA"',
+  },
+  {
+    label: "RSI JSON field",
+    text: '"rsi":" + str.tostring(rsiValue)',
+  },
+  {
+    label: "RSI upper band JSON field",
+    text: '"rsiUpper":" + str.tostring(rsiUpper)',
+  },
+  {
+    label: "RSI alignment JSON field",
+    text: '"rsiAlignedWithTouch":" + str.tostring(rsiAlignedWithTouch)',
+  },
+  {
+    label: "volume ratio JSON field",
+    text: '"volumeRatio":" + str.tostring(volumeRatio)',
+  },
+  {
+    label: "volume spike JSON field",
+    text: '"volumeSpike":" + str.tostring(volumeSpike)',
+  },
+  {
+    label: "MA ribbon JSON field",
+    text: '"ma20":" + str.tostring(ma20)',
+  },
+  {
+    label: "MA trend JSON field",
+    text: '"maTrend":"',
   },
   {
     label: "original triangle signal calculation",
@@ -255,7 +303,7 @@ const requiredSnippets = [
   },
   {
     label: "visible audit panel",
-    text: "var table auditPanel = table.new(position.top_right, 1, 8, border_width=1)",
+    text: "var table auditPanel = table.new(position.top_right, 1, 9, border_width=1)",
   },
   {
     label: "audit panel shows confirmation state",
@@ -1309,3 +1357,4 @@ if (
 console.log(
   `Brutus Pine export verifier passed (${requiredSnippets.length + requiredCaptureSnippets.length + requiredTradeDeskSnippets.length + requiredDataSnippets.length} invariants).`,
 );
+
