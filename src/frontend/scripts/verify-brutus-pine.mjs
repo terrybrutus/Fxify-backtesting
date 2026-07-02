@@ -126,8 +126,16 @@ const requiredSnippets = [
     text: "alert(message, alert.freq_once_per_bar)",
   },
   {
-    label: "raw parity v20 payload",
-    text: '"playbookVersion":"raw-parity-v20"',
+    label: "raw parity v21 payload",
+    text: '"playbookVersion":"raw-parity-v21"',
+  },
+  {
+    label: "session filter is measured but not a default block",
+    text: 'useSessionFilter = input.bool(false, title="Block Outside Active Session")',
+  },
+  {
+    label: "session measurement copy",
+    text: "Session is measured in every alert. It is not a default block until evidence proves that gate helps.",
   },
   {
     label: "raw signal JSON field",
