@@ -4299,6 +4299,7 @@ export default function BrutusTradeDeskPage() {
                     <th className="px-2 py-2">TF</th>
                     <th className="px-2 py-2">Side</th>
                     <th className="px-2 py-2">Outcome</th>
+                    <th className="px-2 py-2">Timing</th>
                     <th className="px-2 py-2">R</th>
                     <th className="px-2 py-2">Price</th>
                     <th className="px-2 py-2">Plain read</th>
@@ -4323,6 +4324,9 @@ export default function BrutusTradeDeskPage() {
                       <td className="px-2 py-2">{alert.direction ?? "n/a"}</td>
                       <td className="px-2 py-2 text-cyan-200">
                         {alert.event ?? alert.outcome ?? "exit"}
+                      </td>
+                      <td className="px-2 py-2">
+                        {alert.sameBarLiveExit ? "live same-bar" : "after entry bar"}
                       </td>
                       <td className="px-2 py-2">
                         {alert.outcomeR != null
