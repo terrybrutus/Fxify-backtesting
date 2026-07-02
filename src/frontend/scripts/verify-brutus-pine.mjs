@@ -1372,6 +1372,30 @@ const requiredTradeDeskSnippets = [
     text: "strategyDiagnosisRead,",
   },
   {
+    label: "trade desk live rule extractor panel",
+    text: "Live Rule Extractor",
+  },
+  {
+    label: "trade desk live rule extractor plain answer",
+    text: "liveRuleRead",
+  },
+  {
+    label: "trade desk live rule extractor export",
+    text: "liveRuleCards,",
+  },
+  {
+    label: "trade desk identifies reversal candidates",
+    text: "Only consider the reversal after price has pierced/touched the band and started reclaiming back toward the band.",
+  },
+  {
+    label: "trade desk identifies continuation trap risk",
+    text: "If price is still beyond the push-through line and has not reclaimed, do not fade the move.",
+  },
+  {
+    label: "trade desk exports alert-only evidence",
+    text: "disabled={!decisions.length && !latestAlertMatches.length}",
+  },
+  {
     label: "trade desk strategy diagnosis includes dynamic exits",
     text: "First target is ${midTarget}",
   },
