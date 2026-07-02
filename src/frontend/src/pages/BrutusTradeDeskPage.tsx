@@ -341,6 +341,36 @@ type StrategyDiagnosisRow = {
   examples: string[];
 };
 
+type StrategyOverlapRow = {
+  key: string;
+  symbol: string;
+  timeframe: string;
+  direction: string;
+  session: string;
+  timing: string;
+  pierce: string;
+  behavior: string;
+  rsi: string;
+  volume: string;
+  trend: string;
+  count: number;
+  enter: number;
+  wait: number;
+  skip: number;
+  doNotHold: number;
+  worked: number;
+  failed: number;
+  wouldHaveWorked: number;
+  avoidedLoss: number;
+  reviewed: number;
+  averageTouchDepthRatio: number;
+  averageReclaimDistanceRatio: number;
+  averagePushThroughDistanceRatio: number;
+  provisionalRead: string;
+  nextReview: string;
+  examples: string[];
+};
+
 type LiveRuleCard = {
   key: string;
   title: string;
@@ -2292,6 +2322,104 @@ function rsiReadForAlert(alert: TvAlert) {
   };
 }
 
+function sessionBucketForAlert(alert: TvAlert) {
+  if (alert.inSession === true) return "active-session";
+  if (alert.inSession === false) return "off-session";
+  return "session-unknown";
+}
+
+function timingBucketForAlert(alert: TvAlert) {
+  if (alert.tooEarly === true || alert.tooSoonAfterTouch === true) {
+    return "early";
+  }
+  if (alert.tooLate === true) return "late";
+  const progress = alert.barProgressPct;
+  if (progress == null || !Number.isFinite(progress)) return "timing-unknown";
+  if (progress < 25) return "early";
+  if (progress > 85) return "late";
+  return "decision-window";
+}
+
+function pierceBucketForAlert(alert: TvAlert) {
+  const depth = alert.touchDepthRatio;
+  if (depth == null || !Number.isFinite(depth)) return "depth-unknown";
+  if (depth < 0.02) return "touch";
+  if (depth < 0.08) return "pierce";
+  return "deep-pierce";
+}
+
+function behaviorBucketForAlert(alert: TvAlert) {
+  const snapback =
+    gateValueForDirection(alert, alert.longSnapback, alert.shortSnapback) ===
+      true || alert.snapback === true;
+  const pushThrough =
+    gateValueForDirection(
+      alert,
+      alert.longPushThrough,
+      alert.shortPushThrough,
+    ) === true || alert.pushThrough === true;
+  if (pushThrough && !snapback) return "push-through";
+  if (snapback && !pushThrough) return "snapback";
+  if (snapback && pushThrough) return "mixed-snap-push";
+  return "no-reclaim-yet";
+}
+
+function rsiBucketForAlert(alert: TvAlert) {
+  const rsi = rsiReadForAlert(alert);
+  if (!rsi.known) return "rsi-unknown";
+  if (rsi.aligned) return "rsi-aligned";
+  if (rsi.opposed) return "rsi-opposed";
+  return alert.rsiStretch ? `rsi-${alert.rsiStretch}` : "rsi-neutral";
+}
+
+function volumeBucketForAlert(alert: TvAlert) {
+  if (alert.volumeSpike === true) return "volume-spike";
+  const ratio = alert.volumeRatio;
+  if (ratio == null || !Number.isFinite(ratio)) return "volume-unknown";
+  if (ratio >= 1.2) return "volume-above-avg";
+  if (ratio < 0.8) return "volume-light";
+  return "volume-normal";
+}
+
+function trendBucketForAlert(alert: TvAlert) {
+  if (alert.maStackBullish === true) return "bullish-ma-stack";
+  if (alert.maStackBearish === true) return "bearish-ma-stack";
+  return alert.maTrend ?? "trend-unknown";
+}
+
+function overlapReadForRow(row: StrategyOverlapRow) {
+  if (row.reviewed === 0) {
+    return "Unreviewed pattern. Do not trade from this yet.";
+  }
+  if (row.enter > 0 && row.worked > row.failed) {
+    return "Paper candidate: ENTER rows in this pattern worked more than failed.";
+  }
+  if (row.failed > row.worked && row.enter > 0) {
+    return "Tighten: ENTER rows in this pattern failed more than worked.";
+  }
+  if (row.wouldHaveWorked > row.failed + row.avoidedLoss) {
+    return "Possible over-filter: denied rows often would have worked.";
+  }
+  if (row.avoidedLoss > row.wouldHaveWorked) {
+    return "Useful avoid filter: this pattern avoided more losses than missed trades.";
+  }
+  return "Mixed evidence. Keep reviewing before changing rules.";
+}
+
+function overlapNextReviewForRow(row: StrategyOverlapRow) {
+  if (row.reviewed === 0) return "Mark the next 5 rows in this pattern first.";
+  if (row.wouldHaveWorked > 0) {
+    return "Replay missed-good rows and identify which gate blocked them.";
+  }
+  if (row.failed > 0) {
+    return "Replay failed ENTER rows and check whether push-through or late timing was visible.";
+  }
+  if (row.enter === 0 && row.wait + row.skip + row.doNotHold > 0) {
+    return "Do not loosen until denied rows are marked as missed-good or avoided-loss.";
+  }
+  return "Keep collecting. No rule promotion from this row yet.";
+}
+
 function strategyDiagnosisFor(item: AlertDecisionMatch) {
   const alert = item.alert;
   const denial = denialReasonFor(item);
@@ -3332,6 +3460,184 @@ export default function BrutusTradeDeskPage() {
     return "This alert batch does not contain a clean paper-test family yet.";
   }, [strategyDiagnosisMatrix]);
 
+  const strategyOverlapMatrix = useMemo(() => {
+    type MutableOverlap = StrategyOverlapRow & {
+      touchDepthRatioTotal: number;
+      touchDepthRatioCount: number;
+      reclaimDistanceRatioTotal: number;
+      reclaimDistanceRatioCount: number;
+      pushThroughDistanceRatioTotal: number;
+      pushThroughDistanceRatioCount: number;
+    };
+    const rows = new Map<string, MutableOverlap>();
+    for (const item of denialSourceMatches) {
+      const alert = item.alert;
+      const symbol = alert.symbol ?? "unknown";
+      const timeframe = normalizeTimeframe(alert.timeframe ?? "") ?? "n/a";
+      const direction = alert.direction ?? alert.signalDirection ?? "n/a";
+      const session = sessionBucketForAlert(alert);
+      const timing = timingBucketForAlert(alert);
+      const pierce = pierceBucketForAlert(alert);
+      const behavior = behaviorBucketForAlert(alert);
+      const rsi = rsiBucketForAlert(alert);
+      const volume = volumeBucketForAlert(alert);
+      const trend = trendBucketForAlert(alert);
+      const key = [
+        symbol,
+        timeframe,
+        direction,
+        session,
+        timing,
+        pierce,
+        behavior,
+        rsi,
+        volume,
+        trend,
+      ].join("|");
+      const current =
+        rows.get(key) ??
+        ({
+          key,
+          symbol,
+          timeframe,
+          direction,
+          session,
+          timing,
+          pierce,
+          behavior,
+          rsi,
+          volume,
+          trend,
+          count: 0,
+          enter: 0,
+          wait: 0,
+          skip: 0,
+          doNotHold: 0,
+          worked: 0,
+          failed: 0,
+          wouldHaveWorked: 0,
+          avoidedLoss: 0,
+          reviewed: 0,
+          averageTouchDepthRatio: 0,
+          averageReclaimDistanceRatio: 0,
+          averagePushThroughDistanceRatio: 0,
+          provisionalRead: "",
+          nextReview: "",
+          examples: [],
+          touchDepthRatioTotal: 0,
+          touchDepthRatioCount: 0,
+          reclaimDistanceRatioTotal: 0,
+          reclaimDistanceRatioCount: 0,
+          pushThroughDistanceRatioTotal: 0,
+          pushThroughDistanceRatioCount: 0,
+        } satisfies MutableOverlap);
+      current.count += 1;
+      const action = decisionFromAlertOrMatch(item);
+      if (action === "ENTER") current.enter += 1;
+      if (action === "WAIT") current.wait += 1;
+      if (action === "SKIP") current.skip += 1;
+      if (action === "DO_NOT_HOLD") current.doNotHold += 1;
+      const outcome =
+        paperOutcomes[paperOutcomeKey(alert)] ?? "unreviewed";
+      current.worked += outcome === "worked" ? 1 : 0;
+      current.failed += outcome === "failed" ? 1 : 0;
+      current.wouldHaveWorked += outcome === "would_have_worked" ? 1 : 0;
+      current.avoidedLoss += outcome === "avoided_loss" ? 1 : 0;
+      current.reviewed += outcome !== "unreviewed" ? 1 : 0;
+      if (Number.isFinite(alert.touchDepthRatio)) {
+        current.touchDepthRatioTotal += alert.touchDepthRatio ?? 0;
+        current.touchDepthRatioCount += 1;
+      }
+      if (Number.isFinite(alert.reclaimDistanceRatio)) {
+        current.reclaimDistanceRatioTotal +=
+          alert.reclaimDistanceRatio ?? 0;
+        current.reclaimDistanceRatioCount += 1;
+      }
+      if (Number.isFinite(alert.pushThroughDistanceRatio)) {
+        current.pushThroughDistanceRatioTotal +=
+          alert.pushThroughDistanceRatio ?? 0;
+        current.pushThroughDistanceRatioCount += 1;
+      }
+      if (current.examples.length < 2) {
+        current.examples.push(
+          `${fmtDate(typeof alert.alertTime === "number" ? alert.alertTime : alert.candleTime)} | ${alert.plainAction ?? alert.reason ?? item.note}`,
+        );
+      }
+      rows.set(key, current);
+    }
+    return [...rows.values()]
+      .map(
+        ({
+          touchDepthRatioTotal,
+          touchDepthRatioCount,
+          reclaimDistanceRatioTotal,
+          reclaimDistanceRatioCount,
+          pushThroughDistanceRatioTotal,
+          pushThroughDistanceRatioCount,
+          ...row
+        }) => {
+          const completeRow: StrategyOverlapRow = {
+            ...row,
+            averageTouchDepthRatio: averageFromSum(
+              touchDepthRatioTotal,
+              touchDepthRatioCount,
+            ),
+            averageReclaimDistanceRatio: averageFromSum(
+              reclaimDistanceRatioTotal,
+              reclaimDistanceRatioCount,
+            ),
+            averagePushThroughDistanceRatio: averageFromSum(
+              pushThroughDistanceRatioTotal,
+              pushThroughDistanceRatioCount,
+            ),
+          };
+          return {
+            ...completeRow,
+            provisionalRead: overlapReadForRow(completeRow),
+            nextReview: overlapNextReviewForRow(completeRow),
+          };
+        },
+      )
+      .sort(
+        (a, b) =>
+          b.reviewed - a.reviewed ||
+          b.wouldHaveWorked - a.wouldHaveWorked ||
+          b.failed - a.failed ||
+          b.enter - a.enter ||
+          b.count - a.count,
+      )
+      .slice(0, 18);
+  }, [denialSourceMatches, paperOutcomes]);
+
+  const strategyOverlapRead = useMemo(() => {
+    if (!strategyOverlapMatrix.length) {
+      return "Import Playbook alerts first. The overlap matrix needs alert JSON, not screenshots.";
+    }
+    const reviewed = strategyOverlapMatrix.filter((row) => row.reviewed > 0);
+    if (!reviewed.length) {
+      return "The matrix can group setups now, but no rows have marked outcomes. Mark worked, failed, missed-good, or avoided-loss before trusting any pattern.";
+    }
+    const overFiltered = reviewed.find(
+      (row) => row.wouldHaveWorked > row.failed + row.avoidedLoss,
+    );
+    if (overFiltered) {
+      return `First research lead: ${overFiltered.symbol} ${overFiltered.timeframe} ${overFiltered.direction} ${overFiltered.behavior} rows may be over-filtered. Review the missed-good examples first.`;
+    }
+    const failedEnter = reviewed.find(
+      (row) => row.enter > 0 && row.failed > row.worked,
+    );
+    if (failedEnter) {
+      return `First danger lead: ${failedEnter.symbol} ${failedEnter.timeframe} ${failedEnter.direction} ${failedEnter.behavior} ENTER rows are failing more than working. Tighten this family before trading it.`;
+    }
+    const candidate = reviewed.find(
+      (row) => row.enter > 0 && row.worked > row.failed,
+    );
+    if (candidate) {
+      return `First paper candidate: ${candidate.symbol} ${candidate.timeframe} ${candidate.direction} ${candidate.behavior} has more marked wins than failures. Still paper-only until the sample grows.`;
+    }
+    return "No overlap row is strong enough yet. Keep marking outcomes; do not promote a rule from unreviewed counts.";
+  }, [strategyOverlapMatrix]);
+
   const liveRuleCards = useMemo(() => {
     const byKey = new Map(
       strategyDiagnosisMatrix.map((row) => [row.key, row] as const),
@@ -3830,6 +4136,8 @@ export default function BrutusTradeDeskPage() {
                 alertSourceCounts,
                 liveRuleCards,
                 liveRuleRead,
+                strategyOverlapMatrix,
+                strategyOverlapRead,
                 denialMatrix,
                 denialMatrixRead,
                 strategyDiagnosisMatrix,
@@ -4735,6 +5043,125 @@ export default function BrutusTradeDeskPage() {
                   )}
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+        {strategyOverlapMatrix.length > 0 && (
+          <div className="mt-3 border border-lime-300/50 bg-lime-300/5 p-3">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p className="font-display text-sm font-bold">
+                  Strategy Discovery Matrix
+                </p>
+                <p className="mt-1 max-w-4xl text-xs text-muted-foreground">
+                  This groups Playbook alerts by the actual overlap: symbol,
+                  timeframe, direction, session, candle timing, pierce depth,
+                  snapback/push-through, RSI, volume, and MA trend.
+                </p>
+              </div>
+              <span className="border border-lime-300/60 px-2 py-1 font-mono text-xs text-lime-200">
+                {strategyOverlapMatrix.length} pattern(s)
+              </span>
+            </div>
+            <div className="mt-3 border border-border bg-background p-3 text-sm">
+              <p className="font-display text-sm font-bold">
+                Plain research read
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                {strategyOverlapRead}
+              </p>
+            </div>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[1280px] border-collapse font-mono text-xs">
+                <thead className="text-left text-muted-foreground">
+                  <tr className="border-b border-border">
+                    <th className="px-2 py-2">Pattern</th>
+                    <th className="px-2 py-2">Count</th>
+                    <th className="px-2 py-2">Actions</th>
+                    <th className="px-2 py-2">Outcome marks</th>
+                    <th className="px-2 py-2">Pierce / reclaim</th>
+                    <th className="px-2 py-2">Context</th>
+                    <th className="px-2 py-2">Plain read</th>
+                    <th className="px-2 py-2">Next review</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {strategyOverlapMatrix.map((row) => (
+                    <tr className="border-b border-border/60" key={row.key}>
+                      <td className="max-w-xs whitespace-normal px-2 py-2 text-foreground">
+                        {row.symbol} {row.timeframe} {row.direction}
+                        <span className="block text-muted-foreground">
+                          {row.session} | {row.timing} | {row.pierce} |{" "}
+                          {row.behavior}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-lg text-lime-300">
+                        {row.count}
+                        <span className="block text-xs text-muted-foreground">
+                          {row.reviewed} reviewed
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-muted-foreground">
+                        <span className="block text-lime-300">
+                          ENTER {row.enter}
+                        </span>
+                        <span className="block text-amber-200">
+                          WAIT {row.wait}
+                        </span>
+                        <span className="block text-red-300">
+                          SKIP {row.skip}
+                        </span>
+                        <span className="block text-fuchsia-200">
+                          DNH {row.doNotHold}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-muted-foreground">
+                        <span className="block text-lime-300">
+                          worked {row.worked}
+                        </span>
+                        <span className="block text-red-300">
+                          failed {row.failed}
+                        </span>
+                        <span className="block text-amber-200">
+                          missed {row.wouldHaveWorked}
+                        </span>
+                        <span className="block text-cyan-200">
+                          avoided {row.avoidedLoss}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-muted-foreground">
+                        Depth {(row.averageTouchDepthRatio * 100).toFixed(1)}%
+                        <span className="block">
+                          Reclaim{" "}
+                          {(row.averageReclaimDistanceRatio * 100).toFixed(1)}%
+                        </span>
+                        <span className="block">
+                          Push{" "}
+                          {(row.averagePushThroughDistanceRatio * 100).toFixed(
+                            1,
+                          )}
+                          %
+                        </span>
+                      </td>
+                      <td className="max-w-xs whitespace-normal px-2 py-2 text-muted-foreground">
+                        {row.rsi} | {row.volume}
+                        <span className="block">{row.trend}</span>
+                      </td>
+                      <td className="max-w-sm whitespace-normal px-2 py-2 text-muted-foreground">
+                        {row.provisionalRead}
+                        {row.examples[0] && (
+                          <span className="mt-1 block text-[10px]">
+                            Example: {row.examples[0]}
+                          </span>
+                        )}
+                      </td>
+                      <td className="max-w-sm whitespace-normal px-2 py-2 text-muted-foreground">
+                        {row.nextReview}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

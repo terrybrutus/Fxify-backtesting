@@ -414,6 +414,26 @@ const requiredSnippets = [
     text: 'plotshape(showReviewLabels and skipSignal and direction == "long", title="Long SKIP"',
   },
   {
+    label: "strategy discovery matrix section",
+    text: "Strategy Discovery Matrix",
+  },
+  {
+    label: "strategy overlap matrix groups real confluence",
+    text: "strategyOverlapMatrix",
+  },
+  {
+    label: "strategy overlap includes pierce behavior",
+    text: "behaviorBucketForAlert(alert)",
+  },
+  {
+    label: "strategy overlap includes RSI context",
+    text: "rsiBucketForAlert(alert)",
+  },
+  {
+    label: "strategy overlap includes volume context",
+    text: "volumeBucketForAlert(alert)",
+  },
+  {
     label: "visible audit panel",
     text: "var table auditPanel = table.new(position.top_right, 1, 9, border_width=1)",
   },
