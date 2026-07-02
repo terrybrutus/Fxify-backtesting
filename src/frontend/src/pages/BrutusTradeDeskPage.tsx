@@ -207,6 +207,7 @@ type TvAlert = {
   priceAboveMa200?: boolean;
   setupId?: number;
   exitAction?: string;
+  exitAlertMode?: string;
   outcome?: string;
   outcomePrice?: number;
   outcomeR?: number;
@@ -827,6 +828,8 @@ function normalizeAlertPayload(
     setupId: asNumber(item.setupId),
     exitAction:
       typeof item.exitAction === "string" ? item.exitAction : undefined,
+    exitAlertMode:
+      typeof item.exitAlertMode === "string" ? item.exitAlertMode : undefined,
     outcome: typeof item.outcome === "string" ? item.outcome : undefined,
     outcomePrice: asNumber(item.outcomePrice),
     outcomeR: asNumber(item.outcomeR),
@@ -1518,7 +1521,7 @@ indicator("Brutus Playbook Alerts", overlay=true, max_lines_count=100, max_label
 // Alert setup: create exactly one alert per symbol/timeframe using "Any alert() function call".
 // This script intentionally does not define named alertconditions. If the alert dialog does not show "Any alert() function call", stop and reload the latest script.
 // Alert coverage: use "Actionable only" for cleaner live testing, or "Full evidence" when paper-testing WAIT/SKIP decisions.
-// Safety note: this intentionally avoids alert.freq_all. Repeated intrabar spam can make TradingView pause the alert.
+// Safety note: keep Exit Alert Mode on Safe one-per-bar unless you are actively testing live same-candle exits.
 // Sanity check: keep Show Original Triangle Matches on first. ORIG markers must match the old Brutus triangles before trusting ENTER, WAIT, SKIP, or DO NOT HOLD labels.
 // Timing truth: ORIG matches the old triangle formula. Because that formula uses candle color, an open candle can change until it closes. First-touch alerts are live evidence, not perfect historical replay.
 ${testRows || "// No TEST rows were available when this script was exported. Keep this in paper-test mode."}
@@ -1542,6 +1545,7 @@ tp3R = input.float(2.0, minval=0.25, maxval=10.0, title="TP3 R")
 tp4R = input.float(3.0, minval=0.25, maxval=15.0, title="TP4 R")
 liveAlertsOnly = input.bool(true, title="Only Fire Alerts On Live Bars")
 alertCoverage = input.string("Actionable only", title="Alert Coverage", options=["Actionable only", "Full evidence"])
+exitAlertMode = input.string("Safe one-per-bar", title="Exit Alert Mode", options=["Safe one-per-bar", "Immediate TP/Stop"])
 showOriginalSignals = input.bool(true, title="Show Original Triangle Matches")
 showLiveLatchSignals = input.bool(true, title="Show Live First-Touch Latches")
 showTradeLevels = input.bool(true, title="Show Current ENTER Plan Levels")
@@ -1900,9 +1904,9 @@ exitPrice = stopHit ? activeStop : tp4Hit ? activeTp4 : tp3Hit ? activeTp3 : tp2
 exitR = stopHit ? -1.0 : tp4Hit ? tp4R : tp3Hit ? tp3R : tp2Hit ? tp2R : tp1Hit ? tp1R : na
 exitPlain = stopHit ? "STOP HIT. Trade is done." : tp4Hit ? "TP4 HIT. Runner is done." : tp3Hit ? "TP3 HIT. Take profit or trail tight." : tp2Hit ? "TP2 HIT. Take profit or move stop up." : tp1Hit ? "TP1 HIT. Take partial profit and protect the trade." : ""
 exitReason = sameBarLiveExit ? "Live entry-bar exit used current realtime price, not full-candle hindsight." : stopHit ? "Stop was touched after the entry bar." : exitEvent != "none" ? "Profit target was touched after the entry bar." : ""
-exitMessage = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v21\\",\\"rawSignal\\":false,\\"event\\":\\"" + exitEvent + "\\",\\"setupId\\":" + str.tostring(activeSetupId) + ",\\"exitAction\\":\\"" + (stopHit ? "STOP" : "TAKE_PROFIT") + "\\",\\"sameBarLiveExit\\":" + str.tostring(sameBarLiveExit) + ",\\"outcome\\":\\"" + exitEvent + "\\",\\"outcomePrice\\":" + (na(exitPrice) ? "null" : str.tostring(exitPrice)) + ",\\"outcomeR\\":" + (na(exitR) ? "null" : str.tostring(exitR)) + ",\\"plainAction\\":\\"" + exitPlain + "\\",\\"reason\\":\\"" + exitReason + "\\",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"direction\\":\\"" + (activeDirection == 1 ? "long" : "short") + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"entry\\":" + str.tostring(activeEntry) + ",\\"stop\\":" + str.tostring(activeStop) + ",\\"target\\":" + str.tostring(activeTp1) + ",\\"tp1\\":" + str.tostring(activeTp1) + ",\\"tp2\\":" + str.tostring(activeTp2) + ",\\"tp3\\":" + str.tostring(activeTp3) + ",\\"tp4\\":" + str.tostring(activeTp4) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + "}"
+exitMessage = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v21\\",\\"rawSignal\\":false,\\"event\\":\\"" + exitEvent + "\\",\\"setupId\\":" + str.tostring(activeSetupId) + ",\\"exitAction\\":\\"" + (stopHit ? "STOP" : "TAKE_PROFIT") + "\\",\\"exitAlertMode\\":\\"" + exitAlertMode + "\\",\\"sameBarLiveExit\\":" + str.tostring(sameBarLiveExit) + ",\\"outcome\\":\\"" + exitEvent + "\\",\\"outcomePrice\\":" + (na(exitPrice) ? "null" : str.tostring(exitPrice)) + ",\\"outcomeR\\":" + (na(exitR) ? "null" : str.tostring(exitR)) + ",\\"plainAction\\":\\"" + exitPlain + "\\",\\"reason\\":\\"" + exitReason + "\\",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"direction\\":\\"" + (activeDirection == 1 ? "long" : "short") + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"entry\\":" + str.tostring(activeEntry) + ",\\"stop\\":" + str.tostring(activeStop) + ",\\"target\\":" + str.tostring(activeTp1) + ",\\"tp1\\":" + str.tostring(activeTp1) + ",\\"tp2\\":" + str.tostring(activeTp2) + ",\\"tp3\\":" + str.tostring(activeTp3) + ",\\"tp4\\":" + str.tostring(activeTp4) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + "}"
 if exitEvent != "none" and (not liveAlertsOnly or barstate.isrealtime)
-    alert(exitMessage, alert.freq_once_per_bar)
+    alert(exitMessage, exitAlertMode == "Immediate TP/Stop" ? alert.freq_all : alert.freq_once_per_bar)
     if tp1Hit
         activeTp1Sent := true
     if tp2Hit

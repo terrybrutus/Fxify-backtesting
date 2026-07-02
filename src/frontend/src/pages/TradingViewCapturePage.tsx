@@ -17,6 +17,7 @@ type TvAlert = {
   sameBarLiveExit?: boolean;
   setupId?: number;
   exitAction?: string;
+  exitAlertMode?: string;
   outcome?: string;
   outcomePrice?: number;
   outcomeR?: number;
@@ -378,6 +379,7 @@ function normalizePayload(raw: unknown): TvAlert {
     sameBarLiveExit: asBoolean(item.sameBarLiveExit),
     setupId: asNumber(item.setupId),
     exitAction: asString(item.exitAction),
+    exitAlertMode: asString(item.exitAlertMode),
     outcome: asString(item.outcome),
     outcomePrice: asNumber(item.outcomePrice),
     outcomeR: asNumber(item.outcomeR),
@@ -1394,6 +1396,7 @@ function evidenceRowsToCsv(
     "setup_id",
     "decision_event",
     "exit_action",
+    "exit_alert_mode",
     "outcome",
     "outcome_price",
     "outcome_r",
@@ -1452,6 +1455,7 @@ function evidenceRowsToCsv(
       alert.setupId,
       alert.decisionEvent,
       alert.exitAction,
+      alert.exitAlertMode,
       alert.outcome,
       alert.outcomePrice,
       alert.outcomeR,
