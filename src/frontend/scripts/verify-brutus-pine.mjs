@@ -402,12 +402,8 @@ const requiredSnippets = [
     text: 'create exactly one alert per symbol/timeframe using "Any alert() function call"',
   },
   {
-    label: "pine script warns named alertconditions lack JSON",
-    text: "those are only visual fallback labels and will not carry the full JSON audit packet.",
-  },
-  {
-    label: "named alertconditions warn wrong alert type",
-    text: "Wrong alert type for evidence loop. Use Any alert() function call for full JSON.",
+    label: "pine script says no named alertconditions",
+    text: "This script intentionally does not define named alertconditions.",
   },
   {
     label: "original-marker parity warning",
@@ -1024,8 +1020,8 @@ const requiredTradeDeskSnippets = [
     text: "Do not choose the named ENTER/WAIT/SKIP conditions.",
   },
   {
-    label: "trade desk says named alert labels lack full JSON",
-    text: "full JSON packet.",
+    label: "trade desk says named alert labels are absent",
+    text: "intentionally exposes no named ENTER/WAIT/SKIP alertconditions",
   },
   {
     label: "trade desk import logs setup step",
@@ -1341,6 +1337,14 @@ const missingData = requiredDataSnippets.filter((item) => {
 
 const forbiddenSnippets = [
   {
+    label: "exported Pine named alertconditions",
+    text: "alertcondition(",
+  },
+  {
+    label: "old wrong alert type fallback",
+    text: "Wrong alert type for evidence loop.",
+  },
+  {
     label: "old raw-parity-v10 contract",
     text: "raw-parity-v10",
   },
@@ -1371,6 +1375,12 @@ const forbiddenSnippets = [
 ];
 
 const forbidden = forbiddenSnippets.filter((item) => {
+  if (
+    item.label === "exported Pine named alertconditions" ||
+    item.label === "old wrong alert type fallback"
+  ) {
+    return normalizedSource.includes(item.text);
+  }
   const haystacks = [
     normalizedSource,
     normalizedCaptureSource,

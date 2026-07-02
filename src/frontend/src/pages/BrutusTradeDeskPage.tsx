@@ -1498,7 +1498,7 @@ indicator("Brutus Playbook Alerts", overlay=true, max_lines_count=100, max_label
 // Use this on TradingView Alchemy symbols first: DJ30.R, USTEC.R, US500.R, JPN225.R, and RUS2000.R.
 // This is a paper-test alert bridge. It does not prove the strategy is live-trade ready by itself.
 // Alert setup: create exactly one alert per symbol/timeframe using "Any alert() function call".
-// Do not choose the named Brutus ENTER/WAIT/SKIP alertconditions for the evidence loop; those are only visual fallback labels and will not carry the full JSON audit packet.
+// This script intentionally does not define named alertconditions. If the alert dialog does not show "Any alert() function call", stop and reload the latest script.
 // Alert coverage: by default, live alerts are actionable only: ENTER or DO_NOT_HOLD. WAIT/SKIP stay visual unless research alerts are enabled.
 // Safety note: this intentionally avoids alert.freq_all. Repeated intrabar spam can make TradingView pause the alert.
 // Sanity check: keep Show Original Triangle Matches on first. ORIG markers must match the old Brutus triangles before trusting ENTER, WAIT, SKIP, or DO NOT HOLD labels.
@@ -1881,13 +1881,7 @@ if exitEvent != "none" and (not liveAlertsOnly or barstate.isrealtime)
     if stopHit or tp4Hit
         activeTrade := false
 
-// These named alertconditions are labels only. The paper evidence loop depends on the alert(message) JSON above, so TradingView alerts should use "Any alert() function call".
-alertcondition(longEnter or shortEnter, title="Brutus ENTER", message="Wrong alert type for evidence loop. Use Any alert() function call for full JSON.")
-alertcondition(longWatch or shortWatch, title="Brutus WAIT", message="Wrong alert type for evidence loop. Use Any alert() function call for full JSON.")
-alertcondition(doNotHold, title="Brutus DO NOT HOLD", message="Wrong alert type for evidence loop. Use Any alert() function call for full JSON.")
-alertcondition(skipSignal, title="Brutus SKIP", message="Wrong alert type for evidence loop. Use Any alert() function call for full JSON.")
-alertcondition(rawLongSignal, title="Raw Brutus Long", message="Wrong alert type for evidence loop. Use Any alert() function call for full JSON.")
-alertcondition(rawShortSignal, title="Raw Brutus Short", message="Wrong alert type for evidence loop. Use Any alert() function call for full JSON.")
+// No named alert-condition calls on purpose. The evidence loop depends on the alert(message) JSON above.
 `;
 }
 
@@ -4012,10 +4006,9 @@ export default function BrutusTradeDeskPage() {
                 again if that same live candle changes from WAIT to ENTER or DO
                 NOT HOLD. Confirmed close waits for the candle to close.
                 Because your original triangle formula uses candle color,
-                open-bar ORIG markers can change until close. Do not select the
-                named ENTER, WAIT, SKIP, or Raw Brutus alertconditions when
-                creating the evidence-loop alert; those labels do not carry the
-                full JSON packet.
+                open-bar ORIG markers can change until close. The current script
+                intentionally exposes no named ENTER/WAIT/SKIP alertconditions;
+                if TradingView shows them, you are still running an older script.
               </p>
             </div>
             <div>
