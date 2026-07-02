@@ -1571,6 +1571,7 @@ exitAlertMode = input.string("Safe one-per-bar", title="Exit Alert Mode", option
 alertCooldownSeconds = input.int(8, minval=0, maxval=300, title="Minimum Seconds Between Decision Alerts")
 showOriginalSignals = input.bool(true, title="Show Original Triangle Matches")
 showLiveLatchSignals = input.bool(true, title="Show Live First-Touch Latches")
+showReviewLabels = input.bool(false, title="Show WAIT/SKIP Review Labels")
 showTradeLevels = input.bool(true, title="Show Current ENTER Plan Levels")
 showAuditPanel = input.bool(true, title="Show Brutus Audit Panel")
 
@@ -1770,13 +1771,13 @@ plotshape(showLiveLatchSignals and rawLongSignal and not rawLongCondition, title
 plotshape(showLiveLatchSignals and rawShortSignal and not rawShortCondition, title="Live Latched Short Touch", location=location.abovebar, color=color.new(color.aqua, 15), style=shape.triangledown, size=size.tiny, text="LIVE")
 plotshape(longEnter, title="Long ENTER", location=location.belowbar, color=color.lime, style=shape.triangleup, text="ENTER")
 plotshape(shortEnter, title="Short ENTER", location=location.abovebar, color=color.red, style=shape.triangledown, text="ENTER")
-plotshape(longWatch, title="Long WAIT", location=location.belowbar, color=color.new(color.lime, 45), style=shape.circle, text="WAIT")
-plotshape(shortWatch, title="Short WAIT", location=location.abovebar, color=color.new(color.red, 45), style=shape.circle, text="WAIT")
+plotshape(showReviewLabels and longWatch, title="Long WAIT", location=location.belowbar, color=color.new(color.lime, 45), style=shape.circle, text="WAIT")
+plotshape(showReviewLabels and shortWatch, title="Short WAIT", location=location.abovebar, color=color.new(color.red, 45), style=shape.circle, text="WAIT")
 plotshape(doNotHold and direction == "long", title="Long DO NOT HOLD", location=location.belowbar, color=color.orange, style=shape.xcross, text="NO")
 plotshape(doNotHold and direction == "short", title="Short DO NOT HOLD", location=location.abovebar, color=color.orange, style=shape.xcross, text="NO")
-plotshape(skipSignal and direction == "long", title="Long SKIP", location=location.belowbar, color=color.new(color.gray, 15), style=shape.square, text="SKIP")
-plotshape(skipSignal and direction == "short", title="Short SKIP", location=location.abovebar, color=color.new(color.gray, 15), style=shape.square, text="SKIP")
-plotshape(conflictSkip, title="Conflict SKIP", location=location.top, color=color.yellow, style=shape.diamond, text="BOTH")
+plotshape(showReviewLabels and skipSignal and direction == "long", title="Long SKIP", location=location.belowbar, color=color.new(color.gray, 15), style=shape.square, text="SKIP")
+plotshape(showReviewLabels and skipSignal and direction == "short", title="Short SKIP", location=location.abovebar, color=color.new(color.gray, 15), style=shape.square, text="SKIP")
+plotshape(showReviewLabels and conflictSkip, title="Conflict SKIP", location=location.top, color=color.yellow, style=shape.diamond, text="BOTH")
 
 var line entryLine = na
 var line stopLine = na

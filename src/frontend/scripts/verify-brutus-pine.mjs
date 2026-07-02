@@ -402,6 +402,18 @@ const requiredSnippets = [
     text: 'showLiveLatchSignals = input.bool(true, title="Show Live First-Touch Latches")',
   },
   {
+    label: "review labels default off",
+    text: 'showReviewLabels = input.bool(false, title="Show WAIT/SKIP Review Labels")',
+  },
+  {
+    label: "wait labels gated by review labels",
+    text: 'plotshape(showReviewLabels and longWatch, title="Long WAIT"',
+  },
+  {
+    label: "skip labels gated by review labels",
+    text: 'plotshape(showReviewLabels and skipSignal and direction == "long", title="Long SKIP"',
+  },
+  {
     label: "visible audit panel",
     text: "var table auditPanel = table.new(position.top_right, 1, 9, border_width=1)",
   },
