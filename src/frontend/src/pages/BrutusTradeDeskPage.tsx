@@ -928,6 +928,13 @@ function isLatestPlaybookAlert(alert: TvAlert) {
   );
 }
 
+function isExitOutcomeAlert(alert: TvAlert) {
+  return (
+    typeof alert.event === "string" &&
+    alert.event.startsWith("EXIT_")
+  );
+}
+
 function paperOutcomeKey(alert: TvAlert) {
   return [
     alert.symbol ?? "unknown",
@@ -963,6 +970,14 @@ function playbookContractIssues(alert: TvAlert) {
 function missingPlaybookFields(alert: TvAlert) {
   const missing: string[] = [];
   if (!isLatestPlaybookAlert(alert)) return missing;
+  if (isExitOutcomeAlert(alert)) {
+    if (!alert.event) missing.push("event");
+    if (!alert.setupId) missing.push("setupId");
+    if (!alert.exitAction) missing.push("exitAction");
+    if (alert.outcomePrice == null) missing.push("outcomePrice");
+    if (alert.outcomeR == null) missing.push("outcomeR");
+    return missing;
+  }
   if (alert.rawSignal !== true) missing.push("rawSignal");
   if (!alert.decisionEvent) missing.push("decisionEvent");
   if (alert.decisionEvent === "decision_change" && !alert.previousAction) {
@@ -2415,7 +2430,21 @@ export default function BrutusTradeDeskPage() {
 
   const latestAlertMatches = useMemo(
     () =>
-      alertMatches.filter((item) => isLatestPlaybookAlert(item.alert)),
+      alertMatches.filter(
+        (item) =>
+          isLatestPlaybookAlert(item.alert) &&
+          !isExitOutcomeAlert(item.alert),
+      ),
+    [alertMatches],
+  );
+
+  const latestExitAlertMatches = useMemo(
+    () =>
+      alertMatches.filter(
+        (item) =>
+          isLatestPlaybookAlert(item.alert) &&
+          isExitOutcomeAlert(item.alert),
+      ),
     [alertMatches],
   );
 
@@ -2439,6 +2468,41 @@ export default function BrutusTradeDeskPage() {
     }),
     [alertMatches],
   );
+
+  const exitOutcomeCounts = useMemo(() => {
+    const counts = {
+      total: latestExitAlertMatches.length,
+      stop: 0,
+      tp1: 0,
+      tp2: 0,
+      tp3: 0,
+      tp4: 0,
+      totalR: 0,
+      knownR: 0,
+      latestAlertTime: 0,
+    };
+    for (const item of latestExitAlertMatches) {
+      const event = item.alert.event ?? "";
+      if (event === "EXIT_STOP") counts.stop += 1;
+      if (event === "EXIT_TP1") counts.tp1 += 1;
+      if (event === "EXIT_TP2") counts.tp2 += 1;
+      if (event === "EXIT_TP3") counts.tp3 += 1;
+      if (event === "EXIT_TP4") counts.tp4 += 1;
+      if (item.alert.outcomeR != null) {
+        counts.totalR += item.alert.outcomeR;
+        counts.knownR += 1;
+      }
+      const alertTime =
+        typeof item.alert.alertTime === "number"
+          ? item.alert.alertTime
+          : item.alert.candleTime ?? 0;
+      counts.latestAlertTime = Math.max(counts.latestAlertTime, alertTime);
+    }
+    return {
+      ...counts,
+      averageR: counts.knownR ? counts.totalR / counts.knownR : 0,
+    };
+  }, [latestExitAlertMatches]);
 
   const alertCounts = useMemo(
     () => ({
@@ -3963,6 +4027,9 @@ export default function BrutusTradeDeskPage() {
             <span className="border border-border px-2 py-1 text-muted-foreground">
               UNKNOWN SOURCE {alertSourceCounts.unknown}
             </span>
+            <span className="border border-cyan-400/50 px-2 py-1 text-cyan-200">
+              EXIT OUTCOMES {exitOutcomeCounts.total}
+            </span>
             <span className="border border-lime-400/50 px-2 py-1 text-lime-300">
               PINE ENTER {pineActionCounts.enter}
             </span>
@@ -4044,6 +4111,112 @@ export default function BrutusTradeDeskPage() {
             </p>
           </div>
         </div>
+        {exitOutcomeCounts.total > 0 && (
+          <div className="mt-3 border border-cyan-400/40 bg-cyan-400/5 p-3">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p className="font-display text-sm font-bold">
+                  Exit / TP Evidence
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  These are follow-up alerts from trades the Pine already
+                  marked as ENTER. They are not new entries.
+                </p>
+              </div>
+              <span className="border border-cyan-400/60 px-2 py-1 font-mono text-xs text-cyan-200">
+                Avg {exitOutcomeCounts.averageR.toFixed(2)}R
+              </span>
+            </div>
+            <div className="mt-3 grid gap-2 font-mono text-xs sm:grid-cols-6">
+              <div className="border border-border p-2">
+                <span className="block text-muted-foreground">Total</span>
+                <span className="text-lg text-foreground">
+                  {exitOutcomeCounts.total}
+                </span>
+              </div>
+              <div className="border border-red-500/40 p-2">
+                <span className="block text-muted-foreground">Stops</span>
+                <span className="text-lg text-red-300">
+                  {exitOutcomeCounts.stop}
+                </span>
+              </div>
+              <div className="border border-lime-400/40 p-2">
+                <span className="block text-muted-foreground">TP1</span>
+                <span className="text-lg text-lime-300">
+                  {exitOutcomeCounts.tp1}
+                </span>
+              </div>
+              <div className="border border-lime-400/40 p-2">
+                <span className="block text-muted-foreground">TP2</span>
+                <span className="text-lg text-lime-300">
+                  {exitOutcomeCounts.tp2}
+                </span>
+              </div>
+              <div className="border border-lime-400/40 p-2">
+                <span className="block text-muted-foreground">TP3</span>
+                <span className="text-lg text-lime-300">
+                  {exitOutcomeCounts.tp3}
+                </span>
+              </div>
+              <div className="border border-lime-400/40 p-2">
+                <span className="block text-muted-foreground">TP4</span>
+                <span className="text-lg text-lime-300">
+                  {exitOutcomeCounts.tp4}
+                </span>
+              </div>
+            </div>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[920px] border-collapse font-mono text-xs">
+                <thead className="text-left text-muted-foreground">
+                  <tr className="border-b border-border">
+                    <th className="px-2 py-2">Time</th>
+                    <th className="px-2 py-2">Symbol</th>
+                    <th className="px-2 py-2">TF</th>
+                    <th className="px-2 py-2">Side</th>
+                    <th className="px-2 py-2">Outcome</th>
+                    <th className="px-2 py-2">R</th>
+                    <th className="px-2 py-2">Price</th>
+                    <th className="px-2 py-2">Plain read</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {latestExitAlertMatches.slice(0, 12).map(({ alert }) => (
+                    <tr className="border-b border-border/60" key={alert.id}>
+                      <td className="px-2 py-2">
+                        {fmtDate(
+                          typeof alert.alertTime === "number"
+                            ? alert.alertTime
+                            : alert.candleTime,
+                        )}
+                      </td>
+                      <td className="px-2 py-2 text-foreground">
+                        {alert.symbol ?? "unknown"}
+                      </td>
+                      <td className="px-2 py-2">
+                        {normalizeTimeframe(alert.timeframe) ?? "n/a"}
+                      </td>
+                      <td className="px-2 py-2">{alert.direction ?? "n/a"}</td>
+                      <td className="px-2 py-2 text-cyan-200">
+                        {alert.event ?? alert.outcome ?? "exit"}
+                      </td>
+                      <td className="px-2 py-2">
+                        {alert.outcomeR != null
+                          ? `${alert.outcomeR.toFixed(2)}R`
+                          : "n/a"}
+                      </td>
+                      <td className="px-2 py-2">
+                        {fmtPrice(alert.outcomePrice)}
+                      </td>
+                      <td className="max-w-md whitespace-normal px-2 py-2 text-muted-foreground">
+                        {alert.plainAction ?? alert.reason ?? "Exit event."}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
         <div className="mt-3 grid gap-3 border border-border bg-background p-3 md:grid-cols-[1.25fr_2fr]">
           <div>
             <p className="font-display text-sm font-bold">
