@@ -339,6 +339,21 @@ type StrategyDiagnosisRow = {
   examples: string[];
 };
 
+type LiveRuleCard = {
+  key: string;
+  title: string;
+  status: "candidate" | "danger" | "review" | "blocked";
+  count: number;
+  reviewed: number;
+  worked: number;
+  failed: number;
+  wouldHaveWorked: number;
+  avoidedLoss: number;
+  plainRule: string;
+  tradeInstruction: string;
+  proofNeed: string;
+};
+
 const STORAGE_KEY = "ict.brutus.trade-desk.report.v1";
 const ALERT_STORAGE_KEY = "ict.brutus.trade-desk.alerts.v1";
 const PAPER_OUTCOME_STORAGE_KEY = "ict.brutus.trade-desk.paperOutcomes.v1";
@@ -2476,6 +2491,13 @@ function paperUseClass(use: StrategyDiagnosisRow["paperUse"]) {
   return "border-red-500/60 text-red-300";
 }
 
+function liveRuleStatusClass(status: LiveRuleCard["status"]) {
+  if (status === "candidate") return "border-lime-400/60 bg-lime-400/10";
+  if (status === "danger") return "border-red-500/60 bg-red-500/10";
+  if (status === "review") return "border-amber-300/60 bg-amber-300/10";
+  return "border-border bg-background";
+}
+
 function VerdictPill({ verdict }: { verdict: PlaybookVerdict }) {
   const colors: Record<PlaybookVerdict, string> = {
     TEST: "border-lime-400 bg-lime-400/10 text-lime-300",
@@ -3298,6 +3320,104 @@ export default function BrutusTradeDeskPage() {
     return "This alert batch does not contain a clean paper-test family yet.";
   }, [strategyDiagnosisMatrix]);
 
+  const liveRuleCards = useMemo(() => {
+    const byKey = new Map(
+      strategyDiagnosisMatrix.map((row) => [row.key, row] as const),
+    );
+    const cardFrom = (
+      key: string,
+      fallbackTitle: string,
+      status: LiveRuleCard["status"],
+      plainRule: string,
+      tradeInstruction: string,
+      proofNeed: string,
+    ): LiveRuleCard => {
+      const row = byKey.get(key);
+      const reviewed =
+        (row?.worked ?? 0) +
+        (row?.failed ?? 0) +
+        (row?.wouldHaveWorked ?? 0) +
+        (row?.avoidedLoss ?? 0);
+      return {
+        key,
+        title: row?.family ?? fallbackTitle,
+        status,
+        count: row?.count ?? 0,
+        reviewed,
+        worked: row?.worked ?? 0,
+        failed: row?.failed ?? 0,
+        wouldHaveWorked: row?.wouldHaveWorked ?? 0,
+        avoidedLoss: row?.avoidedLoss ?? 0,
+        plainRule,
+        tradeInstruction,
+        proofNeed,
+      };
+    };
+
+    return [
+      cardFrom(
+        "snapback-reversal",
+        "Snapback reversal candidate",
+        "candidate",
+        "Only consider the reversal after price has pierced/touched the band and started reclaiming back toward the band.",
+        "If the alert says ENTER, use the alert's entry, stop, TP1-TP4 immediately. If it says WAIT, do not enter yet.",
+        "Needs marked outcomes proving these ENTER rows work more often than they fail.",
+      ),
+      cardFrom(
+        "push-through-continuation",
+        "Continuation trap risk",
+        "danger",
+        "If price is still beyond the push-through line and has not reclaimed, do not fade the move.",
+        "No reversal trade. Treat it as danger unless a later alert shows reclaim/snapback.",
+        "Review whether these later reverse or continue; until then they are not live fade entries.",
+      ),
+      cardFrom(
+        "early-touch-research",
+        "Early first-touch risk",
+        "review",
+        "A first touch early in the candle is evidence that the setup started, not proof that it is ready.",
+        "Do not enter from touch alone. Wait for the later live decision alert or skip if no reclaim appears.",
+        "Compare early touches with later reclaim alerts to decide if the entry window is too strict.",
+      ),
+      cardFrom(
+        "late-reclaim-risk",
+        "Late reclaim / chase risk",
+        "review",
+        "If reclaim arrives late, the wick scalp may already be gone.",
+        "Do not chase. Only use it if the alert still gives fresh entry/stop/targets before TP1 is reached.",
+        "Review late rows to see whether smaller timeframes give earlier usable entries.",
+      ),
+      cardFrom(
+        "session-blocked-review",
+        "Session-blocked review",
+        "blocked",
+        "A session block means time-of-day rejected the setup; it does not prove the touch was bad.",
+        "No live trade from the current rule. Mark these as would-have-worked or avoided-loss to decide whether the session gate is too strict.",
+        "Needs enough reviewed off-session rows before changing session filters.",
+      ),
+    ];
+  }, [strategyDiagnosisMatrix]);
+
+  const liveRuleRead = useMemo(() => {
+    if (!latestAlertMatches.length) {
+      return "Import current Playbook alerts first. The live rule extractor cannot infer trade rules from screenshots.";
+    }
+    const snapback = liveRuleCards.find((row) => row.key === "snapback-reversal");
+    const push = liveRuleCards.find(
+      (row) => row.key === "push-through-continuation",
+    );
+    if ((snapback?.count ?? 0) > 0 && (snapback?.reviewed ?? 0) === 0) {
+      return "Closest live rule: reclaim/snapback is the first paper-entry candidate, but it has not been outcome-marked yet.";
+    }
+    if ((snapback?.worked ?? 0) > (snapback?.failed ?? 0)) {
+      return "Current evidence leans toward paper-testing reclaim/snapback entries. This is not funded-account approval.";
+    }
+    if ((push?.count ?? 0) > Math.max(5, latestAlertMatches.length * 0.25)) {
+      return "Current evidence is dominated by push-through risk. The first useful rule is avoiding fades while price is still driving through the band.";
+    }
+    return "Current evidence is not clean enough for a locked rule. Use the cards below to mark which family is working or failing.";
+  }, [latestAlertMatches.length, liveRuleCards]);
+
   const denialMatrixRead = useMemo(() => {
     if (!denialSourceMatches.length) {
       return "Import Playbook alerts first. No denial matrix can be built from screenshots.";
@@ -3682,7 +3802,7 @@ export default function BrutusTradeDeskPage() {
           </button>
           <button
             className="inline-flex items-center gap-2 border border-border bg-card px-4 py-2 font-mono text-xs hover:border-primary disabled:opacity-40"
-            disabled={!decisions.length}
+            disabled={!decisions.length && !latestAlertMatches.length}
             onClick={() =>
               exportJson("ict-brutus-trade-desk.json", {
                 generatedAt: new Date().toISOString(),
@@ -3696,6 +3816,8 @@ export default function BrutusTradeDeskPage() {
                 alertVersionCounts,
                 alertCounts,
                 alertSourceCounts,
+                liveRuleCards,
+                liveRuleRead,
                 denialMatrix,
                 denialMatrixRead,
                 strategyDiagnosisMatrix,
@@ -4731,6 +4853,92 @@ export default function BrutusTradeDeskPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+        {liveRuleCards.length > 0 && (
+          <div className="mt-3 border border-cyan-300/50 bg-cyan-300/5 p-3">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p className="font-display text-sm font-bold">
+                  Live Rule Extractor
+                </p>
+                <p className="mt-1 max-w-4xl text-xs text-muted-foreground">
+                  This translates the Brutus evidence into live handling rules:
+                  when the touch is a reversal candidate, when it is a
+                  continuation trap, and when the setup is only review evidence.
+                </p>
+              </div>
+              <span className="border border-cyan-300/60 px-2 py-1 font-mono text-xs text-cyan-200">
+                not real-money approval
+              </span>
+            </div>
+            <div className="mt-3 border border-border bg-background p-3 text-sm">
+              <p className="font-display text-sm font-bold">Plain answer</p>
+              <p className="mt-1 text-muted-foreground">{liveRuleRead}</p>
+            </div>
+            <div className="mt-3 grid gap-3 lg:grid-cols-2">
+              {liveRuleCards.map((row) => (
+                <div
+                  className={`border p-3 ${liveRuleStatusClass(row.status)}`}
+                  key={row.key}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p className="font-display text-sm font-bold">
+                        {row.title}
+                      </p>
+                      <p className="mt-1 font-mono text-xs uppercase text-muted-foreground">
+                        {row.status}
+                      </p>
+                    </div>
+                    <div className="text-right font-mono text-xs text-muted-foreground">
+                      <span className="block text-foreground">
+                        {row.count} alert(s)
+                      </span>
+                      <span>{row.reviewed} reviewed</span>
+                    </div>
+                  </div>
+                  <div className="mt-3 space-y-2 text-xs text-muted-foreground">
+                    <p>
+                      <span className="font-bold text-foreground">
+                        Rule:{" "}
+                      </span>
+                      {row.plainRule}
+                    </p>
+                    <p>
+                      <span className="font-bold text-foreground">
+                        Do live:{" "}
+                      </span>
+                      {row.tradeInstruction}
+                    </p>
+                    <p>
+                      <span className="font-bold text-foreground">
+                        Proof needed:{" "}
+                      </span>
+                      {row.proofNeed}
+                    </p>
+                  </div>
+                  <div className="mt-3 grid grid-cols-4 gap-2 font-mono text-xs">
+                    <div>
+                      <p className="text-muted-foreground">Worked</p>
+                      <p className="text-lime-300">{row.worked}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Failed</p>
+                      <p className="text-red-300">{row.failed}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Missed</p>
+                      <p className="text-amber-200">{row.wouldHaveWorked}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Avoided</p>
+                      <p className="text-cyan-200">{row.avoidedLoss}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
