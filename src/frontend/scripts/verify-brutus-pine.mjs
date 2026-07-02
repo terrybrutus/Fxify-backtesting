@@ -278,6 +278,22 @@ const requiredSnippets = [
     text: '"notTooEarly":" + str.tostring(notTooEarly)',
   },
   {
+    label: "too early JSON field",
+    text: '"tooEarly":" + str.tostring(tooEarly)',
+  },
+  {
+    label: "too late JSON field",
+    text: '"tooLate":" + str.tostring(tooLate)',
+  },
+  {
+    label: "too soon after touch JSON field",
+    text: '"tooSoonAfterTouch":" + str.tostring(tooSoonAfterTouch)',
+  },
+  {
+    label: "explicit late timing wait reason",
+    text: "the candle is already too late for a fresh entry",
+  },
+  {
     label: "snapback JSON field",
     text: '"longSnapback":" + str.tostring(longSnapback)',
   },
@@ -295,7 +311,7 @@ const requiredSnippets = [
   },
   {
     label: "specific wait reason for early live candle",
-    text: "the candle has not reached the allowed live-decision window yet",
+    text: "the candle is too early for the live-decision window",
   },
   {
     label: "specific wait reason for missing snapback",
@@ -545,6 +561,10 @@ const requiredCaptureSnippets = [
     text: "alertCoverage: asString(item.alertCoverage)",
   },
   {
+    label: "capture parses explicit timing gates",
+    text: "tooLate: asBoolean(item.tooLate)",
+  },
+  {
     label: "capture parses exit action",
     text: "exitAction: asString(item.exitAction)",
   },
@@ -559,6 +579,10 @@ const requiredCaptureSnippets = [
   {
     label: "alert coverage CSV export",
     text: '"alert_coverage"',
+  },
+  {
+    label: "too late CSV export",
+    text: '"too_late"',
   },
   {
     label: "exit action CSV export",
@@ -1250,6 +1274,14 @@ const requiredTradeDeskSnippets = [
   {
     label: "trade desk denial matrix push-through gate",
     text: "Denied by push-through",
+  },
+  {
+    label: "trade desk denial matrix late timing gate",
+    text: "Denied by late timing",
+  },
+  {
+    label: "trade desk late reclaim family",
+    text: "Late reclaim / chase risk",
   },
   {
     label: "trade desk denial matrix over-filtering read",
