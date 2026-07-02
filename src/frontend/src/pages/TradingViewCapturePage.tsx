@@ -8,6 +8,7 @@ type TvAlert = {
   id: string;
   importedAt: number;
   strategy?: string;
+  event?: string;
   playbookVersion?: string;
   rawSignal?: boolean;
   decisionEvent?: string;
@@ -30,7 +31,15 @@ type TvAlert = {
   modeReady?: boolean;
   inSession?: boolean;
   minutesIntoBar?: number;
+  barProgressPct?: number;
+  touchProgressPct?: number;
+  progressAfterTouchPct?: number;
+  minBarProgressPct?: number;
+  maxBarProgressPct?: number;
+  minProgressAfterTouchPct?: number;
   notTooEarly?: boolean;
+  snapback?: boolean;
+  pushThrough?: boolean;
   longSnapback?: boolean;
   shortSnapback?: boolean;
   longPushThrough?: boolean;
@@ -53,6 +62,11 @@ type TvAlert = {
   entry?: number;
   stop?: number;
   target?: number;
+  tp1?: number;
+  tp2?: number;
+  tp3?: number;
+  tp4?: number;
+  finalTarget?: number;
   length?: number;
   upperSource?: string;
   lowerSource?: string;
@@ -325,9 +339,16 @@ function normalizePayload(raw: unknown): TvAlert {
     id: asString(item.id) ?? crypto.randomUUID(),
     importedAt: asNumber(item.importedAt) ?? Date.now(),
     strategy: asString(item.strategy),
+    event: asString(item.event),
     playbookVersion: asString(item.playbookVersion),
-    rawSignal: asBoolean(item.rawSignal),
-    decisionEvent: asString(item.decisionEvent),
+    rawSignal:
+      asBoolean(item.rawSignal) ??
+      (asString(item.event)?.includes("TOUCH") ||
+      asString(item.event)?.includes("ENTER") ||
+      asString(item.event)?.includes("DECISION")
+        ? true
+        : undefined),
+    decisionEvent: asString(item.decisionEvent) ?? asString(item.event),
     previousAction: asString(item.previousAction),
     rawLongSignal: asBoolean(item.rawLongSignal),
     rawShortSignal: asBoolean(item.rawShortSignal),
@@ -338,7 +359,12 @@ function normalizePayload(raw: unknown): TvAlert {
     newLongTouch: asBoolean(item.newLongTouch),
     newShortTouch: asBoolean(item.newShortTouch),
     signalConflict: asBoolean(item.signalConflict),
-    action: asString(item.action),
+    action:
+      asString(item.action) ??
+      (asString(item.event) === "ENTER_SETUP" ||
+      asString(item.event) === "ANY_ENTER_SETUP"
+        ? "ENTER"
+        : undefined),
     plainAction: asString(item.plainAction),
     reason: asString(item.reason),
     alertMode: asString(item.alertMode),
@@ -347,7 +373,15 @@ function normalizePayload(raw: unknown): TvAlert {
     modeReady: asBoolean(item.modeReady),
     inSession: asBoolean(item.inSession),
     minutesIntoBar: asNumber(item.minutesIntoBar),
+    barProgressPct: asNumber(item.barProgressPct),
+    touchProgressPct: asNumber(item.touchProgressPct),
+    progressAfterTouchPct: asNumber(item.progressAfterTouchPct),
+    minBarProgressPct: asNumber(item.minBarProgressPct),
+    maxBarProgressPct: asNumber(item.maxBarProgressPct),
+    minProgressAfterTouchPct: asNumber(item.minProgressAfterTouchPct),
     notTooEarly: asBoolean(item.notTooEarly),
+    snapback: asBoolean(item.snapback),
+    pushThrough: asBoolean(item.pushThrough),
     longSnapback: asBoolean(item.longSnapback),
     shortSnapback: asBoolean(item.shortSnapback),
     longPushThrough: asBoolean(item.longPushThrough),
@@ -371,7 +405,12 @@ function normalizePayload(raw: unknown): TvAlert {
     touchDepthRatio: asNumber(item.touchDepthRatio),
     entry: asNumber(item.entry),
     stop: asNumber(item.stop),
-    target: asNumber(item.target),
+    target: asNumber(item.target ?? item.tp1 ?? item.finalTarget),
+    tp1: asNumber(item.tp1),
+    tp2: asNumber(item.tp2),
+    tp3: asNumber(item.tp3),
+    tp4: asNumber(item.tp4),
+    finalTarget: asNumber(item.finalTarget),
     length: asNumber(item.length),
     upperSource: asString(item.upperSource),
     lowerSource: asString(item.lowerSource),
@@ -813,11 +852,28 @@ function missingPlaybookFields(alert: TvAlert) {
   if (alert.modeReady == null) missing.push("modeReady");
   if (alert.inSession == null) missing.push("inSession");
   if (alert.minutesIntoBar == null) missing.push("minutesIntoBar");
-  if (alert.notTooEarly == null) missing.push("notTooEarly");
-  if (alert.longSnapback == null) missing.push("longSnapback");
-  if (alert.shortSnapback == null) missing.push("shortSnapback");
-  if (alert.longPushThrough == null) missing.push("longPushThrough");
-  if (alert.shortPushThrough == null) missing.push("shortPushThrough");
+  if (alert.barProgressPct == null) missing.push("barProgressPct");
+  if (alert.touchProgressPct == null) missing.push("touchProgressPct");
+  if (alert.progressAfterTouchPct == null) {
+    missing.push("progressAfterTouchPct");
+  }
+  if (alert.notTooEarly == null && alert.minBarProgressPct == null) {
+    missing.push("timing gate");
+  }
+  if (
+    alert.longSnapback == null &&
+    alert.shortSnapback == null &&
+    alert.snapback == null
+  ) {
+    missing.push("snapback");
+  }
+  if (
+    alert.longPushThrough == null &&
+    alert.shortPushThrough == null &&
+    alert.pushThrough == null
+  ) {
+    missing.push("pushThrough");
+  }
   if (!alert.brokerSymbol) missing.push("symbol");
   if (!alert.timeframe) missing.push("timeframe");
   if (!directionFor(alert)) missing.push("direction");
@@ -829,32 +885,51 @@ function missingPlaybookFields(alert: TvAlert) {
   if (alert.close == null) missing.push("close");
   if (alert.upper == null) missing.push("upper");
   if (alert.lower == null) missing.push("lower");
-  if (alert.entry == null) missing.push("entry");
-  if (alert.stop == null) missing.push("stop");
-  if (alert.target == null) missing.push("target");
-  if (alert.length !== 9) missing.push("length=9");
-  if (alert.upperSource !== "high") missing.push("upperSource=high");
-  if (alert.lowerSource !== "low") missing.push("lowerSource=low");
-  if (alert.stdDev !== 2) missing.push("stdDev=2");
+  if (actionFor(alert) === "ENTER") {
+    if (alert.entry == null) missing.push("entry");
+    if (alert.stop == null) missing.push("stop");
+    if (alert.target == null) missing.push("target");
+  }
+  if (alert.length != null && alert.length !== 9) missing.push("length=9");
+  if (alert.upperSource != null && alert.upperSource !== "high") {
+    missing.push("upperSource=high");
+  }
+  if (alert.lowerSource != null && alert.lowerSource !== "low") {
+    missing.push("lowerSource=low");
+  }
+  if (alert.stdDev != null && alert.stdDev !== 2) missing.push("stdDev=2");
   return missing;
 }
 
 function playbookContractIssues(alert: TvAlert) {
   const issues: string[] = [];
-  if (alert.length !== 9) issues.push("Length is not locked to 9");
-  if (alert.upperSource !== "high") issues.push("Upper band source is not high");
-  if (alert.lowerSource !== "low") issues.push("Lower band source is not low");
-  if (alert.stdDev !== 2) issues.push("StdDev is not locked to 2");
+  if (alert.length != null && alert.length !== 9) {
+    issues.push("Length is not locked to 9");
+  }
+  if (alert.upperSource != null && alert.upperSource !== "high") {
+    issues.push("Upper band source is not high");
+  }
+  if (alert.lowerSource != null && alert.lowerSource !== "low") {
+    issues.push("Lower band source is not low");
+  }
+  if (alert.stdDev != null && alert.stdDev !== 2) {
+    issues.push("StdDev is not locked to 2");
+  }
   return issues;
 }
 
 function isPlaybookAlert(alert: TvAlert) {
-  return alert.strategy === "brutus_playbook_v1" || alert.rawSignal === true;
+  return (
+    alert.strategy === "brutus_playbook_v1" ||
+    alert.strategy === "brutus_live_touch_punch_v6" ||
+    alert.rawSignal === true
+  );
 }
 
 function isLatestPlaybookAlert(alert: TvAlert) {
   return (
-    isPlaybookAlert(alert) && alert.playbookVersion === LATEST_PLAYBOOK_VERSION
+    (isPlaybookAlert(alert) && alert.playbookVersion === LATEST_PLAYBOOK_VERSION) ||
+    alert.strategy === "brutus_live_touch_punch_v6"
   );
 }
 
@@ -3352,15 +3427,35 @@ export default function TradingViewCapturePage() {
                           )}
                           {isLatestPlaybookAlert(alert) && (
                             <span className="block max-w-56 whitespace-normal text-muted-foreground">
-                              Gates: session {gateLabel(alert.inSession)}, time{" "}
-                              {gateLabel(alert.notTooEarly)}, snap L:
-                              {gateLabel(alert.longSnapback)} S:
-                              {gateLabel(alert.shortSnapback)}, push L:
-                              {gateLabel(alert.longPushThrough)} S:
-                              {gateLabel(alert.shortPushThrough)}
-                              {alert.minutesIntoBar != null
-                                ? `, ${alert.minutesIntoBar.toFixed(1)}m in`
+                              Gates: session {gateLabel(alert.inSession)}, timing{" "}
+                              {gateLabel(
+                                alert.notTooEarly ??
+                                  (alert.minBarProgressPct != null &&
+                                  alert.barProgressPct != null
+                                    ? alert.barProgressPct >=
+                                      alert.minBarProgressPct
+                                    : undefined),
+                              )}
+                              {alert.barProgressPct != null
+                                ? `, ${alert.barProgressPct.toFixed(0)}% in`
+                                : alert.minutesIntoBar != null
+                                  ? `, ${alert.minutesIntoBar.toFixed(1)}m in`
+                                  : ""}
+                              {alert.touchProgressPct != null
+                                ? `, touch ${alert.touchProgressPct.toFixed(0)}%`
                                 : ""}
+                              , snap{" "}
+                              {gateLabel(
+                                alert.longSnapback ??
+                                  alert.shortSnapback ??
+                                  alert.snapback,
+                              )}
+                              , push{" "}
+                              {gateLabel(
+                                alert.longPushThrough ??
+                                  alert.shortPushThrough ??
+                                  alert.pushThrough,
+                              )}
                             </span>
                           )}
                         </td>
