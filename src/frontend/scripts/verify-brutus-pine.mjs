@@ -298,6 +298,10 @@ const requiredSnippets = [
     text: '"sameBarLiveExit":" + str.tostring(sameBarLiveExit)',
   },
   {
+    label: "entry alert setup id JSON field",
+    text: '"setupId":" + setupIdJson',
+  },
+  {
     label: "specific skip reason for session gate",
     text: "outside the active session",
   },
