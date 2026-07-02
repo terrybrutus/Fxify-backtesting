@@ -326,6 +326,10 @@ const requiredSnippets = [
     text: 'tp1AlreadyTouched ? "WAIT"',
   },
   {
+    label: "stale TP1 plain live instruction",
+    text: "WAIT. DO NOT CHASE. TP1 already moved inside this candle before a fresh entry.",
+  },
+  {
     label: "overlap turns live enter into wait",
     text: 'liveAction = overlappingActiveTrade ? "WAIT" : action',
   },
