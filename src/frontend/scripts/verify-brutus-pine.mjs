@@ -1348,12 +1348,37 @@ const forbidden = forbiddenSnippets.filter((item) => {
   return haystacks.some((haystack) => haystack.includes(item.text));
 });
 
+const orderedSnippets = [
+  {
+    label: "active setup id is declared before entry payload id",
+    before: "varip int activeSetupId = na",
+    after: "setupIdJson = hasEnter ? str.tostring(activeSetupId) : \"null\"",
+  },
+  {
+    label: "new entry increments setup id before entry payload id",
+    before: "activeSetupId := setupCounter",
+    after: "setupIdJson = hasEnter ? str.tostring(activeSetupId) : \"null\"",
+  },
+  {
+    label: "entry payload id is calculated before JSON message",
+    before: "setupIdJson = hasEnter ? str.tostring(activeSetupId) : \"null\"",
+    after: 'message = "{\\\\"strategy\\\\":\\\\"brutus_playbook_v1\\\\",\\\\"playbookVersion\\\\":\\\\"raw-parity-v21\\\\",\\\\"rawSignal\\\\":true,\\\\"setupId\\\\":" + setupIdJson',
+  },
+];
+
+const orderFailures = orderedSnippets.filter((item) => {
+  const beforeIndex = source.indexOf(item.before);
+  const afterIndex = source.indexOf(item.after);
+  return beforeIndex === -1 || afterIndex === -1 || beforeIndex >= afterIndex;
+});
+
 if (
   missing.length > 0 ||
   missingCapture.length > 0 ||
   missingTradeDesk.length > 0 ||
   missingData.length > 0 ||
-  forbidden.length > 0
+  forbidden.length > 0 ||
+  orderFailures.length > 0
 ) {
   console.error("Brutus Pine export verifier failed.");
   for (const item of missing) {
@@ -1371,10 +1396,13 @@ if (
   for (const item of forbidden) {
     console.error(`- Forbidden: ${item.label}`);
   }
+  for (const item of orderFailures) {
+    console.error(`- Invalid order: ${item.label}`);
+  }
   process.exit(1);
 }
 
 console.log(
-  `Brutus Pine export verifier passed (${requiredSnippets.length + requiredCaptureSnippets.length + requiredTradeDeskSnippets.length + requiredDataSnippets.length} invariants).`,
+  `Brutus Pine export verifier passed (${requiredSnippets.length + requiredCaptureSnippets.length + requiredTradeDeskSnippets.length + requiredDataSnippets.length + orderedSnippets.length} invariants).`,
 );
 
