@@ -51,6 +51,7 @@ type TvAlert = {
   tooLate?: boolean;
   tooSoonAfterTouch?: boolean;
   notTooEarly?: boolean;
+  overlappingActiveTrade?: boolean;
   enterAlertAllowed?: boolean;
   dnhAlertAllowed?: boolean;
   actionableAlertAllowed?: boolean;
@@ -416,6 +417,7 @@ function normalizePayload(raw: unknown): TvAlert {
     tooLate: asBoolean(item.tooLate),
     tooSoonAfterTouch: asBoolean(item.tooSoonAfterTouch),
     notTooEarly: asBoolean(item.notTooEarly),
+    overlappingActiveTrade: asBoolean(item.overlappingActiveTrade),
     enterAlertAllowed: asBoolean(item.enterAlertAllowed),
     dnhAlertAllowed: asBoolean(item.dnhAlertAllowed),
     actionableAlertAllowed: asBoolean(item.actionableAlertAllowed),
@@ -1419,6 +1421,7 @@ function evidenceRowsToCsv(
     "too_early",
     "too_late",
     "too_soon_after_touch",
+    "overlapping_active_trade",
     "minutes_into_bar",
     "long_snapback",
     "short_snapback",
@@ -1476,6 +1479,7 @@ function evidenceRowsToCsv(
       alert.tooEarly,
       alert.tooLate,
       alert.tooSoonAfterTouch,
+      alert.overlappingActiveTrade,
       alert.minutesIntoBar,
       alert.longSnapback,
       alert.shortSnapback,
