@@ -314,6 +314,22 @@ const requiredSnippets = [
     text: "overlappingActiveTrade = hasEnter and activeTrade",
   },
   {
+    label: "tp1 stale entry guard",
+    text: "tp1AlreadyTouched = (longEnter and not na(tp1) and high >= tp1) or (shortEnter and not na(tp1) and low <= tp1)",
+  },
+  {
+    label: "fresh long enter excludes stale TP1",
+    text: "freshLongEnter = longEnter and not tp1AlreadyTouched",
+  },
+  {
+    label: "fresh short enter excludes stale TP1",
+    text: "freshShortEnter = shortEnter and not tp1AlreadyTouched",
+  },
+  {
+    label: "stale TP1 becomes wait",
+    text: 'tp1AlreadyTouched ? "WAIT"',
+  },
+  {
     label: "overlap turns live enter into wait",
     text: 'liveAction = overlappingActiveTrade ? "WAIT" : action',
   },
@@ -328,6 +344,10 @@ const requiredSnippets = [
   {
     label: "overlap JSON field",
     text: '"overlappingActiveTrade":" + str.tostring(overlappingActiveTrade)',
+  },
+  {
+    label: "stale TP1 JSON field",
+    text: '"tp1AlreadyTouched":" + str.tostring(tp1AlreadyTouched)',
   },
   {
     label: "alert uses live action",
