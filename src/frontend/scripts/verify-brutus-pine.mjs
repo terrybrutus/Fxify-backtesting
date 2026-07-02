@@ -111,11 +111,11 @@ const requiredSnippets = [
   },
   {
     label: "long action memory update",
-    text: "lastLongAlertAction := action",
+    text: "lastLongAlertAction := liveAction",
   },
   {
     label: "short action memory update",
-    text: "lastShortAlertAction := action",
+    text: "lastShortAlertAction := liveAction",
   },
   {
     label: "new side touch event",
@@ -288,6 +288,30 @@ const requiredSnippets = [
   {
     label: "too soon after touch JSON field",
     text: '"tooSoonAfterTouch":" + str.tostring(tooSoonAfterTouch)',
+  },
+  {
+    label: "active setup overlap guard",
+    text: "overlappingActiveTrade = hasEnter and activeTrade",
+  },
+  {
+    label: "overlap turns live enter into wait",
+    text: 'liveAction = overlappingActiveTrade ? "WAIT" : action',
+  },
+  {
+    label: "overlap plain instruction",
+    text: "Existing setup still active. Do not open a second trade.",
+  },
+  {
+    label: "overlap blocks fresh enter alerts",
+    text: "enterAlertAllowed = newEnterPlan and",
+  },
+  {
+    label: "overlap JSON field",
+    text: '"overlappingActiveTrade":" + str.tostring(overlappingActiveTrade)',
+  },
+  {
+    label: "alert uses live action",
+    text: 'lastLongAlertAction := liveAction',
   },
   {
     label: "explicit late timing wait reason",
@@ -563,6 +587,14 @@ const requiredCaptureSnippets = [
   {
     label: "capture parses explicit timing gates",
     text: "tooLate: asBoolean(item.tooLate)",
+  },
+  {
+    label: "capture parses active setup overlap",
+    text: "overlappingActiveTrade: asBoolean(item.overlappingActiveTrade)",
+  },
+  {
+    label: "active setup overlap CSV export",
+    text: '"overlapping_active_trade"',
   },
   {
     label: "capture parses exit action",
