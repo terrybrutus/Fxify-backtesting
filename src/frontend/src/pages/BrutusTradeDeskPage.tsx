@@ -138,6 +138,9 @@ type TvAlert = {
   maxBarProgressPct?: number;
   minProgressAfterTouchPct?: number;
   notTooEarly?: boolean;
+  enterAlertAllowed?: boolean;
+  dnhAlertAllowed?: boolean;
+  actionableAlertAllowed?: boolean;
   snapback?: boolean;
   pushThrough?: boolean;
   longSnapback?: boolean;
@@ -332,7 +335,7 @@ type StrategyDiagnosisRow = {
 const STORAGE_KEY = "ict.brutus.trade-desk.report.v1";
 const ALERT_STORAGE_KEY = "ict.brutus.trade-desk.alerts.v1";
 const PAPER_OUTCOME_STORAGE_KEY = "ict.brutus.trade-desk.paperOutcomes.v1";
-const LATEST_PLAYBOOK_VERSION = "raw-parity-v18";
+const LATEST_PLAYBOOK_VERSION = "raw-parity-v19";
 const POINT_VALUE = 10;
 
 function fmtDate(timestamp?: number) {
@@ -689,6 +692,18 @@ function normalizeAlertPayload(
     minProgressAfterTouchPct: asNumber(item.minProgressAfterTouchPct),
     notTooEarly:
       typeof item.notTooEarly === "boolean" ? item.notTooEarly : undefined,
+    enterAlertAllowed:
+      typeof item.enterAlertAllowed === "boolean"
+        ? item.enterAlertAllowed
+        : undefined,
+    dnhAlertAllowed:
+      typeof item.dnhAlertAllowed === "boolean"
+        ? item.dnhAlertAllowed
+        : undefined,
+    actionableAlertAllowed:
+      typeof item.actionableAlertAllowed === "boolean"
+        ? item.actionableAlertAllowed
+        : undefined,
     snapback:
       typeof item.snapback === "boolean" ? item.snapback : undefined,
     pushThrough:
@@ -1585,6 +1600,10 @@ varip float shortTouchProgressPct = na
 varip bool alertedLongThisBar = false
 varip bool alertedShortThisBar = false
 varip bool alertedOriginalThisBar = false
+varip bool alertedLongEnterThisBar = false
+varip bool alertedShortEnterThisBar = false
+varip bool alertedLongDnhThisBar = false
+varip bool alertedShortDnhThisBar = false
 varip string lastLongAlertAction = ""
 varip string lastShortAlertAction = ""
 if na(latchedBarTime) or time != latchedBarTime
@@ -1596,6 +1615,10 @@ if na(latchedBarTime) or time != latchedBarTime
     alertedLongThisBar := false
     alertedShortThisBar := false
     alertedOriginalThisBar := false
+    alertedLongEnterThisBar := false
+    alertedShortEnterThisBar := false
+    alertedLongDnhThisBar := false
+    alertedShortDnhThisBar := false
     lastLongAlertAction := ""
     lastShortAlertAction := ""
 newLongTouch = pureLongTouchCondition and not rawLongLatched
@@ -1770,8 +1793,11 @@ confirmedCloseEvent = signalMode == "Confirmed close" and rawSignal and barstate
 decisionEvent = confirmedCloseEvent ? "confirmed_close" : firstTouchNewSide ? "first_touch" : firstTouchOriginalTriangle ? "original_triangle" : firstTouchDecisionChanged ? "decision_change" : "none"
 previousAction = direction == "long" ? lastLongAlertAction : direction == "short" ? lastShortAlertAction : signalConflict ? "both" : ""
 actionableAlert = action == "ENTER" or action == "DO_NOT_HOLD"
+enterAlertAllowed = (longEnter and not alertedLongEnterThisBar) or (shortEnter and not alertedShortEnterThisBar)
+dnhAlertAllowed = doNotHold and ((direction == "long" and not alertedLongDnhThisBar) or (direction == "short" and not alertedShortDnhThisBar))
+actionableAlertAllowed = (action == "ENTER" and enterAlertAllowed) or (action == "DO_NOT_HOLD" and dnhAlertAllowed)
 researchAlert = sendResearchAlerts and (firstTouchNewSide or firstTouchOriginalTriangle or confirmedCloseEvent)
-shouldAlert = modeReady and (not liveAlertsOnly or barstate.isrealtime) and ((actionableAlert and (firstTouchNewSide or firstTouchDecisionChanged or confirmedCloseEvent)) or researchAlert)
+shouldAlert = modeReady and (not liveAlertsOnly or barstate.isrealtime) and ((actionableAlert and actionableAlertAllowed and (firstTouchNewSide or firstTouchDecisionChanged or confirmedCloseEvent)) or researchAlert)
 rawAuditText = rawSignal ? "Raw " + action + " | alert " + (shouldAlert ? "will fire" : "held") : "No raw Brutus signal now"
 alertDirection = signalConflict ? (rawLongSignal ? "long" : "short") : direction
 confirmText = barstate.isconfirmed ? "confirmed close" : "open candle"
@@ -1781,7 +1807,7 @@ contextText = "RSI " + str.tostring(rsiValue, "#.##") + " " + rsiStretch + " | V
 
 var table auditPanel = table.new(position.top_right, 1, 9, border_width=1)
 if showAuditPanel and barstate.islast
-    table.cell(auditPanel, 0, 0, "Brutus Playbook raw-parity-v18", text_color=color.white, bgcolor=color.new(color.black, 0))
+    table.cell(auditPanel, 0, 0, "Brutus Playbook raw-parity-v19", text_color=color.white, bgcolor=color.new(color.black, 0))
     table.cell(auditPanel, 0, 1, "Locked: length 9, high/low bands, StdDev 2", text_color=color.white, bgcolor=color.new(color.black, 15))
     table.cell(auditPanel, 0, 2, rawAuditText, text_color=rawSignal ? color.aqua : color.silver, bgcolor=color.new(color.black, 15))
     table.cell(auditPanel, 0, 3, modeText + " | " + str.tostring(barProgressPct, "#") + "% in", text_color=barstate.isconfirmed ? color.lime : color.yellow, bgcolor=color.new(color.black, 15))
@@ -1790,16 +1816,24 @@ if showAuditPanel and barstate.islast
     table.cell(auditPanel, 0, 6, "Check ORIG markers against old triangles first", text_color=color.yellow, bgcolor=color.new(color.black, 15))
     table.cell(auditPanel, 0, 7, "Open-bar ORIG can change until candle close", text_color=color.yellow, bgcolor=color.new(color.black, 15))
     table.cell(auditPanel, 0, 8, "Paper evidence only - not live-trade approval", text_color=color.orange, bgcolor=color.new(color.black, 15))
-message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v18\\",\\"rawSignal\\":true,\\"pureTouchSignal\\":" + str.tostring(pureTouchSignal) + ",\\"pureLongTouchCondition\\":" + str.tostring(pureLongTouchCondition) + ",\\"pureShortTouchCondition\\":" + str.tostring(pureShortTouchCondition) + ",\\"originalTriangleSignal\\":" + str.tostring(originalTriangleSignal) + ",\\"latchedSignal\\":" + str.tostring(latchedSignal) + ",\\"decisionEvent\\":\\"" + decisionEvent + "\\",\\"previousAction\\":\\"" + previousAction + "\\",\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"rawLongCondition\\":" + str.tostring(rawLongCondition) + ",\\"rawShortCondition\\":" + str.tostring(rawShortCondition) + ",\\"newLongTouch\\":" + str.tostring(newLongTouch) + ",\\"newShortTouch\\":" + str.tostring(newShortTouch) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"signalDirection\\":\\"" + direction + "\\",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"modeReady\\":" + str.tostring(modeReady) + ",\\"inSession\\":" + str.tostring(inSession) + ",\\"minutesIntoBar\\":" + str.tostring(minutesIntoBar) + ",\\"barProgressPct\\":" + str.tostring(barProgressPct) + ",\\"touchProgressPct\\":" + (na(touchProgressPct) ? "null" : str.tostring(touchProgressPct)) + ",\\"progressAfterTouchPct\\":" + (na(progressAfterTouchPct) ? "null" : str.tostring(progressAfterTouchPct)) + ",\\"decisionCheckpointPct\\":" + str.tostring(barProgressPct) + ",\\"reclaimLevel\\":" + (na(reclaimLevel) ? "null" : str.tostring(reclaimLevel)) + ",\\"reclaimDistance\\":" + (na(reclaimDistance) ? "null" : str.tostring(reclaimDistance)) + ",\\"reclaimDistanceRatio\\":" + (na(reclaimDistanceRatio) ? "null" : str.tostring(reclaimDistanceRatio)) + ",\\"pushThroughLevel\\":" + (na(pushThroughLevel) ? "null" : str.tostring(pushThroughLevel)) + ",\\"pushThroughDistance\\":" + (na(pushThroughDistance) ? "null" : str.tostring(pushThroughDistance)) + ",\\"pushThroughDistanceRatio\\":" + (na(pushThroughDistanceRatio) ? "null" : str.tostring(pushThroughDistanceRatio)) + ",\\"minBarProgressPct\\":" + str.tostring(minBarProgressPct) + ",\\"maxBarProgressPct\\":" + str.tostring(maxBarProgressPct) + ",\\"minProgressAfterTouchPct\\":" + str.tostring(minProgressAfterTouchPct) + ",\\"notTooEarly\\":" + str.tostring(notTooEarly) + ",\\"longSnapback\\":" + str.tostring(longSnapback) + ",\\"shortSnapback\\":" + str.tostring(shortSnapback) + ",\\"longPushThrough\\":" + str.tostring(longPushThrough) + ",\\"shortPushThrough\\":" + str.tostring(shortPushThrough) + ",\\"snapback\\":" + str.tostring(snapbackOk) + ",\\"pushThrough\\":" + str.tostring(longPushThrough or shortPushThrough) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + alertDirection + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"bandWidth\\":" + str.tostring(bandWidth) + ",\\"touchDepth\\":" + str.tostring(touchDepth) + ",\\"touchDepthRatio\\":" + str.tostring(touchDepthRatio) + ",\\"entry\\":" + entryJson + ",\\"stop\\":" + stopJson + ",\\"target\\":" + tp1Json + ",\\"tp1\\":" + tp1Json + ",\\"tp2\\":" + tp2Json + ",\\"tp3\\":" + tp3Json + ",\\"tp4\\":" + tp4Json + ",\\"length\\":" + str.tostring(length) + ",\\"upperSource\\":\\"high\\",\\"lowerSource\\":\\"low\\",\\"stdDev\\":" + str.tostring(mult) + ",\\"rsi\\":" + str.tostring(rsiValue) + ",\\"rsiMa\\":" + str.tostring(rsiMa) + ",\\"rsiUpper\\":" + str.tostring(rsiUpper) + ",\\"rsiLower\\":" + str.tostring(rsiLower) + ",\\"rsiBbWidth\\":" + str.tostring(rsiBbWidth) + ",\\"rsiStretch\\":\\"" + rsiStretch + "\\",\\"rsiPosition\\":\\"" + rsiPosition + "\\",\\"rsiAlignedWithTouch\\":" + str.tostring(rsiAlignedWithTouch) + ",\\"alignedWithTouch\\":" + str.tostring(rsiAlignedWithTouch) + ",\\"volumeValue\\":" + str.tostring(volume) + ",\\"volumeMa\\":" + str.tostring(volumeMa) + ",\\"volumeRatio\\":" + str.tostring(volumeRatio) + ",\\"volumeSpike\\":" + str.tostring(volumeSpike) + ",\\"ma20\\":" + str.tostring(ma20) + ",\\"ma50\\":" + str.tostring(ma50) + ",\\"ma100\\":" + str.tostring(ma100) + ",\\"ma200\\":" + str.tostring(ma200) + ",\\"maTrend\\":\\"" + maTrend + "\\",\\"maStackBullish\\":" + str.tostring(maStackBullish) + ",\\"maStackBearish\\":" + str.tostring(maStackBearish) + ",\\"priceAboveMa20\\":" + str.tostring(priceAboveMa20) + ",\\"priceAboveMa50\\":" + str.tostring(priceAboveMa50) + ",\\"priceAboveMa100\\":" + str.tostring(priceAboveMa100) + ",\\"priceAboveMa200\\":" + str.tostring(priceAboveMa200) + ",\\"reason\\":\\"" + reason + "\\"}"
+message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v19\\",\\"rawSignal\\":true,\\"pureTouchSignal\\":" + str.tostring(pureTouchSignal) + ",\\"pureLongTouchCondition\\":" + str.tostring(pureLongTouchCondition) + ",\\"pureShortTouchCondition\\":" + str.tostring(pureShortTouchCondition) + ",\\"originalTriangleSignal\\":" + str.tostring(originalTriangleSignal) + ",\\"latchedSignal\\":" + str.tostring(latchedSignal) + ",\\"decisionEvent\\":\\"" + decisionEvent + "\\",\\"previousAction\\":\\"" + previousAction + "\\",\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"rawLongCondition\\":" + str.tostring(rawLongCondition) + ",\\"rawShortCondition\\":" + str.tostring(rawShortCondition) + ",\\"newLongTouch\\":" + str.tostring(newLongTouch) + ",\\"newShortTouch\\":" + str.tostring(newShortTouch) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"signalDirection\\":\\"" + direction + "\\",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"modeReady\\":" + str.tostring(modeReady) + ",\\"inSession\\":" + str.tostring(inSession) + ",\\"minutesIntoBar\\":" + str.tostring(minutesIntoBar) + ",\\"barProgressPct\\":" + str.tostring(barProgressPct) + ",\\"touchProgressPct\\":" + (na(touchProgressPct) ? "null" : str.tostring(touchProgressPct)) + ",\\"progressAfterTouchPct\\":" + (na(progressAfterTouchPct) ? "null" : str.tostring(progressAfterTouchPct)) + ",\\"decisionCheckpointPct\\":" + str.tostring(barProgressPct) + ",\\"reclaimLevel\\":" + (na(reclaimLevel) ? "null" : str.tostring(reclaimLevel)) + ",\\"reclaimDistance\\":" + (na(reclaimDistance) ? "null" : str.tostring(reclaimDistance)) + ",\\"reclaimDistanceRatio\\":" + (na(reclaimDistanceRatio) ? "null" : str.tostring(reclaimDistanceRatio)) + ",\\"pushThroughLevel\\":" + (na(pushThroughLevel) ? "null" : str.tostring(pushThroughLevel)) + ",\\"pushThroughDistance\\":" + (na(pushThroughDistance) ? "null" : str.tostring(pushThroughDistance)) + ",\\"pushThroughDistanceRatio\\":" + (na(pushThroughDistanceRatio) ? "null" : str.tostring(pushThroughDistanceRatio)) + ",\\"minBarProgressPct\\":" + str.tostring(minBarProgressPct) + ",\\"maxBarProgressPct\\":" + str.tostring(maxBarProgressPct) + ",\\"minProgressAfterTouchPct\\":" + str.tostring(minProgressAfterTouchPct) + ",\\"notTooEarly\\":" + str.tostring(notTooEarly) + ",\\"enterAlertAllowed\\":" + str.tostring(enterAlertAllowed) + ",\\"dnhAlertAllowed\\":" + str.tostring(dnhAlertAllowed) + ",\\"actionableAlertAllowed\\":" + str.tostring(actionableAlertAllowed) + ",\\"longSnapback\\":" + str.tostring(longSnapback) + ",\\"shortSnapback\\":" + str.tostring(shortSnapback) + ",\\"longPushThrough\\":" + str.tostring(longPushThrough) + ",\\"shortPushThrough\\":" + str.tostring(shortPushThrough) + ",\\"snapback\\":" + str.tostring(snapbackOk) + ",\\"pushThrough\\":" + str.tostring(longPushThrough or shortPushThrough) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + action + "\\",\\"plainAction\\":\\"" + plainAction + "\\",\\"direction\\":\\"" + alertDirection + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"bandWidth\\":" + str.tostring(bandWidth) + ",\\"touchDepth\\":" + str.tostring(touchDepth) + ",\\"touchDepthRatio\\":" + str.tostring(touchDepthRatio) + ",\\"entry\\":" + entryJson + ",\\"stop\\":" + stopJson + ",\\"target\\":" + tp1Json + ",\\"tp1\\":" + tp1Json + ",\\"tp2\\":" + tp2Json + ",\\"tp3\\":" + tp3Json + ",\\"tp4\\":" + tp4Json + ",\\"length\\":" + str.tostring(length) + ",\\"upperSource\\":\\"high\\",\\"lowerSource\\":\\"low\\",\\"stdDev\\":" + str.tostring(mult) + ",\\"rsi\\":" + str.tostring(rsiValue) + ",\\"rsiMa\\":" + str.tostring(rsiMa) + ",\\"rsiUpper\\":" + str.tostring(rsiUpper) + ",\\"rsiLower\\":" + str.tostring(rsiLower) + ",\\"rsiBbWidth\\":" + str.tostring(rsiBbWidth) + ",\\"rsiStretch\\":\\"" + rsiStretch + "\\",\\"rsiPosition\\":\\"" + rsiPosition + "\\",\\"rsiAlignedWithTouch\\":" + str.tostring(rsiAlignedWithTouch) + ",\\"alignedWithTouch\\":" + str.tostring(rsiAlignedWithTouch) + ",\\"volumeValue\\":" + str.tostring(volume) + ",\\"volumeMa\\":" + str.tostring(volumeMa) + ",\\"volumeRatio\\":" + str.tostring(volumeRatio) + ",\\"volumeSpike\\":" + str.tostring(volumeSpike) + ",\\"ma20\\":" + str.tostring(ma20) + ",\\"ma50\\":" + str.tostring(ma50) + ",\\"ma100\\":" + str.tostring(ma100) + ",\\"ma200\\":" + str.tostring(ma200) + ",\\"maTrend\\":\\"" + maTrend + "\\",\\"maStackBullish\\":" + str.tostring(maStackBullish) + ",\\"maStackBearish\\":" + str.tostring(maStackBearish) + ",\\"priceAboveMa20\\":" + str.tostring(priceAboveMa20) + ",\\"priceAboveMa50\\":" + str.tostring(priceAboveMa50) + ",\\"priceAboveMa100\\":" + str.tostring(priceAboveMa100) + ",\\"priceAboveMa200\\":" + str.tostring(priceAboveMa200) + ",\\"reason\\":\\"" + reason + "\\"}"
 
 if shouldAlert
     alert(message, alert.freq_once_per_bar)
     if rawLongSignal
         alertedLongThisBar := true
         lastLongAlertAction := action
+        if action == "ENTER"
+            alertedLongEnterThisBar := true
+        if action == "DO_NOT_HOLD"
+            alertedLongDnhThisBar := true
     if rawShortSignal
         alertedShortThisBar := true
         lastShortAlertAction := action
+        if action == "ENTER"
+            alertedShortEnterThisBar := true
+        if action == "DO_NOT_HOLD"
+            alertedShortDnhThisBar := true
     if originalTriangleSignal
         alertedOriginalThisBar := true
 
@@ -1814,7 +1848,7 @@ exitPrice = stopHit ? activeStop : tp4Hit ? activeTp4 : tp3Hit ? activeTp3 : tp2
 exitR = stopHit ? -1.0 : tp4Hit ? tp4R : tp3Hit ? tp3R : tp2Hit ? tp2R : tp1Hit ? tp1R : na
 exitPlain = stopHit ? "STOP HIT. Trade is done." : tp4Hit ? "TP4 HIT. Runner is done." : tp3Hit ? "TP3 HIT. Take profit or trail tight." : tp2Hit ? "TP2 HIT. Take profit or move stop up." : tp1Hit ? "TP1 HIT. Take partial profit and protect the trade." : ""
 exitReason = stopHit ? "Stop was touched after the entry bar. Conservative rule: same-bar stop/TP is not claimed because Pine cannot prove event order inside the bar." : exitEvent != "none" ? "Profit target was touched after the entry bar. Conservative rule: same-bar target is not claimed because Pine cannot prove event order inside the bar." : ""
-exitMessage = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v18\\",\\"rawSignal\\":false,\\"event\\":\\"" + exitEvent + "\\",\\"setupId\\":" + str.tostring(activeSetupId) + ",\\"exitAction\\":\\"" + (stopHit ? "STOP" : "TAKE_PROFIT") + "\\",\\"outcome\\":\\"" + exitEvent + "\\",\\"outcomePrice\\":" + (na(exitPrice) ? "null" : str.tostring(exitPrice)) + ",\\"outcomeR\\":" + (na(exitR) ? "null" : str.tostring(exitR)) + ",\\"plainAction\\":\\"" + exitPlain + "\\",\\"reason\\":\\"" + exitReason + "\\",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"direction\\":\\"" + (activeDirection == 1 ? "long" : "short") + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"entry\\":" + str.tostring(activeEntry) + ",\\"stop\\":" + str.tostring(activeStop) + ",\\"target\\":" + str.tostring(activeTp1) + ",\\"tp1\\":" + str.tostring(activeTp1) + ",\\"tp2\\":" + str.tostring(activeTp2) + ",\\"tp3\\":" + str.tostring(activeTp3) + ",\\"tp4\\":" + str.tostring(activeTp4) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + "}"
+exitMessage = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v19\\",\\"rawSignal\\":false,\\"event\\":\\"" + exitEvent + "\\",\\"setupId\\":" + str.tostring(activeSetupId) + ",\\"exitAction\\":\\"" + (stopHit ? "STOP" : "TAKE_PROFIT") + "\\",\\"outcome\\":\\"" + exitEvent + "\\",\\"outcomePrice\\":" + (na(exitPrice) ? "null" : str.tostring(exitPrice)) + ",\\"outcomeR\\":" + (na(exitR) ? "null" : str.tostring(exitR)) + ",\\"plainAction\\":\\"" + exitPlain + "\\",\\"reason\\":\\"" + exitReason + "\\",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"direction\\":\\"" + (activeDirection == 1 ? "long" : "short") + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"entry\\":" + str.tostring(activeEntry) + ",\\"stop\\":" + str.tostring(activeStop) + ",\\"target\\":" + str.tostring(activeTp1) + ",\\"tp1\\":" + str.tostring(activeTp1) + ",\\"tp2\\":" + str.tostring(activeTp2) + ",\\"tp3\\":" + str.tostring(activeTp3) + ",\\"tp4\\":" + str.tostring(activeTp4) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + "}"
 if exitEvent != "none" and (not liveAlertsOnly or barstate.isrealtime)
     alert(exitMessage, alert.freq_once_per_bar)
     if tp1Hit
@@ -5038,4 +5072,5 @@ export default function BrutusTradeDeskPage() {
     </div>
   );
 }
+
 
