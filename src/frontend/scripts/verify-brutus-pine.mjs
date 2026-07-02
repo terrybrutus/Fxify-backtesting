@@ -330,6 +330,14 @@ const requiredSnippets = [
     text: "WAIT. DO NOT CHASE. TP1 already moved inside this candle before a fresh entry.",
   },
   {
+    label: "stale TP1 is actionable warning",
+    text: 'actionableAlert = liveAction == "ENTER" or liveAction == "DO_NOT_HOLD" or tp1AlreadyTouched',
+  },
+  {
+    label: "stale TP1 has side alert gate",
+    text: 'staleEntryAlertAllowed = tp1AlreadyTouched and ((direction == "long" and not alertedLongThisBar) or (direction == "short" and not alertedShortThisBar))',
+  },
+  {
     label: "overlap turns live enter into wait",
     text: 'liveAction = overlappingActiveTrade ? "WAIT" : action',
   },
@@ -348,6 +356,10 @@ const requiredSnippets = [
   {
     label: "stale TP1 JSON field",
     text: '"tp1AlreadyTouched":" + str.tostring(tp1AlreadyTouched)',
+  },
+  {
+    label: "stale TP1 alert gate JSON field",
+    text: '"staleEntryAlertAllowed":" + str.tostring(staleEntryAlertAllowed)',
   },
   {
     label: "alert uses live action",
