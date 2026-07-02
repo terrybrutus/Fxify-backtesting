@@ -230,6 +230,10 @@ const requiredSnippets = [
     text: 'alertCoverage = input.string("Actionable only", title="Alert Coverage", options=["Actionable only", "Full evidence"])',
   },
   {
+    label: "exit alert mode input",
+    text: 'exitAlertMode = input.string("Safe one-per-bar", title="Exit Alert Mode", options=["Safe one-per-bar", "Immediate TP/Stop"])',
+  },
+  {
     label: "full evidence alert mode",
     text: 'fullEvidenceAlerts = alertCoverage == "Full evidence"',
   },
@@ -348,6 +352,14 @@ const requiredSnippets = [
   {
     label: "same bar live exit JSON field",
     text: '"sameBarLiveExit":" + str.tostring(sameBarLiveExit)',
+  },
+  {
+    label: "exit alert mode JSON field",
+    text: '"exitAlertMode":"',
+  },
+  {
+    label: "immediate exit alert option",
+    text: 'exitAlertMode == "Immediate TP/Stop" ? alert.freq_all : alert.freq_once_per_bar',
   },
   {
     label: "entry alert setup id JSON field",
@@ -601,6 +613,10 @@ const requiredCaptureSnippets = [
     text: "exitAction: asString(item.exitAction)",
   },
   {
+    label: "capture parses exit alert mode",
+    text: "exitAlertMode: asString(item.exitAlertMode)",
+  },
+  {
     label: "capture parses outcome R",
     text: "outcomeR: asNumber(item.outcomeR)",
   },
@@ -619,6 +635,10 @@ const requiredCaptureSnippets = [
   {
     label: "exit action CSV export",
     text: '"exit_action"',
+  },
+  {
+    label: "exit alert mode CSV export",
+    text: '"exit_alert_mode"',
   },
   {
     label: "outcome R CSV export",
