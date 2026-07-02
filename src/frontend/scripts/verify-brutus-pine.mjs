@@ -234,6 +234,22 @@ const requiredSnippets = [
     text: 'exitAlertMode = input.string("Safe one-per-bar", title="Exit Alert Mode", options=["Safe one-per-bar", "Immediate TP/Stop"])',
   },
   {
+    label: "decision alert cooldown input",
+    text: 'alertCooldownSeconds = input.int(8, minval=0, maxval=300, title="Minimum Seconds Between Decision Alerts")',
+  },
+  {
+    label: "decision alert cooldown gate",
+    text: "alertCooldownReady = alertCooldownSeconds == 0 or na(lastDecisionAlertTimeMs) or timenow - lastDecisionAlertTimeMs >= alertCooldownSeconds * 1000",
+  },
+  {
+    label: "decision alert cooldown JSON field",
+    text: '"alertCooldownReady":" + str.tostring(alertCooldownReady)',
+  },
+  {
+    label: "decision alert cooldown updates after alert",
+    text: "lastDecisionAlertTimeMs := timenow",
+  },
+  {
     label: "full evidence alert mode",
     text: 'fullEvidenceAlerts = alertCoverage == "Full evidence"',
   },
