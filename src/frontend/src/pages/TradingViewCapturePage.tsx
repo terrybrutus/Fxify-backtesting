@@ -62,6 +62,9 @@ type TvAlert = {
   bandWidth?: number;
   touchDepth?: number;
   touchDepthRatio?: number;
+  reclaimLevel?: number;
+  pushThroughLevel?: number;
+  decisionCheckpointPct?: number;
   entry?: number;
   stop?: number;
   target?: number;
@@ -178,8 +181,8 @@ type ImportUsabilityVerdict =
   | "partially usable"
   | "not usable";
 
-const LATEST_PLAYBOOK_VERSION = "raw-parity-v16";
-const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v16","rawSignal":true,"pureTouchSignal":true,"pureLongTouchCondition":true,"pureShortTouchCondition":false,"originalTriangleSignal":true,"latchedSignal":false,"decisionEvent":"decision_change","previousAction":"WAIT","rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"BUY NOW | Entry 51798.7 | Stop 51685.2 | TP1 51912.2 | TP2 52025.7 | TP3 52139.2 | TP4 52252.7","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51798.7,"stop":51685.2,"target":51912.2,"tp1":51912.2,"tp2":52025.7,"tp3":52139.2,"tp4":52252.7,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"rsi":38.4,"rsiMa":44.8,"rsiUpper":61.2,"rsiLower":28.4,"rsiBbWidth":32.8,"rsiStretch":"none","rsiPosition":"below-ma","rsiAlignedWithTouch":false,"alignedWithTouch":false,"volumeValue":142300,"volumeMa":105200,"volumeRatio":1.35,"volumeSpike":false,"ma20":51830.2,"ma50":51882.4,"ma100":51920.1,"ma200":51720.6,"maTrend":"above-200-mixed","maStackBullish":false,"maStackBearish":false,"priceAboveMa20":false,"priceAboveMa50":false,"priceAboveMa100":false,"priceAboveMa200":true,"reason":"Band touch fired and price reclaimed enough for an entry plan."}`;
+const LATEST_PLAYBOOK_VERSION = "raw-parity-v17";
+const EXAMPLE_PAYLOAD = `{"strategy":"brutus_playbook_v1","playbookVersion":"raw-parity-v17","rawSignal":true,"pureTouchSignal":true,"pureLongTouchCondition":true,"pureShortTouchCondition":false,"originalTriangleSignal":true,"latchedSignal":false,"decisionEvent":"decision_change","previousAction":"WAIT","rawLongSignal":true,"rawShortSignal":false,"rawLongCondition":true,"rawShortCondition":false,"newLongTouch":true,"newShortTouch":false,"signalConflict":false,"mode":"first_touch","confirmed":false,"modeReady":true,"inSession":true,"minutesIntoBar":2.4,"barProgressPct":42,"touchProgressPct":31,"progressAfterTouchPct":11,"decisionCheckpointPct":42,"reclaimLevel":51770.3,"pushThroughLevel":51753.58,"notTooEarly":true,"longSnapback":true,"shortSnapback":false,"longPushThrough":false,"shortPushThrough":false,"symbol":"ALCHEMYMARKETS:DJ30.r","timeframe":"60","action":"ENTER","plainAction":"BUY NOW | Entry 51798.7 | Stop 51685.2 | TP1 51912.2 | TP2 52025.7 | TP3 52139.2 | TP4 52252.7 | Check 42% into candle | Reclaim 51770.3","direction":"long","time":1782084600000,"timestamp":1782084600000,"candleTime":1782084600000,"alertTime":1782084723000,"open":51810.5,"high":51834.2,"low":51762.1,"close":51798.7,"upper":52104.8,"lower":51770.3,"bandWidth":334.5,"touchDepth":8.2,"touchDepthRatio":0.0245,"entry":51798.7,"stop":51685.2,"target":51912.2,"tp1":51912.2,"tp2":52025.7,"tp3":52139.2,"tp4":52252.7,"length":9,"upperSource":"high","lowerSource":"low","stdDev":2,"rsi":38.4,"rsiMa":44.8,"rsiUpper":61.2,"rsiLower":28.4,"rsiBbWidth":32.8,"rsiStretch":"none","rsiPosition":"below-ma","rsiAlignedWithTouch":false,"alignedWithTouch":false,"volumeValue":142300,"volumeMa":105200,"volumeRatio":1.35,"volumeSpike":false,"ma20":51830.2,"ma50":51882.4,"ma100":51920.1,"ma200":51720.6,"maTrend":"above-200-mixed","maStackBullish":false,"maStackBearish":false,"priceAboveMa20":false,"priceAboveMa50":false,"priceAboveMa100":false,"priceAboveMa200":true,"reason":"Band touch fired and price reclaimed the band level at the decision checkpoint."}`;
 
 const BRUTUS_STRATEGIES = new Set(["brutus_band", "brutus_playbook_v1"]);
 const BRUTUS_TIMEFRAMES = new Set([
@@ -409,6 +412,9 @@ function normalizePayload(raw: unknown): TvAlert {
     bandWidth: asNumber(item.bandWidth),
     touchDepth: asNumber(item.touchDepth),
     touchDepthRatio: asNumber(item.touchDepthRatio),
+    reclaimLevel: asNumber(item.reclaimLevel),
+    pushThroughLevel: asNumber(item.pushThroughLevel),
+    decisionCheckpointPct: asNumber(item.decisionCheckpointPct),
     entry: asNumber(item.entry),
     stop: asNumber(item.stop),
     target: asNumber(item.target ?? item.tp1 ?? item.finalTarget),
@@ -3460,6 +3466,12 @@ export default function TradingViewCapturePage() {
                                   : ""}
                               {alert.touchProgressPct != null
                                 ? `, touch ${alert.touchProgressPct.toFixed(0)}%`
+                                : ""}
+                              {alert.reclaimLevel != null
+                                ? `, reclaim ${alert.reclaimLevel.toFixed(2)}`
+                                : ""}
+                              {alert.pushThroughLevel != null
+                                ? `, push line ${alert.pushThroughLevel.toFixed(2)}`
                                 : ""}
                               , snap{" "}
                               {gateLabel(
