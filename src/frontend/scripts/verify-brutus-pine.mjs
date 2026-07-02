@@ -521,6 +521,38 @@ const requiredCaptureSnippets = [
     text: '"event_key"',
   },
   {
+    label: "capture current Playbook version",
+    text: 'const LATEST_PLAYBOOK_VERSION = "raw-parity-v21"',
+  },
+  {
+    label: "capture example includes setup id",
+    text: '"setupId":1',
+  },
+  {
+    label: "capture parses setup id",
+    text: "setupId: asNumber(item.setupId)",
+  },
+  {
+    label: "capture parses exit action",
+    text: "exitAction: asString(item.exitAction)",
+  },
+  {
+    label: "capture parses outcome R",
+    text: "outcomeR: asNumber(item.outcomeR)",
+  },
+  {
+    label: "setup id CSV export",
+    text: '"setup_id"',
+  },
+  {
+    label: "exit action CSV export",
+    text: '"exit_action"',
+  },
+  {
+    label: "outcome R CSV export",
+    text: '"outcome_r"',
+  },
+  {
     label: "raw signal CSV export",
     text: '"raw_signal"',
   },
