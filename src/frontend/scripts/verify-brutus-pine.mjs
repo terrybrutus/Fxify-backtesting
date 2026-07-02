@@ -230,10 +230,6 @@ const requiredSnippets = [
     text: 'alertCoverage = input.string("Actionable only", title="Alert Coverage", options=["Actionable only", "Full evidence"])',
   },
   {
-    label: "exit alert mode input",
-    text: 'exitAlertMode = input.string("Safe one-per-bar", title="Exit Alert Mode", options=["Safe one-per-bar", "Immediate TP/Stop"])',
-  },
-  {
     label: "decision alert cooldown input",
     text: 'alertCooldownSeconds = input.int(8, minval=0, maxval=300, title="Minimum Seconds Between Decision Alerts")',
   },
@@ -391,7 +387,7 @@ const requiredSnippets = [
   },
   {
     label: "exit alert mode JSON field",
-    text: '"exitAlertMode":"',
+    text: '"exitAlertMode":"Safe one-per-bar"',
   },
   {
     label: "safe immediate exit alert cadence",
@@ -1555,6 +1551,14 @@ const forbiddenSnippets = [
   {
     label: "unsafe all-tick exit alert cadence",
     text: "alert.freq_all",
+  },
+  {
+    label: "stale exit alert mode input",
+    text: "Exit Alert Mode",
+  },
+  {
+    label: "stale immediate exit mode option",
+    text: "Immediate TP/Stop",
   },
   {
     label: "editable upper source input",
