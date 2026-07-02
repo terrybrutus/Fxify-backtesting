@@ -1698,7 +1698,6 @@ tp1Json = na(tp1) ? "null" : str.tostring(tp1)
 tp2Json = na(tp2) ? "null" : str.tostring(tp2)
 tp3Json = na(tp3) ? "null" : str.tostring(tp3)
 tp4Json = na(tp4) ? "null" : str.tostring(tp4)
-setupIdJson = hasEnter ? str.tostring(activeSetupId) : "null"
 entryText = na(entry) ? "n/a" : str.tostring(entry)
 stopText = na(stop) ? "n/a" : str.tostring(stop)
 tp1Text = na(tp1) ? "n/a" : str.tostring(tp1)
@@ -1792,6 +1791,7 @@ if newEnterPlan
     activeTp3Sent := false
     activeTp4Sent := false
 
+setupIdJson = hasEnter ? str.tostring(activeSetupId) : "null"
 firstTouchNewSide = signalMode == "First touch" and barstate.isrealtime and ((rawLongSignal and not alertedLongThisBar) or (rawShortSignal and not alertedShortThisBar))
 firstTouchOriginalTriangle = signalMode == "First touch" and barstate.isrealtime and originalTriangleSignal and not alertedOriginalThisBar
 meaningfulActionChange = action == "ENTER" or action == "DO_NOT_HOLD"
