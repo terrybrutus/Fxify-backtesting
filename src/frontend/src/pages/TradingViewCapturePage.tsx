@@ -15,6 +15,9 @@ type TvAlert = {
   previousAction?: string;
   rawLongSignal?: boolean;
   rawShortSignal?: boolean;
+  pureTouchSignal?: boolean;
+  pureLongTouchCondition?: boolean;
+  pureShortTouchCondition?: boolean;
   rawLongCondition?: boolean;
   rawShortCondition?: boolean;
   originalTriangleSignal?: boolean;
@@ -352,6 +355,9 @@ function normalizePayload(raw: unknown): TvAlert {
     previousAction: asString(item.previousAction),
     rawLongSignal: asBoolean(item.rawLongSignal),
     rawShortSignal: asBoolean(item.rawShortSignal),
+    pureTouchSignal: asBoolean(item.pureTouchSignal),
+    pureLongTouchCondition: asBoolean(item.pureLongTouchCondition),
+    pureShortTouchCondition: asBoolean(item.pureShortTouchCondition),
     rawLongCondition: asBoolean(item.rawLongCondition),
     rawShortCondition: asBoolean(item.rawShortCondition),
     originalTriangleSignal: asBoolean(item.originalTriangleSignal),
@@ -494,6 +500,9 @@ function alertIdentity(alert: TvAlert) {
     alert.rawSignal ?? "",
     alert.rawLongSignal ?? "",
     alert.rawShortSignal ?? "",
+    alert.pureTouchSignal ?? "",
+    alert.pureLongTouchCondition ?? "",
+    alert.pureShortTouchCondition ?? "",
     alert.rawLongCondition ?? "",
     alert.rawShortCondition ?? "",
     alert.originalTriangleSignal ?? "",
@@ -3402,6 +3411,14 @@ export default function TradingViewCapturePage() {
                               Live touch held L:
                               {alert.rawLongSignal ? "yes" : "no"} S:
                               {alert.rawShortSignal ? "yes" : "no"}
+                            </span>
+                          )}
+                          {(alert.pureLongTouchCondition != null ||
+                            alert.pureShortTouchCondition != null) && (
+                            <span className="block text-cyan-300">
+                              Pure band touch L:
+                              {alert.pureLongTouchCondition ? "yes" : "no"} S:
+                              {alert.pureShortTouchCondition ? "yes" : "no"}
                             </span>
                           )}
                           {(alert.rawLongCondition != null ||

@@ -106,6 +106,9 @@ type TvAlert = {
   previousAction?: string;
   rawLongSignal?: boolean;
   rawShortSignal?: boolean;
+  pureTouchSignal?: boolean;
+  pureLongTouchCondition?: boolean;
+  pureShortTouchCondition?: boolean;
   rawLongCondition?: boolean;
   rawShortCondition?: boolean;
   originalTriangleSignal?: boolean;
@@ -240,6 +243,7 @@ type AlertGroupRow = {
   originalTriangle: number;
   decisionChange: number;
   confirmedClose: number;
+  pureSource: number;
   origSource: number;
   liveLatchSource: number;
   match: number;
@@ -612,6 +616,18 @@ function normalizeAlertPayload(
       typeof item.rawLongSignal === "boolean" ? item.rawLongSignal : undefined,
     rawShortSignal:
       typeof item.rawShortSignal === "boolean" ? item.rawShortSignal : undefined,
+    pureTouchSignal:
+      typeof item.pureTouchSignal === "boolean"
+        ? item.pureTouchSignal
+        : undefined,
+    pureLongTouchCondition:
+      typeof item.pureLongTouchCondition === "boolean"
+        ? item.pureLongTouchCondition
+        : undefined,
+    pureShortTouchCondition:
+      typeof item.pureShortTouchCondition === "boolean"
+        ? item.pureShortTouchCondition
+        : undefined,
     rawLongCondition:
       typeof item.rawLongCondition === "boolean"
         ? item.rawLongCondition
@@ -1889,6 +1905,11 @@ function alertGateSummary(alert: TvAlert) {
     alert.rawLongCondition,
     alert.rawShortCondition,
   );
+  const pureTouch = sideGateValue(
+    alert,
+    alert.pureLongTouchCondition,
+    alert.pureShortTouchCondition,
+  );
   const liveTouch = sideGateValue(alert, alert.rawLongSignal, alert.rawShortSignal);
   const snapback =
     sideGateValue(alert, alert.longSnapback, alert.shortSnapback) ??
@@ -1897,7 +1918,9 @@ function alertGateSummary(alert: TvAlert) {
     sideGateValue(alert, alert.longPushThrough, alert.shortPushThrough) ??
     alert.pushThrough;
   const source =
-    alert.originalTriangleSignal === true
+    alert.pureTouchSignal === true
+      ? "pure band touch"
+      : alert.originalTriangleSignal === true
       ? "orig formula now"
       : alert.latchedSignal === true
         ? "live latch"
@@ -1924,7 +1947,7 @@ function alertGateSummary(alert: TvAlert) {
     (alert.minBarProgressPct != null && alert.barProgressPct != null
       ? alert.barProgressPct >= alert.minBarProgressPct
       : undefined);
-  return `${source} | original ${boolWord(original)} | live ${boolWord(liveTouch)} | session ${boolWord(alert.inSession)} | timing ${boolWord(timingOk)} (${progress}, ${touchProgress}, ${afterTouch}) | snapback ${boolWord(snapback)} | push-through ${boolWord(push)}`;
+  return `${source} | pure ${boolWord(pureTouch)} | original ${boolWord(original)} | live ${boolWord(liveTouch)} | session ${boolWord(alert.inSession)} | timing ${boolWord(timingOk)} (${progress}, ${touchProgress}, ${afterTouch}) | snapback ${boolWord(snapback)} | push-through ${boolWord(push)}`;
 }
 
 function alertEventExplanation(event?: string) {
@@ -2682,6 +2705,7 @@ export default function BrutusTradeDeskPage() {
           originalTriangle: 0,
           decisionChange: 0,
           confirmedClose: 0,
+          pureSource: 0,
           origSource: 0,
           liveLatchSource: 0,
           match: 0,
@@ -2704,6 +2728,7 @@ export default function BrutusTradeDeskPage() {
         item.alert.decisionEvent === "decision_change" ? 1 : 0;
       current.confirmedClose +=
         item.alert.decisionEvent === "confirmed_close" ? 1 : 0;
+      current.pureSource += item.alert.pureTouchSignal === true ? 1 : 0;
       current.origSource += item.alert.originalTriangleSignal === true ? 1 : 0;
       current.liveLatchSource += item.alert.latchedSignal === true ? 1 : 0;
       current.match += item.agreement === "MATCH" ? 1 : 0;
@@ -4674,6 +4699,7 @@ export default function BrutusTradeDeskPage() {
                         </span>
                       </td>
                       <td className="px-2 py-2 text-muted-foreground">
+                        <span className="block">PURE {row.pureSource}</span>
                         <span className="block">ORIG {row.origSource}</span>
                         <span className="block">
                           LIVE LATCH {row.liveLatchSource}
