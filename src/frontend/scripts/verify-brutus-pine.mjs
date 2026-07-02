@@ -394,8 +394,8 @@ const requiredSnippets = [
     text: '"exitAlertMode":"',
   },
   {
-    label: "immediate exit alert option",
-    text: 'exitAlertMode == "Immediate TP/Stop" ? alert.freq_all : alert.freq_once_per_bar',
+    label: "safe immediate exit alert cadence",
+    text: "alert(exitMessage, alert.freq_once_per_bar)",
   },
   {
     label: "entry alert setup id JSON field",
@@ -1551,6 +1551,10 @@ const forbiddenSnippets = [
   {
     label: "stale v10 script copy",
     text: "v10 script",
+  },
+  {
+    label: "unsafe all-tick exit alert cadence",
+    text: "alert.freq_all",
   },
   {
     label: "editable upper source input",
