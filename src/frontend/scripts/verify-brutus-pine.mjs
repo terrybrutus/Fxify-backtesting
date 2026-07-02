@@ -95,11 +95,11 @@ const requiredSnippets = [
   },
   {
     label: "alert fires on first touch, original triangle, or decision change",
-    text: "firstTouchNewSide or firstTouchOriginalTriangle or firstTouchDecisionChanged or confirmedCloseEvent",
+    text: "actionableAlert and actionableAlertAllowed and (firstTouchNewSide or firstTouchDecisionChanged or confirmedCloseEvent)",
   },
   {
     label: "plain alert coverage documentation",
-    text: "Alert coverage: confirmed-close mode sends one JSON packet for every confirmed raw signal.",
+    text: "Alert coverage: by default, live alerts are actionable only: ENTER or DO_NOT_HOLD.",
   },
   {
     label: "confirmed close raw signal event",
@@ -107,7 +107,7 @@ const requiredSnippets = [
   },
   {
     label: "first touch sends first live side touch",
-    text: "First-touch mode sends a JSON packet on the first live side touch",
+    text: "First-touch mode latches the first live intrabar touch",
   },
   {
     label: "long action memory update",
@@ -123,11 +123,11 @@ const requiredSnippets = [
   },
   {
     label: "all alert calls allowed after per-side gating",
-    text: "alert(message, alert.freq_all)",
+    text: "alert(message, alert.freq_once_per_bar)",
   },
   {
-    label: "raw parity v12 payload",
-    text: '"playbookVersion":"raw-parity-v12"',
+    label: "raw parity v20 payload",
+    text: '"playbookVersion":"raw-parity-v20"',
   },
   {
     label: "raw signal JSON field",
@@ -215,7 +215,7 @@ const requiredSnippets = [
   },
   {
     label: "alert gate includes original triangle event",
-    text: "firstTouchNewSide or firstTouchOriginalTriangle or firstTouchDecisionChanged or confirmedCloseEvent",
+    text: "researchAlert = sendResearchAlerts and (firstTouchNewSide or firstTouchOriginalTriangle or confirmedCloseEvent)",
   },
   {
     label: "original triangle alert latches per bar",
@@ -275,11 +275,19 @@ const requiredSnippets = [
   },
   {
     label: "specific wait reason for early live candle",
-    text: "it is still too early in the live candle",
+    text: "the candle has not reached the allowed live-decision window yet",
   },
   {
     label: "specific wait reason for missing snapback",
-    text: "snapback is not clean yet",
+    text: "price has not reclaimed the band level yet",
+  },
+  {
+    label: "live entry bar exit detection",
+    text: "canResolveLiveEntryBar = activeTrade and barstate.isrealtime and bar_index == activeEntryBar",
+  },
+  {
+    label: "same bar live exit JSON field",
+    text: '"sameBarLiveExit":" + str.tostring(sameBarLiveExit)',
   },
   {
     label: "specific skip reason for session gate",
@@ -758,7 +766,7 @@ const requiredCaptureSnippets = [
   },
   {
     label: "capture example uses current plain action",
-    text: "PAPER REVIEW: BUY setup now. Skip if you are late.",
+    text: "BUY NOW | Entry",
   },
   {
     label: "capture example includes original triangle signal",
@@ -809,7 +817,7 @@ const requiredTradeDeskSnippets = [
   },
   {
     label: "trade desk preserves Pine action",
-    text: "action: decisionFrom(item.action)",
+    text: "decisionFrom(item.action) ??",
   },
   {
     label: "trade desk preserves numeric Pine alert time",
@@ -1141,7 +1149,7 @@ const requiredTradeDeskSnippets = [
   },
   {
     label: "trade desk plain paper trade instruction",
-    text: "PAPER REVIEW: ${plainTradeWord(touch.direction)} setup now. Skip if you are late.",
+    text: "NOW. Use the listed entry, stop, and target.",
   },
   {
     label: "trade desk plain wait instruction",
