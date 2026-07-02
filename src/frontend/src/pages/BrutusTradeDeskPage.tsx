@@ -144,6 +144,7 @@ type TvAlert = {
   tooSoonAfterTouch?: boolean;
   notTooEarly?: boolean;
   overlappingActiveTrade?: boolean;
+  tp1AlreadyTouched?: boolean;
   enterAlertAllowed?: boolean;
   dnhAlertAllowed?: boolean;
   actionableAlertAllowed?: boolean;
@@ -762,6 +763,10 @@ function normalizeAlertPayload(
     overlappingActiveTrade:
       typeof item.overlappingActiveTrade === "boolean"
         ? item.overlappingActiveTrade
+        : undefined,
+    tp1AlreadyTouched:
+      typeof item.tp1AlreadyTouched === "boolean"
+        ? item.tp1AlreadyTouched
         : undefined,
     enterAlertAllowed:
       typeof item.enterAlertAllowed === "boolean"
@@ -1761,16 +1766,20 @@ doNotHold = rawSignal and not signalConflict and modeReady and (longPushThrough 
 conflictSkip = signalConflict and modeReady
 skipSignal = (rawSignal and modeReady and not (longEnter or shortEnter or longWatch or shortWatch or doNotHold)) or conflictSkip
 
-action = conflictSkip ? "SKIP" : doNotHold ? "DO_NOT_HOLD" : longEnter or shortEnter ? "ENTER" : longWatch or shortWatch ? "WAIT" : rawSignal ? "SKIP" : "NO_SIGNAL"
-hasEnter = longEnter or shortEnter
+rawHasEnter = longEnter or shortEnter
 riskFloor = bandWidth * stopBandFraction
-entry = hasEnter ? close : na
+entry = rawHasEnter ? close : na
 stop = longEnter ? math.min(low - syminfo.mintick, entry - riskFloor) : shortEnter ? math.max(high + syminfo.mintick, entry + riskFloor) : na
-risk = hasEnter and not na(stop) ? math.abs(entry - stop) : na
+risk = rawHasEnter and not na(stop) ? math.abs(entry - stop) : na
 tp1 = longEnter ? entry + risk * tp1R : shortEnter ? entry - risk * tp1R : na
 tp2 = longEnter ? entry + risk * tp2R : shortEnter ? entry - risk * tp2R : na
 tp3 = longEnter ? entry + risk * tp3R : shortEnter ? entry - risk * tp3R : na
 tp4 = longEnter ? entry + risk * tp4R : shortEnter ? entry - risk * tp4R : na
+tp1AlreadyTouched = (longEnter and not na(tp1) and high >= tp1) or (shortEnter and not na(tp1) and low <= tp1)
+freshLongEnter = longEnter and not tp1AlreadyTouched
+freshShortEnter = shortEnter and not tp1AlreadyTouched
+hasEnter = freshLongEnter or freshShortEnter
+action = conflictSkip ? "SKIP" : doNotHold ? "DO_NOT_HOLD" : freshLongEnter or freshShortEnter ? "ENTER" : tp1AlreadyTouched ? "WAIT" : longWatch or shortWatch ? "WAIT" : rawSignal ? "SKIP" : "NO_SIGNAL"
 snapbackOk = direction == "long" ? longSnapback : direction == "short" ? shortSnapback : false
 tradeWord = direction == "long" ? "BUY" : direction == "short" ? "SELL" : "TRADE"
 entryJson = na(entry) ? "null" : str.tostring(entry)
@@ -1790,7 +1799,7 @@ pushThroughText = na(pushThroughLevel) ? "n/a" : str.tostring(pushThroughLevel)
 reclaimRatioText = na(reclaimDistanceRatio) ? "n/a" : "+" + str.tostring(reclaimDistanceRatio, "#.###") + "bw"
 pushThroughRatioText = na(pushThroughDistanceRatio) ? "n/a" : "+" + str.tostring(pushThroughDistanceRatio, "#.###") + "bw"
 checkpointText = str.tostring(barProgressPct, "#") + "% into candle"
-waitReason = tooEarly ? "Band touch fired, but the candle is too early for the live-decision window." : tooLate ? "Band touch fired, but the candle is already too late for a fresh entry." : tooSoonAfterTouch ? "Band touch fired, but not enough candle progress has passed after the first touch." : not snapbackOk ? "Band touch fired, but price has not reclaimed the band level yet." : "Band touch fired, but the playbook still says wait."
+waitReason = tp1AlreadyTouched ? "Band touch fired, but TP1 was already touched inside this candle before a fresh live entry could be used." : tooEarly ? "Band touch fired, but the candle is too early for the live-decision window." : tooLate ? "Band touch fired, but the candle is already too late for a fresh entry." : tooSoonAfterTouch ? "Band touch fired, but not enough candle progress has passed after the first touch." : not snapbackOk ? "Band touch fired, but price has not reclaimed the band level yet." : "Band touch fired, but the playbook still says wait."
 skipReason = not inSession ? "Band touch fired outside the active session." : not modeReady ? "Band touch fired, but this mode waits for bar close." : "Band touch fired, but the playbook says skip."
 reason = signalConflict ? "Both long and short band touches are active. Skip because direction is unclear." : action == "ENTER" ? "Band touch fired and price reclaimed the band level at the decision checkpoint." : action == "WAIT" ? waitReason : action == "DO_NOT_HOLD" ? "Band touch fired, but price is still beyond the push-through line at the decision checkpoint." : skipReason
 plainAction = action == "ENTER" ? tradeWord + " NOW | Entry " + entryText + " | Stop " + stopText + " | TP1 " + tp1Text + " | TP2 " + tp2Text + " | TP3 " + tp3Text + " | TP4 " + tp4Text + " | Check " + checkpointText + " | Reclaim " + reclaimRatioText : action == "WAIT" ? "WAIT. No trade yet. At " + checkpointText + ", reclaim is only " + reclaimRatioText + "." : action == "DO_NOT_HOLD" ? "DO NOT ENTER. At " + checkpointText + ", push-through is " + pushThroughRatioText + "." : "SKIP. No trade."
@@ -1799,8 +1808,8 @@ plotshape(showOriginalSignals and rawLongCondition, title="Original Triangle Lon
 plotshape(showOriginalSignals and rawShortCondition, title="Original Triangle Short Match", location=location.abovebar, color=color.new(color.gray, 5), style=shape.triangledown, size=size.tiny, text="ORIG")
 plotshape(showLiveLatchSignals and rawLongSignal and not rawLongCondition, title="Live Latched Long Touch", location=location.belowbar, color=color.new(color.aqua, 15), style=shape.triangleup, size=size.tiny, text="LIVE")
 plotshape(showLiveLatchSignals and rawShortSignal and not rawShortCondition, title="Live Latched Short Touch", location=location.abovebar, color=color.new(color.aqua, 15), style=shape.triangledown, size=size.tiny, text="LIVE")
-plotshape(longEnter, title="Long ENTER", location=location.belowbar, color=color.lime, style=shape.triangleup, text="ENTER")
-plotshape(shortEnter, title="Short ENTER", location=location.abovebar, color=color.red, style=shape.triangledown, text="ENTER")
+plotshape(freshLongEnter, title="Long ENTER", location=location.belowbar, color=color.lime, style=shape.triangleup, text="ENTER")
+plotshape(freshShortEnter, title="Short ENTER", location=location.abovebar, color=color.red, style=shape.triangledown, text="ENTER")
 plotshape(showReviewLabels and longWatch, title="Long WAIT", location=location.belowbar, color=color.new(color.lime, 45), style=shape.circle, text="WAIT")
 plotshape(showReviewLabels and shortWatch, title="Short WAIT", location=location.abovebar, color=color.new(color.red, 45), style=shape.circle, text="WAIT")
 plotshape(doNotHold and direction == "long", title="Long DO NOT HOLD", location=location.belowbar, color=color.orange, style=shape.xcross, text="NO")
@@ -1832,7 +1841,7 @@ varip bool activeTp2Sent = false
 varip bool activeTp3Sent = false
 varip bool activeTp4Sent = false
 overlappingActiveTrade = hasEnter and activeTrade
-newEnterPlan = hasEnter and not activeTrade and ((longEnter and lastLongAlertAction != "ENTER") or (shortEnter and lastShortAlertAction != "ENTER"))
+newEnterPlan = hasEnter and not activeTrade and ((freshLongEnter and lastLongAlertAction != "ENTER") or (freshShortEnter and lastShortAlertAction != "ENTER"))
 if showTradeLevels and newEnterPlan
     if not na(entryLine)
         line.delete(entryLine)
@@ -1848,19 +1857,19 @@ if showTradeLevels and newEnterPlan
         line.delete(tp4Line)
     if not na(entryLabel)
         label.delete(entryLabel)
-    planColor = longEnter ? color.lime : color.red
+    planColor = freshLongEnter ? color.lime : color.red
     entryLine := line.new(bar_index, entry, bar_index + 1, entry, xloc=xloc.bar_index, extend=extend.right, color=planColor, width=2)
     stopLine := line.new(bar_index, stop, bar_index + 1, stop, xloc=xloc.bar_index, extend=extend.right, color=color.red, width=2)
     tp1Line := line.new(bar_index, tp1, bar_index + 1, tp1, xloc=xloc.bar_index, extend=extend.right, color=color.new(color.lime, 0), width=1)
     tp2Line := line.new(bar_index, tp2, bar_index + 1, tp2, xloc=xloc.bar_index, extend=extend.right, color=color.new(color.lime, 15), width=1)
     tp3Line := line.new(bar_index, tp3, bar_index + 1, tp3, xloc=xloc.bar_index, extend=extend.right, color=color.new(color.lime, 30), width=1)
     tp4Line := line.new(bar_index, tp4, bar_index + 1, tp4, xloc=xloc.bar_index, extend=extend.right, color=color.new(color.lime, 45), width=1)
-    entryLabel := label.new(bar_index, entry, tradeWord + " ENTER\\nSL/TP shown now", style=longEnter ? label.style_label_up : label.style_label_down, textcolor=color.white, color=planColor)
+    entryLabel := label.new(bar_index, entry, tradeWord + " ENTER\\nSL/TP shown now", style=freshLongEnter ? label.style_label_up : label.style_label_down, textcolor=color.white, color=planColor)
 if newEnterPlan
     setupCounter += 1
     activeTrade := true
     activeSetupId := setupCounter
-    activeDirection := longEnter ? 1 : -1
+    activeDirection := freshLongEnter ? 1 : -1
     activeEntryBar := bar_index
     activeEntry := entry
     activeStop := stop
@@ -1891,7 +1900,7 @@ confirmedCloseEvent = signalMode == "Confirmed close" and rawSignal and barstate
 decisionEvent = confirmedCloseEvent ? "confirmed_close" : firstTouchNewSide ? "first_touch" : firstTouchOriginalTriangle ? "original_triangle" : firstTouchDecisionChanged ? "decision_change" : "none"
 previousAction = direction == "long" ? lastLongAlertAction : direction == "short" ? lastShortAlertAction : signalConflict ? "both" : ""
 actionableAlert = liveAction == "ENTER" or liveAction == "DO_NOT_HOLD"
-enterAlertAllowed = newEnterPlan and ((longEnter and not alertedLongEnterThisBar) or (shortEnter and not alertedShortEnterThisBar))
+enterAlertAllowed = newEnterPlan and ((freshLongEnter and not alertedLongEnterThisBar) or (freshShortEnter and not alertedShortEnterThisBar))
 dnhAlertAllowed = doNotHold and ((direction == "long" and not alertedLongDnhThisBar) or (direction == "short" and not alertedShortDnhThisBar))
 actionableAlertAllowed = (liveAction == "ENTER" and enterAlertAllowed) or (liveAction == "DO_NOT_HOLD" and dnhAlertAllowed)
 alertCooldownReady = alertCooldownSeconds == 0 or na(lastDecisionAlertTimeMs) or timenow - lastDecisionAlertTimeMs >= alertCooldownSeconds * 1000
@@ -1916,7 +1925,7 @@ if showAuditPanel and barstate.islast
     table.cell(auditPanel, 0, 6, "Check ORIG markers against old triangles first", text_color=color.yellow, bgcolor=color.new(color.black, 15))
     table.cell(auditPanel, 0, 7, "Open-bar ORIG can change until candle close", text_color=color.yellow, bgcolor=color.new(color.black, 15))
     table.cell(auditPanel, 0, 8, "Paper evidence only - not live-trade approval", text_color=color.orange, bgcolor=color.new(color.black, 15))
-message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v21\\",\\"rawSignal\\":true,\\"setupId\\":" + setupIdJson + ",\\"alertCoverage\\":\\"" + alertCoverage + "\\",\\"pureTouchSignal\\":" + str.tostring(pureTouchSignal) + ",\\"pureLongTouchCondition\\":" + str.tostring(pureLongTouchCondition) + ",\\"pureShortTouchCondition\\":" + str.tostring(pureShortTouchCondition) + ",\\"originalTriangleSignal\\":" + str.tostring(originalTriangleSignal) + ",\\"latchedSignal\\":" + str.tostring(latchedSignal) + ",\\"decisionEvent\\":\\"" + decisionEvent + "\\",\\"previousAction\\":\\"" + previousAction + "\\",\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"rawLongCondition\\":" + str.tostring(rawLongCondition) + ",\\"rawShortCondition\\":" + str.tostring(rawShortCondition) + ",\\"newLongTouch\\":" + str.tostring(newLongTouch) + ",\\"newShortTouch\\":" + str.tostring(newShortTouch) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"signalDirection\\":\\"" + direction + "\\",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"modeReady\\":" + str.tostring(modeReady) + ",\\"inSession\\":" + str.tostring(inSession) + ",\\"minutesIntoBar\\":" + str.tostring(minutesIntoBar) + ",\\"barProgressPct\\":" + str.tostring(barProgressPct) + ",\\"touchProgressPct\\":" + (na(touchProgressPct) ? "null" : str.tostring(touchProgressPct)) + ",\\"progressAfterTouchPct\\":" + (na(progressAfterTouchPct) ? "null" : str.tostring(progressAfterTouchPct)) + ",\\"decisionCheckpointPct\\":" + str.tostring(barProgressPct) + ",\\"reclaimLevel\\":" + (na(reclaimLevel) ? "null" : str.tostring(reclaimLevel)) + ",\\"reclaimDistance\\":" + (na(reclaimDistance) ? "null" : str.tostring(reclaimDistance)) + ",\\"reclaimDistanceRatio\\":" + (na(reclaimDistanceRatio) ? "null" : str.tostring(reclaimDistanceRatio)) + ",\\"pushThroughLevel\\":" + (na(pushThroughLevel) ? "null" : str.tostring(pushThroughLevel)) + ",\\"pushThroughDistance\\":" + (na(pushThroughDistance) ? "null" : str.tostring(pushThroughDistance)) + ",\\"pushThroughDistanceRatio\\":" + (na(pushThroughDistanceRatio) ? "null" : str.tostring(pushThroughDistanceRatio)) + ",\\"minBarProgressPct\\":" + str.tostring(minBarProgressPct) + ",\\"maxBarProgressPct\\":" + str.tostring(maxBarProgressPct) + ",\\"minProgressAfterTouchPct\\":" + str.tostring(minProgressAfterTouchPct) + ",\\"tooEarly\\":" + str.tostring(tooEarly) + ",\\"tooLate\\":" + str.tostring(tooLate) + ",\\"tooSoonAfterTouch\\":" + str.tostring(tooSoonAfterTouch) + ",\\"notTooEarly\\":" + str.tostring(notTooEarly) + ",\\"overlappingActiveTrade\\":" + str.tostring(overlappingActiveTrade) + ",\\"enterAlertAllowed\\":" + str.tostring(enterAlertAllowed) + ",\\"dnhAlertAllowed\\":" + str.tostring(dnhAlertAllowed) + ",\\"actionableAlertAllowed\\":" + str.tostring(actionableAlertAllowed) + ",\\"alertCooldownSeconds\\":" + str.tostring(alertCooldownSeconds) + ",\\"alertCooldownReady\\":" + str.tostring(alertCooldownReady) + ",\\"longSnapback\\":" + str.tostring(longSnapback) + ",\\"shortSnapback\\":" + str.tostring(shortSnapback) + ",\\"longPushThrough\\":" + str.tostring(longPushThrough) + ",\\"shortPushThrough\\":" + str.tostring(shortPushThrough) + ",\\"snapback\\":" + str.tostring(snapbackOk) + ",\\"pushThrough\\":" + str.tostring(longPushThrough or shortPushThrough) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + liveAction + "\\",\\"plainAction\\":\\"" + livePlainAction + "\\",\\"direction\\":\\"" + alertDirection + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"bandWidth\\":" + str.tostring(bandWidth) + ",\\"touchDepth\\":" + str.tostring(touchDepth) + ",\\"touchDepthRatio\\":" + str.tostring(touchDepthRatio) + ",\\"entry\\":" + alertEntryJson + ",\\"stop\\":" + alertStopJson + ",\\"target\\":" + alertTp1Json + ",\\"tp1\\":" + alertTp1Json + ",\\"tp2\\":" + alertTp2Json + ",\\"tp3\\":" + alertTp3Json + ",\\"tp4\\":" + alertTp4Json + ",\\"length\\":" + str.tostring(length) + ",\\"upperSource\\":\\"high\\",\\"lowerSource\\":\\"low\\",\\"stdDev\\":" + str.tostring(mult) + ",\\"rsi\\":" + str.tostring(rsiValue) + ",\\"rsiMa\\":" + str.tostring(rsiMa) + ",\\"rsiUpper\\":" + str.tostring(rsiUpper) + ",\\"rsiLower\\":" + str.tostring(rsiLower) + ",\\"rsiBbWidth\\":" + str.tostring(rsiBbWidth) + ",\\"rsiStretch\\":\\"" + rsiStretch + "\\",\\"rsiPosition\\":\\"" + rsiPosition + "\\",\\"rsiAlignedWithTouch\\":" + str.tostring(rsiAlignedWithTouch) + ",\\"alignedWithTouch\\":" + str.tostring(rsiAlignedWithTouch) + ",\\"volumeValue\\":" + str.tostring(volume) + ",\\"volumeMa\\":" + str.tostring(volumeMa) + ",\\"volumeRatio\\":" + str.tostring(volumeRatio) + ",\\"volumeSpike\\":" + str.tostring(volumeSpike) + ",\\"ma20\\":" + str.tostring(ma20) + ",\\"ma50\\":" + str.tostring(ma50) + ",\\"ma100\\":" + str.tostring(ma100) + ",\\"ma200\\":" + str.tostring(ma200) + ",\\"maTrend\\":\\"" + maTrend + "\\",\\"maStackBullish\\":" + str.tostring(maStackBullish) + ",\\"maStackBearish\\":" + str.tostring(maStackBearish) + ",\\"priceAboveMa20\\":" + str.tostring(priceAboveMa20) + ",\\"priceAboveMa50\\":" + str.tostring(priceAboveMa50) + ",\\"priceAboveMa100\\":" + str.tostring(priceAboveMa100) + ",\\"priceAboveMa200\\":" + str.tostring(priceAboveMa200) + ",\\"reason\\":\\"" + liveReason + "\\"}"
+message = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v21\\",\\"rawSignal\\":true,\\"setupId\\":" + setupIdJson + ",\\"alertCoverage\\":\\"" + alertCoverage + "\\",\\"pureTouchSignal\\":" + str.tostring(pureTouchSignal) + ",\\"pureLongTouchCondition\\":" + str.tostring(pureLongTouchCondition) + ",\\"pureShortTouchCondition\\":" + str.tostring(pureShortTouchCondition) + ",\\"originalTriangleSignal\\":" + str.tostring(originalTriangleSignal) + ",\\"latchedSignal\\":" + str.tostring(latchedSignal) + ",\\"decisionEvent\\":\\"" + decisionEvent + "\\",\\"previousAction\\":\\"" + previousAction + "\\",\\"rawLongSignal\\":" + str.tostring(rawLongSignal) + ",\\"rawShortSignal\\":" + str.tostring(rawShortSignal) + ",\\"rawLongCondition\\":" + str.tostring(rawLongCondition) + ",\\"rawShortCondition\\":" + str.tostring(rawShortCondition) + ",\\"newLongTouch\\":" + str.tostring(newLongTouch) + ",\\"newShortTouch\\":" + str.tostring(newShortTouch) + ",\\"signalConflict\\":" + str.tostring(signalConflict) + ",\\"signalDirection\\":\\"" + direction + "\\",\\"mode\\":\\"" + mode + "\\",\\"confirmed\\":" + str.tostring(barstate.isconfirmed) + ",\\"modeReady\\":" + str.tostring(modeReady) + ",\\"inSession\\":" + str.tostring(inSession) + ",\\"minutesIntoBar\\":" + str.tostring(minutesIntoBar) + ",\\"barProgressPct\\":" + str.tostring(barProgressPct) + ",\\"touchProgressPct\\":" + (na(touchProgressPct) ? "null" : str.tostring(touchProgressPct)) + ",\\"progressAfterTouchPct\\":" + (na(progressAfterTouchPct) ? "null" : str.tostring(progressAfterTouchPct)) + ",\\"decisionCheckpointPct\\":" + str.tostring(barProgressPct) + ",\\"reclaimLevel\\":" + (na(reclaimLevel) ? "null" : str.tostring(reclaimLevel)) + ",\\"reclaimDistance\\":" + (na(reclaimDistance) ? "null" : str.tostring(reclaimDistance)) + ",\\"reclaimDistanceRatio\\":" + (na(reclaimDistanceRatio) ? "null" : str.tostring(reclaimDistanceRatio)) + ",\\"pushThroughLevel\\":" + (na(pushThroughLevel) ? "null" : str.tostring(pushThroughLevel)) + ",\\"pushThroughDistance\\":" + (na(pushThroughDistance) ? "null" : str.tostring(pushThroughDistance)) + ",\\"pushThroughDistanceRatio\\":" + (na(pushThroughDistanceRatio) ? "null" : str.tostring(pushThroughDistanceRatio)) + ",\\"minBarProgressPct\\":" + str.tostring(minBarProgressPct) + ",\\"maxBarProgressPct\\":" + str.tostring(maxBarProgressPct) + ",\\"minProgressAfterTouchPct\\":" + str.tostring(minProgressAfterTouchPct) + ",\\"tooEarly\\":" + str.tostring(tooEarly) + ",\\"tooLate\\":" + str.tostring(tooLate) + ",\\"tooSoonAfterTouch\\":" + str.tostring(tooSoonAfterTouch) + ",\\"notTooEarly\\":" + str.tostring(notTooEarly) + ",\\"overlappingActiveTrade\\":" + str.tostring(overlappingActiveTrade) + ",\\"tp1AlreadyTouched\\":" + str.tostring(tp1AlreadyTouched) + ",\\"enterAlertAllowed\\":" + str.tostring(enterAlertAllowed) + ",\\"dnhAlertAllowed\\":" + str.tostring(dnhAlertAllowed) + ",\\"actionableAlertAllowed\\":" + str.tostring(actionableAlertAllowed) + ",\\"alertCooldownSeconds\\":" + str.tostring(alertCooldownSeconds) + ",\\"alertCooldownReady\\":" + str.tostring(alertCooldownReady) + ",\\"longSnapback\\":" + str.tostring(longSnapback) + ",\\"shortSnapback\\":" + str.tostring(shortSnapback) + ",\\"longPushThrough\\":" + str.tostring(longPushThrough) + ",\\"shortPushThrough\\":" + str.tostring(shortPushThrough) + ",\\"snapback\\":" + str.tostring(snapbackOk) + ",\\"pushThrough\\":" + str.tostring(longPushThrough or shortPushThrough) + ",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"action\\":\\"" + liveAction + "\\",\\"plainAction\\":\\"" + livePlainAction + "\\",\\"direction\\":\\"" + alertDirection + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + ",\\"upper\\":" + str.tostring(upper) + ",\\"lower\\":" + str.tostring(lower) + ",\\"bandWidth\\":" + str.tostring(bandWidth) + ",\\"touchDepth\\":" + str.tostring(touchDepth) + ",\\"touchDepthRatio\\":" + str.tostring(touchDepthRatio) + ",\\"entry\\":" + alertEntryJson + ",\\"stop\\":" + alertStopJson + ",\\"target\\":" + alertTp1Json + ",\\"tp1\\":" + alertTp1Json + ",\\"tp2\\":" + alertTp2Json + ",\\"tp3\\":" + alertTp3Json + ",\\"tp4\\":" + alertTp4Json + ",\\"length\\":" + str.tostring(length) + ",\\"upperSource\\":\\"high\\",\\"lowerSource\\":\\"low\\",\\"stdDev\\":" + str.tostring(mult) + ",\\"rsi\\":" + str.tostring(rsiValue) + ",\\"rsiMa\\":" + str.tostring(rsiMa) + ",\\"rsiUpper\\":" + str.tostring(rsiUpper) + ",\\"rsiLower\\":" + str.tostring(rsiLower) + ",\\"rsiBbWidth\\":" + str.tostring(rsiBbWidth) + ",\\"rsiStretch\\":\\"" + rsiStretch + "\\",\\"rsiPosition\\":\\"" + rsiPosition + "\\",\\"rsiAlignedWithTouch\\":" + str.tostring(rsiAlignedWithTouch) + ",\\"alignedWithTouch\\":" + str.tostring(rsiAlignedWithTouch) + ",\\"volumeValue\\":" + str.tostring(volume) + ",\\"volumeMa\\":" + str.tostring(volumeMa) + ",\\"volumeRatio\\":" + str.tostring(volumeRatio) + ",\\"volumeSpike\\":" + str.tostring(volumeSpike) + ",\\"ma20\\":" + str.tostring(ma20) + ",\\"ma50\\":" + str.tostring(ma50) + ",\\"ma100\\":" + str.tostring(ma100) + ",\\"ma200\\":" + str.tostring(ma200) + ",\\"maTrend\\":\\"" + maTrend + "\\",\\"maStackBullish\\":" + str.tostring(maStackBullish) + ",\\"maStackBearish\\":" + str.tostring(maStackBearish) + ",\\"priceAboveMa20\\":" + str.tostring(priceAboveMa20) + ",\\"priceAboveMa50\\":" + str.tostring(priceAboveMa50) + ",\\"priceAboveMa100\\":" + str.tostring(priceAboveMa100) + ",\\"priceAboveMa200\\":" + str.tostring(priceAboveMa200) + ",\\"reason\\":\\"" + liveReason + "\\"}"
 
 if shouldAlert
     alert(message, alert.freq_once_per_bar)
@@ -2212,6 +2221,16 @@ function denialReasonFor(item: AlertDecisionMatch) {
         "Do not open a second trade. Review whether the older setup should be exited or whether overlapping setups need their own rule later.",
     };
   }
+  if (alert.tp1AlreadyTouched === true) {
+    return {
+      key: "tp1-already-touched",
+      label: "Denied because TP1 already moved",
+      plainMeaning:
+        "The setup reclaimed enough to qualify, but the first target was already touched inside this candle before a fresh live entry could be used.",
+      action:
+        "Do not chase it live. Review whether a lower timeframe would have entered earlier.",
+    };
+  }
   if (
     action === "DO_NOT_HOLD" ||
     pushThrough === true ||
@@ -2482,6 +2501,24 @@ function strategyDiagnosisFor(item: AlertDecisionMatch) {
       invalidation: "Prior setup still active.",
       nextProof:
         "Review overlap rows separately. If they often improve exits, convert them into exit-management rules instead of new entries.",
+    };
+  }
+
+  if (alert.tp1AlreadyTouched === true) {
+    return {
+      key: "tp1-already-touched",
+      family: "Late after first target",
+      paperUse: "review" as const,
+      plainFinding:
+        "The move already reached TP1 inside the same candle, so a fresh live entry would be late.",
+      paperRule:
+        "Do not enter after this alert live. Use it to study whether a lower timeframe gave an earlier, tradable entry.",
+      entryPlan: "No fresh entry from this alert.",
+      exitPlan:
+        "If already in from an earlier signal, manage from the original stop and targets.",
+      invalidation: "First target already touched before a fresh entry.",
+      nextProof:
+        "Compare these rows against lower-timeframe alerts. If lower timeframes catch the move earlier, route this pattern there instead of chasing on the current chart.",
     };
   }
 
