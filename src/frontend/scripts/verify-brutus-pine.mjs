@@ -99,7 +99,7 @@ const requiredSnippets = [
   },
   {
     label: "plain alert coverage documentation",
-    text: "Alert coverage: by default, live alerts are actionable only: ENTER or DO_NOT_HOLD.",
+    text: 'Alert coverage: use "Actionable only" for cleaner live testing',
   },
   {
     label: "confirmed close raw signal event",
@@ -223,7 +223,19 @@ const requiredSnippets = [
   },
   {
     label: "alert gate includes original triangle event",
-    text: "researchAlert = sendResearchAlerts and (firstTouchNewSide or firstTouchOriginalTriangle or confirmedCloseEvent)",
+    text: "researchAlert = fullEvidenceAlerts and (firstTouchNewSide or firstTouchOriginalTriangle or confirmedCloseEvent)",
+  },
+  {
+    label: "alert coverage input",
+    text: 'alertCoverage = input.string("Actionable only", title="Alert Coverage", options=["Actionable only", "Full evidence"])',
+  },
+  {
+    label: "full evidence alert mode",
+    text: 'fullEvidenceAlerts = alertCoverage == "Full evidence"',
+  },
+  {
+    label: "alert coverage JSON field",
+    text: '"alertCoverage":"',
   },
   {
     label: "original triangle alert latches per bar",
@@ -529,6 +541,10 @@ const requiredCaptureSnippets = [
     text: "setupId: asNumber(item.setupId)",
   },
   {
+    label: "capture parses alert coverage",
+    text: "alertCoverage: asString(item.alertCoverage)",
+  },
+  {
     label: "capture parses exit action",
     text: "exitAction: asString(item.exitAction)",
   },
@@ -539,6 +555,10 @@ const requiredCaptureSnippets = [
   {
     label: "setup id CSV export",
     text: '"setup_id"',
+  },
+  {
+    label: "alert coverage CSV export",
+    text: '"alert_coverage"',
   },
   {
     label: "exit action CSV export",
