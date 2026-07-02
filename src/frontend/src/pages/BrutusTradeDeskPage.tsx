@@ -186,6 +186,11 @@ type TvAlert = {
   priceAboveMa50?: boolean;
   priceAboveMa100?: boolean;
   priceAboveMa200?: boolean;
+  setupId?: number;
+  exitAction?: string;
+  outcome?: string;
+  outcomePrice?: number;
+  outcomeR?: number;
 };
 
 type AlertDecisionMatch = {
@@ -751,6 +756,12 @@ function normalizeAlertPayload(
       typeof item.priceAboveMa200 === "boolean"
         ? item.priceAboveMa200
         : undefined,
+    setupId: asNumber(item.setupId),
+    exitAction:
+      typeof item.exitAction === "string" ? item.exitAction : undefined,
+    outcome: typeof item.outcome === "string" ? item.outcome : undefined,
+    outcomePrice: asNumber(item.outcomePrice),
+    outcomeR: asNumber(item.outcomeR),
   };
 }
 
@@ -1627,7 +1638,22 @@ var line tp2Line = na
 var line tp3Line = na
 var line tp4Line = na
 var label entryLabel = na
-newEnterPlan = hasEnter and ((longEnter and lastLongAlertAction != "ENTER") or (shortEnter and lastShortAlertAction != "ENTER"))
+varip int setupCounter = 0
+varip bool activeTrade = false
+varip int activeSetupId = na
+varip int activeDirection = 0
+varip int activeEntryBar = na
+varip float activeEntry = na
+varip float activeStop = na
+varip float activeTp1 = na
+varip float activeTp2 = na
+varip float activeTp3 = na
+varip float activeTp4 = na
+varip bool activeTp1Sent = false
+varip bool activeTp2Sent = false
+varip bool activeTp3Sent = false
+varip bool activeTp4Sent = false
+newEnterPlan = hasEnter and not activeTrade and ((longEnter and lastLongAlertAction != "ENTER") or (shortEnter and lastShortAlertAction != "ENTER"))
 if showTradeLevels and newEnterPlan
     if not na(entryLine)
         line.delete(entryLine)
@@ -1651,6 +1677,22 @@ if showTradeLevels and newEnterPlan
     tp3Line := line.new(bar_index, tp3, bar_index + 1, tp3, xloc=xloc.bar_index, extend=extend.right, color=color.new(color.lime, 30), width=1)
     tp4Line := line.new(bar_index, tp4, bar_index + 1, tp4, xloc=xloc.bar_index, extend=extend.right, color=color.new(color.lime, 45), width=1)
     entryLabel := label.new(bar_index, entry, tradeWord + " ENTER\\nSL/TP shown now", style=longEnter ? label.style_label_up : label.style_label_down, textcolor=color.white, color=planColor)
+if newEnterPlan
+    setupCounter += 1
+    activeTrade := true
+    activeSetupId := setupCounter
+    activeDirection := longEnter ? 1 : -1
+    activeEntryBar := bar_index
+    activeEntry := entry
+    activeStop := stop
+    activeTp1 := tp1
+    activeTp2 := tp2
+    activeTp3 := tp3
+    activeTp4 := tp4
+    activeTp1Sent := false
+    activeTp2Sent := false
+    activeTp3Sent := false
+    activeTp4Sent := false
 
 firstTouchNewSide = signalMode == "First touch" and barstate.isrealtime and ((rawLongSignal and not alertedLongThisBar) or (rawShortSignal and not alertedShortThisBar))
 firstTouchOriginalTriangle = signalMode == "First touch" and barstate.isrealtime and originalTriangleSignal and not alertedOriginalThisBar
@@ -1690,6 +1732,31 @@ if shouldAlert
         lastShortAlertAction := action
     if originalTriangleSignal
         alertedOriginalThisBar := true
+
+canResolveTrade = activeTrade and bar_index > activeEntryBar
+stopHit = canResolveTrade and (activeDirection == 1 ? low <= activeStop : high >= activeStop)
+tp4Hit = canResolveTrade and not activeTp4Sent and (activeDirection == 1 ? high >= activeTp4 : low <= activeTp4)
+tp3Hit = canResolveTrade and not activeTp3Sent and (activeDirection == 1 ? high >= activeTp3 : low <= activeTp3)
+tp2Hit = canResolveTrade and not activeTp2Sent and (activeDirection == 1 ? high >= activeTp2 : low <= activeTp2)
+tp1Hit = canResolveTrade and not activeTp1Sent and (activeDirection == 1 ? high >= activeTp1 : low <= activeTp1)
+exitEvent = stopHit ? "EXIT_STOP" : tp4Hit ? "EXIT_TP4" : tp3Hit ? "EXIT_TP3" : tp2Hit ? "EXIT_TP2" : tp1Hit ? "EXIT_TP1" : "none"
+exitPrice = stopHit ? activeStop : tp4Hit ? activeTp4 : tp3Hit ? activeTp3 : tp2Hit ? activeTp2 : tp1Hit ? activeTp1 : na
+exitR = stopHit ? -1.0 : tp4Hit ? tp4R : tp3Hit ? tp3R : tp2Hit ? tp2R : tp1Hit ? tp1R : na
+exitPlain = stopHit ? "STOP HIT. Trade is done." : tp4Hit ? "TP4 HIT. Runner is done." : tp3Hit ? "TP3 HIT. Take profit or trail tight." : tp2Hit ? "TP2 HIT. Take profit or move stop up." : tp1Hit ? "TP1 HIT. Take partial profit and protect the trade." : ""
+exitReason = stopHit ? "Stop was touched after the entry bar. Conservative rule: same-bar stop/TP is not claimed because Pine cannot prove event order inside the bar." : exitEvent != "none" ? "Profit target was touched after the entry bar. Conservative rule: same-bar target is not claimed because Pine cannot prove event order inside the bar." : ""
+exitMessage = "{\\"strategy\\":\\"brutus_playbook_v1\\",\\"playbookVersion\\":\\"raw-parity-v12\\",\\"rawSignal\\":false,\\"event\\":\\"" + exitEvent + "\\",\\"setupId\\":" + str.tostring(activeSetupId) + ",\\"exitAction\\":\\"" + (stopHit ? "STOP" : "TAKE_PROFIT") + "\\",\\"outcome\\":\\"" + exitEvent + "\\",\\"outcomePrice\\":" + (na(exitPrice) ? "null" : str.tostring(exitPrice)) + ",\\"outcomeR\\":" + (na(exitR) ? "null" : str.tostring(exitR)) + ",\\"plainAction\\":\\"" + exitPlain + "\\",\\"reason\\":\\"" + exitReason + "\\",\\"symbol\\":\\"" + syminfo.tickerid + "\\",\\"timeframe\\":\\"" + timeframe.period + "\\",\\"direction\\":\\"" + (activeDirection == 1 ? "long" : "short") + "\\",\\"time\\":" + str.tostring(time) + ",\\"timestamp\\":" + str.tostring(time) + ",\\"candleTime\\":" + str.tostring(time) + ",\\"alertTime\\":" + str.tostring(timenow) + ",\\"entry\\":" + str.tostring(activeEntry) + ",\\"stop\\":" + str.tostring(activeStop) + ",\\"target\\":" + str.tostring(activeTp1) + ",\\"tp1\\":" + str.tostring(activeTp1) + ",\\"tp2\\":" + str.tostring(activeTp2) + ",\\"tp3\\":" + str.tostring(activeTp3) + ",\\"tp4\\":" + str.tostring(activeTp4) + ",\\"open\\":" + str.tostring(open) + ",\\"high\\":" + str.tostring(high) + ",\\"low\\":" + str.tostring(low) + ",\\"close\\":" + str.tostring(close) + "}"
+if exitEvent != "none" and (not liveAlertsOnly or barstate.isrealtime)
+    alert(exitMessage, alert.freq_once_per_bar)
+    if tp1Hit
+        activeTp1Sent := true
+    if tp2Hit
+        activeTp2Sent := true
+    if tp3Hit
+        activeTp3Sent := true
+    if tp4Hit
+        activeTp4Sent := true
+    if stopHit or tp4Hit
+        activeTrade := false
 
 // These named alertconditions are labels only. The paper evidence loop depends on the alert(message) JSON above, so TradingView alerts should use "Any alert() function call".
 alertcondition(longEnter or shortEnter, title="Brutus ENTER", message="Wrong alert type for evidence loop. Use Any alert() function call for full JSON.")
